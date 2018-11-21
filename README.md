@@ -1,7 +1,7 @@
 # Domino Docker 
 This project contains build scripts for Docker images (Dockerfiles) and Docker related utilities for IBM Domino. There are separate folders within this repository that contain build scripts for IBM sThis repository provides the to build an IBM Domino Server with latest fixes.
 
-Main idea is to download and apply all required fixes/patches/updates from a software respository server instead of adding the source installation files to the image directly. For this reason this repo will start a temporary local nginx server at build time to act as a software repository server.
+Main idea is to download and apply all required fixes/patches/updates from a software respository server instead of adding the source installation files to the image directly. For this reason this repo will start a temporary local nginx server at build time to act as a [software repository server](https://github.com/IBM/domino-docker/tree/master/software).
 
 ## How to build the image(s)
 to be documented
@@ -31,9 +31,30 @@ When a new container is started by using the IBM Domino Docker image, it takes t
 * SystemDatabasePath
 * ServerPassword
 
+### Manually creating a new container from an image
+First create a new/empty persistant volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
+
+```bash
+docker volume create dominodata_demo1
+```
+Then run a new Domino server with the configuration details of your choice. Make sure to specifiy the base image name at the very end of this command
+
+```bash
+docker run -it -e "ServerName=Server1" \
+    -e "OrganizationName=MyOrg" \
+    -e "AdminFirstName=Thomas" \
+    -e "AdminLastName=Hampel" \
+    -e "AdminPassword=passw0rd" \
+    -h wien.demo.com \
+    -p 80:80 \
+    -p 1352:1352 \
+    -v dominodata_demo1:/local/notesdata \
+    --name server1 \
+    ibmcom/domino10
+```
 ## Runtime configuration
 
-During ```docker run``` you can setup a volume that mounts property files into /etc/websphere, such as:
+During ```docker run``` you can setup a volume that mounts property files into /local/notesdata
 
 ### Stopping the Application Server gracefully
 Stopping a Domino server takes longer than the time a Docker server would expect by default, so it is recommended to specify the timeout parameter when stopping a container.
@@ -56,8 +77,8 @@ Special Thanks go to the following people for having provided valuable input thi
 
 * [Ulrich Krause](https://www.eknori.de/2017-08-20/domino-on-docker/).
 * Matteo Bisi's [Presentation](https://www.slideshare.net/mbisi/connect2016-1172-shipping-domino) and his [Github repo](https://github.com/matteobisi/docker)
-* Daniel Nashed for donating his [startscript](https://www.nashcom.de/nshweb/pages/startscript.htm)
-* [Egor Margineanu](https://www.egmar.ro/) who also can be found on [Github](https://github.com/egmar)
+* Daniel Nashed for donating his [startscript](https://www.nashcom.de/nshweb/pages/startscript.htm) under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). 
+* [Egor Margineanu](https://www.egmar.ro/) who also can be found on [Github](https://github.com/egmar)
 
 
 

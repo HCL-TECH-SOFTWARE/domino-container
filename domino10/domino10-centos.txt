@@ -1,0 +1,55 @@
+############################################################################
+# (C) Copyright IBM Corporation 2015, 2018                                 #
+#                                                                          #
+# Licensed under the Apache License, Version 2.0 (the "License");          #
+# you may not use this file except in compliance with the License.         #
+# You may obtain a copy of the License at                                  #
+#                                                                          #
+#      http://www.apache.org/licenses/LICENSE-2.0                          #
+#                                                                          #
+# Unless required by applicable law or agreed to in writing, software      #
+# distributed under the License is distributed on an "AS IS" BASIS,        #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
+# See the License for the specific language governing permissions and      #
+# limitations under the License.                                           #
+#                                                                          #
+############################################################################
+
+FROM centos:latest
+
+# Headers
+LABEL com.ibm.dominodocker.containerversion="10.0.0" \
+	version="10.0.0" \
+	vendor="IBM Corporation" \
+	description="IBM Domino Server 10.0.0" \
+	com.ibm.dominodocker.release-date="2018-10-10" \
+	com.ibm.dominodocker.version.is-production="" \
+	maintainer="thomas.hampel@de.ibm.com"
+
+# External arguments with a default value
+ARG DownloadFrom=http://172.17.0.3
+ARG DominoBasePackage=DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar
+ARG DominoResponseFile=domino10_response.dat
+ARG DominoMoveInstallData=/local/templates
+ARG LocalInstallDir=/tmp/install
+ARG DominoVersion=10.0.0
+ARG DominoUserID=1001
+ARG DOMINO_LANG=en_US.UTF-8
+
+# Copy Install Files to container
+COPY scripts $LocalInstallDir
+
+# Prepare environment for Domino
+# Update, Install required packages and run separate install script
+
+RUN yum update -y && \
+	yum install -y bc perl which wget nano unzip rsync lsof gdb sysstat file && \
+ 	yum clean all >/dev/null && \
+ 	rm -fr /var/cache/yum && \
+    $LocalInstallDir/install.sh && \
+    rm -rf $LocalInstallDir 
+
+# Expose Ports HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
+EXPOSE 80 110 143 389 443 636 993 995 63148 63149
+
+ENTRYPOINT ["/domino_docker_entrypoint.sh"]

@@ -52,7 +52,7 @@ repo_stopremove ()
 
 repo_stop ()
 {
-    # Stop and remove SW repository
+    # Stop SW repository
     docker stop ibmsoftware
     return 0
 }
