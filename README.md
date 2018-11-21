@@ -55,7 +55,7 @@ Special Thanks go to the following people for having provided valuable input thi
 
 
 * [Ulrich Krause](https://www.eknori.de/2017-08-20/domino-on-docker/).
-* Matteo Bisi https://www.slideshare.net/mbisi/connect2016-1172-shipping-domino and his [Github repo](https://github.com/matteobisi/docker)
+* Matteo Bisi's [Presentation](https://www.slideshare.net/mbisi/connect2016-1172-shipping-domino) and his [Github repo](https://github.com/matteobisi/docker)
 * Daniel Nashed for donating his [startscript](https://www.nashcom.de/nshweb/pages/startscript.htm)
 * [Egor Margineanu](https://www.egmar.ro/) who also can be found on [Github](https://github.com/egmar)
 

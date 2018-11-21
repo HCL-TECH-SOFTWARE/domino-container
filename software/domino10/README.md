@@ -5,8 +5,13 @@ This directory is supposed to contain the following files. Please download them 
 | :---: |:---|:----|
 | CNW1ZEN | IBM Domino Server 10 (64 bit Linux) | [DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar](https://www-112.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal=CNW1ZEN) | 
 
+## Where to download
+Software packages can be downloaded from the following locations. 
+* [Passport Advantage](https://www-01.ibm.com/software/passportadvantage/pao_customer.html)
+* [Fix Central](https://www-945.ibm.com/support/fixcentral)
+
 ## License
-The Dockerfiles and associated scripts are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). Other products 
+The Dockerfiles and associated scripts are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). 
 
 License for the product installed within the image is as follows:
 * IBM Domino Enterprise Server 10.0 under the [International Program License Agreement](https://www-03.ibm.com/software/sla/sladb.nsf/displaylis/FB664D0899DE8E7C8525832100805159?OpenDocument)
