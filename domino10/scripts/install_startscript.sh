@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ############################################################################
 # (C) Copyright IBM Corporation 2015, 2018                                 #
@@ -17,18 +17,11 @@
 #                                                                          #
 ############################################################################
 
-signWithAdminP=/local/notesdata/signWithAdminP.txt
+INSTALL_DIR=`dirname $0`
 
-# For every file name listed in the text file above, 
-# create Domino AdminP database signing request
+# Install Domino Start Script using it's own installer (which is Docker aware)
+header "Installing Domino Start Script"
 
-if [ -f "$signWithAdminP" ]; then
-echo "Creating AdminP request 'sign with server id' as requested" 
-for i in `cat $signWithAdminP`
-	do
-		echo "Signing request for " $i
-		cd /local/notesdata 
-		/opt/ibm/domino/bin/java -jar ./DatabaseSigner.jar $i
-	done
-	rm -f $signWithAdminP
-fi
+cd $INSTALL_DIR
+wget -q "$DownloadFrom/start_script.tar" | tar -x
+$INSTALL_DIR/start_script/install_script
