@@ -17,7 +17,7 @@ First create a new/empty persistant volume that will be used as the Domino Data 
 ```bash
 docker volume create dominodata_demo1
 ```
-Then run a new Domino server with the configuration details of your choice. Make sure to specifiy the base image name at the very end of this command
+Then run a new Domino server with the configuration details of your choice. Make sure to specify the base image name at the very end of this command
 
 ```bash
 docker run -it -e "ServerName=Server1" \
