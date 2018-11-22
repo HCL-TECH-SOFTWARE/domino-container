@@ -26,7 +26,7 @@ Default value : DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar
 Name of the Domino Server base image file. The build script will use this parameter for download and extracting the instalaltion package
 ```--build-arg DominoBasePackage=DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar```
 
-### DominoResponseFile=domino10_response.dat
+### DominoResponseFile
 
 Default value : domino10_response.dat
 
@@ -46,10 +46,13 @@ Specifies the temporary directory that will be used to extract the Domino instal
 ```--build-arg LocalInstallDir=/tmp/install```
 
 
-### DominoVersion=10.0.0
+### DominoVersion
+
+Default value : 10.0.0
 to be documented
 
-### DominoUserID=1001
+### DominoUserID
+Default value : 1001
 
 ### DOMINO_LANG
 
