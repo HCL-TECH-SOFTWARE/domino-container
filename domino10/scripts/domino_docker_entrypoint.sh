@@ -41,11 +41,11 @@ trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
 # Check if server is configured, else start unattended configuration, or remote configuation on port 1352
 if [ ! -f "$DOMINO_SERVER_ID" ]; then
 	if [ ! -z "$ServerName" ]; then
-        if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-            if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-                $DOMINO_DOCKER_CFG_SCRIPT
-            fi
-        fi
+    if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
+      if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
+        $DOMINO_DOCKER_CFG_SCRIPT
+      fi
+    fi
 	else
 		echo "Configuration for automated setup not found."
 		echo "Starting Domino Server in listen mode"

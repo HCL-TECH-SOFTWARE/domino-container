@@ -7,29 +7,9 @@ Main idea is to download and apply all required fixes/patches/updates from a sof
 to be documented
 
 ## How to use this image
-When a new container is started by using the IBM Domino Docker image, it takes the following environment variables into account for auto-configuring the Domino server:
+When a new container is created from the IBM Domino Docker image, it takes [environment variables](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md)
 
-* isFirstServer 
-* AdminFirstName
-* AdminIDFile
-* AdminLastName
-* AdminMiddleName
-* AdminPassword
-* CountryCode
-* DominoDomainName
-* HostName
-* OrgUnitIDFile
-* OrgUnitName
-* OrgUnitPassword
-* OrganizationIDFile
-* OrganizationName
-* OrganizationPassword
-* OtherDirectoryServerAddress
-* OtherDirectoryServerName
-* ServerIDFile
-* ServerName
-* SystemDatabasePath
-* ServerPassword
+* Domino Data directory needs to be a persistant volume.
 
 ### Manually creating a new container from an image
 First create a new/empty persistant volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
@@ -72,14 +52,12 @@ For issues relating specifically to the Dockerfiles and scripts, please use the 
 We welcome contributions following [our guidelines](https://github.com/IBM/domino-docker/blob/master/CONTRIBUTING.md).
 
 ## Community Support
-Special Thanks go to the following people for having provided valuable input this project
-
+Special Thanks go to the following people for having provided valuable input to this project
 
 * [Ulrich Krause](https://www.eknori.de/2017-08-20/domino-on-docker/).
 * Matteo Bisi's [Presentation](https://www.slideshare.net/mbisi/connect2016-1172-shipping-domino) and his [Github repo](https://github.com/matteobisi/docker)
 * Daniel Nashed for donating his [startscript](https://www.nashcom.de/nshweb/pages/startscript.htm) under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). 
 * [Egor Margineanu](https://www.egmar.ro/) who also can be found on [Github](https://github.com/egmar)
-
 
 
 ## License
