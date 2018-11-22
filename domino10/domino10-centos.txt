@@ -46,7 +46,8 @@ RUN yum update -y && \
 	yum install -y bc perl which wget nano unzip rsync lsof gdb sysstat file && \
  	yum clean all >/dev/null && \
  	rm -fr /var/cache/yum && \
-    $LocalInstallDir/install.sh && \
+    $LocalInstallDir/install_domino.sh && \
+	$LocalInstallDir/install_startscript.sh && \
     rm -rf $LocalInstallDir 
 
 # Expose Ports HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
