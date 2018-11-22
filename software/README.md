@@ -2,7 +2,7 @@
 
 This directory is used to host the installation packages that will be used inside of a Docker image. 
 
-Each folder is supposed to contain the packages requried for the corresponding image. You must download the software before building the image(s). File names are important.
+Each folder is supposed to contain the packages required for the corresponding image. You must download the software before building the image(s). File names are important.
 
 ##  Software Repository Server
 The software repository server is used by the build scripts to download IBM software packages rather than adding them to the image. It is not required to start or stop this repository server manually, all actions are taken care of in the build scripts. However, we are providing the script ```software-repo.sh``` for manual handling in case its required.
