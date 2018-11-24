@@ -1,0 +1,102 @@
+#!/bin/sh
+
+###########################################################################
+# Install Binary - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
+# Version 3.2.0 30.10.2018                                                #
+#                                                                         #
+# (C) Copyright Daniel Nashed/NashCom 2005-2018                           #
+# Feedback domino_unix@nashcom.de                                         #
+#                                                                         #
+# Licensed under the Apache License, Version 2.0 (the "License");         #
+# you may not use this file except in compliance with the License.        #
+# You may obtain a copy of the License at                                 #
+#                                                                         #
+#      http://www.apache.org/licenses/LICENSE-2.0                         #
+#                                                                         #
+# Unless required by applicable law or agreed to in writing, software     #
+# distributed under the License is distributed on an "AS IS" BASIS,       #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
+# See the License for the specific language governing permissions and     #
+# limitations under the License.                                          #
+###########################################################################
+
+export LOTUS=/opt/ibm/domino
+export Notes_ExecDirectory=$LOTUS/notes/latest/linux
+
+check_binary_busy()
+{
+  if [ ! -e "$1" ]; then
+    return 0
+  fi
+
+  TARGET_REAL_BIN=`readlink -f $1`
+  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
+
+  if [ -n "$FOUND_TARGETS" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+install_binary()
+{
+  SOURCE_BIN=$1
+
+  if [ -z "$SOURCE_BIN" ]; then
+    echo "no file specified"
+    return 0
+  fi
+
+  INSTALL_BIN_NAME=`basename $SOURCE_BIN`
+
+  if [ -z "$INSTALL_BIN_NAME" ]; then
+    echo "no file specified"
+    return 0
+  fi
+
+  TARGET_BIN=$Notes_ExecDirectory/$INSTALL_BIN_NAME
+
+  if [ -e "$TARGET_BIN" ]; then
+
+    cmp -s "$SOURCE_BIN" "$TARGET_BIN"
+    if [ $? -eq 0 ]; then
+      echo "File did not change -- o update needed for '$TARGET_FILE'"
+      return 0
+    fi
+
+    if [ ! -w "$TARGET_BIN" ]; then
+      echo "Error - Can not update binary '$TARGET_BIN' -- No write permissions"
+      return 1
+    fi
+
+    check_binary_busy "$TARGET_BIN"
+
+    if [ $? -eq 1 ]; then
+      echo "Error - Can not update binary '$TARGET_BIN' -- Binary in use"
+      return 1
+    fi
+  fi
+  
+  cp -f "$SOURCE_BIN" "$TARGET_BIN"
+  chmod 755 "$TARGET_BIN"
+
+  case "$INSTALL_BIN_NAME" in
+    *.so)
+      echo "Installed '$INSTALL_BIN_NAME' Extension-Manager"
+      ;;
+
+    *)
+      cd $LOTUS/bin
+      ln -f -s tools/startup "$INSTALL_BIN_NAME"
+      echo "Installed '$INSTALL_BIN_NAME' Servertask"
+      ;;
+
+  esac
+
+  return 0
+}
+
+install_binary "$1"
+
+exit 0

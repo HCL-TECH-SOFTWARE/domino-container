@@ -48,6 +48,10 @@ RUN yum update -y && \
  	rm -fr /var/cache/yum && \
     $LocalInstallDir/install_domino.sh && \
 	$LocalInstallDir/install_startscript.sh && \
+	header "Installing Domino Start Script" && \
+	cd $LocalInstallDir && \
+	wget -q "$DownloadFrom/start_script.tar" | tar -x && \
+	$INSTALL_DIR/start_script/install_script && \
     rm -rf $LocalInstallDir 
 
 # Expose Ports HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
