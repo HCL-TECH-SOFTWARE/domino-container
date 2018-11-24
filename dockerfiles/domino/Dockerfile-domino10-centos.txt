@@ -30,7 +30,7 @@ LABEL com.ibm.dominodocker.containerversion="10.0.0" \
 ARG DownloadFrom=http://172.17.0.3
 ARG DominoBasePackage=DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar
 ARG DominoResponseFile=domino10_response.dat
-ARG DominoMoveInstallData=/local/templates
+ARG DominoMoveInstallData=
 ARG LocalInstallDir=/tmp/install
 ARG DominoVersion=10.0.0
 ARG DominoUserID=1001
@@ -50,7 +50,7 @@ RUN yum update -y && \
 	$LocalInstallDir/install_startscript.sh && \
 	header "Installing Domino Start Script" && \
 	cd $LocalInstallDir && \
-	wget -q "$DownloadFrom/start_script.tar" | tar -x && \
+	wget -qO "$DownloadFrom/start_script.tar" | tar -x && \
 	$INSTALL_DIR/start_script/install_script && \
     rm -rf $LocalInstallDir 
 

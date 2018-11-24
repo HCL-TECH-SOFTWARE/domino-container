@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 #
 ############################################################################
 # (C) Copyright IBM Corporation 2015, 2018                                 #
@@ -16,20 +16,19 @@
 # limitations under the License.                                           #
 #                                                                          #
 ############################################################################
+#
+# usage:
+# 	./build.sh <parameter>
+#
+# example:
+#	./build.sh domino
+SECONDS=0
+if [ "$1" = "" ] ; then
+    echo "Usage:" 
+    echo "  ./docker-build-image.sh domino"
+else
+    echo "Building IBM Domino Image : " $1
 
-SCRIPT_NAME=$0
-PARAM=$1
-
-usage ()
-{
-  echo
-  echo "Usage: `basename $SCRIPT_NAME` { start | stop | ip | remove | stopremove }"
-
-  return 0
-}
-
-repo_start ()
-{
     # Check if we already have this container in status exited
     STATUS="$(docker inspect --format '{{ .State.Status }}' ibmsoftware)"
     if [[ -z "$STATUS" ]] ; then
@@ -39,65 +38,31 @@ repo_start ()
         echo "Starting existing Docker container: ibmsoftware"
         docker start ibmsoftware
     fi
-    return 0
-}
 
-repo_stopremove ()
-{
-    # Stop and remove SW repository
-    docker stop ibmsoftware
-    docker container rm ibmsoftware
-    return 0
-}
-
-repo_stop ()
-{
-    # Stop SW repository
-    docker stop ibmsoftware
-    return 0
-}
-
-repo_getIP ()
-{
-    # get IP address of repository
-    IP="$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ibmsoftware 2>/dev/null)"
-    if [ -z "$IP" ] ; then
+    # Start local nginx container to host SW Repository 
+    IP="$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ibmsoftware)"
+    if [[ -z "$IP" ]] ; then
         echo "Unable to locate software repository."
-        echo "Build process stopped."
+        echo "Built stopped."
     else
         echo "Hosting IBM Software repository on" HTTP://$IP
+        # build 
+        cd dockerfile/domino
+        docker build -t ibmcom/domino:10.0.0 -f Dockerfile-domino-centos.txt . --build-arg downloadfrom=HTTP://$IP/domino10
+        cd ..
     fi
+fi
+docker stop ibmsoftware
 
-    return 0
-}
-
-echo
-
-case "$PARAM1" in
-	
-  start)
-    repo_start 
-    ;;
-
-  stop)
-    repo_stopremove 
-    ;;
-
-  ip)
-    repo_getIP
-    ;;
-
-  *)
-
-    if [ -z "$PARAM1" ]; then
-      usage 
-    else
-      echo "Invalid command:" [$PARAM1]
-      usage 
-    fi
-    ;;
-
-esac
-
-echo 
-exit 0
+if (( $SECONDS > 3600 )) ; then
+    let "hours=SECONDS/3600"
+    let "minutes=(SECONDS%3600)/60"
+    let "seconds=(SECONDS%3600)%60"
+    echo "Completed in $hours hour(s), $minutes minute(s) and $seconds second(s)" 
+elif (( $SECONDS > 60 )) ; then
+    let "minutes=(SECONDS%3600)/60"
+    let "seconds=(SECONDS%3600)%60"
+    echo "Completed in $minutes minute(s) and $seconds second(s)"
+else
+    echo "Completed in $SECONDS seconds"
+fi
