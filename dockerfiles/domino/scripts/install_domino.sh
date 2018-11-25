@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ############################################################################
 # (C) Copyright IBM Corporation 2015, 2018                                 #
@@ -29,8 +29,59 @@ export NUI_NOTESDIR=$LOTUS
 export PATH=$PATH:/local/notesdata
 export LANG=C
 
+CHECK_SOFTWARE_HASH_FILE=$INSTALL_DIR/software_dir_sha256.txt
+WGET_COMMAND="wget --connect-timeout=20"
 
 # Helper Functions
+
+download_and_check_hash ()
+{
+  DOWNLOAD_FILE=$1
+
+  if [[ "$DOWNLOAD_FILE" =~ ".taz" ]]; then
+    TAR_OPTIONS=xz
+  elif [[ "$DOWNLOAD_FILE" =~ ".tar" ]]; then
+    TAR_OPTIONS=x
+  else
+    TAR_OPTIONS=""
+  fi
+
+  if [ -z "$TAR_OPTIONS" ]; then
+    # download without extracting for none tar files, without hash checking
+    $WGET_COMMAND "$DOWNLOAD_FILE" 2>/dev/null
+
+    if [ "$?" = "0" ]; then
+      echo "Successfully downloaded: [$DOWNLOAD_FILE] "
+      return 0
+    else
+      echo "File [$DOWNLOAD_FILE] not downloaded correctly - terminating installation"
+      exit 1
+    fi
+  else
+    if [ -e $CHECK_SOFTWARE_HASH_FILE ]; then
+      HASH=`$WGET_COMMAND -qO- $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS) | sha256sum -b | cut -d" " -f1`
+      FOUND=`grep $HASH $CHECK_SOFTWARE_HASH_FILE | wc -l`
+
+      if [ "$FOUND" = "1" ]; then
+        echo "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
+        return 0
+      else
+        echo "File [$DOWNLOAD_FILE] not downloaded correctly - terminating installation"
+        exit 1
+      fi
+    else
+      $WGET_COMMAND -qO- $DOWNLOAD_FILE | tar $TAR_OPTIONS 2>/dev/null
+
+      if [ "$?" = "0" ]; then
+        echo "Successfully downloaded & extracted: [$DOWNLOAD_FILE] "
+      else
+        echo "File [$DOWNLOAD_FILE] not downloaded correctly - terminating installation"
+        exit 1
+      fi
+    fi
+  fi
+}
+
 
 print_delim ()
 {
@@ -226,15 +277,26 @@ echo
 echo "Downloading Domino Installation files ..."
 echo
 
-wget -qO- "$DownloadFrom/$DominoBasePackage" | tar -x
+download_and_check_hash $DownloadFrom/$DominoBasePackage
+download_and_check_hash $DownloadFrom/start_script.tar
 
 echo
-echo "Running Domino Silent Install -- this takes a while ..."
+echo "Running Domino Silent Install -- This takes a while ..."
 echo
+
+header "Final Steps & Configuration"
 
 # Run Domino Silent Install
 cd "$INSTALL_DIR/linux64/domino/"
 ./install -silent -options "$INSTALL_DIR/$DominoResponseFile"
+
+# Removing Base Install files
+cd "$INSTALL_DIR"
+remove_directory "$INSTALL_DIR/linux64"
+
+header "Installing Start Script"
+
+$INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
 install_file "$INSTALL_DIR/SetupProfile.pds" "/local/notesdata/SetupProfile.pds" notes notes 644

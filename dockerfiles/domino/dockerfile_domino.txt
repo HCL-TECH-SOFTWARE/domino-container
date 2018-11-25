@@ -14,17 +14,17 @@
 # limitations under the License.                                           #
 #                                                                          #
 ############################################################################
-
+  
 FROM centos:latest
 
 # Headers
 LABEL com.ibm.dominodocker.containerversion="10.0.0" \
-	version="10.0.0" \
-	vendor="IBM Corporation" \
-	description="IBM Domino Server 10.0.0" \
-	com.ibm.dominodocker.release-date="2018-10-10" \
-	com.ibm.dominodocker.version.is-production="" \
-	maintainer="thomas.hampel@de.ibm.com"
+  version="10.0.0" \
+  vendor="IBM Corporation" \
+  description="IBM Domino Server 10.0.0" \
+  com.ibm.dominodocker.release-date="2018-10-10" \
+  com.ibm.dominodocker.version.is-production="" \
+  maintainer="thomas.hampel@de.ibm.com"
 
 # External arguments with a default value
 ARG DownloadFrom=http://172.17.0.3
@@ -32,9 +32,8 @@ ARG DominoBasePackage=DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar
 ARG DominoResponseFile=domino10_response.dat
 ARG DominoMoveInstallData=
 ARG LocalInstallDir=/tmp/install
-ARG DominoVersion=10.0.0
-ARG DominoUserID=1001
-ARG DOMINO_LANG=en_US.UTF-8
+ARG DominoUserID=
+ARG DOMINO_LANG=
 
 # Copy Install Files to container
 COPY scripts $LocalInstallDir
@@ -43,16 +42,11 @@ COPY scripts $LocalInstallDir
 # Update, Install required packages and run separate install script
 
 RUN yum update -y && \
-	yum install -y bc perl which wget nano unzip rsync lsof gdb sysstat file && \
- 	yum clean all >/dev/null && \
- 	rm -fr /var/cache/yum && \
-    $LocalInstallDir/install_domino.sh && \
-	$LocalInstallDir/install_startscript.sh && \
-	header "Installing Domino Start Script" && \
-	cd $LocalInstallDir && \
-	wget -qO "$DownloadFrom/start_script.tar" | tar -x && \
-	$INSTALL_DIR/start_script/install_script && \
-    rm -rf $LocalInstallDir 
+  yum install -y bc perl which wget nano unzip rsync lsof gdb sysstat file && \
+  yum clean all >/dev/null && \
+  rm -fr /var/cache/yum && \
+  $LocalInstallDir/install_domino.sh && \
+  rm -rf $LocalInstallDir 
 
 # Expose Ports HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
 EXPOSE 80 110 143 389 443 636 993 995 63148 63149
