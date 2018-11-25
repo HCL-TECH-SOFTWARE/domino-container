@@ -1,6 +1,32 @@
 ## Introduction
 This article describes the different variables that can be passed to the container when using Docker RUN
 
+- [Introduction](#introduction)
+- [Special](#special)
+    - [Notesini](#notesini)
+- [Environment Variables](#environment-variables)
+    - [isFirstServer](#isfirstserver)
+    - [AdminFirstName](#adminfirstname)
+    - [AdminIDFile](#adminidfile)
+    - [AdminLastName](#adminlastname)
+    - [AdminMiddleName](#adminmiddlename)
+    - [AdminPassword](#adminpassword)
+    - [CountryCode](#countrycode)
+    - [DominoDomainName](#dominodomainname)
+    - [HostName](#hostname)
+    - [OrgUnitIDFile](#orgunitidfile)
+    - [OrgUnitName](#orgunitname)
+    - [OrgUnitPassword](#orgunitpassword)
+    - [OrganizationIDFile](#organizationidfile)
+    - [OrganizationName](#organizationname)
+    - [OrganizationPassword](#organizationpassword)
+    - [OtherDirectoryServerAddress](#otherdirectoryserveraddress)
+    - [OtherDirectoryServerName](#otherdirectoryservername)
+    - [ServerIDFile](#serveridfile)
+    - [ServerName](#servername)
+    - [SystemDatabasePath](#systemdatabasepath)
+    - [ServerPassword](#serverpassword)
+
 ## Special
 ### Notesini
 A list of Notes.ini variables and values that will be added to the Notes.ini file directly before the first server startup.

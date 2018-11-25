@@ -18,17 +18,18 @@
 ############################################################################
 #
 # usage:
-# 	./build.sh <parameter>
+# 	./build-image.sh <parameter>
 #
 # example:
-#	./build.sh domino
+#	./build-image.sh domino
+#
+
 SECONDS=0
+
 if [ "$1" = "" ] ; then
     echo "Usage:" 
-    echo "  ./docker-build-image.sh domino"
+    echo "  ./build-image.sh domino"
 else
-    echo "Building IBM Domino Image : " $1
-
     # Check if we already have this container in status exited
     STATUS="$(docker inspect --format '{{ .State.Status }}' ibmsoftware)"
     if [[ -z "$STATUS" ]] ; then
@@ -38,6 +39,7 @@ else
         echo "Starting existing Docker container: ibmsoftware"
         docker start ibmsoftware
     fi
+    echo "Building IBM Domino Image : " $1
 
     # Start local nginx container to host SW Repository 
     IP="$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ibmsoftware)"
@@ -47,22 +49,26 @@ else
     else
         echo "Hosting IBM Software repository on" HTTP://$IP
         # build 
-        cd dockerfile/domino
-        docker build -t ibmcom/domino:10.0.0 -f Dockerfile-domino-centos.txt . --build-arg downloadfrom=HTTP://$IP/domino10
+        cd dockerfiles/domino
+        ./build.sh HTTP://$IP/domino10
+        cd ..
         cd ..
     fi
-fi
-docker stop ibmsoftware
 
-if (( $SECONDS > 3600 )) ; then
-    let "hours=SECONDS/3600"
-    let "minutes=(SECONDS%3600)/60"
-    let "seconds=(SECONDS%3600)%60"
-    echo "Completed in $hours hour(s), $minutes minute(s) and $seconds second(s)" 
-elif (( $SECONDS > 60 )) ; then
-    let "minutes=(SECONDS%3600)/60"
-    let "seconds=(SECONDS%3600)%60"
-    echo "Completed in $minutes minute(s) and $seconds second(s)"
-else
-    echo "Completed in $SECONDS seconds"
+    echo "Removing temporary container: ibmsoftware"
+    docker stop ibmsoftware
+    docker container rm ibmsoftware
+
+    if (( $SECONDS > 3600 )) ; then
+      let "hours=SECONDS/3600"
+      let "minutes=(SECONDS%3600)/60"
+      let "seconds=(SECONDS%3600)%60"
+      echo "Completed in $hours hour(s), $minutes minute(s) and $seconds second(s)" 
+    elif (( $SECONDS > 60 )) ; then
+      let "minutes=(SECONDS%3600)/60"
+      let "seconds=(SECONDS%3600)%60"
+      echo "Completed in $minutes minute(s) and $seconds second(s)"
+    else
+      echo "Completed in $SECONDS seconds"
+    fi
 fi
