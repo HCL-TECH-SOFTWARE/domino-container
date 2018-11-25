@@ -1,5 +1,3 @@
-## Introduction
-This article describes the different variables that can be passed to the container when using Docker RUN
 
 - [Introduction](#introduction)
 - [Special](#special)
@@ -26,6 +24,9 @@ This article describes the different variables that can be passed to the contain
     - [ServerName](#servername)
     - [SystemDatabasePath](#systemdatabasepath)
     - [ServerPassword](#serverpassword)
+
+## Introduction
+This article describes the different variables that can be passed to the container when using Docker RUN
 
 ## Special
 ### Notesini

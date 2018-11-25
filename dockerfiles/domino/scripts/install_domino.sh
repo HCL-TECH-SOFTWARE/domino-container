@@ -226,7 +226,7 @@ echo
 echo "Downloading Domino Installation files ..."
 echo
 
-wget -qO "$DownloadFrom/$DominoBasePackage" | tar -x
+wget -qO- "$DownloadFrom/$DominoBasePackage" | tar -x
 
 echo
 echo "Running Domino Silent Install -- this takes a while ..."

@@ -30,7 +30,7 @@ docker run -it -e "ServerName=Server1" \
     -p 1352:1352 \
     -v dominodata_demo1:/local/notesdata \
     --name server1 \
-    ibmcom/domino10
+    ibmcom/domino:10.0.0
 ```
 ## Runtime configuration
 
