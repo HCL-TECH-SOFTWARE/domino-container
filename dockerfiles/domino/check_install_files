@@ -38,6 +38,8 @@ calc_hashes ()
 
   cd $SOFTWARE_DIR
   sha256sum -b *.tar >> $FULLHASHFILE 2>/dev/null
+  cd domino10
+  sha256sum -b *.tar >> $FULLHASHFILE 2>/dev/null
   sha256sum -b *.taz >> $FULLHASHFILE 2>/dev/null
 
   if [ -e "$FULLHASHFILE" ]; then

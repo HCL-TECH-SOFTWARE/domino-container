@@ -18,11 +18,11 @@
 FROM centos:latest
 
 # Headers
-LABEL com.ibm.dominodocker.containerversion="10.0.0" \
-  version="10.0.0" \
+LABEL com.ibm.dominodocker.containerversion="10.0.1" \
+  version="10.0.1" \
   vendor="IBM Corporation" \
-  description="IBM Domino Server 10.0.0" \
-  com.ibm.dominodocker.release-date="2018-10-10" \
+  description="IBM Domino Server 10.0.1" \
+  com.ibm.dominodocker.release-date="2019-01-01" \
   com.ibm.dominodocker.version.is-production="" \
   maintainer="thomas.hampel@de.ibm.com"
 

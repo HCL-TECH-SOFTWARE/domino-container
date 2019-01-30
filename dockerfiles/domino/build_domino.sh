@@ -24,9 +24,10 @@ SCRIPT_NAME=$0
 DOWNLOAD_FROM=$1
 
 DOCKER_IMAGE_NAME=ibmcom/domino
-DOCKER_IMAGE_VERSION=10.0.0
+DOCKER_IMAGE_VERSION=10.0.1
 DOCKER_FILE=dockerfile_domino.txt
-DominoBasePackage=domino10/DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar
+#DominoBasePackage=domino10/DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar
+DominoBasePackage=domino10/DOM_SVR_V10.0.1_64_BIT_Lnx.tar
 
 usage ()
 {

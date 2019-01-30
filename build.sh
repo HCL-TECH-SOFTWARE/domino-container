@@ -28,7 +28,7 @@ TARGET_IMAGE=$1
 #DOWNLOAD_FROM=http://192.168.1.1
 
 # With NGINX container you could chose your own local directory or use the default "software" directory
-#SOFTWARE_DIR=/local/software
+SOFTWARE_DIR=/local/software
 
 usage ()
 {
