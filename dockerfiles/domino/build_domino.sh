@@ -56,9 +56,8 @@ docker_build ()
 
   popd
   echo
-
-  echo "Completed in" `date -d@$SECONDS -u +%T`
-  echo
+  # echo "Completed in" `date -d@$SECONDS -u +%T`
+  # echo
   return 0
 }
 

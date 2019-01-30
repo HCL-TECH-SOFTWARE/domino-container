@@ -27,8 +27,8 @@ TARGET_IMAGE=$1
 # By default NGINX is used
 #DOWNLOAD_FROM=http://192.168.1.1
 
-# With NGINX container you could chose your own local directory or use the default "software" directory
-SOFTWARE_DIR=/local/software
+# With NGINX container you could chose your own local directory or if variable is empty use the default "software" subdirectory 
+# SOFTWARE_DIR=/local/software
 
 usage ()
 {
@@ -46,7 +46,7 @@ usage ()
 #DOWNLOAD_FROM=http://192.168.1.1
 
 # Or use a local software image hosted via NGINX temporary image.
-#SOFTWARE_DIR=/local/software
+# SOFTWARE_DIR=/local/software
 
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
 SOFTWARE_PORT=7777
@@ -56,7 +56,7 @@ if [ -z "$DOWNLOAD_FROM" ]; then
   SOFTWARE_USE_NGINX=1
   
   if [ -z "$SOFTWARE_DIR" ]; then
-    SOFTWARE_DIR=$SCRIPT_DIR/software
+    SOFTWARE_DIR=$PWD/software
   fi
 fi
   
@@ -96,6 +96,21 @@ nginx_stop ()
   echo
 }
 
+print_runtime()
+{
+  hours=$((SECONDS / 3600))
+  seconds=$((SECONDS % 3600))
+  minutes=$((seconds / 60))
+  seconds=$((seconds % 60))
+  h=""; m=""; s=""
+  if [ ! $hours = "1" ] ; then h="s"; fi
+  if [ ! $minutes = "1" ] ; then m="s"; fi
+  if [ ! $seconds = "1" ] ; then s="s"; fi
+  if [ ! $hours = 0 ] ; then echo "Completed in $hours hour$h, $minutes minute$m and $seconds second$s"
+  elif [ ! $minutes = 0 ] ; then echo "Completed in $minutes minute$m and $seconds second$s"
+  else echo "Completed in $seconds second$s"; fi
+}
+
 echo
 
 if [ "$TARGET_IMAGE" = "" ]; then
@@ -121,9 +136,7 @@ if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
   nginx_stop
 fi
 
-echo
-echo "Total elapsed time: " `date -d@$SECONDS -u +%T`
-echo
+print_runtime
 
 exit 0
 
