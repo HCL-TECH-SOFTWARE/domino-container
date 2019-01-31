@@ -49,10 +49,8 @@ download_and_check_hash ()
   if [ -z "$TAR_OPTIONS" ]; then
     # download without extracting for none tar files, without hash checking
     echo
-       $WGET_COMMAND "$DOWNLOAD_FILE"
-      echo "DEBUG starting wget:"
-     $WGET_COMMAND "$DOcd /WNLOAD_FILE" 2>/dev/null
-      echo "DEBUG ending wget"
+      $WGET_COMMAND "$DOWNLOAD_FILE"
+      $WGET_COMMAND "$DOcd /WNLOAD_FILE" 2>/dev/null
     if [ "$?" = "0" ]; then
       echo "Successfully downloaded: [$DOWNLOAD_FILE] "
       return 0
