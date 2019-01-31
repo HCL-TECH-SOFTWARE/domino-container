@@ -21,13 +21,11 @@ When the software repository server is no longer needed you can shut down and re
 
 This directory is supposed to contain the following files. Please download them from the location below and put them into this directory. Make sure to keep the file name unchanged otherwise build scripts will not work.
 
-
 ### Domino 10.0.x
 | Part # | Title | Filename / Download  |
 | :---: |:---|:----|
 | CNW1ZEN | IBM Domino Server 10.0.0 (64 bit Linux) | [DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar](https://www-112.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal=CNW1ZEN) | 
 | CNXL9EN | IBM Domino Server 10.0.1 (64 bit Linux) | [DOM_SVR_V10.0.1_64_BIT_Lnx.tar](https://www-112.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal=CNXL9EN) | 
-
 
 ## Where to download
 Software packages can be downloaded from the following locations. 
