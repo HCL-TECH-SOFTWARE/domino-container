@@ -23,9 +23,9 @@
 SCRIPT_NAME=$0
 TARGET_IMAGE=$1
 
-# Configure your own software share instead of launching a local repository via NGINX.
-# By default NGINX is used
-#DOWNLOAD_FROM=http://192.168.1.1
+# (Default) NIGX is used hosting software from the local "software" directory.
+# (Optional) Configure software download location.
+# DOWNLOAD_FROM=http://192.168.1.1
 
 # With NGINX container you could chose your own local directory or if variable is empty use the default "software" subdirectory 
 # SOFTWARE_DIR=/local/software
@@ -38,15 +38,6 @@ usage ()
 
   return 0
 }
-
-# (Default) NIGX is used hosting software from the local "software" directory.
-# (Optional) Configure software download location.
-
-# You can either use your own software repository remotely.
-#DOWNLOAD_FROM=http://192.168.1.1
-
-# Or use a local software image hosted via NGINX temporary image.
-# SOFTWARE_DIR=/local/software
 
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
 SOFTWARE_PORT=7777
