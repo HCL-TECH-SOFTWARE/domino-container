@@ -1,0 +1,24 @@
+
+FROM ibmcom/domino:10.0.1
+
+# Headers
+LABEL  description="IBM Domino Server 10 for IBM Think 2019" \
+  vendor="IBM" \
+  maintainer="Thomas Hampel <thomas.hampel@de.ibm.com>" \
+  release-date="2019-01-31" 
+
+ARG DownloadFrom=
+
+COPY install_dir /tmp/install_dir
+
+RUN  yum update -y && \
+  yum clean all >/dev/null && \
+  rm -fr /var/cache/yum && \
+  /tmp/install_dir/install.sh && \
+  rm -rf /tmp/install_dir
+
+# Expose Ports HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
+
+EXPOSE 80 110 143 389 443 636 993 995 63148 63149 
+
+ENTRYPOINT ["/domino_docker_entrypoint.sh"]
