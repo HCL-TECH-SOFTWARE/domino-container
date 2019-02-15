@@ -49,7 +49,10 @@ Example:
 For issues relating specifically to the Dockerfiles and scripts, please use the [GitHub issue tracker](https://github.com/IBM/domino-docker/issues)
 
 ## Contributing
-We welcome contributions following [our guidelines](https://github.com/IBM/domino-docker/blob/master/CONTRIBUTING.md).
+We welcome contributions following [our guidelines](https://github.com/IBM/domino-docker/blob/master/.github/CONTRIBUTING.md).
+
+## Code of Conduct
+See [Code of Conduct](https://github.com/IBM/domino-docker/blob/master/.github/CODE_OF_CONDUCT.md).
 
 ## Community Support
 Special Thanks go to the following people for having provided valuable input to this project
