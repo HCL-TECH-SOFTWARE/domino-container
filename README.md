@@ -10,7 +10,9 @@ to be documented
 When a new container is created from the IBM Domino Docker image, it takes [environment variables](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md)
 
 * Domino Data directory needs to be a persistant volume.
-
+## Docker for Windows
+Before attempting to create an image, ensure that you are sharing the appropriate drive in the Docker for Windows settings:
+![Windows drive settings](documentation/images/docker-windows-shared-drives.png)
 ### Manually creating a new container from an image
 First create a new/empty persistant volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
 
@@ -32,6 +34,7 @@ docker run -it -e "ServerName=Server1" \
     --name server1 \
     ibmcom/domino:10.0.0
 ```
+For Docker for Windows edit the file run_windows.cmd and run this from the command line
 ## Runtime configuration
 
 During ```docker run``` you can setup a volume that mounts property files into /local/notesdata
