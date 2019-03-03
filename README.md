@@ -1,7 +1,7 @@
 # Domino Docker 
-This project contains build scripts for Docker images (Dockerfiles) and Docker related utilities for IBM Domino. There are separate folders within this repository that contain build scripts for IBM sThis repository provides the to build an IBM Domino Server with latest fixes.
+This project contains build scripts for Docker images (Dockerfiles) and Docker related utilities for IBM Domino. There are separate folders within this repository that contain build scripts for IBM. This repository provides the to build an IBM Domino Server with latest fixes.
 
-Main idea is to download and apply all required fixes/patches/updates from a software respository server instead of adding the source installation files to the image directly. For this reason this repo will start a temporary local nginx server at build time to act as a [software repository server](https://github.com/IBM/domino-docker/tree/master/software).
+Main idea is to download and apply all required fixes/patches/updates from a software repository server instead of adding the source installation files to the image directly. For this reason this repo will start a temporary local nginx server at build time to act as a [software repository server](https://github.com/IBM/domino-docker/tree/master/software).
 
 ## How to build the image(s)
 to be documented
@@ -34,7 +34,7 @@ docker run -it -e "ServerName=Server1" \
 ```
 ## Runtime configuration
 
-During ```docker run``` you can setup a volume that mounts property files into /local/notesdata
+During ```docker run``` you can setup a volume that mounts property files into `/local/notesdata`
 
 ### Stopping the Application Server gracefully
 Stopping a Domino server takes longer than the time a Docker server would expect by default, so it is recommended to specify the timeout parameter when stopping a container.
