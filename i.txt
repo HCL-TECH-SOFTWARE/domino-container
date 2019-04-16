@@ -1,0 +1,136 @@
+[
+    {
+        "Id": "sha256:7a68b086c2045bfaa65d1d706bb1e3e8f7b8f319c5cb14152b3ac2815ee7c217",
+        "RepoTags": [
+            "ibmcom/domino:10.0.1FP1"
+        ],
+        "RepoDigests": [],
+        "Parent": "sha256:992613957f5d5a535fa8551b44cc6e71b727337815fed5d53c4de7a0a7c0533e",
+        "Comment": "",
+        "Created": "2019-04-16T16:37:36.762476011Z",
+        "Container": "d19fa2e5409cd2914ceebbb9dc4e158f45483de36c8c5ee5c83ea168a7f34981",
+        "ContainerConfig": {
+            "Hostname": "d19fa2e5409c",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "ExposedPorts": {
+                "110/tcp": {},
+                "143/tcp": {},
+                "389/tcp": {},
+                "443/tcp": {},
+                "63148/tcp": {},
+                "63149/tcp": {},
+                "636/tcp": {},
+                "80/tcp": {},
+                "993/tcp": {},
+                "995/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Cmd": [
+                "/bin/sh",
+                "-c",
+                "#(nop) ",
+                "LABEL DominoDocker.version=10.0.1FP1"
+            ],
+            "ArgsEscaped": true,
+            "Image": "sha256:992613957f5d5a535fa8551b44cc6e71b727337815fed5d53c4de7a0a7c0533e",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": [
+                "/domino_docker_entrypoint.sh"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "DominoDocker.buildtime": "16.04.2019 18:32:58",
+                "DominoDocker.description": "IBM Domino Enterprise Server",
+                "DominoDocker.maintainer": "thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de",
+                "DominoDocker.version": "10.0.1FP1",
+                "org.label-schema.build-date": "20190305",
+                "org.label-schema.license": "GPLv2",
+                "org.label-schema.name": "CentOS Base Image",
+                "org.label-schema.schema-version": "1.0",
+                "org.label-schema.vendor": "CentOS"
+            }
+        },
+        "DockerVersion": "18.09.0",
+        "Author": "",
+        "Config": {
+            "Hostname": "",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "ExposedPorts": {
+                "110/tcp": {},
+                "143/tcp": {},
+                "389/tcp": {},
+                "443/tcp": {},
+                "63148/tcp": {},
+                "63149/tcp": {},
+                "636/tcp": {},
+                "80/tcp": {},
+                "993/tcp": {},
+                "995/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Cmd": null,
+            "ArgsEscaped": true,
+            "Image": "sha256:992613957f5d5a535fa8551b44cc6e71b727337815fed5d53c4de7a0a7c0533e",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": [
+                "/domino_docker_entrypoint.sh"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "DominoDocker.buildtime": "16.04.2019 18:32:58",
+                "DominoDocker.description": "IBM Domino Enterprise Server",
+                "DominoDocker.maintainer": "thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de",
+                "DominoDocker.version": "10.0.1FP1",
+                "org.label-schema.build-date": "20190305",
+                "org.label-schema.license": "GPLv2",
+                "org.label-schema.name": "CentOS Base Image",
+                "org.label-schema.schema-version": "1.0",
+                "org.label-schema.vendor": "CentOS"
+            }
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 2531527307,
+        "VirtualSize": 2531527307,
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/9ca6d0017d7c1cdd42bee4582222373b2eb64ca1c7a0dd35790a0001645c967e/diff:/var/lib/docker/overlay2/3dbab6f215a302d7d9bc6b0e874a655640522af9fa181f6843aedad00bb80c24/diff",
+                "MergedDir": "/var/lib/docker/overlay2/84c725951a42fec35e294eaada241a9f726618fe24e1576d3e2114176a6a62aa/merged",
+                "UpperDir": "/var/lib/docker/overlay2/84c725951a42fec35e294eaada241a9f726618fe24e1576d3e2114176a6a62aa/diff",
+                "WorkDir": "/var/lib/docker/overlay2/84c725951a42fec35e294eaada241a9f726618fe24e1576d3e2114176a6a62aa/work"
+            },
+            "Name": "overlay2"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:d69483a6face4499acb974449d1303591fcbb5cdce5420f36f8a6607bda11854",
+                "sha256:c9d13ca1680c1e7836a6c4f4773ed22a16882e7622f4daad1731dbe6d2411bcf",
+                "sha256:22eb9c3dfe2cbb0a07a1c20088c97b8469374651cb33fe2061520c188707cfc0"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2019-04-16T18:37:36.776320904+02:00"
+        }
+    }
+]

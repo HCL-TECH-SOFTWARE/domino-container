@@ -1,5 +1,5 @@
 ############################################################################
-# (C) Copyright IBM Corporation 2015, 2018                                 #
+# (C) Copyright IBM Corporation 2015, 2019                                 #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -18,17 +18,14 @@
 FROM centos:latest
 
 # Headers
-LABEL com.ibm.dominodocker.containerversion="10.0.1" \
-  version="10.0.1" \
-  vendor="IBM Corporation" \
-  description="IBM Domino Server 10.0.1" \
-  com.ibm.dominodocker.release-date="2019-01-01" \
-  com.ibm.dominodocker.version.is-production="" \
-  maintainer="thomas.hampel@de.ibm.com"
+LABEL DominoDocker.maintainer="thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de"
 
 # External arguments with a default value
 ARG DownloadFrom=http://172.17.0.3
-ARG DominoBasePackage=DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar
+ARG PROD_NAME=
+ARG PROD_VER=
+ARG PROD_FP=
+ARG PROD_HF=
 ARG DominoResponseFile=domino10_response.dat
 ARG DominoMoveInstallData=
 ARG LocalInstallDir=/tmp/install
