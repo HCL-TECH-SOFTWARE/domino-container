@@ -1,0 +1,10 @@
+domino|10.0.1|DOM_SVR_V10.0.1_64_BIT_Lnx.tar|CNXL9EN|57a19f56da492740d50457bcb3eec6f2b5410e8e122608c19e1886cf3fb36515
+domino|10.0.1FP1|domino10001FP1_linux64.tar|CNZ9IEN|6f6209bd14814001d52cc3b0af734a3ead119e9f4e97341bf2ebaa3505550aa8
+startscript|3.2.1|start_script_321.tar|-|ff4dbc26a241791cd8e31af2737b40abe83f285ecdfb63fda6a1215acde69f5c
+startscript|-|start_script.tar|-|54ece4e9a5f2f3ac5e32ea333db88886b727b22e3f1ea003bc393d0e46a9c04e
+domino|10.0.1FP1HF123|100HF6-linux64.tar|-|83d9fa2357102d17e29b6b9e5f21203471656a66aecf0fb8d5396963568af8eb
+domino|10.0.1FP1IF1|100HF6-linux64.tar|-|83d9fa2357102d17e29b6b9e5f21203471656a66aecf0fb8d5396963568af8eb
+domino-ce|10.0.1|IBMDominoCommunityServerforNonProduction10.0.1Linux.tar|CNXK1EN|9287a194e1068b86b688536f8de6f3e6ffa7962d3da806b24a2e9e500ea5aa49
+domino-ce|10.0.1FP1|FP1_IBMDominoCommunityServerforNon-Production10.0.1_FeaturePack1_Linux.tar|-|f8b197e0507753abb81c01fc8bfef597e001c56a98c8de4eb89012a12d827549
+traveler|10.0.1.1|TRAVELER_V10.0.1_FP1_FOR_LINUX_ML.tar.gz|CNZ9LML|0849f295816d40799ee31a9fc29fb4131db5ce4fa869078450e7a571661aae2a
+
