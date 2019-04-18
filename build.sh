@@ -38,7 +38,7 @@ TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { domino }"
+  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce }"
   echo
 
   return 0
@@ -101,7 +101,7 @@ SOFTWARE_CONTAINER=ibmsoftware
 
 # In case software directory is not set and the well know location is filled with software
 if [ -z "$SOFTWARE_DIR" ]; then
-  if [ -e /local/software/software.txt ]; then
+  if [ -x /local/software/software.txt ]; then
     SOFTWARE_DIR=/local/software
   fi
 fi

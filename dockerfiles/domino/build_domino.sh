@@ -117,12 +117,12 @@ docker_build ()
       DOCKER_DESCRIPTION="IBM Domino Enterprise Server"
       ;;
 
-    domino_ce)
+    domino-ce)
       DOCKER_DESCRIPTION="IBM Domino Community Edition Server"
       ;;
 
     *)
-      error "Unknown product [$PROD_NAME] - Terminating installation"
+      echo "Unknown product [$PROD_NAME] - Terminating installation"
       exit 1
       ;;
   esac
