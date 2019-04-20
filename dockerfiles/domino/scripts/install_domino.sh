@@ -695,6 +695,11 @@ install_file "$INSTALL_DIR/docker_prestart.sh" "/docker_prestart.sh" notes notes
 install_file "$INSTALL_DIR/rc_domino_config" "/local/notesdata/rc_domino_config" notes notes 644 
 install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/local/notesdata/domino_docker_entrypoint.sh" notes notes 770
 
+
+# Install health check script
+
+install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
+
 # Copy tools required for automating Domino Server configuration
 install_file "$INSTALL_DIR/DatabaseSigner.jar" "/local/notesdata/DatabaseSigner.jar" notes notes 644
 
@@ -709,7 +714,19 @@ fi
 
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
 
+# Remove Fixpack Data Backup and Download Files
+
+find $Notes_ExecDirectory -maxdepth 1 -type d -name "*_bck" -exec rm -rf {} \;
+find /local/notesdata/domino/html -name "*.dll" -exec rm -rf {} \;
+find /local/notesdata/domino/html -name "*.msi" -exec rm -rf {} \;
+rm -rf /local/notesdata/domino/html/download/filesets
+
+# Remove uninstaller --> we never uninstall but rebuild
+
+rm -rf $Notes_ExecDirectory/_uninst
+
 # Create missing links
+
 cd /opt/ibm/domino/bin/
 ln -f -s tools/startup kyrtool
 ln -f -s tools/startup dbmt
