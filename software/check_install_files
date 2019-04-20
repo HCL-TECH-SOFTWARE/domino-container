@@ -3,13 +3,14 @@
 SCRIPT_NAME=$0
 PARAM1=$1
 
+SOFTWARE_DIR=/local/software
+HASHFILE=/local/software/software_dir_sha256.txt
+SOFTWARE_FILE=/local/software/software.txt
+
 # need full path because of cd later in script logic
-HASHFILE=install_dir/software_dir_sha256.txt
-SOFTWARE_FILE=install_dir/software.txt
 FULL_SCRIPT_NAME=`realpath $0`
 FULLHASHFILE=`realpath $HASHFILE`
 FULL_SOFTWARE_FILE=`realpath $SOFTWARE_FILE`
-SOFTWARE_DIR=/local/software
 
 usage ()
 {

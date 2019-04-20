@@ -424,9 +424,6 @@ install_domino ()
   echo "Downloading Domino Installation files ..."
   echo
   
-  # download start script
-  download_and_check_hash $DownloadFrom/start_script.tar
-  
   if [ ! -z "$INST_VER" ]; then
     get_download_name $PROD_NAME $INST_VER
     download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME domino_server
@@ -681,6 +678,11 @@ remove_directory "$INSTALL_DIR/linux64"
 
 header "Installing Start Script"
 
+# extracting start script files
+cd $INSTALL_DIR
+tar -xf start_script.tar
+
+# run start script installer
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
@@ -734,6 +736,9 @@ install_res_links
 
 # Remove tunekernel. It is causing error messages because of Docker virtualization
 rm -f /opt/ibm/domino/notes/latest/linux/tunekrnl
+
+# Prepare data directory
+su - notes -c $INSTALL_DIR/domino_install_data_prep.sh
 
 # remove_directory "$INSTALL_DIR"
 
