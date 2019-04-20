@@ -45,6 +45,8 @@ RUN yum update -y && \
   $LocalInstallDir/install_domino.sh && \
   rm -rf $LocalInstallDir 
 
+HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
+
 # Expose Ports HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
 EXPOSE 80 110 143 389 443 636 993 995 63148 63149
 
