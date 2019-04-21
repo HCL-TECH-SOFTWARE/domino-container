@@ -403,6 +403,43 @@ install_res_links ()
   return 0
 }
 
+get_domino_version ()
+{
+  LOTUS=/opt/ibm/domino
+  DOMINO_INSTALL_DAT=$LOTUS/.install.dat
+
+  if [ -e $DOMINO_INSTALL_DAT ]; then
+
+    find_str=`tail "$DOMINO_INSTALL_DAT" | grep "rev = " | awk -F " = " '{print $2}' | tr -d '"'`
+
+    if [ ! -z "$find_str" ]; then
+      DOMINO_VERSION=$find_str
+
+      if [ "$DOMINO_VERSION" = "10000000" ]; then
+        DOMINO_VERSION=1000
+      fi
+
+      if [ "$DOMINO_VERSION" = "90010" ]; then
+        DOMINO_VERSION=901
+      fi
+
+    else
+      DOMINO_VERSION="UNKNOWN"
+    fi
+  else
+    DOMINO_VERSION="NONE"
+  fi
+
+  return 0
+}
+
+set_domino_version ()
+{
+  get_domino_version
+  echo $DOMINO_VERSION > /local/domino_$1.txt
+  echo $DOMINO_VERSION > /local/notesdata/domino_$1.txt
+}
+
 
 install_domino ()
 {
@@ -465,8 +502,6 @@ install_domino ()
 
     ./install -silent -options "$INSTALL_DIR/$DominoResponseFile"
 
-    echo $INST_VER >/local/notesdata/data_version.txt
-
     mv "$Notes_ExecDirectory/DominoInstall.log" "$INST_DOM_LOG"
 
     check_file_str "$INST_DOM_LOG" "$DOM_STRING_OK"
@@ -474,6 +509,9 @@ install_domino ()
     if [ "$?" = "1" ]; then
       echo
       log_ok "Domino installed successfully"
+
+      # Store Domino Version Information
+      set_domino_version ver
 
     else
       print_delim
@@ -508,6 +546,10 @@ install_domino ()
     if [ "$?" = "1" ]; then
     	echo
       log_ok "Fixpack installed successfully"
+
+      # Store Domino Fixpack Information
+      set_domino_version fp
+
     else
 
       echo
@@ -541,6 +583,10 @@ install_domino ()
     if [ "$?" = "1" ]; then
       echo
       log_ok "InterimsFix/HotFix installed successfully"
+
+      # Store Domino Interimsfix/Hotfix Information
+      set_domino_version hf
+
     else
 
       echo
@@ -695,8 +741,12 @@ install_file "$INSTALL_DIR/docker_prestart.sh" "/docker_prestart.sh" notes notes
 
 # Copy Docker specific start script configuration if provided
 install_file "$INSTALL_DIR/rc_domino_config" "/local/notesdata/rc_domino_config" notes notes 644 
-install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/local/notesdata/domino_docker_entrypoint.sh" notes notes 770
+install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/domino_docker_entrypoint.sh" notes notes 755
 
+
+# Install Data Directory Copy File 
+
+install_file "$INSTALL_DIR/domino_install_data_copy.sh" "/domino_install_data_copy.sh" root root 755
 
 # Install health check script
 
@@ -718,7 +768,8 @@ find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
 
 # Remove Fixpack Data Backup and Download Files
 
-find $Notes_ExecDirectory -maxdepth 1 -type d -name "*_bck" -exec rm -rf {} \;
+# find $Notes_ExecDirectory -maxdepth 1 -type d -name "*_bck" -exec rm -rf {} \;
+
 find /local/notesdata/domino/html -name "*.dll" -exec rm -rf {} \;
 find /local/notesdata/domino/html -name "*.msi" -exec rm -rf {} \;
 
