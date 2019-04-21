@@ -721,12 +721,13 @@ find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "*_bck" -exec rm -rf {} \;
 find /local/notesdata/domino/html -name "*.dll" -exec rm -rf {} \;
 find /local/notesdata/domino/html -name "*.msi" -exec rm -rf {} \;
+
 rm -rf /local/notesdata/domino/html/download/filesets
+rm -rf /local/notesdata/domino/html/help
 
 # Remove uninstaller --> we never uninstall but rebuild
 
 rm -rf $Notes_ExecDirectory/_uninst
-
 # Create missing links
 
 cd /opt/ibm/domino/bin/

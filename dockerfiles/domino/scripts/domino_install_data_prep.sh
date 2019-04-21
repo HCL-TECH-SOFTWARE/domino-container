@@ -31,6 +31,6 @@ rm notes.ini
 mv notes.ini.orig notes.ini
 
 
-echo --> Compact done!
+echo Compact done.
 echo
 

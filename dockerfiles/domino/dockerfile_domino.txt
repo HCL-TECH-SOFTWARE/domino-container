@@ -40,9 +40,9 @@ COPY scripts $LocalInstallDir
 
 RUN yum update -y && \
   yum install -y bc perl which wget nano unzip rsync lsof gdb sysstat file && \
+  $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
-  $LocalInstallDir/install_domino.sh && \
   rm -rf $LocalInstallDir 
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
