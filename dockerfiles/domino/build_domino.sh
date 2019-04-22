@@ -19,6 +19,7 @@
 # Domino Docker Build Script
 # Usage  : ./build.sh <URL for download repository>
 # Example: ./build-image.sh http://192.168.1.1
+
 # ---------------------------------------------------
 # Optional Parameters in the following order
 # ---------------------------------------------------
@@ -26,6 +27,7 @@
 # Product Fixpack
 # Product InterimsFix
 # (use "" for no Fixpack)
+# ---------------------------------------------------
 
 SCRIPT_NAME=$0
 DOWNLOAD_FROM=$1
@@ -95,7 +97,6 @@ print_runtime()
   else echo "Completed in $seconds second$s"; fi
 }
 
-
 docker_build ()
 {
   echo "Building Image : " $IMAGENAME
@@ -111,8 +112,7 @@ docker_build ()
   # Get Build Time  
   BUILDTIME=`date +"%d.%m.%Y %H:%M:%S"`
 
-
-	case "$PROD_NAME" in
+  case "$PROD_NAME" in
     domino)
       DOCKER_DESCRIPTION="IBM Domino Enterprise Server"
       ;;
@@ -126,7 +126,6 @@ docker_build ()
       exit 1
       ;;
   esac
-
   
   # Get build arguments
   DOCKER_IMAGE=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_VERSION
@@ -153,10 +152,11 @@ docker_build ()
 }
 
 if [ -z "$DOWNLOAD_FROM" ]; then
-	echo
-	echo "No download location specified!"
-	echo
-	usage
+  echo
+  echo "No download location specified!"
+  echo
+
+  usage
   exit 0
 fi
 

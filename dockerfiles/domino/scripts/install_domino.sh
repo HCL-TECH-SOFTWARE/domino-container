@@ -165,7 +165,6 @@ download_file_ifpresent ()
   fi
 }
 
-
 download_and_check_hash ()
 {
   DOWNLOAD_FILE=$1
@@ -267,8 +266,6 @@ check_binary_busy()
   fi
 }
 
-
-
 check_file_busy()
 {
   if [ ! -e "$1" ]; then
@@ -364,9 +361,15 @@ create_directory ()
 
 remove_directory ()
 {
-  if [ ! -z "$1" ]; then
-    rm -rf "$1"
+  if [ -z "$1" ]; then
+    return 1
   fi
+
+  if [ ! -e "$1" ]; then
+    return 2
+  fi
+
+  rm -rf "$1"
 
   if [ -e "$1" ]; then
   	echo " --- directory not completely deleted! ---"
@@ -374,6 +377,20 @@ remove_directory ()
   	echo " --- directory not completely deleted! ---"
   fi
   
+  return 0
+}
+
+remove_file ()
+{
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 2
+  fi
+  
+  rm -rf "$1"
   return 0
 }
 
@@ -403,9 +420,24 @@ install_res_links ()
   return 0
 }
 
+create_startup_link ()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi
+  
+  cd $LOTUS/bin
+  
+  if [ ! -e "$" ]; then
+    ln -f -s tools/startup "$1"
+    echo "installed startup link for [$1]"
+  fi
+
+  return 0
+}
+
 get_domino_version ()
 {
-  LOTUS=/opt/ibm/domino
   DOMINO_INSTALL_DAT=$LOTUS/.install.dat
 
   if [ -e $DOMINO_INSTALL_DAT ]; then
@@ -416,7 +448,7 @@ get_domino_version ()
       DOMINO_VERSION=$find_str
 
       if [ "$DOMINO_VERSION" = "10000000" ]; then
-        DOMINO_VERSION=1000
+        DOMINO_VERSION=1001
       fi
 
       if [ "$DOMINO_VERSION" = "90010" ]; then
@@ -440,23 +472,57 @@ set_domino_version ()
   echo $DOMINO_VERSION > /local/notesdata/domino_$1.txt
 }
 
+check_installed_version ()
+{
+  VersionFile=/local/domino_$1.txt
+  
+  if [ ! -r $VersionFile ]; then
+    return 0
+  fi
+
+ CHECK_VERSION=`cat $VersionFile`
+ INSTALL_VERSION=`echo $2 | tr -d '.'`
+ 
+ if [ "$CHECK_VERSION" = "$INSTALL_VERSION" ]; then
+   echo "Domino $INSTALL_VERSION already installed" 
+   return 1
+ else
+   return 0
+ fi
+ 
+}
 
 install_domino ()
 {
   INST_VER=$PROD_VER
 
+  check_installed_version ver $INST_VER
+  if [ "$?" = "1" ]; then
+    INST_VER=""
+  fi
+
   if [ -z "$PROD_FP" ]; then
     INST_FP=""
   else
     INST_FP=$PROD_VER$PROD_FP
+    
+    check_installed_version fp $INST_FP
+    if [ "$?" = "1" ]; then
+      INST_FP=""
+    fi
   fi
 
   if [ -z "$PROD_HF" ]; then
     INST_HF=""
   else
     INST_HF=$PROD_VER$PROD_FP$PROD_HF
+    
+    check_installed_version hf $INST_HF
+    if [ "$?" = "1" ]; then
+    	INST_HF=""
+    fi
   fi
-
+  
   echo
   echo "Downloading Domino Installation files ..."
   echo
@@ -611,9 +677,14 @@ install_traveler ()
 {
   header "$PROD_NAME Installation"
 
+  INST_VER=$PROD_VER
+
   if [ ! -z "$INST_VER" ]; then
     get_download_name $PROD_NAME $INST_VER
     download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME traveler
+  else
+    log_error "No Traveler Target Version specified"
+    exit 1
   fi
 
   header "Installing $PROD_NAME $INST_VER"
@@ -648,27 +719,7 @@ install_traveler ()
   return 0
 }
 
-
 # --- Main Install Logic ---
-
-# Add notes:notes user
-if [ -z "$DominoUserID" ]; then
-  adduser notes -U
-else
-  adduser notes -U -u $DominoUserID 
-fi
-
-# Set User Local if configured
-if [ ! -z "$DOMINO_LANG" ]; then
-  echo "export LANG=$DOMINO_LANG" >> /home/notes/.bash_profile
-fi
-
-# Set security limits for pam modules (su needs it)
-echo >> /etc/security/limits.conf
-echo '# -- Begin Changes Domino --' >> /etc/security/limits.conf
-echo 'notes soft nofile 60000' >> /etc/security/limits.conf
-echo 'notes hard nofile 60000' >> /etc/security/limits.conf
-echo '# -- End Changes Domino --' >> /etc/security/limits.conf
 
 header "Environment Setup"
 
@@ -683,20 +734,44 @@ echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 
-create_directory /local notes notes 770
-create_directory /local/notesdata notes notes 770
-create_directory /local/translog notes notes 770
-create_directory /local/daos notes notes 770
+# This logic allows icremental installes for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
+if [ -e /opt/ibm/domino ]; then
+	FIRST_TIME_SETUP=0
+	echo
+	echo "!! Incremantal install based on exiting Domino image !!"
+	echo
+else
+	FIRST_TIME_SETUP=1
+fi
+
+if [ "$FIRST_TIME_SETUP" = "1" ]; then
+
+  # Add notes:notes user
+  if [ -z "$DominoUserID" ]; then
+    adduser notes -U
+  else
+    adduser notes -U -u $DominoUserID 
+  fi
+
+  # Set User Local if configured
+  if [ ! -z "$DOMINO_LANG" ]; then
+    echo "export LANG=$DOMINO_LANG" >> /home/notes/.bash_profile
+  fi
+
+  # Set security limits for pam modules (su needs it)
+  echo >> /etc/security/limits.conf
+  echo '# -- Begin Changes Domino --' >> /etc/security/limits.conf
+  echo 'notes soft nofile 60000' >> /etc/security/limits.conf
+  echo 'notes hard nofile 60000' >> /etc/security/limits.conf
+  echo '# -- End Changes Domino --' >> /etc/security/limits.conf
+
+  create_directory /local notes notes 770
+  create_directory /local/notesdata notes notes 770
+  create_directory /local/translog notes notes 770
+  create_directory /local/daos notes notes 770
+fi
 
 cd "$INSTALL_DIR"
-
-header "Environment"
-
-df -h
-
-echo
-print_delim
-echo
 
 # Download updated software.txt file if available
 download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
@@ -716,19 +791,13 @@ case "$PROD_NAME" in
     ;;
 esac
 
-header "Final Steps & Configuration"
-
-# Removing Base Install files
-cd "$INSTALL_DIR"
-remove_directory "$INSTALL_DIR/linux64"
-
 header "Installing Start Script"
 
-# extracting start script files
+# Extracting start script files
 cd $INSTALL_DIR
 tar -xf start_script.tar
 
-# run start script installer
+# Run start script installer
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
@@ -743,13 +812,10 @@ install_file "$INSTALL_DIR/docker_prestart.sh" "/docker_prestart.sh" notes notes
 install_file "$INSTALL_DIR/rc_domino_config" "/local/notesdata/rc_domino_config" notes notes 644 
 install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/domino_docker_entrypoint.sh" notes notes 755
 
-
 # Install Data Directory Copy File 
-
 install_file "$INSTALL_DIR/domino_install_data_copy.sh" "/domino_install_data_copy.sh" root root 755
 
 # Install health check script
-
 install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
 
 # Copy tools required for automating Domino Server configuration
@@ -762,37 +828,35 @@ if [ ! -z "$DominoMoveInstallData" ]; then
   create_directory /local/notesdata notes notes 770
 fi
 
-# Remove Fixpack/Hotfix Backup Files
+# --- Cleanup Routines to reduce image size ---
 
+# Remove Fixpack/Hotfix backup files
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
 
-# Remove Fixpack Data Backup and Download Files
-
-# find $Notes_ExecDirectory -maxdepth 1 -type d -name "*_bck" -exec rm -rf {} \;
-
+# Remove not needed domino/html data to keep image smaller
 find /local/notesdata/domino/html -name "*.dll" -exec rm -rf {} \;
 find /local/notesdata/domino/html -name "*.msi" -exec rm -rf {} \;
 
-rm -rf /local/notesdata/domino/html/download/filesets
-rm -rf /local/notesdata/domino/html/help
+remove_directory /local/notesdata/domino/html/download/filesets
+remove_directory /local/notesdata/domino/html/help
 
-# Remove uninstaller --> we never uninstall but rebuild
+# Remove uninstaller --> we never uninstall but rebuild from scratch
+remove_directory $Notes_ExecDirectory/_uninst
 
-rm -rf $Notes_ExecDirectory/_uninst
 # Create missing links
 
-cd /opt/ibm/domino/bin/
-ln -f -s tools/startup kyrtool
-ln -f -s tools/startup dbmt
+create_startup_link kyrtool
+create_startup_link dbmt
 install_res_links
 
-# Remove tunekernel. It is causing error messages because of Docker virtualization
-rm -f /opt/ibm/domino/notes/latest/linux/tunekrnl
+remove_file /opt/ibm/domino/notes/latest/linux/tunekrnl
 
-# Prepare data directory
-su - notes -c $INSTALL_DIR/domino_install_data_prep.sh
 
-# remove_directory "$INSTALL_DIR"
+if [ "$FIRST_TIME_SETUP" = "1" ]; then
+  # Prepare data directory (compact NSFs and NTFs)
+
+  su - notes -c $INSTALL_DIR/domino_install_data_prep.sh
+fi
 
 header "Successfully completed installation!"
 
