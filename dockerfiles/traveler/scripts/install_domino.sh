@@ -28,26 +28,14 @@ export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
 export NUI_NOTESDIR=$LOTUS
 export DOMINO_DATA_PATH=/local/notesdata
 export PATH=$PATH:$DOMINO_DATA_PATH
+export LANG=C
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
 WGET_COMMAND="wget --connect-timeout=20"
 
-# Helper Functions
-
-DOM_STRING_OK="Dominoserver Installation successful"
-LP_STRING_OK="Selected Language Packs are successfully installed."
-FP_STRING_OK="The installation completed successfully."
-HF_STRING_OK="The installation completed successfully."
 TRAVELER_STRING_OK="Installation completed with warnings."
-HF_UNINSTALL_STRING_OK="The installation completed successfully."
-JVM_STRING_OK="Patch was successfully applied."
-JVM_STRING_FP_OK="Tree diff file patch successful!"
-
-
-INST_DOM_LOG=/local/install_domino.log
-INST_FP_LOG=/local/install_fp.log
-INST_HF_LOG=/local/install_hf.log
 INST_TRAVELER_LOG=/local/install_traveler.log
+
 
 pushd()
 {
@@ -436,241 +424,59 @@ create_startup_link ()
   return 0
 }
 
-get_domino_version ()
+
+install_traveler ()
 {
-  DOMINO_INSTALL_DAT=$LOTUS/.install.dat
+  header "$PROD_NAME Installation"
 
-  if [ -e $DOMINO_INSTALL_DAT ]; then
-
-    find_str=`tail "$DOMINO_INSTALL_DAT" | grep "rev = " | awk -F " = " '{print $2}' | tr -d '"'`
-
-    if [ ! -z "$find_str" ]; then
-      DOMINO_VERSION=$find_str
-
-      if [ "$DOMINO_VERSION" = "10000000" ]; then
-        DOMINO_VERSION=1001
-      fi
-
-      if [ "$DOMINO_VERSION" = "90010" ]; then
-        DOMINO_VERSION=901
-      fi
-
-    else
-      DOMINO_VERSION="UNKNOWN"
-    fi
-  else
-    DOMINO_VERSION="NONE"
-  fi
-
-  return 0
-}
-
-set_domino_version ()
-{
-  get_domino_version
-  echo $DOMINO_VERSION > /local/domino_$1.txt
-  echo $DOMINO_VERSION > /local/notesdata/domino_$1.txt
-}
-
-check_installed_version ()
-{
-  VersionFile=/local/domino_$1.txt
-  
-  if [ ! -r $VersionFile ]; then
-    return 0
-  fi
-
- CHECK_VERSION=`cat $VersionFile`
- INSTALL_VERSION=`echo $2 | tr -d '.'`
- 
- if [ "$CHECK_VERSION" = "$INSTALL_VERSION" ]; then
-   echo "Domino $INSTALL_VERSION already installed" 
-   return 1
- else
-   return 0
- fi
- 
-}
-
-install_domino ()
-{
   INST_VER=$PROD_VER
 
-  check_installed_version ver $INST_VER
-  if [ "$?" = "1" ]; then
-    INST_VER=""
-  fi
-
-  if [ -z "$PROD_FP" ]; then
-    INST_FP=""
-  else
-    INST_FP=$PROD_VER$PROD_FP
-    
-    check_installed_version fp $INST_FP
-    if [ "$?" = "1" ]; then
-      INST_FP=""
-    fi
-  fi
-
-  if [ -z "$PROD_HF" ]; then
-    INST_HF=""
-  else
-    INST_HF=$PROD_VER$PROD_FP$PROD_HF
-    
-    check_installed_version hf $INST_HF
-    if [ "$?" = "1" ]; then
-    	INST_HF=""
-    fi
-  fi
-  
-  echo
-  echo "Downloading Domino Installation files ..."
-  echo
-  
   if [ ! -z "$INST_VER" ]; then
     get_download_name $PROD_NAME $INST_VER
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME domino_server
+    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME traveler
+  else
+    log_error "No Traveler Target Version specified"
+    exit 1
   fi
 
-  if [ ! -z "$INST_FP" ]; then
-    get_download_name $PROD_NAME $INST_FP domino_fp
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME domino_fp
+  header "Installing $PROD_NAME $INST_VER"
+
+  pushd .
+
+  cd traveler
+
+  ./silentInstall > $INST_TRAVELER_LOG
+
+  cp /local/notesdata/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log /local
+
+  check_file_str "$INST_TRAVELER_LOG" "$TRAVELER_STRING_OK"
+
+  if [ "$?" = "1" ]; then
+    echo
+    log_ok "Traveler installed successfully"
+
+  else
+
+    print_delim
+    cat $INST_TRAVELER_LOG
+    print_delim
+
+    log_error "Traveler Installation failed!!!"
+    exit 1
   fi
 
-  if [ ! -z "$INST_HF" ]; then
-    get_download_name $PROD_NAME $INST_HF domino_hf
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME domino_hf
-  fi
-
-  if [ ! -z "$INST_VER" ]; then
-    header "Installing $PROD_NAME $INST_VER"
-    pushd .
-
-    case "$PROD_NAME" in
-      domino)
-        cd domino_server/linux64/domino
-        ;;
-
-      domino-ce)
-        cd domino_server/linux64/DominoEval
-      ;;
-
-      *)
-        log_error "Unknown product [$PROD_NAME] - Terminating installation"
-        popd
-        exit 1
-        ;;
-    esac
-
-    echo
-    echo "Running Domino Silent Install -- This takes a while ..."
-    echo
-
-    ./install -silent -options "$INSTALL_DIR/$DominoResponseFile"
-
-    mv "$Notes_ExecDirectory/DominoInstall.log" "$INST_DOM_LOG"
-
-    check_file_str "$INST_DOM_LOG" "$DOM_STRING_OK"
-
-    if [ "$?" = "1" ]; then
-      echo
-      log_ok "Domino installed successfully"
-
-      # Store Domino Version Information
-      set_domino_version ver
-
-    else
-      print_delim
-      cat $INST_DOM_LOG
-      print_delim
-
-      log_error "Domino Installation failed!!!"
-      popd
-      exit 1
-    fi
-
-    popd
-    rm -rf domino_server
-  fi
-
-  if [ ! -z "$INST_FP" ]; then
-    header "Installing Fixpack $INST_FP"
-
-    echo
-    echo "Running Domino Fixpack Silent Install -- This takes a while ..."
-    echo
-
-    pushd .
-    cd domino_fp/linux64/domino
-
-    ./install -script script.dat > $INST_FP_LOG
-
-    echo $INST_FP >/local/notesdata/data_version.txt
-
-    check_file_str "$INST_FP_LOG" "$FP_STRING_OK"
-
-    if [ "$?" = "1" ]; then
-    	echo
-      log_ok "Fixpack installed successfully"
-
-      # Store Domino Fixpack Information
-      set_domino_version fp
-
-    else
-
-      echo
-      print_delim
-      cat $INST_FP_LOG
-      print_delim
-      log_error "Fixpack Installation failed!!!"
-      popd
-      exit 1
-    fi
-
-    popd
-    rm -rf domino_fp
-
-  fi  
-
-  if [ ! -z "$INST_HF" ]; then
-    header "Installing IF/HF INST_HF"
-
-    echo
-    echo "Running Domino Iterimsfix/Hotfix Silent Install -- This takes a while ..."
-    echo
-
-    pushd .
-    cd domino_hf/linux64
-
-    ./install -script script.dat > $INST_HF_LOG
-
-    check_file_str "$INST_HF_LOG" "$HF_STRING_OK"
-
-    if [ "$?" = "1" ]; then
-      echo
-      log_ok "InterimsFix/HotFix installed successfully"
-
-      # Store Domino Interimsfix/Hotfix Information
-      set_domino_version hf
-
-    else
-
-      echo
-      print_delim
-      cat hf.log
-      print_delim
-      log_error "InterimsFix/HotFix Installation failed!!!"
-
-      popd
-      exit 1
-    fi
-
-    popd
-    rm -rf domino_hf
-
-  fi
+  popd
+  rm -rf traveler 
 
   return 0
+}
+
+set_version ()
+{
+  echo $PROD_VER > "/local/${PROD_NAME}_ver.txt"
+  echo $PROD_VER > "/local/notesdata/${PROD_NAME}_ver.txt"
+  echo " TEST : set_version File /local/${PROD_NAME}_ver.txt"
+  echo " PROD_NAME: [$PROD_NAME]"
 }
 
 # --- Main Install Logic ---
@@ -681,49 +487,7 @@ echo "INSTALL_DIR           = [$INSTALL_DIR]"
 echo "DownloadFrom          = [$DownloadFrom]"
 echo "Product               = [$PROD_NAME]"
 echo "Version               = [$PROD_VER]"
-echo "Fixpack               = [$PROD_FP]"
-echo "InterimsFix/Hotfix    = [$PROD_HF]"
-echo "DominoResponseFile    = [$DominoResponseFile]"
-echo "DominoMoveInstallData = [$DominoMoveInstallData]"
-echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
-
-# This logic allows icremental installes for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
-if [ -e /opt/ibm/domino ]; then
-  FIRST_TIME_SETUP=0
-  echo
-  echo "!! Incremantal install based on exiting Domino image !!"
-  echo
-else
-  FIRST_TIME_SETUP=1
-fi
-
-if [ "$FIRST_TIME_SETUP" = "1" ]; then
-
-  # Add notes:notes user
-  if [ -z "$DominoUserID" ]; then
-    adduser notes -U
-  else
-    adduser notes -U -u $DominoUserID 
-  fi
-
-  # Set User Local if configured
-  if [ ! -z "$DOMINO_LANG" ]; then
-    echo "export LANG=$DOMINO_LANG" >> /home/notes/.bash_profile
-  fi
-
-  # Set security limits for pam modules (su needs it)
-  echo >> /etc/security/limits.conf
-  echo '# -- Begin Changes Domino --' >> /etc/security/limits.conf
-  echo 'notes soft nofile 60000' >> /etc/security/limits.conf
-  echo 'notes hard nofile 60000' >> /etc/security/limits.conf
-  echo '# -- End Changes Domino --' >> /etc/security/limits.conf
-
-  create_directory /local notes notes 770
-  create_directory /local/notesdata notes notes 770
-  create_directory /local/translog notes notes 770
-  create_directory /local/daos notes notes 770
-fi
 
 cd "$INSTALL_DIR"
 
@@ -731,8 +495,9 @@ cd "$INSTALL_DIR"
 download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 
 case "$PROD_NAME" in
-  domino|domino-ce)
-    install_domino
+
+  traveler)
+    install_traveler
     ;;
 
   *)
@@ -741,26 +506,7 @@ case "$PROD_NAME" in
     ;;
 esac
 
-header "Installing Start Script"
-
-# Extracting start script files
-cd $INSTALL_DIR
-tar -xf start_script.tar
-
-# Run start script installer
-$INSTALL_DIR/start_script/install_script
-
-# Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "/local/notesdata/SetupProfile.pds" notes notes 644
-
 header "Final Steps & Configuration"
-
-# Copy pre-start configuration
-install_file "$INSTALL_DIR/docker_prestart.sh" "/docker_prestart.sh" notes notes 770
-
-# Copy Docker specific start script configuration if provided
-install_file "$INSTALL_DIR/rc_domino_config" "/local/notesdata/rc_domino_config" notes notes 644 
-install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/domino_docker_entrypoint.sh" notes notes 755
 
 # Install Data Directory Copy File 
 install_file "$INSTALL_DIR/domino_install_data_copy.sh" "/domino_install_data_copy.sh" root root 755
@@ -768,47 +514,20 @@ install_file "$INSTALL_DIR/domino_install_data_copy.sh" "/domino_install_data_co
 # Install health check script
 install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
 
-# Copy tools required for automating Domino Server configuration
-install_file "$INSTALL_DIR/DatabaseSigner.jar" "/local/notesdata/DatabaseSigner.jar" notes notes 644
-
-# Move installed templates, etc. to install directory
-if [ ! -z "$DominoMoveInstallData" ]; then
-  echo "Moving install data /local/notesdata -> $DominoMoveInstallData"
-  mv -f /local/notesdata "$DominoMoveInstallData"
-  create_directory /local/notesdata notes notes 770
-fi
-
 # --- Cleanup Routines to reduce image size ---
-
-# Remove Fixpack/Hotfix backup files
-find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
-
-# Remove not needed domino/html data to keep image smaller
-find /local/notesdata/domino/html -name "*.dll" -exec rm -rf {} \;
-find /local/notesdata/domino/html -name "*.msi" -exec rm -rf {} \;
-
-remove_directory /local/notesdata/domino/html/download/filesets
-remove_directory /local/notesdata/domino/html/help
 
 # Remove uninstaller --> we never uninstall but rebuild from scratch
 remove_directory $Notes_ExecDirectory/_uninst
 
-# Create missing links
 
-create_startup_link kyrtool
-create_startup_link dbmt
-install_res_links
+# Take a backup copy of Traveler Data Files
 
-remove_file /opt/ibm/domino/notes/latest/linux/tunekrnl
+cd $DOMINO_DATA_PATH
+tar -czf /local/install_data_${PROD_NAME}_${PROD_VER}.taz traveler
 
-# Ensure permissons are set correctly for data directory
-chown -R notes:notes /local/notesdata
+# Set Installed Version
 
-if [ "$FIRST_TIME_SETUP" = "1" ]; then
-  # Prepare data directory (compact NSFs and NTFs)
-
-  su - notes -c $INSTALL_DIR/domino_install_data_prep.sh
-fi
+set_version
 
 header "Successfully completed installation!"
 
