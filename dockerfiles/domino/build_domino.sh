@@ -57,7 +57,7 @@ if [ -z $DOCKER_TZ ]; then
   if [ $LARCH = "Linux" ]; then
     DOCKER_TZ=$(readlink /etc/localtime | awk -F'/usr/share/zoneinfo/' '{print $2}')
   elif [ $LARCH = "Darwin" ]; then
-    DOCKER_TZ=$(readlink /etc/localtime | awk -F'/var/db/timezone/zoneinfo/' '{print $2}')
+    DOCKER_TZ=$(readlink /etc/localtime | awk -F'/usr/share/zoneinfo/' '{print $2}')
   else
     DOCKER_TZ=""
   fi

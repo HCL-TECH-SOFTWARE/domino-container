@@ -1,3 +1,4 @@
+product|version|filename|product-code|sha256-hash
 domino|10.0.1|DOM_SVR_V10.0.1_64_BIT_Lnx.tar|CNXL9EN|57a19f56da492740d50457bcb3eec6f2b5410e8e122608c19e1886cf3fb36515
 domino|10.0.1FP1|domino10001FP1_linux64.tar|CNZ9IEN|6f6209bd14814001d52cc3b0af734a3ead119e9f4e97341bf2ebaa3505550aa8
 startscript|-|start_script.tar|-|54ece4e9a5f2f3ac5e32ea333db88886b727b22e3f1ea003bc393d0e46a9c04e
