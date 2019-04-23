@@ -673,6 +673,38 @@ install_domino ()
   return 0
 }
 
+
+docker_set_timezone ()
+{
+  if [ -z "$DOCKER_TZ" ]; then
+    return 0
+  fi
+
+  CURRENT_TZ=$(readlink /etc/localtime)
+  SET_TZ=/usr/share/zoneinfo/$DOCKER_TZ
+
+  if [ "$CURRENT_TZ" = "$SET_TZ" ]; then
+    echo
+    echo "Timezone [$DOCKER_TZ] already set"
+    echo
+    return 0
+  fi
+
+  if [ ! -e "$SET_TZ" ]; then
+    echo
+    echo "Cannot read timezone [$SET_TZ] -- Timezone not changed"
+    echo
+    return 1
+  fi
+
+  echo
+  echo "Timezone set to [$DOCKER_TZ]"
+  echo
+  ln -sf "$SET_TZ" /etc/localtime
+
+  return 0
+}
+
 # --- Main Install Logic ---
 
 header "Environment Setup"
@@ -723,6 +755,9 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   create_directory /local/notesdata notes notes 770
   create_directory /local/translog notes notes 770
   create_directory /local/daos notes notes 770
+
+  docker_set_timezone
+
 fi
 
 cd "$INSTALL_DIR"

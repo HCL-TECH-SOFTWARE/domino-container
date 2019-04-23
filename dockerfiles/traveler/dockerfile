@@ -33,7 +33,7 @@ ARG DominoUserID=
 ARG DOMINO_LANG=
 
 # Copy Install Files to container
-COPY scripts $LocalInstallDir
+COPY install_dir $LocalInstallDir
 
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script

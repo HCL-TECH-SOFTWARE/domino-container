@@ -32,21 +32,49 @@
 SCRIPT_NAME=$0
 DOWNLOAD_FROM=$1
 
-# Select product to install
+# Select product to install (by default name is derived from filename)
 #PROD_NAME=domino
 #PROD_NAME=domino-ce
+
+#DOCKER_TZ=Europe/Berlin
+
+# Specify Version to install
+# Can be overwritten on command-line
+
+PROD_VER=10.0.1
+PROD_FP=FP1
+#PROD_HF=IF1
+#PROD_HF=HF123
+
+# ---------------------------------------------------
+
+LARCH=`uname`
+
+# If Timezone is not set use host's timezone
+
+if [ -z $DOCKER_TZ ]; then
+
+  if [ $LARCH = "Linux" ]; then
+    DOCKER_TZ=$(readlink /etc/localtime | awk -F'/usr/share/zoneinfo/' '{print $2}')
+  elif [ $LARCH = "Darwin" ]; then
+    DOCKER_TZ=$(readlink /etc/localtime | awk -F'/var/db/timezone/zoneinfo/' '{print $2}')
+  else
+    DOCKER_TZ=""
+  fi
+
+  echo
+  echo "Using OS Timezone : [$DOCKER_TZ]"
+  echo
+else
+  echo
+  echo "Timezone configured: [$DOCKER_TZ]"
+  echo
+fi
 
 # Get product name from file name
 if [ -z $PROD_NAME ]; then
   PROD_NAME=`basename $0 | cut -f 2 -d"_" | cut -f 1 -d"."`
 fi
-
-# Specify Version to install
-# Can be overwritten on command-line
-PROD_VER=10.0.1
-PROD_FP=FP1
-#PROD_HF=IF1
-#PROD_HF=HF123
 
 CUSTOM_VER=`echo "$2" | awk '{print toupper($0)}'`
 CUSTOM_FP=`echo "$3" | awk '{print toupper($0)}'`
@@ -60,7 +88,7 @@ fi
 
 DOCKER_IMAGE_NAME="ibmcom/$PROD_NAME"
 DOCKER_IMAGE_VERSION=$PROD_VER$PROD_FP$PROD_HF
-DOCKER_FILE=dockerfile_domino.txt
+DOCKER_FILE=dockerfile
 
 # Latest Tag not set when specifying explicit version
 
@@ -134,6 +162,7 @@ docker_build ()
   BUILD_ARG_PROD_VER="--build-arg PROD_VER=$PROD_VER"
   BUILD_ARG_PROD_FP="--build-arg PROD_FP=$PROD_FP"
   BUILD_ARG_PROD_HF="--build-arg PROD_HF=$PROD_HF"
+  BUILD_ARG_DOCKER_TZ="--build-arg DOCKER_TZ=$DOCKER_TZ"
   BUILD_ARG_DOWNLOAD_FROM="--build-arg DownloadFrom=$DOWNLOAD_FROM"
 
   # Switch to current directory and remember current directory
@@ -142,7 +171,13 @@ docker_build ()
   cd $CURRENT_DIR
 
   # Finally build the image
-  docker build --no-cache --label "DominoDocker.description"="$DOCKER_DESCRIPTION" --label "DominoDocker.version"="$DOCKER_IMAGE_VERSION" --label "DominoDocker.buildtime"="$BUILDTIME" -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD -f $DOCKER_FILE $BUILD_ARG_DOWNLOAD_FROM $BUILD_ARG_PROD_NAME $BUILD_ARG_PROD_VER $BUILD_ARG_PROD_FP $BUILD_ARG_PROD_HF .
+  docker build --no-cache --label "DominoDocker.description"="$DOCKER_DESCRIPTION" \
+    --label "DominoDocker.version"="$DOCKER_IMAGE_VERSION" \
+    --label "DominoDocker.buildtime"="$BUILDTIME" \
+    -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
+    -f $DOCKER_FILE \
+    $BUILD_ARG_DOWNLOAD_FROM $BUILD_ARG_PROD_NAME $BUILD_ARG_DOCKER_TZ \
+    $BUILD_ARG_PROD_VER $BUILD_ARG_PROD_FP $BUILD_ARG_PROD_HF .
 
   popd
   echo
