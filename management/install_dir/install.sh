@@ -385,6 +385,11 @@ install_binary()
 install_all_servertasks ()
 {
   SERVERTASKS_INSTALL_DIR=$1
+
+  if [ ! -e "$SERVERTASKS_INSTALL_DIR" ]; then
+    return 0
+  fi
+
   all_servertasks=`find $SERVERTASKS_INSTALL_DIR -type f -printf "%p\n"`
 
   for servertask in $all_servertasks; do
@@ -397,6 +402,11 @@ install_all_servertasks ()
 install_all_extmgr ()
 {
   EXTMGR_INSTALL_DIR=$1
+
+  if [ ! -e "$EXTMGR_INSTALL_DIR" ]; then
+    return 0
+  fi
+
   all_extmgr=`find $EXTMGR_INSTALL_DIR -type f -printf "%p\n"`
 
   for extmgr in $all_extmgr; do
