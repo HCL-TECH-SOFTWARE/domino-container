@@ -463,11 +463,12 @@ docker_removeimage ()
     fi
   fi
 
-  docker rmi "$DOCKER_IMAGE"
-
+  # if configured remove latest tag first
   if [ ! -z "$DOCKER_TAG_LATEST" ]; then
     docker rmi "$DOCKER_TAG_LATEST"
   fi 
+
+  docker rmi "$DOCKER_IMAGE"
 
   return 0
 }
