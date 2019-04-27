@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Nash!Com Domino Docker Script                                           #
-# Version 1.1.0 14.04.2019                                                #
+# Version 1.1.1 27.04.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -427,48 +427,6 @@ create_link ()
   return 0
 }
 
-install_traveler ()
-{
-  header "$PROD_NAME Installation"
-
-  if [ ! -z "$INST_VER" ]; then
-    get_download_name $PROD_NAME $INST_VER
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME traveler
-  fi
-
-  header "Installing $PROD_NAME $INST_VER"
-
-  pushd .
-
-  cd traveler
-
-  ./silentInstall > $INST_TRAVELER_LOG
-
-  cp /local/notesdata/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log /local
-
-  check_file_str "$INST_TRAVELER_LOG" "$TRAVELER_STRING_OK"
-
-  if [ "$?" = "1" ]; then
-    echo
-    log_ok "Traveler installed successfully"
-
-  else
-
-    print_delim
-    cat $INST_TRAVELER_LOG
-    print_delim
-
-    log_error "Traveler Installation failed!!!"
-    exit 1
-  fi
-
-  popd
-  rm -rf traveler 
-
-  return 0
-}
-
-
 cd $INSTALL_DIR
 
 header "Environment"
@@ -486,24 +444,6 @@ if [ ! -z $DownloadFrom ]; then
 
   download_and_check_hash $DownloadFrom/start_script.tar
   download_and_check_hash $DownloadFrom/text.txt "My Install Directory"
-  #download_and_check_hash $DownloadFrom/doesnotexist.txt "My Install Directory"
-
-  PROD_NAME=traveler
-  PROD_VER=10.0.1.1
-  INST_VER=$PROD_VER
-  
-  case "$PROD_NAME" in
-
-    traveler)
-      #install_traveler
-      ;;
-
-    *)
-      log_error "Unknown product [$PROD_NAME] - Terminating installation"
-      exit 0
-      ;;
-  esac
-    
 fi
 
 header "Installing Domino related Files"
