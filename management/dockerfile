@@ -19,8 +19,8 @@ RUN yum update -y && \
   rm -fr /var/cache/yum && \
   rm -rf /tmp/install_dir
 
-# Expose Ports HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
+# Expose Ports NRPC HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
 
-EXPOSE 80 110 143 389 443 636 993 995 63148 63149 
+EXPOSE 1352 80 110 143 389 443 636 993 995 63148 63149 
 
 ENTRYPOINT ["/domino_docker_entrypoint.sh"]

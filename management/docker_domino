@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Nash!Com Domino Docker Script                                           #
-# Version 1.0.2 12.04.2019                                                #
+# Version 1.0.3 28.04.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -192,9 +192,12 @@ docker_status ()
 docker_inspect_image ()
 {
   DOCKER_IMAGE_ID="$(docker inspect --format "{{.Id}}" $DOCKER_IMAGE 2>/dev/null)"
+  DOCKER_IMAGE_SHORTID=`echo $DOCKER_IMAGE_ID | cut -d":" -f2 | cut -c1-12`
+
+  if [ -z "$1" ]; then return 0; fi
+
   DOCKER_IMAGE_VERSION="$(docker inspect --format "{{ .Config.Labels.version }}" $DOCKER_IMAGE 2>/dev/null)"
   DOCKER_IMAGE_BUILDTIME="$(docker inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_IMAGE 2>/dev/null)" 
-
   DOCKER_IMAGE_SIZE="$(docker inspect --format "{{.Size}}" $DOCKER_IMAGE 2>/dev/null)" 
 
   if [ -z "$DOCKER_IMAGE_SIZE" ]; then
@@ -205,45 +208,97 @@ docker_inspect_image ()
 
   DOCKER_IMAGE_DOMINODOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
 
-  DOCKER_IMAGE_SHORTID=`echo $DOCKER_IMAGE_ID | cut -d":" -f2 | cut -c1-12`
   return 0
 }
 
-docker_inspect ()
+
+docker_status ()
 {
   DOCKER_STATUS="$(docker inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
   if [ -z "$DOCKER_STATUS" ]; then return 0; fi
+}
+
+docker_inspect_container ()
+{
+  DOCKER_STATUS="$(docker inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_VERSION="$(docker inspect --format "{{ .Config.Labels.version }}" $DOCKER_CONTAINER 2>/dev/null)"
+  if [ -z "$DOCKER_STATUS" ]; then return 0; fi
+
+  DOCKER_CONTAINER_IMAGE_ID="$(docker inspect --format "{{ .Image }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_ID="$(docker inspect --format "{{ .Id }}" $DOCKER_CONTAINER 2>/dev/null)"
+
+  DOCKER_CONTAINER_SHORTID=`echo $DOCKER_CONTAINER_ID | cut -d":" -f2 | cut -c1-12`
+  DOCKER_CONTAINER_IMAGE_SHORTID=`echo $DOCKER_CONTAINER_IMAGE_ID | cut -d":" -f2 | cut -c1-12`
+
+  if [ -z "$1" ]; then return 0; fi
 
   DOCKER_CONTAINER_NAME="$(docker inspect --format "{{ .Name }}" $DOCKER_CONTAINER | cut -d/ -f2 2>/dev/null)"
   DOCKER_CONTAINER_IMAGE="$(docker inspect --format "{{ .Config.Image }}" $DOCKER_CONTAINER 2>/dev/null)"
+
   DOCKER_CONTAINER_HOSTNAME="$(docker inspect --format "{{ .Config.Hostname }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_DRIVER="$(docker inspect --format "{{ .Driver }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_PLATFORM="$(docker inspect --format "{{ .Platform }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_NETWORKMODE="$(docker inspect --format "{{ .HostConfig.NetworkMode }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_IPAddress="$(docker inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_IMAGE_ID="$(docker inspect --format "{{ .Image }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_ID="$(docker inspect --format "{{ .Id }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_VERSION="$(docker inspect --format "{{ .Config.Labels.version }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_BUILDTIME="$(docker inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_CONTAINER 2>/dev/null)"
-
   DOCKER_CONTAINER_VOLUMES="$(docker inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
 
   STARTDATE="$(docker inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_STARTED_AT=`date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE"`
 
-  DOCKER_CONTAINER_SHORTID=`echo $DOCKER_CONTAINER_ID | cut -d":" -f2 | cut -c1-12`
-  DOCKER_CONTAINER_IMAGE_SHORTID=`echo $DOCKER_CONTAINER_IMAGE_ID | cut -d":" -f2 | cut -c1-12`
   return 0
 }
 
 docker_inspect_extras ()
 {
+  if [ -z "$1" ]; then return 0; fi
+
   if [ "$DOCKER_STATUS" = "running" ]; then 
     DOCKER_CONTAINER_OS_VERSION=`docker exec -it $DOCKER_CONTAINER cat /etc/redhat-release`
     DOCKER_CONTAINER_OS_KERNEL=`docker exec -it $DOCKER_CONTAINER uname -r`
-    DOCKER_CONTAINER_DOMINO_REV=`docker exec -it $DOCKER_CONTAINER cat /opt/ibm/domino/.install.dat | awk -F '(=| =)' -v SEARCH_STR="rev" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' $1 | cut -d'"' -f2`
+    DOCKER_CONTAINER_DOMINO_REV=`docker exec -it $DOCKER_CONTAINER cat /opt/ibm/domino/.install.dat | awk -F '(=| =)' -v SEARCH_STR="rev" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' | cut -d'"' -f2`
   fi
 }
+
+docker_show_infos ()
+{
+  if [ -z "$DOCKER_STATUS" ]; then
+    if [ -z "$DOCKER_IMAGE_ID" ]; then
+      echo "Docker container and image not found"
+      return 0
+    else
+      echo "Docker container not found"
+    fi
+    #return 0
+  fi
+
+  docker_inspect_image
+  docker_inspect_container
+  docker_inspect_extras
+
+  print_delim
+  echo " Status        :  $DOCKER_STATUS"
+
+  if [ "$DOCKER_IMAGE_VERSION" = "$DOCKER_CONTAINER_VERSION" ]; then
+    echo " Version       :  $DOCKER_IMAGE_VERSION"
+  else
+    echo " Version CNT   :  $DOCKER_CONTAINER_VERSION"
+    echo " Version IMG   :  $DOCKER_IMAGE_VERSION"
+  fi
+
+  echo " Container ID  :  $DOCKER_CONTAINER_SHORTID"
+  if [ "$DOCKER_IMAGE_ID" = "$DOCKER_CONTAINER_IMAGE_ID" ]; then
+    echo " Image-ID      :  $DOCKER_IMAGE_SHORTID"
+  else
+    echo " Image-ID CNT  :  $DOCKER_CONTAINER_IMAGE_SHORTID"
+    echo " Image-ID IMG  :  $DOCKER_IMAGE_SHORTID"
+  fi
+  
+  print_delim
+
+  return 0
+}
+
 
 docker_show_inspect ()
 {
@@ -257,7 +312,9 @@ docker_show_inspect ()
     #return 0
   fi
 
-  docker_inspect_extras
+  docker_inspect_image "$1" 
+  docker_inspect_container "$1" 
+  docker_inspect_extras "$1"
 
   print_delim
   echo " Status        :  $DOCKER_STATUS"
@@ -300,7 +357,6 @@ docker_show_inspect ()
 
   print_delim
 
-
   echo " Container ID  :  $DOCKER_CONTAINER_SHORTID"
   if [ "$DOCKER_IMAGE_ID" = "$DOCKER_CONTAINER_IMAGE_ID" ]; then 
     echo " Image-ID      :  $DOCKER_IMAGE_SHORTID"
@@ -310,6 +366,18 @@ docker_show_inspect ()
   fi
 
   print_delim
+
+  if [ ! -z "$DOCKER_CONTAINER_IMAGE_ID" ]; then
+
+    DOCKER_PORTS=`docker port "$DOCKER_CONTAINER"`    
+
+    echo " Docker Ports  :"
+    if [ ! -z "$DOCKER_PORTS" ]; then
+      echo "$DOCKER_PORTS" | awk '{print "                  " $0}'
+      print_delim
+    fi
+  fi
+
 }
 
 docker_start ()
@@ -381,7 +449,6 @@ docker_build ()
 
   return 0
 }
-
 
 docker_run ()
 {
@@ -513,24 +580,22 @@ docker_update ()
     docker_stop
   fi
 
-  docker_inspect
+  docker_inspect_container
 
   echo "Removing Container [$DOCKER_CONTAINER] ..."
   docker_remove
   
   echo "Creating & starting new Container [$DOCKER_CONTAINER] ..."
-  docker_inspect
+  docker_inspect_container
   docker_run
-
-  docker_inspect_image
-  docker_inspect
+  docker_inspect_container
   
   echo
   if [ "$DOCKER_CONTAINER_IMAGE_ID" = "$DOCKER_IMAGE_ID" ]; then
-  	echo "Successfully updated Container [$DOCKER_CONTAINER]"
+    echo "Successfully updated Container [$DOCKER_CONTAINER]"
     return 0
   else
-  	echo "Failed to updated Container [$DOCKER_CONTAINER]"
+    echo "Failed to updated Container [$DOCKER_CONTAINER]"
     return 1
   fi
 }
@@ -556,7 +621,7 @@ usage ()
 {
   show_version
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | version | help}"
+  echo "Usage: `basename $SCRIPT_NAME` { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | port | version | help}"
 
   return 0
 }
@@ -570,7 +635,8 @@ help ()
   echo "start [live]    start an existing container (the 'live' option shows start script output)"
   echo "stop  [live]    stops container (the 'live' option shows start script output)"
   echo "status          shows container status (running, exited, notexisting)"
-  echo "inspect|info    shows information about container and image"
+  echo "info            shows status and basic information about container and image"
+  echo "inspect         shows detailed information about container and image"
   echo "logs            shows container logs (output from entry point script/start script)"
   echo "attach          attach to entry point script"
   echo "domino          pass a command to start script (e.g. domino nsd)"
@@ -578,6 +644,7 @@ help ()
   echo "remove|rm       removes the container (if not running)"
   echo "removeimage|rmi removes the current container (you have to remove the container first)"
   echo "update          updates the container if referenced image has changed (stops Domino, stops the container, runs a new image)"
+  echo "port            show used tcp/ip ports for container"
   echo "config|cfg      edit configuration"
   echo "version         shows script version information"
   echo "help            you already figured out what help does ;-)"
@@ -629,7 +696,7 @@ get_domino_version ()
 }
 
 docker_inspect_image
-docker_inspect
+docker_inspect_container
 config_warnings
 
 echo
@@ -640,8 +707,16 @@ case "$PARAM1" in
     docker_show_status 
     ;;
 
-  inspect|info)
-    docker_show_inspect
+  inspect|fullinfo)
+    docker_show_inspect full 
+    ;;
+
+  info)
+    if [ -z "$PARAM2" ]; then
+      docker_show_infos
+    else
+      docker_show_inspect full 
+    fi
     ;;
 
   build)
@@ -692,6 +767,11 @@ case "$PARAM1" in
   domino)
     docker_domino_cmd domino "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
     ;;
+
+
+  port)
+   docker port "$DOCKER_CONTAINER"
+   ;;
 
   config|cfg)
     vi $CONFIG_FILE
