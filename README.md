@@ -9,10 +9,10 @@ to be documented
 ## How to use this image
 When a new container is created from the IBM Domino Docker image, it takes [environment variables](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md)
 
-* Domino Data directory needs to be a persistant volume.
+* Domino Data directory needs to be a persistent volume.
 
 ### Manually creating a new container from an image
-First create a new/empty persistant volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
+First create a new/empty persistent volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
 
 ```bash
 docker volume create dominodata_demo1
