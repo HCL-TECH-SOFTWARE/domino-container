@@ -79,4 +79,4 @@ With some modifications the following base images can be built
 * IBM Domino Collaboration Express
 * IBM Domino Messaging Express
 
-Note that this license does not permit further distribution.
+Note that IBM software agreement does not permit further distribution of the docker image that was built with this script.
