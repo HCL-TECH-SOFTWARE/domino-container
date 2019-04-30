@@ -1,18 +1,24 @@
 # Domino Docker 
-This project contains build scripts for Docker images (Dockerfiles) and Docker related utilities for IBM Domino. There are separate folders within this repository that contain build scripts for IBM sThis repository provides the to build an IBM Domino Server with latest fixes.
+This project contains build scripts for Docker images (Dockerfiles) and Docker related utilities for IBM Domino. There are separate folders within this repository that contain build scripts for IBM. This repository provides an IBM Domino Server with the latest fixes.
 
-Main idea is to download and apply all required fixes/patches/updates from a software respository server instead of adding the source installation files to the image directly. For this reason this repo will start a temporary local nginx server at build time to act as a [software repository server](https://github.com/IBM/domino-docker/tree/master/software).
+Main idea is to download and apply all required fixes/patches/updates from a software repository server instead of adding the source installation files to the image directly. For this reason this repo will start a temporary local nginx server at build time to act as a [software repository server](https://github.com/IBM/domino-docker/tree/master/software).
 
 ## How to build the image(s)
-to be documented
+To build the latest available image 
+1. Download the required [software packages](https://github.com/IBM/domino-docker/blob/master/software/README.md) to the 'software' directory
+2. From the root folder of this repository issue the following command 
+```bash
+build domino
+```
+The process will perform all required actions to create the image in the version requested. Usually it takes less than 5 minutes to build the image.
 
 ## How to use this image
 When a new container is created from the IBM Domino Docker image, it takes [environment variables](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md)
 
-* Domino Data directory needs to be a persistant volume.
+* Domino Data directory needs to be a persistent volume.
 
 ### Manually creating a new container from an image
-First create a new/empty persistant volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
+First create a new/empty persistent volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
 
 ```bash
 docker volume create dominodata_demo1
@@ -34,7 +40,7 @@ docker run -it -e "ServerName=Server1" \
 ```
 ## Runtime configuration
 
-During ```docker run``` you can setup a volume that mounts property files into /local/notesdata
+During ```docker run``` you can setup a volume that mounts property files into `/local/notesdata`
 
 ### Stopping the Application Server gracefully
 Stopping a Domino server takes longer than the time a Docker server would expect by default, so it is recommended to specify the timeout parameter when stopping a container.
@@ -71,9 +77,9 @@ License for the products that can be installed within the images is as follows:
 * IBM Domino Enterprise Server 10.0 under the [International Program License Agreement](https://www-03.ibm.com/software/sla/sladb.nsf/displaylis/FB664D0899DE8E7C8525832100805159?OpenDocument)
 * IBM Domino Community Server under the [International License Agreement for Non-Warranted Programs](https://www-01.ibm.com/common/ssi/rep_ca/2/877/ENUSZP17-0552/ENUSZP17-0552.PDF)
  
-With some modifications the following base images can be built
+With some modifications the following base images can be built:
 * IBM Domino Utility Server
 * IBM Domino Collaboration Express
 * IBM Domino Messaging Express
-
-Note that this license does not permit further distribution.
+  
+Note that the IBM Domino is commercial software - the software licenses agreement does not permit further distribution of the docker image that was built using this script.

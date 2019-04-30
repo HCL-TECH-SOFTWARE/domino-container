@@ -22,35 +22,28 @@
 
 SCRIPT_NAME=$0
 TARGET_IMAGE=$1
+PROD_VER=$2
+PROD_FP=$3
+PROD_HF=$4
+
+TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
 
 # (Default) NIGX is used hosting software from the local "software" directory.
 # (Optional) Configure software download location.
 # DOWNLOAD_FROM=http://192.168.1.1
 
 # With NGINX container you could chose your own local directory or if variable is empty use the default "software" subdirectory 
-# SOFTWARE_DIR=/local/software
+#SOFTWARE_DIR=/local/software
 
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { domino }"
+  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler }"
   echo
 
   return 0
 }
 
-SCRIPT_DIR=`dirname $SCRIPT_NAME`
-SOFTWARE_PORT=7777
-SOFTWARE_CONTAINER=ibmsoftware
-
-if [ -z "$DOWNLOAD_FROM" ]; then
-  SOFTWARE_USE_NGINX=1
-  
-  if [ -z "$SOFTWARE_DIR" ]; then
-    SOFTWARE_DIR=$PWD/software
-  fi
-fi
-  
 nginx_start ()
 {
   # Create a nginx container hosting software download locally
@@ -102,18 +95,37 @@ print_runtime()
   else echo "Completed in $seconds second$s"; fi
 }
 
+SCRIPT_DIR=`dirname $SCRIPT_NAME`
+SOFTWARE_PORT=7777
+SOFTWARE_CONTAINER=ibmsoftware
+
+# In case software directory is not set and the well know location is filled with software
+if [ -z "$SOFTWARE_DIR" ]; then
+  if [ -e /local/software/software.txt ]; then
+    SOFTWARE_DIR=/local/software
+  fi
+fi
+
+if [ -z "$DOWNLOAD_FROM" ]; then
+  SOFTWARE_USE_NGINX=1
+
+  if [ -z "$SOFTWARE_DIR" ]; then
+    SOFTWARE_DIR=$PWD/software
+  fi
+fi
+
 echo
 
 if [ "$TARGET_IMAGE" = "" ]; then
-	echo "No Taget Image specified! - Terminating"
-	usage
+  echo "No Taget Image specified! - Terminating"
+  usage
   exit 1
 fi
 
-BUILD_SCRIPT=dockerfiles/$TARGET_IMAGE/build_$TARGET_IMAGE.sh
+BUILD_SCRIPT=dockerfiles/$TARGET_DIR/build_$TARGET_IMAGE.sh
 
 if [ ! -e "$BUILD_SCRIPT" ]; then
-	echo "Cannot execute build script for [$TARGET_IMAGE] -- Terminating [$BUILD_SCRIPT]"
+  echo "Cannot execute build script for [$TARGET_IMAGE] -- Terminating [$BUILD_SCRIPT]"
   exit 1
 fi
 
@@ -121,7 +133,7 @@ if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
   nginx_start
 fi
 
-$BUILD_SCRIPT $DOWNLOAD_FROM
+$BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 
 if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
   nginx_stop
