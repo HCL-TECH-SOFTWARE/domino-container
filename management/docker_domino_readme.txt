@@ -1,8 +1,8 @@
 ###########################################################################
 # Nash!Com Domino Docker Script                                           #
-# Version 1.0.0 22.12.2018                                                #
+# Version 1.0.2 20.04.2019                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2018                                #
+# (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -25,8 +25,17 @@ Introduction
 
 This Domino Docker script is intended to simplify your Domino on Docker environment.
 It can be used build, run and maintain your Domino on Docker environment.
-The "dockerscript" is also a good example how to derive your own image from the standard image.
 
+The "dockerscript" is also a good example how to derive your own image from the standard image.
+It comes with a flexible configuration and provides and easy interface for container/image related Docker commands.
+This is the logical extension of the Domino start script and works hand in hand with the Domino start script.
+
+It is also a good example how to interact with Docker when you don't have a Docker management solution in place.
+You can use the script as a reference also how to query information from the images and containers.
+
+The inspect/info command queries a lot of information from the running Domino servers. 
+
+This management script can be used to create custom images and to run them.
 
 
 ------------
@@ -34,17 +43,17 @@ Quick Config
 ------------
 
 You just need to build the image and run the container. It will be derived from the image.
-The default configuration should work for your. But you should check the configuration 
-and change the naming accordingly.
+The default configuration should work for first tests. But you should check the configuration 
+and change the naming accordingly (the default configuration contains "Acme"). 
 
 To ensure you are deriving from the right Domino Docker image, you have to check the "dockerscript" 
-for the "FROM" statement.
+for the "FROM" statement. This is usually set to something like "FROM ibmcom/domino:latest".
+There are multiple example files for different targets like Domino, Domino CE or Traveler.
 
 Afterwards build and run the image.
 
 docker_domino build
 docker_domino run
-
 
 
 ----------
@@ -70,7 +79,7 @@ config_domino
 This file contains the configuration for the docker_domino script.
 The name has to match the last part of the docker_domino script.
 In case you want to run multiple instances you can clone the files and have multiple instances.
-For example docker_domino2, config_domino2. See more "Run multiple instances" section for details.
+For example docker_domino-ce, config_domino-ce. See more "Run multiple instances" section for details.
 
 For configuration details check the next section.
 
@@ -78,7 +87,7 @@ For configuration details check the next section.
 dockerfile
 ----------
 
-This docker file is deriving from a Docker Domino image and allows customization.
+This dockerfile is deriving from a Docker Domino image and allows customization.
 The main logic is performed by the install.sh which is executed from the dockerfile.
 
 
@@ -102,7 +111,7 @@ Configuration parameters
 ------------------------
 
 The following configuration is used to customize your Docker container.
-Most of the default configuration should work.
+Most of the default configuration should work for you.
 
 
 DOCKER_CONTAINER
@@ -133,6 +142,8 @@ DOCKER_FILE
 -----------
 
 This parameter is used to configure the dockerfile which is used.
+The script comes with a ready to use sample dockerfile which you can modify for your needs.
+
 Default: dockerfile
 
 
@@ -204,7 +215,6 @@ builds a current image -- even image tags might not have changed to ensure OS pa
 run [live]
 ----------
 
-
 runs a container -- will initiate a container if not present ('live' shows start script output, alias 'runit')
 
 
@@ -241,13 +251,14 @@ shows container logs (output from entry point script/start script)
 attach
 ------
 
-attach to entry point script
+attach to entry point script which is running inside the Docker container.
 
 
 domino
 ------
 
-pass a command to start script (e.g. domino nsd)
+pass a command to start script (e.g. domino nsd, domino console).
+"domino console" will launch the interactive Domino console (Domino Start Script).
 
 
 bash
@@ -256,14 +267,14 @@ bash
 invokes a bash in the running container
 
 
-remove
-------
+remove|rm
+---------
 
 removes the container (if not running)
 
 
-removeimage
------------
+removeimage|rmi
+---------------
 
 removes the current container (you have to remove the container first)
 
@@ -289,7 +300,5 @@ In addition you have specify different container names in each of the configurat
 You also have to specify a separate IP addresses per container and separate volumes!
 Having multiple containers per hosts adds complexity to your environment.
 The script allows this deployment scenario. But it's recommended to use a Docker management/deployment solution.
-
-
 
 

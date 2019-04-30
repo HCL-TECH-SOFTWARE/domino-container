@@ -59,7 +59,7 @@ I recommend to use the standard configuration. This will make your life easier f
 You can change the data directory in the rc_domino_config file. 
 But the binary location and the notes:notes user and group are required.
 
-Still I would stay with the standard /local/notesdata. This could be a spearate mount-point.
+Still I would stay with the standard /local/notesdata. This could be a separate mount-point.
 And you could also use the following directory structure for the other directories.
 
 /local/translog

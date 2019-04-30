@@ -18,12 +18,12 @@
 ############################################################################
 
 SCRIPT_NAME=$0
-PARAM=$1
+PARAM1=$1
 
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { start | stop | ip | remove | stopremove }"
+  echo "Usage: `basename $SCRIPT_NAME` { start | stop | ip | stopremove }"
 
   return 0
 }
@@ -80,6 +80,10 @@ case "$PARAM1" in
     ;;
 
   stop)
+    repo_stop
+    ;;
+
+  stopremove)
     repo_stopremove 
     ;;
 
