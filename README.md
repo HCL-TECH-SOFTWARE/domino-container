@@ -4,7 +4,13 @@ This project contains build scripts for Docker images (Dockerfiles) and Docker r
 Main idea is to download and apply all required fixes/patches/updates from a software repository server instead of adding the source installation files to the image directly. For this reason this repo will start a temporary local nginx server at build time to act as a [software repository server](https://github.com/IBM/domino-docker/tree/master/software).
 
 ## How to build the image(s)
-to be documented
+To build the latest available image 
+1. Download the required [software packages](https://github.com/IBM/domino-docker/blob/master/software/README.md) to the 'software' directory
+2. From the root folder of this repository issue the following command 
+```bash
+build domino
+```
+The process will perform all required actions to create the image in the version requested. Usually it takes less than 5 minutes to build the image.
 
 ## How to use this image
 When a new container is created from the IBM Domino Docker image, it takes [environment variables](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md)
