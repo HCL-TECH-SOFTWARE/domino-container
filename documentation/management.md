@@ -14,8 +14,10 @@ The inspect/info command queries a lot of information from the running Domino se
 
 This management script can be used to create custom images and to run them.
 
+----------
 
 ## Quick Config
+
 You just need to build the image and run the container. It will be derived from the image.
 The default configuration should work for first tests. But you should check the configuration
 and change the naming accordingly (the default configuration contains "Acme").
@@ -214,7 +216,7 @@ updates the container if referenced image has changed (stops Domino, stops the c
 
 shows script version information
 
-
+----------
 ## Run multiple instances
 
 When running multiple instances you have to define separate docker_domino and configuration files.
