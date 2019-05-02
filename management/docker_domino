@@ -535,7 +535,7 @@ docker_removeimage ()
     docker rmi "$DOCKER_TAG_LATEST"
   fi 
 
-  docker rmi "$DOCKER_IMAGE"
+  docker rmi "$DOCKER_IMAGE_NAMEVERSION"
 
   return 0
 }

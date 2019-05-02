@@ -520,10 +520,13 @@ install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthc
 remove_directory $Notes_ExecDirectory/_uninst
 
 
+# Ensure permissons are set correctly for data directory
+chown -R notes:notes /local/notesdata
+
 # Take a backup copy of Traveler Data Files
 
 cd $DOMINO_DATA_PATH
-tar -czf /local/install_data_${PROD_NAME}_${PROD_VER}.taz traveler
+tar -czf /local/install_data_${PROD_NAME}_${PROD_VER}.taz traveler domino/workspace
 
 # Set Installed Version
 
