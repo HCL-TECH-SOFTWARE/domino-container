@@ -33,7 +33,7 @@ TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
 # DOWNLOAD_FROM=http://192.168.1.1
 
 # With NGINX container you could chose your own local directory or if variable is empty use the default "software" subdirectory 
-#SOFTWARE_DIR=/local/software
+# SOFTWARE_DIR=/local/software
 
 usage ()
 {

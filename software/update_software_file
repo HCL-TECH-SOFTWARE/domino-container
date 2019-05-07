@@ -1,0 +1,32 @@
+#!/bin/sh 
+
+SCRIPT_NAME=$0
+PARAM1=$1
+
+update_file()
+{
+  SOURCE_FILE=$1
+  TARGET_FILE=$2
+
+  if [ ! -r "$SOURCE_FILE" ]; then
+    echo "source file does not exist or is not readable"
+    return 0
+  fi
+
+  if [ -e "$TARGET_FILE" ]; then
+    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
+    if [ $? -eq 0 ]; then
+      return 0
+    fi
+  fi
+  
+  echo "Updating [$TARGET_FILE]"
+  cp -f "$SOURCE_FILE" "$TARGET_FILE"
+
+  return 0
+}
+
+for FILE_NAME in `find ../dockerfiles/* -maxdepth 0 -type d`; do
+  update_file software.txt $FILE_NAME/install_dir/software.txt
+done
+
