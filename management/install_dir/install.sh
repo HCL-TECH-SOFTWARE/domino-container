@@ -315,7 +315,7 @@ install_file()
 
 install_binary()
 {
-  SOURCE_BIN=$1
+  SOURCE_BIN="$1"
 
   if [ -z "$SOURCE_BIN" ]; then
     echo "no file specified"
@@ -323,12 +323,12 @@ install_binary()
   fi
 
   if [ ! -r "$SOURCE_BIN" ]; then
-    echo "Source file does not exist or is not readable"
+    echo "Source file does not exist or is not readable [$SOURCE_BIN]"
     return 0
   fi
 
   if [ ! -e "$SOURCE_BIN" ]; then
-    echo "Cannot find binary '$SOURCE_BIN'"
+    echo "Cannot find binary [$SOURCE_BIN]"
     return 0
   fi
 
@@ -359,12 +359,12 @@ install_binary()
       echo "Error - Can not update binary '$TARGET_BIN' -- Binary in use"
       return 1
     fi
-    
+
     echo "Updating '$TARGET_BIN'"
   else
     echo "Installing '$TARGET_BIN'"
   fi
-  
+
   cp -f "$SOURCE_BIN" "$TARGET_BIN"
   chmod 755 "$TARGET_BIN"
 
@@ -373,14 +373,17 @@ install_binary()
       ;;
 
     *)
+      pushd .
       cd $LOTUS/bin
       ln -f -s tools/startup "$INSTALL_BIN_NAME"
+      popd
       ;;
 
   esac
 
   return 0
 }
+
 
 install_all_servertasks ()
 {
@@ -452,8 +455,7 @@ download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 if [ ! -z $DownloadFrom ]; then
   header "Download Files Demo"
 
-  download_and_check_hash $DownloadFrom/start_script.tar
-  download_and_check_hash $DownloadFrom/text.txt "My Install Directory"
+  # download_and_check_hash $DownloadFrom/text.txt "My Install Directory"
 fi
 
 header "Installing Domino related Files"

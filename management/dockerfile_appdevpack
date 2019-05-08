@@ -1,9 +1,8 @@
 
-FROM ibmcom/domino-ce:latest
-#FROM ibmcom/domino-ce:10.0.1
+FROM ibmcom/appdevpack:latest
 
 # Headers
-LABEL  description="IBM Domino Server 10 Community Edition" \
+LABEL  description="IBM Domino Server 10 with AppDevPack" \
   vendor="NashCom" \
   maintainer="Daniel Nashed <nsh@nashcom.de>" 
 

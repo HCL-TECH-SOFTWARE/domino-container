@@ -16,15 +16,18 @@
 #                                                                          #
 ############################################################################
 
-# Traveler Docker Build Script
-# Usage  : ./build.sh <URL for download repository> [ Traveler Version ]
+# Domino AppDevPack Docker Build Script
+# Usage  : ./build.sh <URL for download repository> [ AppDevPack Version ]
 # Example: ./build-image.sh http://192.168.1.1
 
 SCRIPT_NAME=$0
 DOWNLOAD_FROM=$1
 
 # Select product to install
-PROD_NAME=traveler
+PROD_NAME=appdevpack
+
+# Description for Image Labels
+PROD_LABEL=AppDevPackDocker
 
 # Get product name from file name
 if [ -z $PROD_NAME ]; then
@@ -33,7 +36,7 @@ fi
 
 # Specify Version to install
 # Can be overwritten on command-line
-PROD_VER=10.0.1.1
+PROD_VER=1.0.1
 
 CUSTOM_VER=`echo "$2" | awk '{print toupper($0)}'`
 
@@ -54,7 +57,7 @@ fi
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` <URL for download repository> [TRAVELER-VERSION] "
+  echo "Usage: `basename $SCRIPT_NAME` <URL for download repository> [APP-DEV-PACK-VERSION] "
   echo
   return 0
 }
@@ -96,8 +99,8 @@ docker_build ()
   BUILDTIME=`date +"%d.%m.%Y %H:%M:%S"`
 
   case "$PROD_NAME" in
-    traveler)
-      DOCKER_DESCRIPTION="IBM Traveler"
+    appdevpack)
+      DOCKER_DESCRIPTION="Domino AppDevPack"
       ;;
 
     *)
@@ -120,12 +123,12 @@ docker_build ()
 
   # Finally build the image
   docker build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
-    --label "TravelerDocker.description"="$DOCKER_DESCRIPTION" \
-    --label "TravelerDocker.version"="$DOCKER_IMAGE_VERSION" \
-    --label "TravelerDocker.buildtime"="$BUILDTIME" -t \
-    $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
-    -f $DOCKER_FILE \
-    $BUILD_ARG_DOWNLOAD_FROM $BUILD_ARG_PROD_NAME $BUILD_ARG_PROD_VER .
+   --label "$PROD_LABEL.description"="$DOCKER_DESCRIPTION" \
+   --label "$PROD_LABEL.version"="$DOCKER_IMAGE_VERSION" \
+   --label "$PROD_LABEL.buildtime"="$BUILDTIME" \
+   -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
+   -f $DOCKER_FILE \
+   $BUILD_ARG_DOWNLOAD_FROM $BUILD_ARG_PROD_NAME $BUILD_ARG_PROD_VER .
 
   popd
   echo

@@ -171,7 +171,8 @@ docker_build ()
   cd $CURRENT_DIR
 
   # Finally build the image
-  docker build --no-cache --label "DominoDocker.description"="$DOCKER_DESCRIPTION" \
+  docker build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
+    --label "DominoDocker.description"="$DOCKER_DESCRIPTION" \
     --label "DominoDocker.version"="$DOCKER_IMAGE_VERSION" \
     --label "DominoDocker.buildtime"="$BUILDTIME" \
     -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \

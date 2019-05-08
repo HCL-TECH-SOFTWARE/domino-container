@@ -2,7 +2,7 @@
 FROM ibmcom/domino:latest
 
 # Headers
-LABEL description="IBM Domino Server 10 with NashCom Tools" \
+LABEL description="IBM Domino Server 10 Acme Customized" \
   vendor="NashCom" \
   maintainer="Daniel Nashed <nsh@nashcom.de>" 
 

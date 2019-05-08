@@ -2,7 +2,7 @@
 FROM ibmcom/traveler:latest
 
 # Headers
-LABEL  description="IBM Domino Server 10 with NashCom Tools" \
+LABEL  description="IBM Domino Server 10 with Traveler" \
   vendor="NashCom" \
   maintainer="Daniel Nashed <nsh@nashcom.de>" 
 
