@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SOFTWARE_DIR=./software
+#SOFTWARE_DIR=/local/software
 #DOWNLOAD_FROM=http://centos-mirror.nashcom.loc/software
 
 . ./check_software.sh "$1" "$2"

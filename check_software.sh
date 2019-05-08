@@ -10,7 +10,7 @@ if [ -z "$DOWNLOAD_FROM" ]; then
 fi
 
 #CHECK_HASH=yes
-#DOWNLOAD_URLS_SHOW=yes
+DOWNLOAD_URLS_SHOW=yes
 
 # -----------------------
 
@@ -127,7 +127,7 @@ check_software ()
   fi
 
   case "$CURRENT_NAME" in
-    domino|traveler)
+    domino|traveler|appdevpack)
 
       if [ -z "$CURRENT_PARTNO" ]; then
         CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_IBM_PA_SEARCH"

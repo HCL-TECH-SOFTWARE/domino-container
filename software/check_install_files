@@ -89,7 +89,6 @@ update_software_list ()
   while read line; do    
     HASH=`echo $line | cut -d" " -f1`
     FILENAME=`echo $line | cut -d"*" -f2`
-
     
     if [ -e "$FULL_SOFTWARE_FILE" ]; then
       DOWNLOAD_NAME=`grep "|$HASH" "$FULL_SOFTWARE_FILE" | grep "|$FILENAME|" | cut -d"|" -f3`
