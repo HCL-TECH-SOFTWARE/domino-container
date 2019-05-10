@@ -242,6 +242,7 @@ docker_inspect_container ()
   DOCKER_CONTAINER_IPAddress="$(docker inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_BUILDTIME="$(docker inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_VOLUMES="$(docker inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
+  DOCKER_CONTAINER_HEALTH="$(docker inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
 
   STARTDATE="$(docker inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_STARTED_AT=`date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE"`
@@ -318,6 +319,7 @@ docker_show_inspect ()
 
   print_delim
   echo " Status        :  $DOCKER_STATUS"
+  echo " Health        :  $DOCKER_CONTAINER_HEALTH"
   echo " Started       :  $DOCKER_CONTAINER_STARTED_AT"
   echo " Name          :  $DOCKER_CONTAINER_NAME"
   echo " Image         :  $DOCKER_CONTAINER_IMAGE"
