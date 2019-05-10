@@ -3,11 +3,11 @@
 # You can clone the domino_docker script and have a corresponding configuration with a matching name
 # You should always make configuration changes in the config file instead of docker_domino
 
-DOCKER_CONTAINER=amce-domino-ce
-DOCKER_IMAGE_NAME=acme/domino-ce
-DOCKER_IMAGE_VERSION=10.0.1FP1
-DOCKER_IMAGE_RELEASE_DATE=2019-04-20
-DOCKER_FILE=dockerfile_domino-ce
+DOCKER_CONTAINER=acme-domino-ce
+DOCKER_IMAGE_NAME=ibmcom/domino-ce
+DOCKER_IMAGE_VERSION=latest
+DOCKER_IMAGE_RELEASE_DATE=2019-05-10
+DOCKER_FILE=
 
 DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 

@@ -431,6 +431,11 @@ docker_logs ()
 
 docker_build ()
 {
+  if [ -z $DOCKER_FILE ]; then
+    echo "No dockerfile configured"
+    return 0
+  fi
+
   echo "Building Image : " $IMAGENAME
 
   if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
@@ -778,7 +783,11 @@ case "$PARAM1" in
     ;;
 
  dockerfile)
-    vi $DOCKER_FILE
+    if [ -z $DOCKER_FILE ]; then
+      echo "No dockerfile configured"
+    else
+      vi $DOCKER_FILE
+    fi
     ;;
 
   version)

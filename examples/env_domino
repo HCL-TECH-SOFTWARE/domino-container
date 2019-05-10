@@ -1,0 +1,8 @@
+# Domino Server Configuration
+
+AdminFirstName=John
+AdminLastName=Doe
+AdminPassword=domino4ever
+DominoDomainName=Acme
+OrganizationName=Acme
+ServerName=domino-acme-01

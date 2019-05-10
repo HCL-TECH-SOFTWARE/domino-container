@@ -3,8 +3,8 @@
 # You can clone the domino_docker script and have a corresponding configuration with a matching name
 # You should always make configuration changes in the config file instead of docker_domino
 
-DOCKER_CONTAINER=domino-test
-DOCKER_IMAGE_NAME=acme/domino-test
+DOCKER_CONTAINER=acme-domino-ce
+DOCKER_IMAGE_NAME=acme/domino-ce
 DOCKER_IMAGE_VERSION=10.0.1FP1
 DOCKER_IMAGE_RELEASE_DATE=2019-04-20
 DOCKER_FILE=dockerfile_domino-ce
@@ -28,7 +28,7 @@ DOCKER_ENV_FILE=env_domino
 DOWNLOAD_FROM=
 
 # Configuration for NGINX container
-SOFTWARE_USE_NGINX=0
+SOFTWARE_USE_NGINX=1
 SOFTWARE_DIR=/local/software
 SOFTWARE_PORT=7777
 SOFTWARE_CONTAINER=ibmsoftware

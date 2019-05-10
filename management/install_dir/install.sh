@@ -450,7 +450,7 @@ echo
 print_delim
 echo
 
-download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
+# download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 
 if [ ! -z $DownloadFrom ]; then
   header "Download Files Demo"
