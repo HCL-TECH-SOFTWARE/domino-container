@@ -40,7 +40,7 @@ COPY install_dir $LocalInstallDir
 # Update, Install required packages and run separate install script
 
 RUN yum update -y && \
-  yum install -y bc perl which wget nano unzip rsync lsof gdb sysstat file && \
+  yum install -y openssl bc perl which wget nano unzip rsync lsof gdb sysstat file && \
   $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \

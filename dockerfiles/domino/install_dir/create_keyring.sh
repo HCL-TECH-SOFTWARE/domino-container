@@ -29,7 +29,7 @@ fi
 
 if [ -z "$KEYRING_PASSWORD" ]; then
   echo "Generating random keyring-file password"
-  KEYRING_PASSWORD=`sha256sum /local/notesdata/notes.ini`
+  KEYRING_PASSWORD=`sha1sum /local/notesdata/notes.ini`
 fi
 
 /opt/ibm/domino/bin/kyrtool create -k "$KEYRING_FILE" -p "$KEYRING_PASSWORD"
