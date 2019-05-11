@@ -23,7 +23,7 @@
 
 # This script is intended to automate the X.509 certificate generation process.
 # Keys, Certificates and PEM files to be used by the Domino kyrtool are automatically created if you use the local CA.
-# For a public or corpoarte CA this script helps you generate the private key pair, signing requests (CSRs).
+# For a public or corporate CA this script helps you generate the private key pair, signing requests (CSRs).
 # And it also helps to build a PEM file which can be used for example the Domino kyrtool.
 
 # Certificate Authority (CA) Configuration
@@ -84,7 +84,7 @@ PEM_DIR=./pem
 # You have send those CSR files (*.csr) to the external CA and get back a certificate file (*.crt) in PEM format.
 # To import the certificate automatically, the *.crt needs to have a matching name used for the *.csr file.
 # IMPORTANT: For external CAs you have to also provide a PEM file (ca_all.pem) with the public key of the Root CA 
-# and all intermediate certificates (ordered from most specifiy to Root CA cert).
+# and all intermediate certificates (ordered from most specific to Root CA cert).
 
 # Steps:
 
@@ -95,16 +95,16 @@ PEM_DIR=./pem
 # 5. Invoke the script again to generate a xxx_all.pem file for each certificate
 # 6. The final PEM file contains the private key, certificate, intermediate certs and the CA's root certificate in the right order to be user by the kyrtool
 
-# The folling configuration is optional for special cases and documentation purposes.
+# The following configuration is optional for special cases and documentation purposes.
 # It shows all local CA related default values which can be modified if needed for your convenience.
 
 
-# Optional Specific Configuraiton
+# Optional Specific Configuration
 # ------------------------------- #
 
-# Default configuraiton should work for most environments
+# Default configuration should work for most environments
 
-# Optional Specific CA Configuraiton
+# Optional Specific CA Configuration
 
 CA_VALID_DAYS=3650
 CA_KEY=ca.key
