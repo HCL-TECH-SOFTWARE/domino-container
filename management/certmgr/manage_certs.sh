@@ -23,14 +23,13 @@
 
 # This script is intended to automate the X.509 certificate generation process.
 # Keys, Certificates and PEM files to be used by the Domino kyrtool are automatically created if you use the local CA.
-# For a public or corpoarte CA this script helps you generate the private key pair, signing requests (CSRs) 
-# and also to build a PEM file which can be used for example the Domino kyrtool.
-
+# For a public or corpoarte CA this script helps you generate the private key pair, signing requests (CSRs).
+# And it also helps to build a PEM file which can be used for example the Domino kyrtool.
 
 # Certificate Authority (CA) Configuration
 
 # If you don't have a company CA configuration this script can create a simple,local CA.
-# It ill be used to generate all certificates needed
+# It will be used to generate all certificates needed. This is the default configuration.
 
 # The following section defines the local CA.
 
@@ -71,27 +70,28 @@ PEM_DIR=./pem
 
 
 # Local CA Configuration
-# ------------------------- #
+# ----------------------
 
-# If you stay with the default configuration a simple CA will be created via openssl.
+# If you stay with the default configuration, a simple CA will be created via openssl.
 # All certificates are automatically signed by this local CA when invoking this script.
-# The whole process is processed in one step. However the script is designed to update/regenerate keys and certificates.
+# The whole process is processed in one step. However the script is designed to allow to update/regenerate keys and certificates.
 
 
 # Public/Company CA 
-# ----------------- #
-#
+# -----------------
+
 # When using a public or company CA, this script automatically creates the private keys and certificate signing requests (CSRs).
-# You have send those CSR files (*.csr) to the external CA and get a certificate file (*.crt) in PEM format back.
-# To import teh certificate automatically the *.crt needs to have a matching name used for the *.csr file.
-# IMPORTANT: For external CAs you have to also provide a PEM file (ca_all.pem) with the public key of the Root CA and all intermediate certificates (ordered from most specifiy to Root CA cert).
+# You have send those CSR files (*.csr) to the external CA and get back a certificate file (*.crt) in PEM format.
+# To import the certificate automatically, the *.crt needs to have a matching name used for the *.csr file.
+# IMPORTANT: For external CAs you have to also provide a PEM file (ca_all.pem) with the public key of the Root CA 
+# and all intermediate certificates (ordered from most specifiy to Root CA cert).
 
 # Steps:
 
 # 1. Run this script once to generate the *.key files and *.csr files
 # 2. Let the *.csr files sign from the external CA
-# 3. Get the *.crt file with the matching name and copy it back to this directory
-# 4. Ensure a certificate PEM file for the CA and all intermediate files is stored in this directory "ca_all.pem"
+# 3. Get the *.crt file with a matching name (before the dot) and copy it back to this directory
+# 4. Ensure a certificate PEM file for the CA and all intermediate files is stored in the "pem" directory "ca_all.pem"
 # 5. Invoke the script again to generate a xxx_all.pem file for each certificate
 # 6. The final PEM file contains the private key, certificate, intermediate certs and the CA's root certificate in the right order to be user by the kyrtool
 
