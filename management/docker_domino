@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ###########################################################################
-# Nash!Com Domino Docker Script                                           #
-# Version 1.0.3 28.04.2019                                                #
+# Nash!Com Domino Docker Management Script                                #
+# Version 1.0.5 11.05.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #

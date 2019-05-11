@@ -453,7 +453,7 @@ echo
 # download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 
 if [ ! -z $DownloadFrom ]; then
-  header "Download Files Demo"
+  # header "Download Files Demo"
 
   # download_and_check_hash $DownloadFrom/text.txt "My Install Directory"
 fi
@@ -471,7 +471,7 @@ install_all_extmgr "$INSTALL_DIR/extmgr"
 
 install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
 
-header "Successfully Build Image"
+header "Successfully completed installation!"
 
 exit 0
 

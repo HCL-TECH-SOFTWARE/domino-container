@@ -372,9 +372,9 @@ remove_directory ()
   rm -rf "$1"
 
   if [ -e "$1" ]; then
-  	echo " --- directory not completely deleted! ---"
-  	ls -l "$1"
-  	echo " --- directory not completely deleted! ---"
+    echo " --- directory not completely deleted! ---"
+    ls -l "$1"
+    echo " --- directory not completely deleted! ---"
   fi
   
   return 0
@@ -802,6 +802,10 @@ install_file "$INSTALL_DIR/domino_install_data_copy.sh" "/domino_install_data_co
 
 # Install health check script
 install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
+
+# Install keyring create/update script
+
+install_file "$INSTALL_DIR/create_keyring.sh" "create_keyring.sh" root root 755
 
 # Copy tools required for automating Domino Server configuration
 install_file "$INSTALL_DIR/DatabaseSigner.jar" "/local/notesdata/DatabaseSigner.jar" notes notes 644
