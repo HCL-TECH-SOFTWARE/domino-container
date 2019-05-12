@@ -68,7 +68,7 @@ KEY_DIR=./key
 CSR_DIR=./csr
 CRT_DIR=./crt
 PEM_DIR=./pem
-INFO_DIR=./info
+TXT_DIR=./txt
 
 # -------------------------- #
 #   END MAIN CONFIGURATION   #
@@ -263,7 +263,7 @@ check_cert()
     NOT_AFTER=`openssl x509 -enddate -noout -in $CRT_FILE | awk -F'notAfter=' '{print $2 }'`
     CA=`openssl x509 -issuer -noout -in $CRT_FILE | awk -F'issuer= ' '{print $2 }'`
 
-    openssl x509 -text -noout -in $CRT_FILE > $INFO_DIR/$NAME.txt
+    openssl x509 -text -noout -in $CRT_FILE > $TXT_DIR/$NAME.txt
 
   else
     SUBJECT=""
@@ -323,7 +323,7 @@ check_generate_keys_and_certs ()
   mkdir -p $CSR_DIR
   mkdir -p $CRT_DIR
   mkdir -p $PEM_DIR
-  mkdir -p $INFO_DIR
+  mkdir -p $TXT_DIR
 
   create_ca
   create_key_cert domino     "$DOMINO_SERVER_NAME" "DNS:$DOMINO_DNS"
