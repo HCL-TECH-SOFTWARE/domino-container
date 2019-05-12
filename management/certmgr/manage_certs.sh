@@ -227,7 +227,7 @@ create_key_cert()
           -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq > /dev/null
       else
         openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
-          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq -extfile <(printf "subjectAltName=$SANS") > /dev/null
+          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq -extfile <(printf "subjectAltName=DNS:$SANS") > /dev/null
       fi
 
       if [ -e  $CSR_FILE ]; then
@@ -314,33 +314,54 @@ check_cert()
   echo
 }
 
-check_generate_keys_and_certs ()
+check_create_dirs ()
 {
-  echo > "$TODO_FILE"
-
   mkdir -p $CA_DIR
   mkdir -p $KEY_DIR
   mkdir -p $CSR_DIR
   mkdir -p $CRT_DIR
   mkdir -p $PEM_DIR
   mkdir -p $TXT_DIR
+}
 
+generate_keys_and_certs ()
+{
   create_ca
-  create_key_cert domino     "$DOMINO_SERVER_NAME" "DNS:$DOMINO_DNS"
-  create_key_cert proton     "$PROTON_SERVER_NAME" "DNS:$PROTON_DNS"
-  create_key_cert iam_server "$IAM_SERVER_NAME"    "DNS:$IAM_SERVER_DNS"
+  create_key_cert domino     "$DOMINO_SERVER_NAME" $DOMINO_DNS"
+  create_key_cert proton     "$PROTON_SERVER_NAME" $PROTON_DNS"
+  create_key_cert iam_server "$IAM_SERVER_NAME"    "$IAM_SERVER_DNS"
   create_key_cert iam_client "$IAM_CLIENT_NAME"    ""
+}
+
+check_keys_and_certs ()
+{
+  log
+  echo > "$TODO_FILE"
+
+  check_cert ca 
+
+  all_keys=`find "$KEY_DIR" -type f -name "*.key" -printf "%p\n" | sort`
+
+  for KEY in $all_keys; do
+    NAME=`basename "$KEY" | cut -d"." -f1`
+    check_cert "$NAME"
+  done
 
   log
-  check_cert ca 
-  check_cert domino 
-  check_cert proton
-  check_cert iam_server
-  check_cert iam_client
 
   cat "$TODO_FILE"
   rm -rf "$TODO_FILE"
-  echo 
 }
 
-check_generate_keys_and_certs
+check_create_dirs
+
+if [ -z "$1" ]; then
+
+  generate_keys_and_certs
+  check_keys_and_certs
+
+else
+
+  create_key_cert "$1" "$2" "$3"
+  check_cert "$1"
+fi
