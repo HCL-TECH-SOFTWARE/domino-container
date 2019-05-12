@@ -42,12 +42,16 @@
 DOMIMO_ORG="Acme"
 
 DOMINO_SERVER="traveler"
-DOMINO_DNS_NAME="traveler.acme.com"
+DOMINO_DNS="traveler.acme.com"
 
 PROTON_SERVER="proton"
-PROTON_DNS_NAME="proton.acme.com"
+PROTON_DNS="proton.acme.com"
 
-DOMINO_IAM_NAME="iam"
+IAM_SERVER="iam_server"
+IAM_SERVER_DNS="iam.acme.com"
+
+IAM_CLIENT="iam_client"
+IAM_CLIENT_NAME="/O=$DOMIMO_ORG/CN=$IAM_CLIENT"
 
 # You can choose between two different configurations 
 
@@ -59,10 +63,12 @@ USE_LOCAL_CA=yes
 CA_ORG=Acme
 CA_PASSWORD=domino4ever
 
+CA_DIR=./ca
 KEY_DIR=./key
 CSR_DIR=./csr
 CRT_DIR=./crt
 PEM_DIR=./pem
+INFO_DIR=./info
 
 # -------------------------- #
 #   END MAIN CONFIGURATION   #
@@ -123,9 +129,10 @@ CLIENT_VALID_DAYS=3650
 
 PROTON_SERVER_NAME="/O=$DOMIMO_ORG/CN=$PROTON_SERVER"
 DOMINO_SERVER_NAME="/O=$DOMIMO_ORG/CN=$DOMINO_SERVER"
+IAM_SERVER_NAME="/O=$DOMIMO_ORG/CN=$IAM_SERVER"
 
-CA_KEY_FILE=$KEY_DIR/$CA_KEY
-CA_CRT_FILE=$CRT_DIR/$CA_CERT
+CA_KEY_FILE=$CA_DIR/$CA_KEY
+CA_CRT_FILE=$CA_DIR/$CA_CERT
 
 TODO_FILE=todo.txt
 
@@ -134,7 +141,6 @@ TODO_FILE=todo.txt
 log ()
 {
   echo $1 $2 $3 $4 
-  echo
 }
 
 todo ()
@@ -185,6 +191,10 @@ create_key_cert()
   CSR_FILE=$CSR_DIR/$NAME.csr
   CRT_FILE=$CRT_DIR/$NAME.crt
 
+  if [ -z "$SUBJ$SANS" ]; then
+    log "No configuration for [$NAME]"
+  fi
+
   if [ -e "$KEY_FILE" ]; then
     log "Key [$KEY_FILE] already exists"
   else
@@ -213,13 +223,17 @@ create_key_cert()
 
       log "Signing CSR [$CSR_FILE] with local CA"
       if [ -z "$SANS" ]; then
-        openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE -out $CRT_FILE -CAcreateserial -CAserial $CRT_DIR/ca.seq > /dev/null
+        openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
+          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq > /dev/null
       else
-        openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE -out $CRT_FILE -CAcreateserial -CAserial $CRT_DIR/ca.seq -extfile <(printf "subjectAltName=$SANS") > /dev/null
+        openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
+          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq -extfile <(printf "subjectAltName=$SANS") > /dev/null
       fi
 
-      log "Remove CSR [$CSR_FILE]"
-      rm -f "$CSR_FILE"
+      if [ -e  $CSR_FILE ]; then
+        log "Remove CSR [$CSR_FILE]"
+        rm -f "$CSR_FILE"
+      fi
     else
       todo "Please send CSR [$CSR_FILE] to external CA for signing"
     fi
@@ -229,8 +243,15 @@ create_key_cert()
 check_cert()
 {
   NAME="$1"
-  KEY_FILE=$KEY_DIR/$NAME.key
-  CRT_FILE=$CRT_DIR/$NAME.crt
+
+  if [ "$NAME" = "ca" ]; then
+    KEY_FILE=$CA_DIR/$NAME.key
+    CRT_FILE=$CA_DIR/$NAME.crt
+  else
+    KEY_FILE=$KEY_DIR/$NAME.key
+    CRT_FILE=$CRT_DIR/$NAME.crt
+  fi
+
   PEM_CA_ALL_FILE=$PEM_DIR/ca_all.pem
 
   STATUS=""
@@ -241,6 +262,9 @@ check_cert()
     DNS_NAME=`openssl x509 -text -noout -in $CRT_FILE | grep DNS | cut -d":" -f2`
     NOT_AFTER=`openssl x509 -enddate -noout -in $CRT_FILE | awk -F'notAfter=' '{print $2 }'`
     CA=`openssl x509 -issuer -noout -in $CRT_FILE | awk -F'issuer= ' '{print $2 }'`
+
+    openssl x509 -text -noout -in $CRT_FILE > $INFO_DIR/$NAME.txt
+
   else
     SUBJECT=""
     DNS_NAME=""
@@ -279,8 +303,12 @@ check_cert()
   echo "--------------------------------------------"
   echo " KeyLen       :  $KEYLEN"
   echo " Subject      :  $SUBJECT"
-  echo " DNS NAME     :  $DNS_NAME"
-  echo " Issuing CA   :  $CA"
+  if [ ! -z "$DNS_NAME" ]; then
+   echo " DNS NAME     :  $DNS_NAME"
+  fi
+  if [ ! "$CA_SUBJECT" = "$CA" ]; then
+    echo " Issuing CA   :  $CA"
+  fi
   echo " Valid Until  :  $NOT_AFTER"
   echo "--------------------------------------------"
   echo
@@ -290,20 +318,25 @@ check_generate_keys_and_certs ()
 {
   echo > "$TODO_FILE"
 
+  mkdir -p $CA_DIR
   mkdir -p $KEY_DIR
   mkdir -p $CSR_DIR
   mkdir -p $CRT_DIR
   mkdir -p $PEM_DIR
+  mkdir -p $INFO_DIR
 
   create_ca
-  create_key_cert domino "$DOMINO_SERVER_NAME" "DNS:$DOMINO_DNS_NAME"
-  create_key_cert proton "$PROTON_SERVER_NAME" "DNS:$PROTON_DNS_NAME"
-  create_key_cert $DOMINO_IAM_NAME "/O=$DOMIMO_ORG/CN=$DOMINO_IAM_NAME" ""
+  create_key_cert domino     "$DOMINO_SERVER_NAME" "DNS:$DOMINO_DNS"
+  create_key_cert proton     "$PROTON_SERVER_NAME" "DNS:$PROTON_DNS"
+  create_key_cert iam_server "$IAM_SERVER_NAME"    "DNS:$IAM_SERVER_DNS"
+  create_key_cert iam_client "$IAM_CLIENT_NAME"    ""
 
+  log
   check_cert ca 
   check_cert domino 
   check_cert proton
-  check_cert "$DOMINO_IAM_NAME"
+  check_cert iam_server
+  check_cert iam_client
 
   cat "$TODO_FILE"
   rm -rf "$TODO_FILE"
