@@ -59,7 +59,7 @@ DOCKER_SCRIPT_VERSION=1.0.2
 
 # Get configuration from config file
 
-CONFIG_FILE=`dirname $0`/config_`basename $0 | cut -f 2 -d _`
+CONFIG_FILE=`dirname $0`/config_`basename $0 | awk -F "docker_" '{print $2}'`
 if [ -e "$CONFIG_FILE" ]; then
   echo "(Using config file $CONFIG_FILE)"  
   . $CONFIG_FILE
