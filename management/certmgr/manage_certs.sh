@@ -327,8 +327,8 @@ check_create_dirs ()
 generate_keys_and_certs ()
 {
   create_ca
-  create_key_cert domino     "$DOMINO_SERVER_NAME" $DOMINO_DNS"
-  create_key_cert proton     "$PROTON_SERVER_NAME" $PROTON_DNS"
+  create_key_cert domino     "$DOMINO_SERVER_NAME" "$DOMINO_DNS"
+  create_key_cert proton     "$PROTON_SERVER_NAME" "$PROTON_DNS"
   create_key_cert iam_server "$IAM_SERVER_NAME"    "$IAM_SERVER_DNS"
   create_key_cert iam_client "$IAM_CLIENT_NAME"    ""
 }
