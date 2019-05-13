@@ -271,11 +271,13 @@ PROD_VER=`echo "$2" | awk '{print toupper($0)}'`
 PROD_FP=`echo "$3" | awk '{print toupper($0)}'`
 PROD_HF=`echo "$4" | awk '{print toupper($0)}'`
 
-if [ "$PROD_VER" = "." ]; then 
-  get_current_version "$PROD_NAME"
-  echo
-  echo "Current Version: $PROD_NAME $PROD_VER$PROD_FP$PROD_HF"
-fi
+case "$PROD_VER" in
+  .|LATEST)
+    get_current_version "$PROD_NAME"
+    echo
+    echo "Current Version: $PROD_NAME $PROD_VER$PROD_FP$PROD_HF"
+    ;;
+ esac
 
 if [ "$ERROR_COUNT" = "0" ]; then
   check_software_status
