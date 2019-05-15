@@ -3,19 +3,19 @@
 # You can clone the domino_docker script and have a corresponding configuration with a matching name
 # You should always make configuration changes in the config file instead of docker_domino
 
-DOCKER_CONTAINER=acme-appdevpack
-DOCKER_IMAGE_NAME=ibmcom/appdevpack
+DOCKER_CONTAINER=acme-proton
+DOCKER_IMAGE_NAME=ibmcom/proton
 DOCKER_IMAGE_VERSION=latest
 DOCKER_IMAGE_RELEASE_DATE=2019-05-10
 DOCKER_FILE=
 
 DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 
-DOCKER_HOSTNAME=acme-appdevpack
+DOCKER_HOSTNAME=acme-proton
 DOMINO_SHUTDOWN_TIMEOUT=60
 # DOCKER_NETWORK=--network=host
 DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
-DOCKER_VOLUMES="-v notesdata_appdevpack:/local/notesdata"
+DOCKER_VOLUMES="-v notesdata_proton:/local/notesdata"
 
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_domino

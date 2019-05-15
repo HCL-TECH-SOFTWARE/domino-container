@@ -381,17 +381,22 @@ remove_file ()
   return 0
 }
 
+extract_tar()
+{
+  TAR=`find . -name "$1"`
+
+  if [ ! -z "$2" ]; then
+    mkdir -p "$2"
+    tar -xf "$TAR" -C $2
+  else
+    tar -xf "$TAR"
+  fi
+}
 
 extract_tgz()
 {
   TGZ=`find . -name "$1"`
   gzip -d "$TGZ"
-}
-
-extract_tar()
-{
-  TAR=`find . -name "$1"`
-  tar -xf "$TAR"
 }
 
 extract_taz()
@@ -588,7 +593,7 @@ install_traveler ()
   return 0
 }
 
-install_appdevpack ()
+install_proton ()
 {
   header "$PROD_NAME Installation"
 
@@ -614,10 +619,14 @@ install_appdevpack ()
   extract_tar "DOMINO_APPDEV_PACK_*.tar"
   extract_taz "proton-addin*.tgz" "proton-addin"
   extract_taz "oauth-dsapi*.tgz" "oauth-dsapi"
+  extract_tgz "domino-iam-service*.tgz"
+  extract_tar "domino-iam-service*.tar" "domino-iam-service"
 
   install_binary "proton-addin/proton"
   install_binary "oauth-dsapi/liboauth-dsapi.so"
   install_binary "oauth-dsapi/oauthcfg"
+
+  install_file "domino-iam-service/template/iam-store.ntf" $DOMINO_DATA_PATH/iam-store.ntf notes notes 644
 
   echo
   log_ok "$PROD_NAME $INST_VER installed successfully"
@@ -657,8 +666,8 @@ case "$PROD_NAME" in
     install_traveler
     ;;
 
-  appdevpack)
-    install_appdevpack
+  proton)
+    install_proton
     ;;
 
   *)
@@ -684,7 +693,7 @@ remove_directory $Notes_ExecDirectory/_uninst
 # Ensure permissons are set correctly for data directory
 chown -R notes:notes /local/notesdata
 
-# Take a backup copy of Traveler Data Files
+# Take a backup copy of Product Data Files
 
 
 case "$PROD_NAME" in
@@ -692,6 +701,11 @@ case "$PROD_NAME" in
   traveler)
     cd $DOMINO_DATA_PATH
     tar -czf /local/install_data_${PROD_NAME}_${PROD_VER}.taz traveler domino/workspace
+    ;;
+
+  proton)
+    cd $DOMINO_DATA_PATH
+    tar -czf /local/install_data_${PROD_NAME}_${PROD_VER}.taz iam-store.ntf
     ;;
 
 esac

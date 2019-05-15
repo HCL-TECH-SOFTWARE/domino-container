@@ -38,7 +38,7 @@ TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler | appdevpack }"
+  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler | proton }"
   echo
 
   return 0

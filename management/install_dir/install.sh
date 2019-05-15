@@ -453,8 +453,7 @@ echo
 # download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 
 if [ ! -z $DownloadFrom ]; then
-  # header "Download Files Demo"
-
+  header "Download Files Demo"
   # download_and_check_hash $DownloadFrom/text.txt "My Install Directory"
 fi
 

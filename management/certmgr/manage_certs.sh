@@ -41,8 +41,8 @@
 
 DOMIMO_ORG="Acme"
 
-DOMINO_SERVER="traveler"
-DOMINO_DNS="traveler.acme.com"
+DOMINO_SERVER="domino"
+DOMINO_DNS="domino.acme.com"
 
 PROTON_SERVER="proton"
 PROTON_DNS="proton.acme.com"
@@ -63,12 +63,8 @@ USE_LOCAL_CA=yes
 CA_ORG=Acme
 CA_PASSWORD=domino4ever
 
-CA_DIR=./ca
-KEY_DIR=./key
-CSR_DIR=./csr
-CRT_DIR=./crt
-PEM_DIR=./pem
-TXT_DIR=./txt
+CERTMGR_CONFIG_FILE="/local/cfg/certmgr_config"
+CERTMGR_DIR=`dirname $0`
 
 # -------------------------- #
 #   END MAIN CONFIGURATION   #
@@ -131,10 +127,25 @@ PROTON_SERVER_NAME="/O=$DOMIMO_ORG/CN=$PROTON_SERVER"
 DOMINO_SERVER_NAME="/O=$DOMIMO_ORG/CN=$DOMINO_SERVER"
 IAM_SERVER_NAME="/O=$DOMIMO_ORG/CN=$IAM_SERVER"
 
+TODO_FILE=todo.txt
+
+# use a config file if present
+if [ -e "$CERTMGR_CONFIG_FILE" ]; then
+  echo "(Using config file $CERTMGR_CONFIG_FILE)"
+  . $CERTMGR_CONFIG_FILE
+fi
+
+# set correct directories based on main path
+
+CA_DIR=$CERTMGR_DIR/ca
+KEY_DIR=$CERTMGR_DIR/key
+CSR_DIR=$CERTMGR_DIR/csr
+CRT_DIR=$CERTMGR_DIR/crt
+PEM_DIR=$CERTMGR_DIR/pem
+TXT_DIR=$CERTMGR_DIR/txt
+
 CA_KEY_FILE=$CA_DIR/$CA_KEY
 CA_CRT_FILE=$CA_DIR/$CA_CERT
-
-TODO_FILE=todo.txt
 
 # -------------------------- #
 
@@ -145,7 +156,7 @@ log ()
 
 todo ()
 {
-  echo $1 $2 $3 $4 >> "$$TODO_FILE"
+  echo $1 $2 $3 $4 >> "$TODO_FILE"
 }
 
 rm_file()
@@ -234,8 +245,6 @@ create_key_cert()
         log "Remove CSR [$CSR_FILE]"
         rm -f "$CSR_FILE"
       fi
-    else
-      todo "Please send CSR [$CSR_FILE] to external CA for signing"
     fi
   fi
 }
@@ -250,6 +259,7 @@ check_cert()
   else
     KEY_FILE=$KEY_DIR/$NAME.key
     CRT_FILE=$CRT_DIR/$NAME.crt
+    CSR_FILE=$CSR_DIR/$NAME.csr
   fi
 
   PEM_CA_ALL_FILE=$PEM_DIR/ca_all.pem
@@ -282,6 +292,10 @@ check_cert()
     else
       KEYLEN=""
       STATUS="NO RSA Private/Public Key"
+    fi
+
+    if [ -e "$CSR_FILE" ]; then
+      todo "Please send CSR [$CSR_FILE] to external CA for signing"
     fi
   fi
 
@@ -347,10 +361,13 @@ check_keys_and_certs ()
     check_cert "$NAME"
   done
 
+  echo "Complete PEM files including trusted roots -> $PEM_DIR"
+  echo "Certificates issues by CA locationed here  -> $CRT_DIR"
+  log
+  cat $TODO_FILE
   log
 
-  cat "$TODO_FILE"
-  rm -rf "$TODO_FILE"
+  rm -f "$TODO_FILE"
 }
 
 check_create_dirs
@@ -365,3 +382,4 @@ else
   create_key_cert "$1" "$2" "$3"
   check_cert "$1"
 fi
+

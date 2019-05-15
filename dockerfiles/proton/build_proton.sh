@@ -24,7 +24,7 @@ SCRIPT_NAME=$0
 DOWNLOAD_FROM=$1
 
 # Select product to install
-PROD_NAME=appdevpack
+PROD_NAME=proton
 
 # Description for Image Labels
 PROD_LABEL=AppDevPackDocker
@@ -99,8 +99,8 @@ docker_build ()
   BUILDTIME=`date +"%d.%m.%Y %H:%M:%S"`
 
   case "$PROD_NAME" in
-    appdevpack)
-      DOCKER_DESCRIPTION="Domino AppDevPack"
+    proton)
+      DOCKER_DESCRIPTION="Domino Proton"
       ;;
 
     *)

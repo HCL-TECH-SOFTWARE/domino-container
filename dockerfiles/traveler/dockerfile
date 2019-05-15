@@ -38,8 +38,8 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN yum update -y && \
-  $LocalInstallDir/install_domino.sh && \
+# RUN yum update -y && \
+RUN  $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
   rm -rf $LocalInstallDir 
