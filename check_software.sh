@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$SOFTWARE_DIR" ]; then
-  SOFTWARE_DIR=/local/software
+  SOFTWARE_DIR=./software
 fi
 
 if [ -z "$DOWNLOAD_FROM" ]; then
