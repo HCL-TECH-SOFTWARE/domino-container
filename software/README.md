@@ -24,9 +24,8 @@ This directory is supposed to contain the following files. Please download them 
 ### Domino 10.0.x
 | Part # | Title | Filename / Download  |
 | :---: |:---|:----|
-| CNW1ZEN | IBM Domino Server 10.0.0 (64 bit Linux) | [DOMINO_SERVER_V10.0_64_BIT_LINUX_.tar](https://www-112.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal=CNW1ZEN) | 
 | CNXL9EN | IBM Domino Server 10.0.1 (64 bit Linux) | [DOM_SVR_V10.0.1_64_BIT_Lnx.tar](https://www-112.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal=CNXL9EN) | 
-| FP1 | IBM Domino Server 10.0.1FP1 (64 bit Linux) | [domino10001FP1_linux64.tar](http://www.ibm.com/support/fixcentral/quickorder?product=ibm%2FLotus%2FLotus+Domino&fixids=DominoServer_1001FP1_Linux64&source=SAR) | 
+| CNZ9IEN | IBM Domino Server 10.0.1FP1 (64 bit Linux) | [DOM_SVR_V10.0.1_FP1_64B_LINUX_EN.tar](https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal=CNZ9IEN) |
 | CC0NGEN | IBM Domino AppDev Pack 1.0.1 | [DOMINO_APPDEV_PACK_1.0.1_MP_EN.tgz](https://www-112.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal=CC0NGEN) | 
 
 

@@ -1,15 +1,15 @@
 #!/bin/sh
 # change this to #!/bin/ksh for AIX
-########################################################################
+###########################################################################
 # RC RunLevel Entry Point
-########################################################################
+###########################################################################
 # Start/Stop Script for Domino on xLinux/zLinux/AIX
-# 2005-2018 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
+# 2005-2019 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
 # You may use and distribute the unmodified version of this script.
 # Use at your own risk. No implied or specific warranties are given.
 # You may change it for your own usage only
-# Version 3.2.0 30.10.2018
-########################################################################
+# Version 3.2.2 16.05.2019
+###########################################################################
 # chkconfig: 345 66 19
 # description: IBM Domino Server (notes)
 
@@ -119,6 +119,20 @@ if [ -e /etc/systemd/system ] ; then
     elif [ "$1" = "statusd" ] ; then
       echo
       systemctl status "$DOMINO_SYSTEMD_NAME"
+      echo
+      exit 0
+
+    elif [ "$1" = "systemlog" ] ; then
+      if [ -z "$2" ]; then
+        LAST_LOG_LINES=100
+      else
+        LAST_LOG_LINES="$2"
+      fi
+
+      echo 
+      echo "--- Last System Log Output ($LAST_LOG_LINES) ---"
+
+      journalctl -u $DOMINO_SYSTEMD_NAME | tail -$LAST_LOG_LINES
       echo
       exit 0
 

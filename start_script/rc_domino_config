@@ -1,8 +1,8 @@
 ###########################################################################
 # Configuration - Start/Stop Script for Domino on xLinux/zLinux/AIX       #
-# Version 3.2.0 30.10.2018                                                #
+# Version 3.2.2 16.05.2019                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2018                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -22,7 +22,7 @@
 
 LOTUS=/opt/ibm/domino
 DOMINO_DATA_PATH=/local/notesdata
-DOMINO_SHUTDOWN_TIMEOUT=600
+DOMINO_SHUTDOWN_TIMEOUT=180
 DOMINO_CONFIGURED="yes"
 
 # -- LANG setting on OS level that should be used --
@@ -84,6 +84,14 @@ DOMINO_NSD_BEFORE_KILL="yes"
 
 # -- Base Path for Scripts --
 #DOMINO_SCRIPT_DIR=$LOTUS/scripts
+
+# -- Tika Server (FT Index Filters) termination check --
+DOMINO_TIKA_SHUTDOWN_TERM_SECONDS=20
+
+# -- Delayed Shutdown Commands --
+
+DOMINO_SHUTDOWN_DELAYED_SCRIPT="/local/delayed.sh"
+DOMINO_SHUTDOWN_DELAYED_SECONDS=15
 
 # -- Pre-Shutdown Script --
 #DOMINO_PRE_SHUTDOWN_SCRIPT=$DOMINO_SCRIPT_DIR/pre_shutdown_script

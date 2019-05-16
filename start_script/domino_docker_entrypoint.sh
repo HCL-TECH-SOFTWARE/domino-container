@@ -2,9 +2,9 @@
 
 ###########################################################################
 # Docker Entrypoint - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.2.0 30.10.2018                                                #
+# Version 3.2.2 16.05.2019                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2018                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -24,6 +24,8 @@
 # You can still interact with the start script invoking rc_domino which is Docker aware.
 # This entry point is invoked by Docker to start the Domino server and also acts as a shutdown monitor.
 
+DOMINO_USER=notes
+DOMINO_SERVER_ID=/local/notesdata/server.id
 DOMINO_DOCKER_CFG_SCRIPT=/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
 
@@ -41,7 +43,7 @@ stop_server ()
 trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
 
 # Check if server is configured. Else start custom configuration script
-if [ ! -e "/local/notesdata/names.nsf" ]; then
+if [ ! -e "$DOMINO_SERVER_ID" ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
       $DOMINO_DOCKER_CFG_SCRIPT
@@ -50,19 +52,33 @@ if [ ! -e "/local/notesdata/names.nsf" ]; then
 fi 
 
 # Check if server is configured. Else start remote configuation on port 1352
-if [ ! -e "/local/notesdata/names.nsf" ]; then
-	
-	echo "--- Configuring Domino Server ---"
-  su - notes -c "cd /local/notesdata; /opt/ibm/domino/bin/server -listen 1352"
-	echo "--- Configuration ended ---"
-	echo
+if [ ! -e "/local/notesdata/server.id" ]; then
+
+  echo "Configuration for automated setup not found."
+  echo "Starting Domino Server in listen mode"
+
+  echo "--- Configuring Domino Server ---"
+
+  if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
+    cd /local/notesdata
+    /opt/ibm/domino/bin/server -listen 1352
+  else
+    su - $DOMINO_USER -c "cd /local/notesdata; /opt/ibm/domino/bin/server -listen 1352"
+  fi
+
+  echo "--- Configuration ended ---"
+  echo
 fi
 
 # Finally start server
 
 echo "--- Starting Domino Server ---"
 
-su - notes -c "$DOMINO_START_SCRIPT start"
+if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
+  $DOMINO_START_SCRIPT start
+else
+  su - $DOMINO_USER -c "$DOMINO_START_SCRIPT start"
+fi
 
 # Wait for shutdown signal. This loop should never terminate, because it would 
 # shutdown the Docker container immediately and kill Domino.
@@ -72,5 +88,5 @@ do
   sleep 1
 done
 
-return 0
+exit 0
 

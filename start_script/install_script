@@ -2,9 +2,9 @@
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version 3.2.0 30.10.2018                                                #
+# Version 3.2.2 16.05.2019                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2018                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -168,6 +168,16 @@ if [ -z "$DOMINO_USER_GROUPID" ]; then
   exit 1
 fi
 
+if [ ! -e "$LOTUS" ]; then
+  echo "Terminating installation - Domino program directory '$LOTUS' does not exist"
+  exit 1
+fi
+
+if [ ! -e "$DOMINO_DATA_PATH" ]; then
+  echo "Terminating installation - Domino data directory directory '$LOTUS' does not exist"
+  exit 1
+fi
+
 install_file $START_SCRIPT_DIR/rc_domino /etc/init.d/$DOMINO_RC_NAME root root 755
 install_file $START_SCRIPT_DIR/rc_domino_script $DOMINO_START_SCRIPT root root 755
 install_file $START_SCRIPT_DIR/rc_domino_readme.txt $DOMINO_START_SCRIPT_README notes notes 644
@@ -189,7 +199,11 @@ if [ -e "/.dockerenv" ]; then
   # when running in a Docker environment, don't use systemd/init.d
   echo "Docker Environment detected!"
   
-  install_file "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" root root 755
+  if [ "$PARAM1" = "upd" ] ; then
+    install_file "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" root root 755
+  else
+    install_file_noupdate "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" root root 755
+  fi
   
 else
   if [ -e /etc/systemd/system ] ; then

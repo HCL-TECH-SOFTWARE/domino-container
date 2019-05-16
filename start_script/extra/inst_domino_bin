@@ -23,6 +23,18 @@
 export LOTUS=/opt/ibm/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 
+pushd()
+{
+  command pushd "$@" > /dev/null
+}
+
+popd ()
+{
+  command popd "$@" > /dev/null
+}
+
+export pushd popd
+
 check_binary_busy()
 {
   if [ ! -e "$1" ]; then
@@ -41,10 +53,20 @@ check_binary_busy()
 
 install_binary()
 {
-  SOURCE_BIN=$1
+  SOURCE_BIN="$1"
 
   if [ -z "$SOURCE_BIN" ]; then
     echo "no file specified"
+    return 0
+  fi
+
+  if [ ! -r "$SOURCE_BIN" ]; then
+    echo "Source file does not exist or is not readable [$SOURCE_BIN]"
+    return 0
+  fi
+
+  if [ ! -e "$SOURCE_BIN" ]; then
+    echo "Cannot find binary [$SOURCE_BIN]"
     return 0
   fi
 
@@ -61,7 +83,6 @@ install_binary()
 
     cmp -s "$SOURCE_BIN" "$TARGET_BIN"
     if [ $? -eq 0 ]; then
-      echo "File did not change -- o update needed for '$TARGET_FILE'"
       return 0
     fi
 
@@ -76,20 +97,24 @@ install_binary()
       echo "Error - Can not update binary '$TARGET_BIN' -- Binary in use"
       return 1
     fi
+
+    echo "Updating '$TARGET_BIN'"
+  else
+    echo "Installing '$TARGET_BIN'"
   fi
-  
+
   cp -f "$SOURCE_BIN" "$TARGET_BIN"
   chmod 755 "$TARGET_BIN"
 
   case "$INSTALL_BIN_NAME" in
     *.so)
-      echo "Installed '$INSTALL_BIN_NAME' Extension-Manager"
       ;;
 
     *)
+      pushd .
       cd $LOTUS/bin
       ln -f -s tools/startup "$INSTALL_BIN_NAME"
-      echo "Installed '$INSTALL_BIN_NAME' Servertask"
+      popd
       ;;
 
   esac
@@ -97,6 +122,4 @@ install_binary()
   return 0
 }
 
-install_binary "$1"
 
-exit 0

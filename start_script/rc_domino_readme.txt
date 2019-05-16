@@ -1,8 +1,8 @@
 ###########################################################################
 # README - Start/Stop Script for Domino on xLinux/zLinux/AIX              #
-# Version 3.2.0 30.10.2018                                                #
+# Version 3.2.2 16.05.2019                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2018                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -39,7 +39,7 @@ You should setup all settings in the script configuration file.
 Note: For newer versions using systemd (CentOS 7 RHEL 7/ SLES 12) root permissions are 
 required to start/stop the server. 
 One way to accomplish this is to grant "sudo" permissions for the "rc_domino" script.
-
+See the "Enable Startup with sudo" section for details.
 
 --------------------
 Simple Configuration
@@ -55,11 +55,11 @@ Group: notes
 Binary Directory: /opt/ibm/domino/bin
 Data Directory  : /local/notesdata
 
-I recommend to use the standard configuration. This will make your life easier for installing the server.
+The standard configuration is highly recommended. This will make your life easier for installing the server.
 You can change the data directory in the rc_domino_config file. 
-But the binary location and the notes:notes user and group are required.
+But the binary location and the notes:notes user and group should stay the same.
 
-Still I would stay with the standard /local/notesdata. This could be a separate mount-point.
+I would stay with the standard /local/notesdata. This could be a spearate mount-point.
 And you could also use the following directory structure for the other directories.
 
 /local/translog
@@ -68,9 +68,9 @@ And you could also use the following directory structure for the other directori
 
 Each of them could be a separate file-system/disk.
 
-If you have the standard environemnt you just have to untar the files and start the install_script.
-It copies all the scripts and configuration and from then on you can use the "domino" command for everything.
-The script is pre-configured and will work for older versions with init.d and also with systemd.
+If you have the standard environemnt you just have to untar the start-script files and start the install_script.
+It copies all the scripts and configuration and after installation you can use the "domino" command for everything.
+The script is pre-configured and will work for older versions with init.d and also with the newer systemd.
 
 - The first command untars the files
 - The install_scripts writes all required files into the right locations with the right owner and permissions.
@@ -87,9 +87,9 @@ Other useful commands:
 
 domino status
 domino statusd
-domion console
+domino console
 
-You find all details about commands and configuration options in this readme.
+All details about configuration and commands are documented below.
 
 --------------------------
 Enable Startup with sudo
@@ -111,7 +111,6 @@ Add the following lines to the sudoer file
 This allows you to to run the start script in the following way from your notes user.
 
 sudo /etc/init.d/rc_domino ..
-
 
 
 --------------------------
@@ -138,13 +137,13 @@ d.) For systemd copy the domino.service file to /etc/systemd/system
 	
 3.) Check Configuration 
 
-Ensure that your UNIX user name matches the one in the configuration part 
+Ensure that your UNIX/Linux user name matches the one in the configuration part 
 of the Domino server. Default is "notes".
 
 For systemd ensure the configuration of the domino.service file is matching and 
 specially if it contains the right user name and path to the rc_domino_script.
 And also the right path for the "PIDFile"
-(See "Special platform considerations --> systemd (CentOS 7 RHEL 7 / SLES 12 or higher)"  for details).
+(See "Special platform considerations --> systemd (CentOS 7 RHEL 7/ SLES 12 or higher)"  for details).
 
 
 Special Note for systemd
@@ -154,11 +153,10 @@ For systemd the start/stop operations are executed using the systemd service "do
 The rc_domino script itself can be still used as a central entry point for all operations.
 This includes start/stop which will calls the systemd commands in the background.
 When using systemd you can re-locate the rc_domino script into any other directory.
-It is perfectly OK to keep it in the /etc/init.d directory for consistence.
-But it is not invoked by the rc level scripts.
+It but it is perfectly OK to keep it in the /etc/init.d directory for consistence.
 
 In addition take care that systemd does not use .profile and .bash_profile!
-Environment variables are specified in the systemd service like this:
+Environment variables are specified in the systemd service in the following way:
 
 Environment=LANG=de_DE.UTF-8 
 
@@ -178,12 +176,12 @@ Environment=LANG=de_DE.UTF-8
   
   Having the configuration separated from the script logic allows you to install new script 
   versions without changing the code in the script itself.
-  The complete configuration is done in the rc_domino_config file.
+  All configuration can be found in the rc_domino_config file.
+  It contains all configuration parameters either with a default value or commented out waiting to be enabled.
   
-  A sample configuration file is included.
   For a single partition the defaults in the start script should work.
-  For AIX you may have to create a directory for the config file.
   This is the current recommended configuration. You should not modify the script itself.
+  For AIX you may have to create a directory for the config file.
 
 
 ---------------------------------------
@@ -197,7 +195,7 @@ systemd (CentOS 7 RHEL 7/ SLES 12 or higher)
 etc/systemd/system/domino.service contains the configuration for the systemd service.
 
 The following parameters should be reviewed and might need to be configured.
-Once you have configured the service you can enable and disable with systemctl.
+Once you have configured the service you can enable and disable it with systemctl.
 	
 systemctl enable domino.service
 systemctl disable domino.service
@@ -218,7 +216,6 @@ With systemd the security limit configuration is not used anymore and the limits
 are enforced by systemd. Starting with Domino 9 you should configure at least 60000 files.
 Files means file handles and also TCP/IP sockets!
 
-
 LimitNPROC=8000
 ---------------
 
@@ -227,20 +224,24 @@ are enforced by systemd. Even Domino uses pthreads you should ensure that you ha
 sufficient processes configured because the limit does not specify the number of 
 processes but the number of threads that the "notes" user is allowed to use!
 
-
 TasksMax=8000
 -------------
 
-The version of systemd shipped in SLES 12 SP2 uses the PIDs cgroup controller. This provides some per-service fork() bomb protection, leading to a safer system.
+The version of systemd shipped in SLES 12 SP2 uses the PIDs cgroup controller. 
+This provides some per-service fork() bomb protection, leading to a safer system.
 It controls the number of threads/processes a user can use.
-To control the default TasksMax= setting for services and scopes running on the system, use the system.conf setting DefaultTasksMax=. 
-This setting defaults to 512, which means services that are not explicitly configured otherwise will only be able to create 512 processes or threads at maximum.
-The domino.service sets this value for the service to 8000 explicitly. But you could also change the system wide setting.
-Also current CentOS / RHEL versions support TaskMax and the setting is required as well.
+To control the default TasksMax= setting for services and scopes running on the system, 
+use the system.conf setting DefaultTasksMax=. 
+
+This setting defaults to 512, which means services that are not explicitly configured otherwise 
+will only be able to create 512 processes or threads at maximum.
+The domino.service sets this value for the service to 8000 explicitly. 
+But you could also change the system wide setting.
+CentOS / RHEL versions also support TaskMax and the setting is required as well.
 
 Note: If you are running an older version TaskMax might not be supported and you have to remove the line from the domino.service
 
-	
+
 #Environment=LANG=en_US.UTF-8
 #Environment=LANG=de_DE.UTF-8
 -----------------------------
@@ -248,7 +249,7 @@ Note: If you are running an older version TaskMax might not be supported and you
 You can specify environment variables in the systemd service file.
 Depending on your configuration you might want to set the LANG variable.
 But in normal cases it should be fine to set it in the profile.
-The parameters in the service file are added for convenience and are optional.	
+
 	
 PIDFile=/local/notesdata/domino.pid
 -----------------------------------
@@ -262,8 +263,7 @@ ExecStart=/opt/ibm/domino/rc_domino_script start
 ExecStop=/opt/ibm/domino/rc_domino_script stop
 ------------------------------------------------
 	
-Those two lines need to match the location of the main domino script including the 
-start/stop command parameter.
+Those two lines need to match the location of the main domino script including the start/stop command parameter.
 	
 TimeoutSec=100
 --------------
@@ -305,35 +305,35 @@ Special platform considerations RedHat/CentOS 6.x
 
 On RedHat/CentOS you can use the chkconfig to add Domino to the run-level environment
     
-Example: chkconfig --add rc_domino 
+Example: chkconfig --add rc_domino
 
 To verify that your service is correctly added to the rc-levels use the following command
 
-find /etc/ -name '*domino*' 
+find /etc/ -name '*domino*'
 
-etc/sysconfig/rc_domino_config 
-/etc/rc.d/rc0.d/K19rc_domino 
-/etc/rc.d/init.d/rc_domino 
-/etc/rc.d/rc2.d/K19rc_domino 
-/etc/rc.d/rc6.d/K19rc_domino 
-/etc/rc.d/rc4.d/S66rc_domino 
-/etc/rc.d/rc3.d/S66rc_domino 
-/etc/rc.d/rc1.d/K19rc_domino 
-/etc/rc.d/rc5.d/S66rc_domino 
+etc/sysconfig/rc_domino_config
+/etc/rc.d/rc0.d/K19rc_domino
+/etc/rc.d/init.d/rc_domino
+/etc/rc.d/rc2.d/K19rc_domino
+/etc/rc.d/rc6.d/K19rc_domino
+/etc/rc.d/rc4.d/S66rc_domino
+/etc/rc.d/rc3.d/S66rc_domino
+/etc/rc.d/rc1.d/K19rc_domino
+/etc/rc.d/rc5.d/S66rc_domino
 
-And you can also query the runlevels like this 
+And you can also query the runlevels in the following way
 
-chkconfig --list | grep -i domino 
-rc_domino       0:off   1:off   2:off   3:on    4:on    5:on    6:off 
+chkconfig --list | grep -i domino
+rc_domino       0:off   1:off   2:off   3:on    4:on    5:on    6:off
 
 
 ------------------------------------
 Special platform considerations AIX 
 ------------------------------------
 
-For AIX change first line of the scripts from "#!/bin/sh" to "#!/bin/ksh"    
+For AIX change first line of the scripts from "#!/bin/sh" to "#!/bin/ksh"
 Domino on Linux use "sh". AIX uses "ksh". 
-The implementation of the shells differs in some ways on different platforms. 
+The implementation of the shells differs in some ways on different platforms.
 Make sure you change this line in rc_domino and rc_domino_script
 
 On AIX you can use the mkitab to include rc_domino in the right run-level
@@ -344,45 +344,48 @@ Domino Docker Support
 ----------------------
 
 This start script supports Domino on Docker. 
-But the configuration differs from the classical configuration.
+But the configuration differs from classical way to run the start script.
 The install_script and also the start script detects a Docker configuration.
+And will work according the the requirements of a Docker environment.
 
 For Domino on Docker a separate entry point is needed to start the server.
 Images derived from CentOS 7.4 and higher are supported.
 
 A Docker image doesn't have a full systemd implementation and start/stop cannot be implemented leveraging systemd.
 Therefore the start script comes with a separate Docker entry point script "domino_docker_entrypoint.sh" 
-which can be used in your Docker build script.
+The script can be used in your Docker build script and you can include the start script into your own Docker images.
 
 The entry point script takes care of start and stop of the server by invoking the rc_domino_start script directly.
-You can still use rc_domino (or the new alias domino) to interact with your server if you start a shell inside the container.
+You can still use rc_domino (or the new alias domino) to interact with your server once you started a shell inside the container.
 
 In addition the script also supports remote setup of a Domino server.
 If no names.nsf is located in the data directory it puts the server into listen mode for port 1352 for remote server setup.
 
-You an add your own configuration script (/docker_prestart.sh), which is started before this standard operation.
-If the file /docker_prestart.sh is present in the container and the server is not yet setup, the script is executed.
+You an add your own configuration script (/docker_prestart.sh) to change the way the server is configured.
+The script is started before this standard operations.
+If the file /docker_prestart.sh is present in the container and the server is not yet setup, the script is executed first.
 
 The output log of the Domino server is still written to the notes.log files.
-Output from the container is just from the entry point script.
+And the only output you see in from the entry point script are the start and stop operations.
 
 If you want to interact with the logs or use the monitor command, you can use a shell inside the container.
-Using this shell you can use all existing Start Script commands.
-But you should normally stop the Domino server by stopping the container.
+Using a shell you can use all existing Start Script commands.
+But you should stop the Domino server by stopping the container and not use the 'stop' command provided by the start script.
 
-!! Important information !! 
+!! Important information !!
 ---------------------------
 
-Docker has a very short default shutdown timeout.
+Docker has a very short default shutdown timeout!
 When you stop your container Docker will send a SIGTERM to the entry point.
-After waiting for 10 seconds Docker will send a SIGKILL signal to the entry point.
+After waiting for 10 seconds Docker will send a SIGKILL signal to the entry point!!
+
 This would cause an unclean Domino Server shutdown!
 
 The entrypoint script is designed to catch the signals, but the server needs time to shutdown!
 
 So you should stop your Domino Docker containers always specifying the --time parameter to increase the shutdown grace period.
 
-Example: docker stop --time=60 domino10 
+Example: docker stop --time=60 domino 
 Will wait for 60 seconds until the container is killed.
 
 
@@ -391,8 +394,9 @@ Additonal Docker Start Script Configuration
 
 There is a special configuration option for start script parameters for Docker.
 Because the rc_domino_config file is read-only, on Docker you can specify an additional config file
-in your data directory which is resisting in persistent storage.
+in your data directory which is usually configured to use a persistent volume which isn't part of the container.
 This allows you to set new parameters or override parameters from the default config file.
+
 
 -------------------------
 Components of the Script
@@ -402,7 +406,7 @@ Components of the Script
 
   This shell script has two main purposes
 
-  - Have a basic entry point per instance to include it in "rc" run-level 
+  - Have a basic entry point per instance to include it in "rc" run-level
     scripts for automatic startup of the Domino partition 
     You need one script per Domino partition or a symbolic link
     with a unique name per Domino partition.
@@ -451,24 +455,24 @@ Components of the Script
   This allows very flexible configuration. You can specify global parameters in the default config file and have specific config files per Domino partition.
   So you can now use both config files in combination or just one of them.
    
-  Note: On AIX this directory is not standard but you can create it 
+  Note: On AIX this directory is not standard but you can create it
   or if really needed change the location the script.
   
-  Usually there is one configuration file per Domino partition and the last part of the name 
+  Usually there is one configuration file per Domino partition and the last part of the name
   determines the partition it is used for. 
   
   Examples:
     rc_domino_config_notes, rc_domino_config_notes1, rc_domino_config_notes2, ...
   
-  If this file exists for a partition those parameters are used for server 
+  If this file exists for a partition those parameters are used for server
   start script configuration.
   
   This way you can completely separate configuration and script logic.
   You could give even write permissions to Domino admins to allow them to change
   the start-up script configuration. 
   
-  This file only needs to be readable in contrast to rc_domino and rc_domino_script 
-  which need to be executable. 
+  This file only needs to be readable in contrast to rc_domino and rc_domino_script
+  which need to be executable.
 
 4.) systemd service file "domino.service
 
@@ -484,6 +488,7 @@ Components of the Script
   This script can be used as the standard entry point for your Domino Docker container.
   It takes care of your Domino Server start/stop operations.
   See details in the Docker section.
+
   
 ---------------------
 Commands & Parameters
@@ -567,6 +572,16 @@ systemd has a very nice and detailed status command.
 The default status check remains the status the existing status command.
 This command is used to show the systemd status for the domino.service.
 (the systemd command would be: systemctl status domino.service"
+
+
+tika stop|kill
+--------------
+
+Shows the Tika server status and can be used to terminate the process.
+Without additional parameters this command shows the status of the Tiker server process.
+
+tika stop -> stops the Tika server process
+tika kill -> kills the Tika server process
 
 
 service
@@ -674,6 +689,12 @@ lastlog
 Shows last log lines. by default 100 lines are displayed.
 Optionally you can specify the number of log lines
 
+systemlog
+---------
+
+Shows last system log lines for the service from systemd. by default 100 lines are displayed.
+Optionally you can specify the number of log lines
+
 
 archivelog
 ----------
@@ -720,13 +741,13 @@ In normal cases you would just use "clearlog" without parameters and specify exp
 
   If $DOMINO_LOG_BACKUP_DIR is set the following expired files are removed from this directory
 
-  $DOMINO_USER_*.log.gz 
+  $DOMINO_USER_*.log.gz
   (Example: notes_*.log.gz)
 
   Else the same file pattern is used to remove files from the data-directory
 
 
-- If DOMINO_CUSTOM_LOG_CLEAR_DAYS is set and also DOMINO_CUSTOM_LOG_CLEAR_PATH is set all expired files from 
+- If DOMINO_CUSTOM_LOG_CLEAR_DAYS is set and also DOMINO_CUSTOM_LOG_CLEAR_PATH is set all expired files from
   this directory and sub-directories are removed that meet the specified expiration days
 
 
@@ -746,7 +767,7 @@ Generates a NSD without memcheck (nsd -nomemcheck).
 info
 ----
 
-Generates a sysinfo style NSD (nsd -info). 
+Generates a sysinfo style NSD (nsd -info).
 
 
 kill
@@ -773,19 +794,19 @@ Remove hanging resources after a server crash
 (processes, shared memory, semaphores, message queues)
 
 In contrast to the NSD -kill option this routine removes ALL resources.
-This includes all message queues, shared memory, semaphores allocated by 
+This includes all message queues, shared memory, semaphores allocated by
 the UNIX user used by the Domino server instance.
 And also removes all processes started from the server binary directory
 (e.g. /opt/ibm/domino).
 NSD currently does only remove registered resources in the following files:
 pid.nbf, mq.nbf, sem.nbf, shm.nbf
 
-So this command is mainly useful if NSD cannot remove all resources due to 
+So this command is mainly useful if NSD cannot remove all resources due to
 corruptions or add-on programs or any other odd situation.
 It prevents you from having to manually remove resources and processes in
-such a corrupt state. 
+such a corrupt state.
 
-Note: Resources allocated by add-on applications using native OS-level 
+Note: Resources allocated by add-on applications using native OS-level
 operations are not registered.
 
   
@@ -857,8 +878,8 @@ If this file is present the compact operations will run once and remove the file
 Configuration Parameters
 ------------------------
 
-Variables can be set in the rc_domino_script per user (configuration settings) 
-or in the profile of the user. 
+Variables can be set in the rc_domino_script per user (configuration settings)
+or in the profile of the user.
 Once the configuration is specified you need to set DOMINO_CONFIGURED="yes"
 
 
@@ -935,7 +956,7 @@ DOMINO_OUTPUT_LOG
 -----------------
 
 (Optional)
-Output log file used to log Domino output into a OS-level log file 
+Output log file used to log Domino output into a OS-level log file
 (used for troubleshooting and the "monitor" option).
 Default: "username".log in data-directory
 
@@ -973,10 +994,10 @@ USE_JAVA_CONTROLLER
 -------------------
 
 (Optional)
-Use the Java Controller to manage the Domino server. 
+Use the Java Controller to manage the Domino server.
 Specify "yes" to enable this option.
 
-When using the Java Server Controller the "monitor" command cannot be used because the 
+When using the Java Server Controller the "monitor" command cannot be used because the
 Domino Java Server Controller does handle all the console input/output and writes to separate files.
 
 
@@ -1015,7 +1036,7 @@ DOMINO_DEBUG_MODE
 -----------------
 
 (Optional)
-Enabling the debug mode via DOMINO_DEBUG_MODE="yes" allows to trace and 
+Enabling the debug mode via DOMINO_DEBUG_MODE="yes" allows to trace and
 troubleshoot the start script. Enable this option only for testing!
 
 DOMINO_DEBUG_FILE
@@ -1031,7 +1052,7 @@ DOMINO_RESET_LOADMON
 --------------------
 
 (Optional - Recommended - Default)
-Domino calculates the Server Availability Index (SAI) via LoadMon by calculating 
+Domino calculates the Server Availability Index (SAI) via LoadMon by calculating
 the current transaction times and the minimum transactions times which are 
 stored in loadmon.ncf when the server is shutdown.
 This file can only be deleted when the server is showdown.
@@ -1045,8 +1066,8 @@ DOMINO_CUSTOM_COMMAND_BASEPATH
 
 (Optional - Expert)
 This option allows you to specify a directory which is used for custom commands.
-If a command which is specified when invoking the script matches a script name which 
-is present in the specified directory (and if the script can be executed) the custom 
+If a command which is specified when invoking the script matches a script name which
+is present in the specified directory (and if the script can be executed) the custom
 command will execute the script passing all current parameters of the current command.
 This is a new flexible way to plug-in your own commands without changing the code of the main script logic.
 
@@ -1089,7 +1110,7 @@ DOMINO_CUSTOM_REMOVE_TEMPFILES_SCRIPT
 This script allows a customizable way to remove temp files on server start.
 A sample script "remove_tempfiles_script" is included.
 the script works in combination with "DOMINO_REMOVE_TEMPFILES".
-you have to specify a script name and enable the option. 
+you have to specify a script name and enable the option.
 this script overwrites the default code in the start script.
 
 DOMINO_CLEAR_LOGS_STARTUP
@@ -1163,14 +1184,19 @@ DOMINO_LOG_DB_BACKUP
 
 (Optional)
 Sets a fixed log.nsf backup file to have one additional version of log.nsf 
-instead of creating multiple versions with date-stamp. Works in combination with DOMINO_LOG_DB_DAYS.
+Instead of creating multiple versions with date-stamp. Works in combination with DOMINO_LOG_DB_DAYS.
+
+Instead of renaming a log database you can specify "DELETEDB" to remove the log database.
+
 
 DOMINO_DOMLOG_DB_BACKUP
 -----------------------
 
 (Optional)
-Sets a  fixed domlog.nsf backup file to have one additional version of domlog.nsf
-instead of creating multiple versions with date-stamp. Works in combination with DOMINO_DOMLOG_DB_DAYS.
+Sets a fixed domlog.nsf backup file to have one additional version of domlog.nsf
+Instead of creating multiple versions with date-stamp. Works in combination with DOMINO_DOMLOG_DB_DAYS.
+
+Instead of renaming a log database you can specify "DELETEDB" to remove the log database.
 
 
 DOMINO_DOMLOG_DB_DAYS
@@ -1203,7 +1229,7 @@ DOMINO_PRE_SHUTDOWN_COMMAND
 
 (Optional)
 Command to execute before shutting down the Domino server.
-In some cases, shutting down a certain servertask before shutting down the 
+In some cases, shutting down a certain servertask before shutting down the
 server reduces the time the server needs to shutdown.
 
 
@@ -1211,8 +1237,8 @@ DOMINO_PRE_SHUTDOWN_DELAY
 -------------------------
 
 (Optional)
-Delay before shutting down the Domino server after invoking the pre-shutdown 
-command. If configured the shutdown waits this time until invoking the 
+Delay before shutting down the Domino server after invoking the pre-shutdown
+command. If configured the shutdown waits this time until invoking the
 actual shutdown after invoking the DOMINO_PRE_SHUTDOWN_COMMAND command.
 
 
@@ -1221,7 +1247,7 @@ DOMINO_VIEW_REBUILD_DIR
 
 (Optional)
 View Rebuild Directory which will be created if not present.
-This option is specially useful for servers using temp file-systems with 
+This option is specially useful for servers using temp file-systems with
 subdirectories for example for each partitioned servers separately.
 Use notes.ini view_rebuild_dir to specify directory.
 
@@ -1268,6 +1294,26 @@ DOMINO_SCRIPT_DIR
 This variable can be used to specify a directory for all scripts that can be invoked.
 it is only referenced in the configuration file and used by default for a scripts which are invoked.
 but you can also specify different locations per pre/post script.
+
+
+DOMINO_TIKA_SHUTDOWN_TERM_SECONDS
+---------------------------------
+
+Tries to shutdown the Tika index server during shutdown.
+It can happen that the Tika server does not terminate, which prevents the Domino server from shutting down properly.
+Default: 30 seconds
+
+DOMINO_SHUTDOWN_DELAYED_SCRIPT
+------------------------------
+
+Script which can be executed delayed during shutdown. 
+DOMINO_SHUTDOWN_DELAYED_SECONDS specifies the number of seconds after shutdown start.
+
+DOMINO_SHUTDOWN_DELAYED_SECONDS
+-------------------------------
+
+Shutdown Delay for delayed shutdown command.
+Default is 20 seconds if script is defined.
 
 
 DOMINO_PRE_STARTUP_SCRIPT
@@ -1430,16 +1476,16 @@ AIX: "#!/bin/ksh"
 Tuning your OS-level Environment for Domino
 -------------------------------------------
 
-Tuning your OS-platform is pretty much depending the flavor and version of 
-UNIX/Linux you are running. You have to tune the security settings for 
-your Domino UNIX user, change system kernel parameters and other system 
+Tuning your OS-platform is pretty much depending the flavor and version of
+UNIX/Linux you are running. You have to tune the security settings for
+your Domino UNIX user, change system kernel parameters and other system
 parameters.
 
-The start script queries the environment of the UNIX notes user and 
+The start script queries the environment of the UNIX notes user and
 the basic information like ulimit output when the server is started.
 
-The script only sets up the tuning parameters specified in the UNIX user 
-environment. There is a section per platform to specify OS environment 
+The script only sets up the tuning parameters specified in the UNIX user
+environment. There is a section per platform to specify OS environment
 tuning parameters.
 
 Linux
@@ -1502,37 +1548,37 @@ for each Domino partitions specified by UNIX user name for each partition.
 
 
 -----------------------------------
-Domino Start Script systemd Support 
+Domino Start Script systemd Support
 -----------------------------------
 
-Beginning with CentOS 7 RHEL 7 and SLES 12 Linux is using the new "systemd" 
+Beginning with CentOS 7 RHEL 7 and SLES 12 Linux is using the new "systemd"
 (http://en.wikipedia.org/wiki/Systemd) for starting services daemons. 
 All other platforms are also moving to systemd. 
-rc scripts are still working to some extent. but it makes sense to switch to the systemd service model. 
-Most of the functionality in the Domino start script will remain the same and you will also 
-continue to use the same files and configuration. But the start/stop operations are done by a "domino.service". 
+rc scripts are still working to some extent. but it makes sense to switch to the systemd service model.
+Most of the functionality in the Domino start script will remain the same and you will also
+continue to use the same files and configuration. But the start/stop operations are done by a "domino.service".
 
 The start script will continue to have a central entry point per partition "rc_domino" but that script
 is not used by the "rc environment" any more. You can place the file in any location and it is not leveraged by systemd.
 
-systemd will use a new "domino.service" per Domino partition. 
-The service file will directly invoke the main script logic "rc_domino_script" after switching to the right user 
-and setting the right resources like number of open files 
-(before this was done with "su - notes" and the limits configuration of the corresponding pam module). 
+systemd will use a new "domino.service" per Domino partition.
+The service file will directly invoke the main script logic "rc_domino_script" after switching to the right user
+and setting the right resources like number of open files
+(before this was done with "su - notes" and the limits configuration of the corresponding pam module).
 
-Starting and Stopping the Domino server can be done either by the rc_domino script which will invoke the 
+Starting and Stopping the Domino server can be done either by the rc_domino script which will invoke the
 right service calls in the background. Or directly using the systemd commands.
 
-Starting, Stopping and getting the Status 
+Starting, Stopping and getting the Status
 
-systemctl start domino.service 
-systemctl stop domino.service 
+systemctl start domino.service
+systemctl stop domino.service
 systemctl status domino.service 
 
-Enabling and Disabling the Service 
+Enabling and Disabling the Service
 
-systemctl enable domino.service 
-systemctl disable domino.service 
+systemctl enable domino.service
+systemctl disable domino.service
 
 The service file itself is be located in /etc/systemd/system.
 
@@ -1569,43 +1615,43 @@ WantedBy=multi-user.target
 
 
 The rc_domino script can be still used for all commands.
-This includes starting and stopping Domino as a service (only "restart live" option is not implemented). 
-You can continue to have rc_domino with the same or different names in the /etc/init.d directory 
-or put it into any other location. It remains the central entry point for all operations. 
+This includes starting and stopping Domino as a service (only "restart live" option is not implemented).
+You can continue to have rc_domino with the same or different names in the /etc/init.d directory
+or put it into any other location. It remains the central entry point for all operations.
 
 But the domino.service can also be started and stopped using "systemctl". 
 rc_domino uses the configured name of the domino.service (in the header section of rc_domino script).
 
-systemd operations need root permissions. So it would be best to either start rc_domino for start/stop operations with root. 
-One way to accomplish using root permissions is to allow sudo for the rc_domino script. 
+systemd operations need root permissions. So it would be best to either start rc_domino for start/stop operations with root.
+One way to accomplish using root permissions is to allow sudo for the rc_domino script.
 
-The configuration in /etc/sysconfig/rc_domino_config (or whatever your user name is) 
-will remain the same and will still be read by rc_domino_script. 
+The configuration in /etc/sysconfig/rc_domino_config (or whatever your user name is)
+will remain the same and will still be read by rc_domino_script.
 
-The only difference is that the rc_domino_script is invoked by the systemd service instead of the rc_domino script for start/stop operations. 
+The only difference is that the rc_domino_script is invoked by the systemd service instead of the rc_domino script for start/stop operations.
 
-When invoking start/stop live operations a combination of systemd commands and the existing rc_domino_script logic is used. 
+When invoking start/stop live operations a combination of systemd commands and the existing rc_domino_script logic is used.
 
 
-New systemd status command 
+New systemd status command
 --------------------------
 
 The output from the systemd status command provides much more information than just if the service is started.
 
 Therefore when using systemd the rc_domino script has a new command to show the systemd status output.
-The new command is "statusd" 
+The new command is "statusd"
 
 
-How do you install the script with systemd? 
+How do you install the script with systemd?
 -------------------------------------------
 
 - Copy rc_domino, rc_domino_script and rc_domino_config to the right locations 
 - Copy domino.service to etc/systemd/system.
 - Make the changes according to your environment 
-- Enable the service via systemctl enable domino.service and have it started/stopped automatically 
+- Enable the service via systemctl enable domino.service and have it started/stopped automatically
   or start/stop it either via systemd command or via rc_domino script commands.
 - rc_domino script contains the name of the systemd service. 
-  If you change the name or have multiple partitions you need to change the names accordingly 
+  If you change the name or have multiple partitions you need to change the names accordingly
 
   
 How does it work?
@@ -1632,7 +1678,7 @@ Known Issues
 Hex Messages instead of Log Messages
 ------------------------------------
 
-In some cases when you start the Domino server with my start script you see 
+In some cases when you start the Domino server with my start script you see
 hex codes instead of log message.
 
 The output looks similar to this instead of real log messages.
@@ -1642,42 +1688,42 @@ The output looks similar to this instead of real log messages.
 
 Here is the background about what happens:
 
-Domino uses string resources for error messages on Windows which are linked into the binary. 
-On Linux/UNIX there are normally no string resources and IBM/Lotus uses the res files created 
+Domino uses string resources for error messages on Windows which are linked into the binary.
+On Linux/UNIX there are normally no string resources and IBM/Lotus uses the res files created
 on Windows in combination which code that reads those string resources for error output.
 
 In theory there could be separate version of res files for each language and there used to be res 
 files which have been language dependent.
 So there is code in place in Domino to check for the locale and find the right language for error message.
 
-But there are no localized resources for the error codes any more since Domino ships as English version 
+But there are no localized resources for the error codes any more since Domino ships as English version
 with localized language packs (not containing res files any more).
-This means there is only one set of res Files in English containing all the error text for the core code 
+This means there is only one set of res Files in English containing all the error text for the core code
 (a file called strings.res) and one per server tasks using string resources.
-So string resources contain all the error texts and if Domino does not found the res files the server 
+So string resources contain all the error texts and if Domino does not found the res files the server
 will only log the error codes instead.
 
 By default the res files should be installed into the standard local of the server called "C".
 In some cases the installer does copy the res files into a locale specific directory. For example ../res/de_DE for German.
 
 The start script usually sets the locale of the server. For example to LANG=de_DE or LANG=en_US.
-If this locale is different than the locale you installed the server with, the Domino server will 
+If this locale is different than the locale you installed the server with, the Domino server will
 not find the res files in those cases.
 
 The right location for the res files would be for example on Linux:
  /opt/ibm/domino/notes/latest/linux/res/C/strings.res
 
-But in some cases it looks like this 
+But in some cases it looks like this
  /opt/ibm/domino/notes/latest/linux/res/de_DE/strings.res
 
-The solution for this issue is to move the de_DE directory to C (e.g. mv de_DE C) and your server 
+The solution for this issue is to move the de_DE directory to C (e.g. mv de_DE C) and your server
 will find the res files independent of the locale configured on the server.
 
-You could create a sym link for your locale. This will ensure it works also with 
-all add-on applications and in upgrade scenarios. 
+You could create a sym link for your locale. This will ensure it works also with
+all add-on applications and in upgrade scenarios.
 
 cd /opt/ibm/domino/notes/latest/linux/res
-ln -s C de_DE.UTF-8  
+ln -s C de_DE.UTF-8 
 ln -s C en_US.UTF-8
 
 
@@ -1696,31 +1742,31 @@ Domino SIGHUB Issue
 
 The Domino JVM has a known limitation when handling the SIGHUB signal on some platforms.
 Normally the Domino Server does ignore this signal. But the JVM might crash
-when receiving the signal. Starting the server via nohub does not solve the issue. 
+when receiving the signal. Starting the server via nohub does not solve the issue.
 The only two known working configurations are:
 
 a.) Invoke the bash before starting the server
 
 b.) - Ensure that your login shell is /bin/ksh
     - Start server always with "su - " (switch user) even if you are already
-      running with the right user. The su command will start the server in 
+      running with the right user. The su command will start the server in
       it's own process tree and the SIGHUB signal is not send to the Domino
       processes. 
       
-      Note: The start-script does always switch to the Domino server user 
+      Note: The start-script does always switch to the Domino server user
       for the "start" and "restart" commands.
       For other commands no "su -" is needed to enforce the environment.
-      Switching the user from a non-system account (e.g. root) will always 
+      Switching the user from a non-system account (e.g. root) will always
       prompt for password -- even when switching to the same UNIX user.
       
 
 SELinux (RedHat) RC-start level issue
 -------------------------------------
 
-Depending on your configuration the RC-subsystem will ask for confirmation 
+Depending on your configuration the RC-subsystem will ask for confirmation
 when starting Domino when switching the run-level.
 
-To avoid this question you have to ensure that your pam configuration for 
+To avoid this question you have to ensure that your pam configuration for
 "su" is setup correctly. 
 
 remove the "multiple" from the pam_selinux.so open statement
@@ -1732,20 +1778,20 @@ extract from pam_selinux documentation
 
 multiple 
 
-Tells pam_selinux.so to allow the user to select the security context they 
+Tells pam_selinux.so to allow the user to select the security context they
 will login with, if the user has more than one role.
 
-This ensures that there are no questions asked when starting the Domino server 
+This ensures that there are no questions asked when starting the Domino server
 during run-level change.
 
 
 !Caution!
 ---------
 Modifying the script to use "runuser" instead of "su" is not a solution,
-because "runuser" does not enforce the /etc/security/limits specified for the 
+because "runuser" does not enforce the /etc/security/limits specified for the
 notes-user. 
-This means that the security limits (max. number of open files, etc.)might be to low. 
-You can check for the security limits in the output log of the script. 
+This means that the security limits (max. number of open files, etc.)might be to low.
+You can check for the security limits in the output log of the script.
 The ulimit output is dumped when the server starts.
 
 
@@ -1766,6 +1812,76 @@ The include file used for "session" settings contains this entry already.
 Change History
 --------------
 
+V3.2.2 16.05.2019
+
+New Features
+------------
+
+New Commands:
+
+"systemlog" shows the last log lines from systemd service.
+This is helpful to see output of the start script.
+
+
+"tika" stop|kill
+
+Shows the Tika server status and can be used to terminate the process.
+Without additional parameters this command shows the status of the Tiker server process.
+tika stop --> stops the process.
+tik kill  --> kills the process. 
+
+Added "locale" output to server start logging.
+This can help to troubleshoot issues with locale setting on your server.
+
+
+New configuration options:
+
+
+DOMINO_TIKA_SHUTDOWN_TERM_SECONDS
+
+Tries to shutdown the Tika index server during shutdown.
+IT happens that the Tika server does not terminate, which prevents the Domino server from shutting down properly.
+Default 30 seconds.
+
+DOMINO_SHUTDOWN_DELAYED_SCRIPT
+
+Script which can be executed delayed during shutdown. 
+DOMINO_SHUTDOWN_DELAYED_SECONDS specifies the number of seconds after shutdown start.
+
+DOMINO_SHUTDOWN_DELAYED_SECONDS (default 20 seconds)
+
+Shutdown Delay for delayed shutdown command.
+Default is 20 seconds if script is defined.
+
+
+Docker Support:
+
+Now the entry point script checks if the script is already started with the right user and will not switch to the user.
+There are configuration options on the Docker side to run the entry point script directly with the right user.
+When you switch the user to "notes" at the end of your dockerfile, the container is started with "notes".
+This provides better security.
+
+
+V3.2.1 02.03.2019
+
+Problems Solved
+---------------
+
+The configuration DOMINO_UMASK was enabled by default.
+
+New Features
+------------
+
+Instead of renaming log databases this new feature allows to delete log databases.
+
+The new functionality is available for the following configuration parameters:
+
+DOMINO_LOG_DB_BACKUP
+DOMINO_DOMLOG_DB_BACKUP_DIR
+
+Instead of specifying a target database you specify "DELETEDB" to remove the database on restart.
+
+
 V3.2.0 30.10.2018
 
 New Features
@@ -1778,11 +1894,11 @@ All files of the start script now contain the required header.
 Introducing Domino Docker support!
 The start script wasn't completely ready for Domino on Docker.
 There are special requirements when running in an Docker environment.
-And the start script includes a Docker entrypoint file to start and stop the server.
+The start script now includes a Docker entrypoint file to start and stop the server.
 See details in the Docker Support section of the start script.
 
-New command 'log' -- displays the start script output log. 
-This command can be used with additional options like specifying the command to open the log (e.g. 'log more'). 
+New command 'log' -- displays the start script output log.
+This command can be used with additional options like specifying the command to open the log (e.g. 'log more').
 See log command description for details.
 
 New command 'systemdcfg' to edit the systemd configuration file
@@ -1797,7 +1913,7 @@ This works like the log.nsf backup/rename introduced earlier.
 New config variable DOMINO_UMASK.
 And also allow to set the umask when starting the server via DOMINO_UMASK.
 
-New variable DOMINO_LOG_DB_BACKUP to set a fixed log.nsf backup file to have one additional version of log.nsf 
+New variable DOMINO_LOG_DB_BACKUP to set a fixed log.nsf backup file to have one additional version of log.nsf
 instead of creating multiple versions with date-stamp. Works in combination with DOMINO_LOG_DB_DAYS.
 
 New variable DOMINO_DOMLOG_DB_BACKUP to set a fixed domlog.nsf backup file to have one additional version of domlog.nsf 
@@ -1824,8 +1940,8 @@ This allows you to change the data directory location without changing the pid f
 But this means for multiple partitions you have to change the name for each of the services.
 
 I tried to dynamically read parameters from the config file in domino.service.
-There is an EnvironmentFile= statement in systemd services to read configuration files. 
-But using variables does only work for parameters passed to a an ExecStart/ExecStop command but not for the name of 
+There is an EnvironmentFile= statement in systemd services to read configuration files.
+But using variables does only work for parameters passed to a an ExecStart/ExecStop command but not for the name of
 those scripts invoked. Also it is not directly sourcing the parameters but reading them directly.
 So there seems to be no way to read the config of domino.service from the config file.
 And I had to "hardcode" the filenames.
@@ -1836,7 +1952,7 @@ V3.1.3 30.10.2017
 Problems Solved
 ---------------
 
-Fixed an issue with systemd in combination with server controller. 
+Fixed an issue with systemd in combination with server controller.
 Now the server controller correctly shutdown when the service is stopped
 
 
@@ -1858,7 +1974,7 @@ New Features
 
 New check if Domino ".res" files exist and readable to generate warnings
 
-New short cut command "res" for "resources" 
+New short cut command "res" for "resources"
 
 Changes
 -------
@@ -2123,7 +2239,7 @@ New Option DOMINO_PRE_SHUTDOWN_SCRIPT to allow invoking a script before shutting
 New Option DOMINO_POST_SHUTDOWN_SCRIPT to allow invoking a script after shutting down the server
 
 New Option DOMINO_PRE_STARTUP_SCRIPT to allow invoking a script before starting the server
-New Option DOMINO_POST_STARTUP_SCRIPT to allow invoking a script after starting the server 
+New Option DOMINO_POST_STARTUP_SCRIPT to allow invoking a script after starting the server
 
 
 DOMINO_PRE_STARTUP_SCRIPT
@@ -2253,15 +2369,15 @@ New Features
 - New parameter DOMINO_LOG_BACKUP_DIR to specify a separate directory for backing up log files (instead of the data directory)
 
 - Have a check that "quit" and "exit" in lower-case in monitor console mode does not shutdown the server
-  You have to type in the command in uppercase to shutdown the server because "exit" and "quit" 
+  You have to type in the command in uppercase to shutdown the server because "exit" and "quit"
   are commonly used commands in a shell. Only those two reserved key-words are captured.
   All other abbreviations (like "q") still work.
 
-- New variable DOMINO_DEBUG_MODE="yes" to help debugging start-script problems 
+- New variable DOMINO_DEBUG_MODE="yes" to help debugging start-script problems
 
 - Crash detection on shutdown.
   The "stop" command does now monitor the server log-file for crashes during server shutdown.
-  If a crash is detected the fault-recovery history is shown along with the name of the 
+  If a crash is detected the fault-recovery history is shown along with the name of the
   generated NSD file.
 
 - Be more SLES RC compliant and always return nice RC error status
@@ -2277,25 +2393,25 @@ Changes
   Example: /etc/sysconfig/rc_domino_config_notes
   On AIX you may have to create this directory.
 
-- Rename archived log file. ".log" is now always the last part of the log-file name before the 
+- Rename archived log file. ".log" is now always the last part of the log-file name before the
   time-stamp to make it easier to open the log file in text editor after decompressing.
 
 
 Problems Solved
 ---------------
 
-- Fixed a problem in parameter processing of the rc_domino script when running with the same account 
-  (without using -su) in some environments the way the parameters are passed did not work with how 
+- Fixed a problem in parameter processing of the rc_domino script when running with the same account
+  (without using -su) in some environments the way the parameters are passed did not work with how
   the shell processed them
   
   Note: you need to replace your rc_domino scripts to get this fixed
   (the rc_domino script contains some logic that cannot be moved to the rc_domino_script)
   
-- Platform SLES: Fixed a problem with the LANG variable that was not properly used by the server 
+- Platform SLES: Fixed a problem with the LANG variable that was not properly used by the server
   due to issues with the RC environment LC_ALL was set to "POSIX".
-  This caused problems setting the locale in Domino (comma and decimal point issues).  
-  Now also LC_ALL is set explicitly to avoid incorrect locale setting in Domino due to the 
-  SuSE RC system. 
+  This caused problems setting the locale in Domino (comma and decimal point issues).
+  Now also LC_ALL is set explicitly to avoid incorrect locale setting in Domino due to the
+  SuSE RC system.
 
 
 V1.6 10.01.2007
@@ -2307,10 +2423,10 @@ V1.6 10.01.2007
   Unfortunately files in /var/lock/subsys need root permissions to create/delete files. 
   Therefore on RedHat the start/stop/restart options need root permissions
 
-  You have to run those scripts as "root". The script automatically switches to the 
+  You have to run those scripts as "root". The script automatically switches to the
   right UNIX user name for the configured Domino partition
   
-- Added information about a known issue in combination with SELinux when starting the 
+- Added information about a known issue in combination with SELinux when starting the
   server during the runlevel setup. 
 
 
@@ -2340,15 +2456,15 @@ V1.4 02.04.2006
 
 - "NOTES_" is reserved. Therefore all variables have been changed from "NOTES_" to "DOMINO_"
 
-- Removed a description line in the SuSE start-script configuration to allow multiple 
+- Removed a description line in the SuSE start-script configuration to allow multiple
   partitions started correctly using the RC package
 
 
 V1.3 24.10.2005
 ---------------
 
-- New DOMINO_OUTPUT_LOG and DOMINO_INPUT_FILE variables to define output and 
-  input log files per partition   
+- New DOMINO_OUTPUT_LOG and DOMINO_INPUT_FILE variables to define output and
+  input log files per partition
 
 - Configurable (exportable) NOTES_SHARED_DPOOLSIZE parameter per partition
   

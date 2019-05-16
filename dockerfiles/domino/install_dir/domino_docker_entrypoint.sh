@@ -1,26 +1,30 @@
 #!/bin/sh
 
-############################################################################
-# (C) Copyright IBM Corporation 2015, 2018                                 #
-#                                                                          #
-# Licensed under the Apache License, Version 2.0 (the "License");          #
-# you may not use this file except in compliance with the License.         #
-# You may obtain a copy of the License at                                  #
-#                                                                          #
-#      http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                          #
-# Unless required by applicable law or agreed to in writing, software      #
-# distributed under the License is distributed on an "AS IS" BASIS,        #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
-# See the License for the specific language governing permissions and      #
-# limitations under the License.                                           #
-#                                                                          #
-############################################################################
+###########################################################################
+# Docker Entrypoint - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
+# Version 3.2.2 16.05.2019                                                #
+#                                                                         #
+# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
+# Feedback domino_unix@nashcom.de                                         #
+#                                                                         #
+# Licensed under the Apache License, Version 2.0 (the "License");         #
+# you may not use this file except in compliance with the License.        #
+# You may obtain a copy of the License at                                 #
+#                                                                         #
+#      http://www.apache.org/licenses/LICENSE-2.0                         #
+#                                                                         #
+# Unless required by applicable law or agreed to in writing, software     #
+# distributed under the License is distributed on an "AS IS" BASIS,       #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
+# See the License for the specific language governing permissions and     #
+# limitations under the License.                                          #
+###########################################################################
 
 # This script is the main entry point for Docker container and used instead of rc_domino.
 # You can still interact with the start script invoking rc_domino which is Docker aware.
 # This entry point is invoked by Docker to start the Domino server and also acts as a shutdown monitor.
 
+DOMINO_USER=notes
 DOMINO_SERVER_ID=/local/notesdata/server.id
 DOMINO_DOCKER_CFG_SCRIPT=/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
@@ -38,29 +42,45 @@ stop_server ()
 
 trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
 
-# Check for updated Install Data Directory
-
-su - notes -c /domino_install_data_copy.sh
-
-# Check if server is configured, else start unattended configuration, or remote configuation on port 1352
-
-if [ ! -f "$DOMINO_SERVER_ID" ]; then
-  if [ ! -z "$ServerName" ]; then
-    if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-      if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-        $DOMINO_DOCKER_CFG_SCRIPT
-      fi
+# Check if server is configured. Else start custom configuration script
+if [ ! -e "$DOMINO_SERVER_ID" ]; then
+  if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
+    if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
+      $DOMINO_DOCKER_CFG_SCRIPT
     fi
-    else
-      echo "Configuration for automated setup not found."
-      echo "Starting Domino Server in listen mode"
-      su notes -c "/opt/ibm/domino/bin/server -listen 1352"
   fi
+fi 
+
+# Check if server is configured. Else start remote configuation on port 1352
+if [ ! -e "/local/notesdata/server.id" ]; then
+
+  echo "Configuration for automated setup not found."
+  echo "Starting Domino Server in listen mode"
+
+  echo "--- Configuring Domino Server ---"
+
+  if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
+    cd /local/notesdata
+    /opt/ibm/domino/bin/server -listen 1352
+  else
+    su - $DOMINO_USER -c "cd /local/notesdata; /opt/ibm/domino/bin/server -listen 1352"
+  fi
+
+  echo "--- Configuration ended ---"
+  echo
 fi
 
 # Finally start server
+
 echo "--- Starting Domino Server ---"
-su - notes -c "$DOMINO_START_SCRIPT start"
+
+if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
+  echo "already notes user --> no switch needed"
+  $DOMINO_START_SCRIPT start
+else
+  echo "switching to notes user"
+  su - $DOMINO_USER -c "$DOMINO_START_SCRIPT start"
+fi
 
 # Wait for shutdown signal. This loop should never terminate, because it would 
 # shutdown the Docker container immediately and kill Domino.
@@ -70,4 +90,5 @@ do
   sleep 1
 done
 
-return 0
+exit 0
+

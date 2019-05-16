@@ -1,11 +1,11 @@
-#!/bin/sh 
+#!/bin/sh
 # change this to #!/bin/ksh for AIX
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.2.0 30.10.2018                                                #
+# Version 3.2.2 16.05.2019                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2018                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=3.2.0
+DOMINO_SCRIPT_VERSION=3.2.2
 
 # VERBOSE_INFO="yes"
 
@@ -29,8 +29,8 @@ DOMINO_SCRIPT_VERSION=3.2.0
 DOMINO_USER=$LOGNAME
 
 if [ -z "$DOMINO_USER" ]; then
-   echo "Empty login name. Please check your configuration"
-   exit 1
+  echo "Empty login name. Please check your configuration"
+  exit 1
 fi
 
 # Reading global and specifiy configuration if present
@@ -148,7 +148,15 @@ if [ -z "$DOMINO_DEBUG_MODE" ]; then
   DOMINO_DEBUG_MODE="no"
 fi
 
-# --- End of  special configuration parameters ---
+if [ -z "$DOMINO_SHUTDOWN_DELAYED_SECONDS" ]; then
+  DOMINO_SHUTDOWN_DELAYED_SECONDS=20
+fi
+
+if [ -z "$DOMINO_TIKA_SHUTDOWN_TERM_SECONDS" ]; then
+  DOMINO_TIKA_SHUTDOWN_TERM_SECONDS=30
+fi
+
+# --- End of special configuration parameters ---
 
 # Determine architecture and platform
 if [ `uname` = AIX ]; then
@@ -395,11 +403,6 @@ DOMINO_PID_FILE=/tmp/domino.pid
 # -- Location of main start script --
 DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
 
-# -- Specify umask if really needed. Usually set in user's profile --
-export DOMINO_UMASK=0077
-
-
-
 # Special Parameters
 
 # TN 1249226 / SPR DMAT6DTTHH / D7.0.x In certain cases, running NSD manually can cause a Domino® server to crash on Unix 3systems.
@@ -512,22 +515,24 @@ remove_tempfiles_default ()
       find $DOMINO_DATA_PATH -name "*.DTF" -exec $REMOVE_COMMAND_TEMP '{}' \;
 
       echo "Removing tempfiles:" [$DOMINO_DATA_PATH/*.TMP]
-      find $DOMINO_DATA_PATH -type f -mtime 1 -name "*.TMP" -exec $REMOVE_COMMAND_TEMP '{}' \;
+      find $DOMINO_DATA_PATH -type f -name "*.TMP" -exec $REMOVE_COMMAND_TEMP '{}' \;
     fi
   fi
 
   if [ ! -z "$DOMINO_VIEW_REBUILD_DIR" ]; then
     if [ -w "$DOMINO_VIEW_REBUILD_DIR" ]; then
       echo "Removing tempfiles:" [$DOMINO_VIEW_REBUILD_DIR/*.DTF]
-      find $DOMINO_DATA -name "*.TMP" -exec $REMOVE_COMMAND_TEMP '{}' \;
+      find $DOMINO_DATA -name "*.DTF" -exec $REMOVE_COMMAND_TEMP '{}' \;
    fi
   fi
 
   return 0 
 }
+
 show_version ()
 {
   echo "Nash!Com Linux/Unix Start Script Version ($DOMINO_SCRIPT_VERSION)"
+  return 0
 }
 
 get_notes_ini_var () 
@@ -966,8 +971,6 @@ check_domlog_db_age()
 move_database()
 {
   DebugText "Moving [$1] to [$2]"
-  echo "--- Moving $1 to $2 ---" >> $DOMINO_OUTPUT_LOG 
-  echo "Moving $1 to $2" 
 
   if [ -z "$1" ]; then
     return 0
@@ -977,13 +980,22 @@ move_database()
     return 0
   fi
 
-  if [ -e "$2" ]; then
-    DebugText "Removing old $2"
 
-    echo "--- Removing old $2 ---" >> $DOMINO_OUTPUT_LOG 
-    echo "Removing old '$2' "
+  if [ "$2" = "DELETEDB" ]; then
+    echo "--- Removing $1 ---" >> $DOMINO_OUTPUT_LOG
+    echo "Removing $1"
+  else
+    echo "--- Moving $1 to $2 ---" >> $DOMINO_OUTPUT_LOG
+    echo "Moving $1 to $2"
 
-    rm -f "$2"
+    if [ -e "$2" ]; then
+      DebugText "Removing old $2"
+
+      echo "--- Removing old $2 ---" >> $DOMINO_OUTPUT_LOG 
+      echo "Removing old '$2' "
+
+      rm -f "$2"
+    fi
   fi
 
   if [ -e "$2" ]; then
@@ -993,7 +1005,7 @@ move_database()
   fi
 
   directory=`dirname $2`
-  DebugText "drname for rename [$directory]"
+  DebugText "dirname for rename [$directory]"
   check_create_dir "$directory" "Database Log Dir"
   
   if [ ! -w "$directory" ]; then
@@ -1002,7 +1014,11 @@ move_database()
     return 1
   fi 
 
-  mv "$1" "$2"
+  if [ "$2" = "DELETEDB" ]; then
+    rm -f "$1"
+  else
+    mv "$1" "$2"
+  fi
 
   if [ -e "$1" ]; then
     echo "--- Error renaming log database [$1 -> $2] ---" >> $DOMINO_OUTPUT_LOG 
@@ -1040,7 +1056,7 @@ check_log_db_rename()
 
       check_create_dir "$DOMINO_LOG_DB_BACKUP_DIR" "Domino LogDbBackup Dir"
 
-      DOMINO_LOG_DB_BACKUP="$DOMINO_LOG_DB_BACKUP_DIR/log_"`date +"%Y%m%d"`".nsf"
+      DOMINO_LOG_DB_BACKUP="$DOMINO_LOG_DB_BACKUP_DIR/log_"`LANG=C date +"%Y%m%d"`".nsf"
     else
       # create directory anyway if configured. log file might need it
       check_create_dir "$DOMINO_LOG_DB_BACKUP_DIR" "Domino LogDbBackup Dir"
@@ -1079,7 +1095,7 @@ check_domlog_db_rename()
 
       check_create_dir "$DOMINO_DOMLOG_DB_BACKUP_DIR" "Domino LogDbBackup Dir"
       
-      DOMINO_DOMLOG_DB_BACKUP="$DOMINO_DOMLOG_DB_BACKUP_DIR/log_"`date +"%Y%m%d"`".nsf"
+      DOMINO_DOMLOG_DB_BACKUP="$DOMINO_DOMLOG_DB_BACKUP_DIR/log_"`LANG=C date +"%Y%m%d"`".nsf"
     else
       # create directory anyway if configured. log file might need it
       check_create_dir "$DOMINO_DOMLOG_DB_BACKUP_DIR" "Domino LogDbBackup Dir"
@@ -1107,6 +1123,82 @@ domino_is_running ()
   fi
 
   return 0
+}
+
+get_tika_status ()
+{
+  TIKA_PROCESS=`$PS_COMMAND -fu $DOMINO_USER | grep "$Notes_ExecDirectory/jvm/bin/java" | grep "tika-server.jar" | awk '{ print $2 }'`
+  DebugText "Tika-Process: [$TIKA_PROCESS]"
+}
+
+tika_server ()
+{
+  get_tika_status
+
+  case "$1" in
+
+    stop)
+
+     if [ -z "$TIKA_PROCESS" ]; then
+        DebugText "Tika process not running (stop)"
+      else
+        echo "Stopping Tika processes"
+
+        for pid in `$PS_COMMAND -fu $DOMINO_USER | grep "$Notes_ExecDirectory/jvm/bin/java" | grep "tika-server.jar" | awk '{ print $2 }'`; do
+          echo "Killing Tika pid #" $pid
+          kill -s 15 $pid
+        done
+      fi
+      ;;
+
+    kill)
+ 
+      if [ -z "$TIKA_PROCESS" ]; then
+        DebugText "Tika process not running (kill)"
+      else
+        echo "Terminating Tika processes"
+
+        for pid in `$PS_COMMAND -fu $DOMINO_USER | grep "$Notes_ExecDirectory/jvm/bin/java" | grep "tika-server.jar" | awk '{ print $2 }'`; do
+          echo "Killing Tika pid #" $pid
+          kill -9 $pid
+        done
+      fi 
+      ;;
+
+     "")
+      if [ -z "$TIKA_PROCESS" ]; then
+        echo "Tika Server NOT running"
+      else
+        echo "Tika Server running"
+      fi
+      ;;
+    *)
+      echo "Unknown tika command option '$1'"
+      ;;
+    esac
+}
+
+check_shutdown_delayed_commands()
+{
+  if [ ! -z "$DOMINO_TIKA_SHUTDOWN_TERM_SECONDS" ]; then
+    if [ "$1" -ge "$DOMINO_TIKA_SHUTDOWN_TERM_SECONDS" ]; then
+      tika_server kill 
+    fi
+  fi
+
+  if [ ! -z "$DOMINO_SHUTDOWN_DELAYED_SCRIPT" ]; then
+    if [ -z "$SHUTDOWN_DELAY_CHECKED" ]; then
+      if [ "$1" -ge "$DOMINO_SHUTDOWN_DELAYED_SECONDS" ]; then
+        DebugText "Invoking ShutDownDleayedScript [$DOMINO_SHUTDOWN_DELAYED_SCRIPT]"
+        if [ -x "$DOMINO_SHUTDOWN_DELAYED_SCRIPT" ]; then
+          $DOMINO_SHUTDOWN_DELAYED_SCRIPT
+        else
+          echo "Cannot execute shutdown delayed script [$DOMINO_SHUTDOWN_DELAYED_SCRIPT]"
+        fi
+        SHUTDOWN_DELAY_CHECKED=1
+      fi
+    fi
+  fi
 }
 
 domino_status_check ()
@@ -1176,9 +1268,9 @@ archive_logs ()
   DebugText "LOG_NAME_INFO: '$LOG_NAME_INFO'"
 
   if [ -z "$DOMINO_LOG_BACKUP_DIR" ]; then
-    DOMINO_OUTPUT_LOG_BACKUP="$LOG_NAME"_`date +"%y%m%d_%H%M%S"`"$LOG_NAME_INFO"."$LOG_EXTENSION"
+    DOMINO_OUTPUT_LOG_BACKUP="$LOG_NAME"_`LANG=C date +"%y%m%d_%H%M%S"`"$LOG_NAME_INFO"."$LOG_EXTENSION"
   else
-    DOMINO_OUTPUT_LOG_BACKUP="$DOMINO_LOG_BACKUP_DIR"/`basename "$LOG_NAME"`_`date +"%y%m%d_%H%M%S"`"$LOG_NAME_INFO"."$LOG_EXTENSION"
+    DOMINO_OUTPUT_LOG_BACKUP="$DOMINO_LOG_BACKUP_DIR"/`basename "$LOG_NAME"`_`LANG=C date +"%y%m%d_%H%M%S"`"$LOG_NAME_INFO"."$LOG_EXTENSION"
   fi
 
   DebugText "backup log filename:" $DOMINO_OUTPUT_LOG_BACKUP
@@ -1438,7 +1530,7 @@ usage ()
   echo "{ version | cmd <command> <n> | help}"
   echo
   echo "Diag Commands   :  {resources (res) | info | stacks | nsd | nsdnomem | memdump | hang | kill | cleanup}"
-  echo "Log Commands    :  {archivelog | clearlog | lastlog | log}"
+  echo "Log Commands    :  {archivelog | clearlog | lastlog | log | systemlog}"
   echo "Config Commands :  {inivar | ini | listini | config (cfg) | systemdcfg}"
   usage_extension_commands
   echo
@@ -1485,8 +1577,9 @@ help ()
   echo
   echo "archivelog       archive logs even if server is running"
   echo "clearlog         clear console logs etc"
-  echo "lastlog          show last <n> log lines"
-  echo "log              edits the log file"
+  echo "lastlog          show last <n> log lines (default 100 lines)"
+  echo "log              shows/edits the log file"
+  echo "systemlog        shows last <n> system log lines (default 100 lines)"
 
   echo
   echo "Config Commands"
@@ -1797,7 +1890,7 @@ show_lastlog ()
     LAST_LOG_LINES="$1"
   fi
 
-  echo " --- Last Console Output ($LAST_LOG_LINES) ---"
+  echo "--- Last Console Output ($LAST_LOG_LINES) ---"
   $TAIL_CMD -n $LAST_LOG_LINES $DOMINO_OUTPUT_LOG
 
   return 0
@@ -1941,6 +2034,11 @@ shutdown_domino_server ()
     count=`expr $count + 1`
     seconds=`expr $count "*" 10`
     echo " ... waiting $seconds seconds"
+
+    # Check Shutdown Delayed commands
+
+    check_shutdown_delayed_commands $seconds
+
     # Terminate Domino Server if still running
     if [ "$seconds" -ge "$DOMINO_SHUTDOWN_TIMEOUT" ]; then
       echo "Domino Server is still running after $seconds seconds"
@@ -2300,6 +2398,19 @@ case "$PARAM1" in
 
     echo
     echo "Starting Domino for $PLATFORM_NAME ($DOMINO_SERVER)"
+
+    DOMINO_START_DATETIME=`date`
+    echo "---- Starting at $DOMINO_START_DATETIME  ----" >> $DOMINO_OUTPUT_LOG
+    echo >> $DOMINO_OUTPUT_LOG
+    echo "---- environment info ----" >> $DOMINO_OUTPUT_LOG
+    echo >> $DOMINO_OUTPUT_LOG
+    set >> $DOMINO_OUTPUT_LOG
+    echo >> $DOMINO_OUTPUT_LOG
+
+    echo "---- locale info ----" >> $DOMINO_OUTPUT_LOG
+    echo >> $DOMINO_OUTPUT_LOG
+    locale >> $DOMINO_OUTPUT_LOG
+    echo >> $DOMINO_OUTPUT_LOG
 
     echo "---- environment info ----" > $DOMINO_OUTPUT_LOG
     echo >> $DOMINO_OUTPUT_LOG
@@ -2727,12 +2838,12 @@ case "$PARAM1" in
 
   nsd)
   
-    # Run NSD -nomemcheck
+    # Run NSD
     echo
-    echo "Running NSD -nomemcheck for ($DOMINO_SERVER)"
+    echo "Running NSD for ($DOMINO_SERVER)"
     cd $DOMINO_DATA_PATH
     nsd_check_set_posix_locale
-    $NSD_BIN -nomemcheck "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5" "$PARAM6"
+    $NSD_BIN "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5" "$PARAM6"
     echo
     exit 0
     ;;
@@ -2849,18 +2960,19 @@ case "$PARAM1" in
     ;;
      
   status)
-  
+
     pre_status_operations
     domino_status_check "$PARAM2"
-    # Remember status 
 
-    domino_status=$? 
+    # Remember status
+    domino_status=$?
+    _rc_status=$domino_status
 
     if [ ! "$PARAM" = "display" ]; then
       rc_status -v
     fi
-    
-    exit $domino_status 
+
+    exit $domino_status
     ;;
 
   setenv)
@@ -2937,6 +3049,15 @@ case "$PARAM1" in
     # list start script config
     echo
     list_config_file "$PARAM2"
+    echo
+    exit 0
+    ;;
+
+ tika)
+
+    # tika check and stop 
+    echo
+    tika_server "$PARAM2"
     echo
     exit 0
     ;;

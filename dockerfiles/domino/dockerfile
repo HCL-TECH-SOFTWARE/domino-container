@@ -44,7 +44,7 @@ RUN yum update -y && \
   $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
-  rm -rf $LocalInstallDir 
+  rm -rf $LocalInstallDir
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
 
