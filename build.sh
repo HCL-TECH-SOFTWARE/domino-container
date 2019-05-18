@@ -35,10 +35,19 @@ TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
 # With NGINX container you could chose your own local directory or if variable is empty use the default "software" subdirectory 
 # SOFTWARE_DIR=/local/software
 
+# external configuration
+CONFIG_FILE=/local/cfg/build_config
+
+# use a config file if present
+if [ -e "$CONFIG_FILE" ]; then
+  echo "(Using config file $CONFIG_FILE)"
+  . $CONFIG_FILE
+fi
+
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler | proton }"
+  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler | proton | iam }"
   echo
 
   return 0

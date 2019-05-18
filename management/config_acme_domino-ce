@@ -13,9 +13,12 @@ DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 
 DOCKER_HOSTNAME=acme-domino
 DOMINO_SHUTDOWN_TIMEOUT=60
+
 # DOCKER_NETWORK=--network=host
+# DOCKER_PORTS="-p 192.168.100.109:1352:1352 -p 192.168.100.109:80:80 -p 192.168.100.109:443:443"
+
 DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
-DOCKER_VOLUMES="-v notesdata:/local/notesdata"
+DOCKER_VOLUMES="-v notesdata_acme:/local/notesdata"
 
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_domino

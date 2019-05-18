@@ -3,26 +3,26 @@
 # You can clone the domino_docker script and have a corresponding configuration with a matching name
 # You should always make configuration changes in the config file instead of docker_domino
 
-DOCKER_CONTAINER=acme-domino-ce
-DOCKER_IMAGE_NAME=ibmcom/domino-ce
+DOCKER_CONTAINER=acme-iam
+DOCKER_IMAGE_NAME=ibmcom/iam
 DOCKER_IMAGE_VERSION=latest
-DOCKER_IMAGE_RELEASE_DATE=2019-05-10
+DOCKER_IMAGE_RELEASE_DATE=2019-05-16
 DOCKER_FILE=
 
 DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 
-DOCKER_HOSTNAME=acme-domino
+DOCKER_HOSTNAME=acme-iam
 DOMINO_SHUTDOWN_TIMEOUT=60
 
 # DOCKER_NETWORK=--network=host
-# DOCKER_PORTS="-p 192.168.100.109:1352:1352 -p 192.168.100.109:80:80 -p 192.168.100.109:443:443"
+# DOCKER_PORTS="-p 80:80 -p 443:1443 -p 8443:8443"
 
-DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
-
-DOCKER_VOLUMES="-v notesdata:/local/notesdata"
+DOCKER_NETWORK="--network acme-net --network-alias iam.nashcom.loc"
+DOCKER_PORTS="-p 192.168.100.107:80:80 -p 192.168.100.107:443:1443 -p 192.168.100.107:8443:8443"
+DOCKER_VOLUMES="-v data_iam:/data"
 
 # Environment file is used for first container start (run) to pass setup parameters
-DOCKER_ENV_FILE=env_domino
+DOCKER_ENV_FILE=env_iam
 
 # Configure software download location.
 # You can either use your own software repository remotely.
@@ -32,7 +32,7 @@ DOCKER_ENV_FILE=env_domino
 DOWNLOAD_FROM=
 
 # Configuration for NGINX container
-SOFTWARE_USE_NGINX=1
+SOFTWARE_USE_NGINX=0
 SOFTWARE_DIR=/local/software
 SOFTWARE_PORT=7777
 SOFTWARE_CONTAINER=ibmsoftware

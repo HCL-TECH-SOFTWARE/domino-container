@@ -25,12 +25,6 @@ DOMINO_SCRIPT_VERSION=3.2.2
 
 # VERBOSE_INFO="yes"
 
-if [ -e "/.dockerenv" ]; then
-  if [ -z "$LOGNAME" ]; then
-     LOGNAME=`whoami`
-  fi
-fi
-
 # Determine Notes/OS level user
 DOMINO_USER=$LOGNAME
 

@@ -1,0 +1,12 @@
+
+# NOTICE: This is an example build config. 
+# It needs to be copied to /local/cfg/build_config to be used and overwrites the configuration inside build.sh
+
+# (Default) NIGX is used hosting software from the local "software" directory.
+# (Optional) Configure software download location.
+
+# DOWNLOAD_FROM=http://192.168.1.1
+
+# With NGINX container you could chose your own local directory or if variable is empty use the default "software" subdirectory
+# SOFTWARE_DIR=/local/software
+

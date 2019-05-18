@@ -64,7 +64,7 @@ CA_ORG=Acme
 CA_PASSWORD=domino4ever
 
 CERTMGR_CONFIG_FILE="/local/cfg/certmgr_config"
-CERTMGR_DIR=`dirname $0`
+CERTMGR_DIR=`dirname $0`/certs
 
 # -------------------------- #
 #   END MAIN CONFIGURATION   #
@@ -369,6 +369,14 @@ check_keys_and_certs ()
 
   rm -f "$TODO_FILE"
 }
+
+
+# --- Main logic --
+
+# Either create defined keys & certs
+# Or configure an additonal cert
+# syntax: name cert-subject cert-dns
+# example: traveler "/O=$acme/CN=traveler" traveler.acme.com 
 
 check_create_dirs
 

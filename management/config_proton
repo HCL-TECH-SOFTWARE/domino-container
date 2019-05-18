@@ -13,8 +13,14 @@ DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 
 DOCKER_HOSTNAME=acme-proton
 DOMINO_SHUTDOWN_TIMEOUT=60
+
 # DOCKER_NETWORK=--network=host
-DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
+# DOCKER_PORTS="-p 192.168.100.108:80:80 -p 192.168.100.108:389:389 -p 192.168.100.108:443:443 -p 192.168.100.108:636:636 -p 192.168.100.108:1352:1352 -p 192.168.100.108:1353:1353"
+
+# HTTP LDAP HTTPS LDAPS NRPC PROTON
+DOCKER_PORTS="-p 80:80 -p 389:389 -p 443:443 -p 636:636 -p 1352:1352 -p 1353:1353"
+DOCKER_NETWORK="--network acme-net --network-alias proton.nashcom.loc --network-alias domino.nashcom.loc"
+
 DOCKER_VOLUMES="-v notesdata_proton:/local/notesdata"
 
 # Environment file is used for first container start (run) to pass setup parameters

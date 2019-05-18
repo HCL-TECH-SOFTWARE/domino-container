@@ -59,7 +59,7 @@ if [ -e "/.dockerenv" ]; then
   # in Docker environment directly start main script
   
   if [ -z "$LOGNAME" ]; then
-    LOGNAME=`whoami`
+    LOGNAME=`whoam`
   fi
 
   if [ "$LOGNAME" = "$DOMINO_USER" ] ; then

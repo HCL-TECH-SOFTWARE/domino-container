@@ -1,0 +1,226 @@
+#!/bin/sh
+
+###########################################################################
+# Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
+# Version 3.2.2 16.05.2019                                                #
+#                                                                         #
+# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
+# Feedback domino_unix@nashcom.de                                         #
+#                                                                         #
+# Licensed under the Apache License, Version 2.0 (the "License");         #
+# you may not use this file except in compliance with the License.        #
+# You may obtain a copy of the License at                                 #
+#                                                                         #
+#      http://www.apache.org/licenses/LICENSE-2.0                         #
+#                                                                         #
+# Unless required by applicable law or agreed to in writing, software     #
+# distributed under the License is distributed on an "AS IS" BASIS,       #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
+# See the License for the specific language governing permissions and     #
+# limitations under the License.                                          #
+###########################################################################
+
+SCRIPT_NAME=$0
+PARAM1=$1
+
+DOMINO_INSTALL_CONFIG_FILE=rc_domino_config
+DOMINO_INSTALL_CONFIG_FILEPATH=/etc/sysconfig/$DOMINO_INSTALL_CONFIG_FILE
+DOMINO_DOCKER_SCRIPT=domino_docker_entrypoint.sh
+#DOMINO_DEBUG_MODE="yes"
+
+START_SCRIPT_DIR=`dirname $0`
+
+if [ "$START_SCRIPT_DIR" = "/" ]; then
+  START_SCRIPT_DIR=""
+fi
+
+DOMINO_USER=notes
+DOMINO_GROUP=notes
+DOMINO_DATA_PATH=/local/notesdata
+
+if [ ! $EUID = "0" ]; then
+  echo "Terminating installation - Please run as root user!"
+  exit 1
+fi
+
+if [ -r "$START_SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE" ]; then
+  . $START_SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE
+else
+  echo "Terminating installation - cannot read config file! [$START_SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE]"
+  exit 1
+fi
+
+DebugText ()
+{
+  if [ "$DOMINO_DEBUG_MODE" = "yes" ]; then
+
+    if [ -z "$DOMINO_DEBUG_FILE" ]; then
+      echo "Debug:" $1 $2 $3 $4 $5 $6 $7 $8 $9
+    else
+      echo "Debug:" $1 $2 $3 $4 $5 $6 $7 $8 $9 >> $DOMINO_DEBUG_FILE 
+    fi
+  fi 
+
+  return 0
+}
+
+check_file_busy()
+{
+  if [ ! -e "$1" ]; then
+    return 0
+  fi
+
+  TARGET_REAL_BIN=`readlink -f $1`
+  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
+
+  if [ -n "$FOUND_TARGETS" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+install_file()
+{
+  SOURCE_FILE=$1
+  TARGET_FILE=$2
+  OWNER=$3
+  GROUP=$4
+  PERMS=$5
+
+  if [ ! -r "$SOURCE_FILE" ]; then
+    echo "[$SOURCE_FILE] Can not read source file"
+    return 1
+  fi
+
+  if [ -e "$TARGET_FILE" ]; then
+
+    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
+    if [ $? -eq 0 ]; then
+      echo "[$TARGET_FILE] File did not change -- No update needed"
+      return 0
+    fi
+
+    if [ ! -w "$TARGET_FILE" ]; then
+      echo "[$TARGET_FILE] Can not update binary -- No write permissions"
+      return 1
+    fi
+
+    check_file_busy "$TARGET_FILE"
+
+    if [ $? -eq 1 ]; then
+      echo "[$TARGET_FILE] Error - Can not update file -- Binary in use"
+      return 1
+    fi
+  fi
+  
+  cp -f "$SOURCE_FILE" "$TARGET_FILE"
+ 
+  if [ ! -z "$OWNER" ]; then
+    chown $OWNER:$GROUP "$TARGET_FILE"
+  fi
+
+  if [ ! -z "$PERMS" ]; then
+    chmod "$PERMS" "$TARGET_FILE"
+  fi
+
+  echo "[$TARGET_FILE] installed"
+
+  return 2
+}
+
+install_file_noupdate()
+{
+  SOURCE_FILE=$1
+  TARGET_FILE=$2
+	
+  if [ -e "$TARGET_FILE" ] ; then
+    echo "[$TARGET_FILE] Skipping file -- Not overwriting"  
+    return 0
+  fi
+ 
+  install_file "$1" "$2" "$3" "$4" "$5" 
+}
+
+# rc script files install
+
+echo
+echo "Installing StartScript & Config"
+echo
+
+if [ -z "$LOTUS" ]; then
+  LOTUS=/opt/ibm/domino
+fi
+
+if [ -z "DOMINO_START_SCRIPT" ]; then
+  DOMINO_START_SCRIPT=$LOTUS/rc_domino_script
+fi
+
+DOMINO_START_SCRIPT_README=`dirname $DOMINO_START_SCRIPT`/rc_domino_readme.txt
+
+DebugText "DOMINO_USER: [$DOMINO_USER]" 
+DOMINO_USER_GROUPID=`id -g "$DOMINO_USER" 2>/dev/null;`
+DebugText "DOMINO_USER_GROUPID: [$DOMINO_USER_GROUPID]"
+DebugText "START_SCRIPT_DIR: [$START_SCRIPT_DIR]"
+
+if [ -z "$DOMINO_USER_GROUPID" ]; then
+  echo "Terminating installation - User Linux '$DOMINO_USER' does not exist"
+  exit 1
+fi
+
+if [ ! -e "$LOTUS" ]; then
+  echo "Terminating installation - Domino program directory '$LOTUS' does not exist"
+  exit 1
+fi
+
+if [ ! -e "$DOMINO_DATA_PATH" ]; then
+  echo "Terminating installation - Domino data directory directory '$LOTUS' does not exist"
+  exit 1
+fi
+
+install_file $START_SCRIPT_DIR/rc_domino /etc/init.d/$DOMINO_RC_NAME root root 755
+install_file $START_SCRIPT_DIR/rc_domino_script $DOMINO_START_SCRIPT root root 755
+install_file $START_SCRIPT_DIR/rc_domino_readme.txt $DOMINO_START_SCRIPT_README notes notes 644
+
+if [ "$PARAM1" = "upd" ] ; then
+  install_file $START_SCRIPT_DIR/rc_domino_config $DOMINO_INSTALL_CONFIG_FILEPATH "$DOMINO_USER" "$DOMINO_GROUP" 644
+  install_file $START_SCRIPT_DIR/systemdbs.ind $DOMINO_DATA_PATH/systemdbs.ind "$DOMINO_USER" "$DOMINO_GROUP" 644
+else
+  install_file_noupdate $START_SCRIPT_DIR/rc_domino_config $DOMINO_INSTALL_CONFIG_FILEPATH  "$DOMINO_USER" "$DOMINO_GROUP" 644
+  install_file_noupdate $START_SCRIPT_DIR/systemdbs.ind $DOMINO_DATA_PATH/systemdbs.ind "$DOMINO_USER" "$DOMINO_GROUP" 644
+fi
+
+# set link to include script as 'domino' into path
+if [ ! -e /usr/bin/domino ] ; then
+  ln -s /etc/init.d/rc_domino /usr/bin/domino
+fi
+
+if [ -e "/.dockerenv" ]; then
+  # when running in a Docker environment, don't use systemd/init.d
+  echo "Docker Environment detected!"
+  
+  if [ "$PARAM1" = "upd" ] ; then
+    install_file "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" root root 755
+  else
+    install_file_noupdate "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" root root 755
+  fi
+  
+else
+  if [ -e /etc/systemd/system ] ; then
+    install_file $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME root root 644
+  
+    if [ $? -eq 2 ]; then
+      systemctl daemon-reload
+    fi
+  fi
+
+  # add domino service (systemd/init.d)
+  /etc/init.d/rc_domino service add
+fi
+
+echo
+echo done
+echo
+
+exit 0
+

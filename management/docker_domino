@@ -55,15 +55,28 @@ SOFTWARE_DIR=$PWD/software
 SOFTWARE_PORT=7777
 SOFTWARE_CONTAINER=ibmsoftware
 
-DOCKER_SCRIPT_VERSION=1.0.2
+# Default config directory. Can be overwritten by environment 
+if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
+  DOMINO_DOCKER_CFG_DIR=/local/cfg
+fi
+
+DOCKER_SCRIPT_VERSION=1.0.3
 
 # Get configuration from config file
+# First check in global config directory before checking in current directory
 
-CONFIG_FILE=`dirname $0`/config_`basename $0 | awk -F "docker_" '{print $2}'`
+CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/config_`basename $0 | awk -F "docker_" '{print $2}'`
 if [ -e "$CONFIG_FILE" ]; then
-  echo "(Using config file $CONFIG_FILE)"  
+  echo "(Using config file $CONFIG_FILE)"
   . $CONFIG_FILE
+else
+  CONFIG_FILE=`dirname $0`/config_`basename $0 | awk -F "docker_" '{print $2}'`
+  if [ -e "$CONFIG_FILE" ]; then
+    echo "(Using config file $CONFIG_FILE)"  
+    . $CONFIG_FILE
+  fi
 fi
+
 
 DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
 
@@ -255,8 +268,8 @@ docker_inspect_extras ()
   if [ -z "$1" ]; then return 0; fi
 
   if [ "$DOCKER_STATUS" = "running" ]; then 
-    DOCKER_CONTAINER_OS_VERSION=`docker exec -it $DOCKER_CONTAINER cat /etc/redhat-release`
-    DOCKER_CONTAINER_OS_KERNEL=`docker exec -it $DOCKER_CONTAINER uname -r`
+    # DOCKER_CONTAINER_OS_VERSION=`docker exec -it $DOCKER_CONTAINER cat /etc/redhat-release`
+    # DOCKER_CONTAINER_OS_KERNEL=`docker exec -it $DOCKER_CONTAINER uname -r`
     DOCKER_CONTAINER_DOMINO_REV=`docker exec -it $DOCKER_CONTAINER cat /opt/ibm/domino/.install.dat | awk -F '(=| =)' -v SEARCH_STR="rev" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' | cut -d'"' -f2`
   fi
 }
@@ -353,8 +366,8 @@ docker_show_inspect ()
     echo
     echo " Platform      :  $DOCKER_CONTAINER_PLATFORM"
     echo " Driver        :  $DOCKER_CONTAINER_DRIVER"
-    echo " Container OS  :  $DOCKER_CONTAINER_OS_VERSION"
-    echo " Kernel        :  $DOCKER_CONTAINER_OS_KERNEL"
+    # echo " Container OS  :  $DOCKER_CONTAINER_OS_VERSION"
+    # echo " Kernel        :  $DOCKER_CONTAINER_OS_KERNEL"
   fi
 
   print_delim
@@ -614,7 +627,13 @@ docker_bash ()
 
   echo "--- Starting bash in Docker [ Use exit to return ] ---"
   echo
-  docker exec -it $DOCKER_CONTAINER /bin/bash
+
+  if [ "$1" = "root" ]; then
+    docker exec -it --user 0 $DOCKER_CONTAINER /bin/bash
+  else
+    docker exec -it $DOCKER_CONTAINER /bin/bash
+  fi
+
   return 0
 }
 
@@ -752,7 +771,7 @@ case "$PARAM1" in
     ;;
 
   bash|shell)
-    docker_bash
+    docker_bash "$PARAM2"
     ;;
 
   cmd)

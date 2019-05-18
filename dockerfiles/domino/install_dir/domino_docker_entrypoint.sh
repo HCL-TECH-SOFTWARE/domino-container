@@ -29,10 +29,23 @@ DOMINO_SERVER_ID=/local/notesdata/server.id
 DOMINO_DOCKER_CFG_SCRIPT=/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
 
+if [ -e "/.dockerenv" ]; then
+  # in docker environment the LOGNAME is not set
+  if [ -z "$LOGNAME" ]; then
+    LOGNAME=`whoami`
+  fi
+fi
+
 stop_server ()
 {
   echo "--- Stopping Domino Server ---"
-  su - notes -c "$DOMINO_START_SCRIPT stop"
+
+   if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
+    $DOMINO_START_SCRIPT stop
+  else
+    su - notes -c "$DOMINO_START_SCRIPT stop"
+  fi
+
   echo "--- Domino Server Shutdown ---"
   exit 0
 }
@@ -46,7 +59,11 @@ trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
 if [ ! -e "$DOMINO_SERVER_ID" ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-      $DOMINO_DOCKER_CFG_SCRIPT
+		  if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
+        $DOMINO_DOCKER_CFG_SCRIPT
+      else
+        su - $DOMINO_USER -c "$DOMINO_DOCKER_CFG_SCRIPT"
+      fi
     fi
   fi
 fi 
@@ -75,10 +92,8 @@ fi
 echo "--- Starting Domino Server ---"
 
 if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-  echo "already notes user --> no switch needed"
   $DOMINO_START_SCRIPT start
 else
-  echo "switching to notes user"
   su - $DOMINO_USER -c "$DOMINO_START_SCRIPT start"
 fi
 

@@ -15,7 +15,7 @@
 #                                                                          #
 ############################################################################
   
-FROM ibmcom/domino-ce:latest
+FROM ibmcom/domino:latest
 
 # Headers
 LABEL DominoDocker.maintainer="thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de"
@@ -32,14 +32,16 @@ ARG LocalInstallDir=/tmp/install
 ARG DominoUserID=
 ARG DOMINO_LANG=
 
+USER root
+
 # Copy Install Files to container
 COPY install_dir $LocalInstallDir
 
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-# RUN yum update -y && \
-RUN  $LocalInstallDir/install_domino.sh && \
+RUN yum update -y && \
+  $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
   rm -rf $LocalInstallDir 
@@ -50,3 +52,6 @@ HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
 EXPOSE 1352 80 110 143 389 443 636 993 995 63148 63149
 
 ENTRYPOINT ["/domino_docker_entrypoint.sh"]
+
+USER notes
+

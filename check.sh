@@ -3,6 +3,15 @@
 #SOFTWARE_DIR=/local/software
 #DOWNLOAD_FROM=http://centos-mirror.nashcom.loc/software
 
+# external configuration
+CONFIG_FILE=/local/cfg/build_config
+
+# use a config file if present
+if [ -e "$CONFIG_FILE" ]; then
+  echo "(Using config file $CONFIG_FILE)"
+  . $CONFIG_FILE
+fi
+
 . ./check_software.sh "$1" "$2"
 
 echo "--- returned install product info ---"

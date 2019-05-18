@@ -68,8 +68,11 @@ fi
 
 		echo "Silent setup of server with the following settings:"
 		$dominoprofileedit -dump $dominosilentsetup
-		# su notes -c "cd /local/notesdata && touch setuplog.txt && /opt/ibm/domino/bin/server -silent $dominosilentsetup /local/notesdata/setuplog.txt"
-		su notes -c "cd /local/notesdata && touch setuplog.txt && /opt/ibm/domino/bin/server -silent $dominosilentsetup /local/notesdata/setuplog.txt"
+
+
+		cd /local/notesdata 
+		touch setuplog.txt 
+		/opt/ibm/domino/bin/server -silent $dominosilentsetup /local/notesdata/setuplog.txt
 
 		# add notes.ini variables if requested
 		if [ ! -z "$Notesini" ]; then
