@@ -720,7 +720,7 @@ echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 
-# This logic allows icremental installes for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
+# This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
 if [ -e /opt/ibm/domino ]; then
   FIRST_TIME_SETUP=0
   echo

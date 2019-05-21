@@ -63,6 +63,7 @@ DOMINO_NSD_BEFORE_KILL="yes"
 # -- View Rebuild Dir to be created if not present (use notes.ini view_rebuild_dir to specify directory) --
 #DOMINO_VIEW_REBUILD_DIR="/tmp/$DOMINO_USER/view_rebuild"
 #DOMINO_VIEW_REBUILD_DIR="/dev/shm/$DOMINO_USER/view_rebuild"
+#DOMINO_VIEW_REBUILD_DIR="/dev/shm/view_rebuild"
 
 # -- Notes Temp Dir to be created if not present (use notes.ini notes_tempdir to specify directory) --
 #DOMINO_TEMP_DIR="/tmp/$DOMINO_USER/tempdir"

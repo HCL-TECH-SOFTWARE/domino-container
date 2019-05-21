@@ -2418,10 +2418,6 @@ case "$PARAM1" in
     locale >> $DOMINO_OUTPUT_LOG
     echo >> $DOMINO_OUTPUT_LOG
 
-    echo "---- environment info ----" > $DOMINO_OUTPUT_LOG
-    echo >> $DOMINO_OUTPUT_LOG
-    set >> $DOMINO_OUTPUT_LOG
-    
     echo >> $DOMINO_OUTPUT_LOG
     echo "---- umask ----" >> $DOMINO_OUTPUT_LOG
     echo >> $DOMINO_OUTPUT_LOG

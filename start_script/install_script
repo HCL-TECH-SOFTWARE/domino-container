@@ -38,6 +38,10 @@ DOMINO_USER=notes
 DOMINO_GROUP=notes
 DOMINO_DATA_PATH=/local/notesdata
 
+if [ -z "$LOTUS" ]; then
+  LOTUS=/opt/ibm/domino
+fi
+
 if [ ! $EUID = "0" ]; then
   echo "Terminating installation - Please run as root user!"
   exit 1
@@ -147,10 +151,6 @@ install_file_noupdate()
 echo
 echo "Installing StartScript & Config"
 echo
-
-if [ -z "$LOTUS" ]; then
-  LOTUS=/opt/ibm/domino
-fi
 
 if [ -z "DOMINO_START_SCRIPT" ]; then
   DOMINO_START_SCRIPT=$LOTUS/rc_domino_script
