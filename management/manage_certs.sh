@@ -39,6 +39,8 @@
 #  BEGIN MAIN CONFIGURATION  #
 # -------------------------- #
 
+CREATE_CONFIGURED_CERTS="yes"
+
 DOMIMO_ORG="Acme"
 
 DOMINO_SERVER="domino"
@@ -127,7 +129,7 @@ PROTON_SERVER_NAME="/O=$DOMIMO_ORG/CN=$PROTON_SERVER"
 DOMINO_SERVER_NAME="/O=$DOMIMO_ORG/CN=$DOMINO_SERVER"
 IAM_SERVER_NAME="/O=$DOMIMO_ORG/CN=$IAM_SERVER"
 
-TODO_FILE=todo.txt
+TODO_FILE=/tmp/todo.txt
 
 # use a config file if present
 if [ -e "$CERTMGR_CONFIG_FILE" ]; then
@@ -159,10 +161,17 @@ todo ()
   echo $1 $2 $3 $4 >> "$TODO_FILE"
 }
 
-rm_file()
+remove_file()
 {
   if [ -e "$1" ]; then
     echo "Removing [$1]"
+    rm -f "$1"
+  fi 
+}
+
+rm_file()
+{
+  if [ -e "$1" ]; then
     rm -f "$1"
   fi 
 }
@@ -181,7 +190,7 @@ create_ca()
   else
     log "Generate Root CA's private key"
     openssl genrsa -passout pass:$CA_PASSWORD $CA_ENCRYPTION -out $CA_KEY_FILE $CA_KEYLEN > /dev/null
-    rm_file "$CA_CRT_FILE"
+    remove_file "$CA_CRT_FILE"
   fi
 
   if [ -e "$CA_CRT_FILE" ]; then
@@ -211,8 +220,8 @@ create_key_cert()
   else
     log "Generating key [$KEY_FILE]"
     openssl genrsa -out "$KEY_FILE" $CLIENT_KEYLEN > /dev/null
-    rm_file "$CRT_FILE"
-    rm_file "$CSR_FILE"
+    remove_file "$CRT_FILE"
+    remove_file "$CSR_FILE"
   fi
     
   if [ -e $CRT_FILE ]; then
@@ -225,7 +234,7 @@ create_key_cert()
   else
     log "Creating certificate Sign Request (CSR) [$CSR_FILE]"
     openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "$SUBJ" $CRT_SIGN_ALG > /dev/null
-    rm_file "$CRT_FILE"
+    remove_file "$CRT_FILE"
   fi
 
   if [ -e $CSR_FILE ]; then
@@ -241,9 +250,8 @@ create_key_cert()
           -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq -extfile <(printf "subjectAltName=DNS:$SANS") > /dev/null
       fi
 
-      if [ -e  $CSR_FILE ]; then
-        log "Remove CSR [$CSR_FILE]"
-        rm -f "$CSR_FILE"
+      if [ -e "$CSR_FILE" ]; then
+        remove_file "$CSR_FILE"
       fi
     fi
   fi
@@ -256,6 +264,7 @@ check_cert()
   if [ "$NAME" = "ca" ]; then
     KEY_FILE=$CA_DIR/$NAME.key
     CRT_FILE=$CA_DIR/$NAME.crt
+    CSR_FILE=""
   else
     KEY_FILE=$KEY_DIR/$NAME.key
     CRT_FILE=$CRT_DIR/$NAME.crt
@@ -274,7 +283,7 @@ check_cert()
     CA=`openssl x509 -issuer -noout -in $CRT_FILE | awk -F'issuer= ' '{print $2 }'`
 
     openssl x509 -text -noout -in $CRT_FILE > $TXT_DIR/$NAME.txt
-
+  
   else
     SUBJECT=""
     DNS_NAME=""
@@ -284,7 +293,7 @@ check_cert()
   fi
 
   if [ "$NAME" = "ca" ]; then
-  	# reading key len from CA would need CA password
+  	# reading key len from CA would need CA password -> get it from configuration and assume it did not change
     KEYLEN="$CA_KEYLEN bit"
   else
     if [ -e "$KEY_FILE" ]; then
@@ -301,15 +310,17 @@ check_cert()
 
   if [ -z "$STATUS" ]; then
     STATUS="OK"
-    cat "$KEY_FILE"   > "$PEM_FILE"
-    cat "$CRT_FILE"  >> "$PEM_FILE"
 
-    # don't try to add CA certs to it's own PEM file
-    if [ ! "$NAME" = "ca" ]; then
+    # don't add private key to ca_all_pem! and don't add CA certs to it's own PEM file
+    if [ "$NAME" = "ca" ]; then
+      cat "$CRT_FILE" > "$PEM_FILE"
+    else
+      cat "$KEY_FILE" > "$PEM_FILE"
+      cat "$CRT_FILE" >> "$PEM_FILE"
       cat "$PEM_CA_ALL_FILE" >> "$PEM_FILE"
     fi
   else
-   rm_file "$PEM_FILE"
+    remove_file "$PEM_FILE"
   fi
 
   echo "--------------------------------------------"
@@ -340,7 +351,6 @@ check_create_dirs ()
 
 generate_keys_and_certs ()
 {
-  create_ca
   create_key_cert domino     "$DOMINO_SERVER_NAME" "$DOMINO_DNS"
   create_key_cert proton     "$PROTON_SERVER_NAME" "$PROTON_DNS"
   create_key_cert iam_server "$IAM_SERVER_NAME"    "$IAM_SERVER_DNS"
@@ -350,7 +360,7 @@ generate_keys_and_certs ()
 check_keys_and_certs ()
 {
   log
-  echo > "$TODO_FILE"
+  rm_file "$TODO_FILE"
 
   check_cert ca 
 
@@ -361,15 +371,16 @@ check_keys_and_certs ()
     check_cert "$NAME"
   done
 
+  echo "Certificates issues by CA located here     -> $CRT_DIR"
   echo "Complete PEM files including trusted roots -> $PEM_DIR"
-  echo "Certificates issues by CA locationed here  -> $CRT_DIR"
-  log
-  cat $TODO_FILE
   log
 
-  rm -f "$TODO_FILE"
+  if [ -e "$TODO_FILE" ]; then
+    cat $TODO_FILE
+    log
+    rm_file "$TODO_FILE"
+  fi
 }
-
 
 # --- Main logic --
 
@@ -382,11 +393,18 @@ check_create_dirs
 
 if [ -z "$1" ]; then
 
-  generate_keys_and_certs
+  # create CA if not present but configured
+  create_ca
+
+  if [ "$CREATE_CONFIGURED_CERTS" = "yes" ]; then
+    generate_keys_and_certs
+  fi
+  
+  # check all certs and show details
   check_keys_and_certs
 
 else
-
+  # create one specific cert
   create_key_cert "$1" "$2" "$3"
   check_cert "$1"
 fi
