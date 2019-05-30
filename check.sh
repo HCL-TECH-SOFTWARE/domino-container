@@ -12,7 +12,7 @@ if [ -e "$CONFIG_FILE" ]; then
   . $CONFIG_FILE
 fi
 
-. ./check_software.sh "$1" "$2"
+. ./check_software.sh "$1" "$2" "$3" "$4"
 
 echo "--- returned install product info ---"
 
