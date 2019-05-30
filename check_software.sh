@@ -6,10 +6,9 @@ fi
 
 if [ -z "$DOWNLOAD_FROM" ]; then
   DOWNLOAD_FROM=
-  #DOWNLOAD_FROM=http://centos-mirror.nashcom.loc/software
 fi
 
-#CHECK_HASH=yes
+CHECK_HASH=no
 DOWNLOAD_URLS_SHOW=yes
 
 # -----------------------
@@ -21,7 +20,7 @@ VERSION_FILE_NAME=current_version.txt
 VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
 DOWNLOAD_LINK_IBM_PA_PARTNO="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal="
-DOWNLOAD_LINK_IBM_PA_SEARCH=https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_PART_NO_OR_DESCRIPTION
+DOWNLOAD_LINK_IBM_PA_SEARCH="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_PART_NO_OR_DESCRIPTION"
 DOWNLOAD_LINK_IBM_CE="https://www.ibm.com/account/reg/us-en/signup?formid=urx-33713"
 
 WGET_COMMAND="wget --connect-timeout=20"
@@ -53,11 +52,13 @@ get_current_version ()
   fi
 
   if [ ! -z "$DOWNLOAD_VERSION_FILE" ]; then
+    echo "Getting current version from [$DOWNLOAD_VERSION_FILE]"
     LINE=`$WGET_COMMAND -qO- $DOWNLOAD_VERSION_FILE | grep "^$1|"`
   else
     if [ ! -r $VERSION_FILE ]; then
       echo "No current version file found! [$VERSION_FILE]"
     else
+      echo "Getting current version from [$VERSION_FILE]"
       LINE=`grep "^$1|" $VERSION_FILE`
     fi
   fi
@@ -82,12 +83,27 @@ check_software ()
   CURRENT_HASH=`echo $1|cut -d'|' -f5` 
 
   if [ -z "$DOWNLOAD_FROM" ]; then
-    if [ -r $SOFTWARE_DIR/$CURRENT_FILE ]; then
-
+  	
+    FOUND=
+    CHECK_FILE=`echo "$CURRENT_FILE" | awk -F "," '{print $1}'`
+    if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
+      CURRENT_FILE="$CHECK_FILE"
+      FOUND=TRUE
+    else
+      CHECK_FILE=`echo "$CURRENT_FILE" | awk -F "," '{print $2}'`
+      if [ ! -z "$CHECK_FILE" ]; then
+        if [ -r $SOFTWARE_DIR/$CHECK_FILE ]; then
+          CURRENT_FILE="$CHECK_FILE"
+          FOUND=TRUE
+        fi
+      fi
+    fi
+  	
+    if [ "$FOUND" = "TRUE" ]; then
       if [ -z "$CURRENT_HASH" ]; then
         CURRENT_STATUS="NF"
       else
-        if [ -z "$CHECK_HASH" ]; then
+        if [ ! "$CHECK_HASH" = "yes" ]; then
           CURRENT_STATUS="OK"
         else
           HASH=`sha256sum $SOFTWARE_DIR/$CURRENT_FILE -b | cut -d" " -f1`
@@ -104,15 +120,35 @@ check_software ()
     fi
   else
 
-    DOWNLOAD_FILE=$DOWNLOAD_FROM/$CURRENT_FILE
+    FOUND=
+    CHECK_FILE=`echo "$CURRENT_FILE" | awk -F "," '{print $1}'`
+
+    DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
     WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-    if [ -z "$WGET_RET_OK" ]; then
+
+    if [ ! -z "$WGET_RET_OK" ]; then
+      CURRENT_FILE="$CHECK_FILE"
+      FOUND=TRUE
+    else
+      CHECK_FILE=`echo "$CURRENT_FILE" | awk -F "," '{print $2}'`
+      if [ ! -z "$CHECK_FILE" ]; then
+        DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
+        WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
+
+        if [ ! -z "$WGET_RET_OK" ]; then
+          CURRENT_FILE="$CHECK_FILE"
+          FOUND=TRUE
+        fi
+      fi
+  	fi
+  	
+    if [ ! "$FOUND" = "TRUE" ]; then
       CURRENT_STATUS="NA"
     else
       if [ -z "$CURRENT_HASH" ]; then
         CURRENT_STATUS="OK"
       else
-        if [ -z "$CHECK_HASH" ]; then
+        if [ ! "$CHECK_HASH" = "yes" ]; then
           CURRENT_STATUS="OK"
         else
           HASH=`$WGET_COMMAND -qO- $DOWNLOAD_FILE | sha256sum -b | cut -d" " -f1`
@@ -228,7 +264,7 @@ check_software_status ()
     WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
     if [ ! -z "$WGET_RET_OK" ]; then
       DOWNLOAD_SOFTWARE_FILE=$DOWNLOAD_FILE
-      log_debug "Checking software via [$DOWNLOAD_SOFTWARE_FILE]"
+      echo "Checking software via [$DOWNLOAD_SOFTWARE_FILE]"
     fi
 
   else
@@ -237,8 +273,8 @@ check_software_status ()
       echo "Software [$SOFTWARE_FILE] Not found!"
       ERROR_COUNT=99
       return 1
-     else
-      log_debug "Checking software via [$SOFTWARE_FILE]"
+    else
+      echo "Checking software via [$SOFTWARE_FILE]"
     fi
   fi
 

@@ -42,7 +42,7 @@ DOWNLOAD_FROM=$1
 # Can be overwritten on command-line
 
 PROD_VER=10.0.1
-PROD_FP=FP1
+PROD_FP=FP2
 #PROD_HF=IF1
 #PROD_HF=HF123
 

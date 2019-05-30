@@ -40,7 +40,7 @@ stop_server ()
 {
   echo "--- Stopping Domino Server ---"
 
-   if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
+  if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
     $DOMINO_START_SCRIPT stop
   else
     su - notes -c "$DOMINO_START_SCRIPT stop"
@@ -59,7 +59,7 @@ trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
 if [ ! -e "$DOMINO_SERVER_ID" ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-		  if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
+      if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
         $DOMINO_DOCKER_CFG_SCRIPT
       else
         su - $DOMINO_USER -c "$DOMINO_DOCKER_CFG_SCRIPT"

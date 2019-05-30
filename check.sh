@@ -14,7 +14,7 @@ fi
 
 . ./check_software.sh "$1" "$2" "$3" "$4"
 
-echo "--- returned install product info ---"
+echo "--- Returned install product info ---"
 
 echo "PROD_NAME: [$PROD_NAME]"
 echo "PROD_VER : [$PROD_VER]"
