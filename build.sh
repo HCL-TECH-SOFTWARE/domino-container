@@ -47,7 +47,7 @@ fi
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler | proton | iam }"
+  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler | proton }"
   echo
 
   return 0

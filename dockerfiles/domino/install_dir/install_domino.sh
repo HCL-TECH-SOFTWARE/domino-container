@@ -178,10 +178,10 @@ download_and_check_hash ()
 
   # check if file exists before downloading
 
-	FOUND=
+  FOUND=
   CHECK_FILE=`echo "$DOWNLOAD_STR" | awk -F "," '{print $1}'`
   DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
-  echo "Checking PartnerWorld Download: [$DOWNLOAD_FILE]"
+  echo "Checking PassportAdvantage Download: [$DOWNLOAD_FILE]"
   WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
 
   if [ ! -z "$WGET_RET_OK" ]; then
@@ -198,7 +198,7 @@ download_and_check_hash ()
         FOUND=TRUE
       fi
     fi
-	fi
+  fi
   	
   if [ ! "$FOUND" = "TRUE" ]; then
     log_error "File [$DOWNLOAD_SERVER/$DOWNLOAD_STR] does not exist"
