@@ -21,7 +21,7 @@ VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
 DOWNLOAD_LINK_IBM_PA_PARTNO="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal="
 DOWNLOAD_LINK_IBM_PA_SEARCH="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_PART_NO_OR_DESCRIPTION"
-DOWNLOAD_LINK_IBM_CE="https://www.ibm.com/account/reg/us-en/signup?formid=urx-33713"
+DOWNLOAD_LINK_IBM_CE="http://ibm.biz/NDCommunityFiles"
 
 WGET_COMMAND="wget --connect-timeout=20"
 
