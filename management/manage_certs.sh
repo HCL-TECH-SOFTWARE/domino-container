@@ -130,7 +130,7 @@ CERT_SIGN_ALG=-sha256
 # Properties for client keys and certificates
 
 CLIENT_KEYLEN=4096
-CLIENT_VALID_DAYS=3650
+CLIENT_VALID_DAYS=825
 
 # Specific Server Name Configuration
 
@@ -361,10 +361,10 @@ create_key_cert()
       log "Signing CSR [$CSR_FILE] with local CA"
       if [ -z "$SANS" ]; then
         openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
-          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq > /dev/null
+          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = clientAuth") > /dev/null
       else
         openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
-          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq -extfile <(printf "subjectAltName=DNS:$SANS") > /dev/null
+          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = serverAuth \n subjectAltName=DNS:$SANS") > /dev/null
       fi
 
       if [ -e "$CSR_FILE" ]; then
@@ -390,13 +390,13 @@ create_pem_kyr()
   if [ ! -e "$CRT_FILE" ]; then
     
     # Convert from PFX format to PEM
-  	if [ -e "$PFX_FILE" ]; then
+    if [ -e "$PFX_FILE" ]; then
       log "Converting [$PFX_FILE] to [$CRT_FILE]"
       openssl pkcs12 -in "$PFX_FILE" -out $CRT_FILE -nodes
     fi
 
     # Convert from DER format to PEM
-  	if [ -e "$CER_FILE" ]; then
+      if [ -e "$CER_FILE" ]; then
       log "Converting [$CER_FILE] to [$CRT_FILE]"
       openssl x509 -inform der -in "$CER_FILE" -outform pem -out "$CRT_FILE"
     fi
