@@ -40,7 +40,7 @@ DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 DOCKER_VOLUMES="-v notesdata:/local/notesdata"
 
 # Environment file is used for first container start (run) to pass setup parameters
-#DOCKER_ENV_FILE=env_domino
+DOCKER_ENV_FILE=env_domino
 
 # Configure software download location.
 # You can either use your own software repository remotely.
