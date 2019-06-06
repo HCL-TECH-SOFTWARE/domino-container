@@ -1861,6 +1861,11 @@ There are configuration options on the Docker side to run the entry point script
 When you switch the user to "notes" at the end of your dockerfile, the container is started with "notes".
 This provides better security.
 
+Problems Solved
+---------------
+restartcompact and restartfixup did not work correctly with systemd. 
+For systemd the rc_domino script needs to stop the service run compact/fixup and restart the service.
+
 
 V3.2.1 02.03.2019
 

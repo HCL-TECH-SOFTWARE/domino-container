@@ -167,8 +167,9 @@ download_file_ifpresent ()
 
 download_and_check_hash ()
 {
-  DOWNLOAD_FILE=$1
-  TARGET_DIR=$2
+  DOWNLOAD_SERVER=$1
+  DOWNLOAD_STR=$2
+  TARGET_DIR=$3
 
   if [ -z "$DOWNLOAD_FILE" ]; then
     log_error "No download file specified!"
@@ -177,9 +178,30 @@ download_and_check_hash ()
 
   # check if file exists before downloading
 
+  FOUND=
+  CHECK_FILE=`echo "$DOWNLOAD_STR" | awk -F "," '{print $1}'`
+  DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
+  echo "Checking PassportAdvantage Download: [$DOWNLOAD_FILE]"
   WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-  if [ -z "$WGET_RET_OK" ]; then
-    log_error "File [$DOWNLOAD_FILE] does not exist"
+
+  if [ ! -z "$WGET_RET_OK" ]; then
+    FOUND=TRUE
+  else
+    CHECK_FILE=`echo "$DOWNLOAD_STR" | awk -F "," '{print $2}'`
+    if [ ! -z "$CHECK_FILE" ]; then
+      DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
+      echo "Checking FixCentral Download: [$DOWNLOAD_FILE]"
+      WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
+
+      if [ ! -z "$WGET_RET_OK" ]; then
+        CURRENT_FILE="$CHECK_FILE"
+        FOUND=TRUE
+      fi
+    fi
+  fi
+  	
+  if [ ! "$FOUND" = "TRUE" ]; then
+    log_error "File [$DOWNLOAD_SERVER/$DOWNLOAD_STR] does not exist"
     exit 1
   fi
 
@@ -529,17 +551,17 @@ install_domino ()
   
   if [ ! -z "$INST_VER" ]; then
     get_download_name $PROD_NAME $INST_VER
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME domino_server
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_server
   fi
 
   if [ ! -z "$INST_FP" ]; then
     get_download_name $PROD_NAME $INST_FP domino_fp
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME domino_fp
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_fp
   fi
 
   if [ ! -z "$INST_HF" ]; then
     get_download_name $PROD_NAME $INST_HF domino_hf
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME domino_hf
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_hf
   fi
 
   if [ ! -z "$INST_VER" ]; then

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ###########################################################################
-# Nash!Com Domino Docker Management Script                                #
-# Version 1.0.5 11.05.2019                                                #
+# Nash!Com Certificate Management Script                                  #
+# Version 1.1.0 28.05.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -39,6 +39,7 @@
 #  BEGIN MAIN CONFIGURATION  #
 # -------------------------- #
 
+# Create the following specified certs (for AppDevPack)
 CREATE_CONFIGURED_CERTS="yes"
 
 DOMIMO_ORG="Acme"
@@ -65,8 +66,15 @@ USE_LOCAL_CA=yes
 CA_ORG=Acme
 CA_PASSWORD=domino4ever
 
-CERTMGR_CONFIG_FILE="/local/cfg/certmgr_config"
+CREATE_KEYRINGS="yes"
+KEYRING_PASSWORD=domino4ever
+
+#CERTMGR_CONFIG_FILE="/local/cfg/certmgr_config"
 CERTMGR_DIR=`dirname $0`/certs
+
+LOTUS=/opt/ibm/domino
+KYRTOOL_BIN=$LOTUS/bin/kyrtool
+DOMINO_DATA_PATH=/local/notesdata
 
 # -------------------------- #
 #   END MAIN CONFIGURATION   #
@@ -78,7 +86,7 @@ CERTMGR_DIR=`dirname $0`/certs
 
 # If you stay with the default configuration, a simple CA will be created via openssl.
 # All certificates are automatically signed by this local CA when invoking this script.
-# The whole process is processed in one step. However the script is designed to allow to update/regenerate keys and certificates.
+# The whole operation is processed in one step. However the script is designed to allow to update/regenerate keys and certificates.
 
 
 # Public/Company CA 
@@ -87,6 +95,7 @@ CERTMGR_DIR=`dirname $0`/certs
 # When using a public or company CA, this script automatically creates the private keys and certificate signing requests (CSRs).
 # You have send those CSR files (*.csr) to the external CA and get back a certificate file (*.crt) in PEM format.
 # To import the certificate automatically, the *.crt needs to have a matching name used for the *.csr file.
+
 # IMPORTANT: For external CAs you have to also provide a PEM file (ca_all.pem) with the public key of the Root CA 
 # and all intermediate certificates (ordered from most specific to Root CA cert).
 
@@ -95,7 +104,8 @@ CERTMGR_DIR=`dirname $0`/certs
 # 1. Run this script once to generate the *.key files and *.csr files
 # 2. Let the *.csr files sign from the external CA
 # 3. Get the *.crt file with a matching name (before the dot) and copy it back to this directory
-# 4. Ensure a certificate PEM file for the CA and all intermediate files is stored in the "pem" directory "ca_all.pem"
+#    (You can also pass a .pfx or a .cer (DER encoded) certificate file. They just have to match the naming and will be converted to PEM)
+# 4. Ensure a certificate PEM file for the CA and all intermediate files is stored in the "pem" directory. "ca_all.pem" is stored in the ca directory.
 # 5. Invoke the script again to generate a xxx_all.pem file for each certificate
 # 6. The final PEM file contains the private key, certificate, intermediate certs and the CA's root certificate in the right order to be user by the kyrtool
 
@@ -103,8 +113,8 @@ CERTMGR_DIR=`dirname $0`/certs
 # It shows all local CA related default values which can be modified if needed for your convenience.
 
 
-# Optional Specific Configuration
-# ------------------------------- #
+# Optional/Specific Configuration
+# -------------------------------
 
 # Default configuration should work for most environments
 
@@ -121,7 +131,7 @@ CERT_SIGN_ALG=-sha256
 # Properties for client keys and certificates
 
 CLIENT_KEYLEN=4096
-CLIENT_VALID_DAYS=3650
+CLIENT_VALID_DAYS=825
 
 # Specific Server Name Configuration
 
@@ -129,15 +139,23 @@ PROTON_SERVER_NAME="/O=$DOMIMO_ORG/CN=$PROTON_SERVER"
 DOMINO_SERVER_NAME="/O=$DOMIMO_ORG/CN=$DOMINO_SERVER"
 IAM_SERVER_NAME="/O=$DOMIMO_ORG/CN=$IAM_SERVER"
 
-TODO_FILE=/tmp/todo.txt
+TODO_FILE=/tmp/certmgr_todo.txt
 
-# use a config file if present
-if [ -e "$CERTMGR_CONFIG_FILE" ]; then
-  echo "(Using config file $CERTMGR_CONFIG_FILE)"
-  . $CERTMGR_CONFIG_FILE
+# Use a config file if present
+if [ -z "$CERTMGR_CONFIG_FILE" ]; then
+  CERTMGR_CONFIG_FILE=./certmgr_config
 fi
 
-# set correct directories based on main path
+if [ -r "$CERTMGR_CONFIG_FILE" ]; then
+  echo "(Using config file $CERTMGR_CONFIG_FILE)"
+  . $CERTMGR_CONFIG_FILE
+else
+  echo "Info: Using default configuration in script" 
+fi
+
+# Set correct directories based on main path
+
+CERTMGR_DIR=`realpath "$CERTMGR_DIR"`
 
 CA_DIR=$CERTMGR_DIR/ca
 KEY_DIR=$CERTMGR_DIR/key
@@ -145,11 +163,23 @@ CSR_DIR=$CERTMGR_DIR/csr
 CRT_DIR=$CERTMGR_DIR/crt
 PEM_DIR=$CERTMGR_DIR/pem
 TXT_DIR=$CERTMGR_DIR/txt
+KYR_DIR=$CERTMGR_DIR/kyr
 
 CA_KEY_FILE=$CA_DIR/$CA_KEY
 CA_CRT_FILE=$CA_DIR/$CA_CERT
+CA_PEM_ALL_FILE=$CA_DIR/ca_all.pem
 
 # -------------------------- #
+
+pushd()
+{
+  command pushd "$@" > /dev/null
+}
+
+popd()
+{
+  command popd "$@" > /dev/null
+}
 
 log ()
 {
@@ -198,8 +228,71 @@ create_ca()
   else
     log "Generating Root CA certificate"
     openssl req -passin pass:$CA_PASSWORD -new -x509 -days $CA_VALID_DAYS -key $CA_KEY_FILE -out $CA_CRT_FILE -subj "$CA_SUBJECT" $CERT_SIGN_ALG > /dev/null
+
+    # write CA's trusted root cert
+    cat $CA_CRT_FILE > $CA_PEM_ALL_FILE
   fi
 }
+
+check_kyrtool ()
+{
+  if [ ! -x "$KYRTOOL_BIN" ]; then
+    echo "Kyrtool not found or cannot be executed [$KYRTOOL_BIN]"
+    exit 1
+  fi	
+ 
+  if [ ! $LOGNAME = "notes" ]; then
+    echo "You have be 'notes' to execute the kyrtool"
+    exit 1
+  fi	
+
+  if [ ! -r "$DOMINO_DATA_PATH/notes.ini" ]; then
+    echo "Cannot read notes.ini"
+    exit 1
+  fi	
+}
+
+create_keyring ()
+{
+  if [ ! "$CREATE_KEYRINGS" = "yes" ]; then return 0; fi
+  if [ "$1" = "iam_server" ]; then return 0; fi
+  if [ "$1" = "iam_client" ]; then return 0; fi
+
+  KYR_FILE=$KYR_DIR/$1.kyr
+  PEM_ALL_FILE=$PEM_DIR/${1}_all.pem
+
+  if [ -e "$KYR_FILE" ]; then 
+  	log "Keyring file [$KYR_FILE] already exists"
+  	return 0
+  fi
+  
+  check_kyrtool
+  
+  pushd .
+
+  cd "$DOMINO_DATA_PATH"
+  $KYRTOOL_BIN create -k "$KYR_FILE" -p "$KEYRING_PASSWORD"
+  $KYRTOOL_BIN import all -k "$KYR_FILE" -i "$PEM_ALL_FILE"
+  $KYRTOOL_BIN verify "$PEM_ALL_FILE" > "$TXT_DIR/kyr_$1.txt"
+  
+  popd
+}
+
+create_keyring_files ()
+{
+  if [ ! "$CREATE_KEYRINGS" = "yes" ]; then return 0; fi
+  check_kyrtool
+
+  log
+
+  ALL_CRTS=`find "$CRT_DIR" -type f -name "*.crt" -printf "%p\n" | sort`
+
+  for CRT in $ALL_CRTS; do
+    NAME=`basename "$CRT" | cut -d"." -f1`
+    create_keyring "$NAME"
+  done
+}
+
 
 create_key_cert()
 {
@@ -210,6 +303,11 @@ create_key_cert()
   KEY_FILE=$KEY_DIR/$NAME.key
   CSR_FILE=$CSR_DIR/$NAME.csr
   CRT_FILE=$CRT_DIR/$NAME.crt
+  PEM_FILE=$CRT_DIR/$NAME.pem
+  CER_FILE=$CRT_DIR/$NAME.cer
+  PFX_FILE=$CRT_DIR/$NAME.pfx
+  KYR_FILE=$KYR_DIR/$NAME.kyr
+  PEM_ALL_FILE=$PEM_DIR/${NAME}_all.pem
 
   if [ -z "$SUBJ$SANS" ]; then
     log "No configuration for [$NAME]"
@@ -220,40 +318,96 @@ create_key_cert()
   else
     log "Generating key [$KEY_FILE]"
     openssl genrsa -out "$KEY_FILE" $CLIENT_KEYLEN > /dev/null
-    remove_file "$CRT_FILE"
     remove_file "$CSR_FILE"
-  fi
-    
-  if [ -e $CRT_FILE ]; then
-    log "Certificate already exists [$CRT_FILE]"
-    return 0
-  fi
-
-  if [ -e $CSR_FILE ]; then
-    log "Certificate Sign Request (CSR) already exists [$CSR_FILE]"
-  else
-    log "Creating certificate Sign Request (CSR) [$CSR_FILE]"
-    openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "$SUBJ" $CRT_SIGN_ALG > /dev/null
     remove_file "$CRT_FILE"
+    remove_file "$CER_FILE"
+    remove_file "$PFX_FILE"
+    remove_file "$KYR_FILE"
   fi
 
-  if [ -e $CSR_FILE ]; then
+  # PEM is named CRT internally
+  if [ -e "$PEM_FILE" ]; then
+    CRT_FILE = "$PEM_FILE"
+  fi
+      
+  if [ -e "$CRT_FILE" ]; then
+    log "Certificate exists [$CRT_FILE]"
+    remove_file "$CSR_FILE"
+  else
+
+    if [ -e "$CSR_FILE" ]; then
+      log "Certificate Sign Request (CSR) already exists [$CSR_FILE]"
+    else
+      log "Creating certificate Sign Request (CSR) [$CSR_FILE]"
+      openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "$SUBJ" $CRT_SIGN_ALG > /dev/null
+      
+      if [ ! -z $SANS ]; then
+        echo >> $CSR_FILE
+        echo "DNS: "$SANS >> $CSR_FILE
+      fi
+
+      remove_file "$CRT_FILE"
+      remove_file "$CER_FILE"
+      remove_file "$PFX_FILE"
+      remove_file "$PEM_ALL_FILE"
+      remove_file "$KYR_FILE"
+    fi
+  fi
+
+  if [ -e "$CSR_FILE" ]; then
 
     if [ "$USE_LOCAL_CA" = "yes" ]; then
 
       log "Signing CSR [$CSR_FILE] with local CA"
       if [ -z "$SANS" ]; then
         openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
-          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq > /dev/null
+          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = clientAuth") > /dev/null
       else
         openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
-          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq -extfile <(printf "subjectAltName=DNS:$SANS") > /dev/null
+          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = serverAuth \n subjectAltName=DNS:$SANS") > /dev/null
       fi
 
       if [ -e "$CSR_FILE" ]; then
         remove_file "$CSR_FILE"
       fi
     fi
+  fi
+}
+
+create_pem_kyr()
+{
+  NAME="$1"
+
+  KEY_FILE=$KEY_DIR/$NAME.key
+  CSR_FILE=$CSR_DIR/$NAME.csr
+  CRT_FILE=$CRT_DIR/$NAME.crt
+  PEM_FILE=$CRT_DIR/$NAME.pem
+  CER_FILE=$CRT_DIR/$NAME.cer
+  PFX_FILE=$CRT_DIR/$NAME.pfx
+  PEM_ALL_FILE=$PEM_DIR/${NAME}_all.pem
+  KYR_FILE=$KYR_DIR/$NAME.kyr
+
+  if [ ! -e "$CRT_FILE" ]; then
+    
+    # Convert from PFX format to PEM
+    if [ -e "$PFX_FILE" ]; then
+      log "Converting [$PFX_FILE] to [$CRT_FILE]"
+      openssl pkcs12 -in "$PFX_FILE" -out $CRT_FILE -nodes
+    fi
+
+    # Convert from DER format to PEM
+      if [ -e "$CER_FILE" ]; then
+      log "Converting [$CER_FILE] to [$CRT_FILE]"
+      openssl x509 -inform der -in "$CER_FILE" -outform pem -out "$CRT_FILE"
+    fi
+  fi
+
+  if [ -e "$CRT_FILE" ]; then
+    cat "$KEY_FILE" > "$PEM_ALL_FILE"
+    cat "$CRT_FILE" >> "$PEM_ALL_FILE"
+    cat "$CA_PEM_ALL_FILE" >> "$PEM_ALL_FILE"
+      
+    create_keyring "$NAME"
   fi
 }
 
@@ -271,10 +425,8 @@ check_cert()
     CSR_FILE=$CSR_DIR/$NAME.csr
   fi
 
-  PEM_CA_ALL_FILE=$PEM_DIR/ca_all.pem
-
   STATUS=""
-  PEM_FILE="$PEM_DIR/${NAME}_all.pem"
+  PEM_ALL_FILE="$PEM_DIR/${NAME}_all.pem"
 
   if [ -e "$CRT_FILE" ]; then
     SUBJECT=`openssl x509 -subject -noout -in $CRT_FILE | awk -F'subject= ' '{print $2 }'`
@@ -293,7 +445,7 @@ check_cert()
   fi
 
   if [ "$NAME" = "ca" ]; then
-  	# reading key len from CA would need CA password -> get it from configuration and assume it did not change
+    # Reading key len from CA would need CA password -> get it from configuration and assume it did not change
     KEYLEN="$CA_KEYLEN bit"
   else
     if [ -e "$KEY_FILE" ]; then
@@ -310,17 +462,8 @@ check_cert()
 
   if [ -z "$STATUS" ]; then
     STATUS="OK"
-
-    # don't add private key to ca_all_pem! and don't add CA certs to it's own PEM file
-    if [ "$NAME" = "ca" ]; then
-      cat "$CRT_FILE" > "$PEM_FILE"
-    else
-      cat "$KEY_FILE" > "$PEM_FILE"
-      cat "$CRT_FILE" >> "$PEM_FILE"
-      cat "$PEM_CA_ALL_FILE" >> "$PEM_FILE"
-    fi
   else
-    remove_file "$PEM_FILE"
+    remove_file "$PEM_ALL_FILE"
   fi
 
   echo "--------------------------------------------"
@@ -347,9 +490,10 @@ check_create_dirs ()
   mkdir -p $CRT_DIR
   mkdir -p $PEM_DIR
   mkdir -p $TXT_DIR
+  mkdir -p $KYR_DIR
 }
 
-generate_keys_and_certs ()
+generate_config_keys_and_certs ()
 {
   create_key_cert domino     "$DOMINO_SERVER_NAME" "$DOMINO_DNS"
   create_key_cert proton     "$PROTON_SERVER_NAME" "$PROTON_DNS"
@@ -360,52 +504,71 @@ generate_keys_and_certs ()
 check_keys_and_certs ()
 {
   log
-  rm_file "$TODO_FILE"
+
+  ALL_KEYS=`find "$KEY_DIR" -type f -name "*.key" -printf "%p\n" | sort`
+
+  for KEY in $ALL_KEYS; do
+    NAME=`basename "$KEY" | cut -d"." -f1`
+    create_pem_kyr  "$NAME"
+  done
+
+  log
 
   check_cert ca 
 
-  all_keys=`find "$KEY_DIR" -type f -name "*.key" -printf "%p\n" | sort`
-
-  for KEY in $all_keys; do
+  for KEY in $ALL_KEYS; do
     NAME=`basename "$KEY" | cut -d"." -f1`
     check_cert "$NAME"
   done
 
-  echo "Certificates issues by CA located here     -> $CRT_DIR"
-  echo "Complete PEM files including trusted roots -> $PEM_DIR"
+  echo "Certificates issues by CA located -> $CRT_DIR"
+  echo "PEM files including trusted roots -> $PEM_DIR"
+  
+  if [ "$CREATE_KEYRINGS" = "yes" ]; then
+    echo "Keyring files                     -> $KYR_DIR"
+  fi
+  
   log
 
-  if [ -e "$TODO_FILE" ]; then
-    cat $TODO_FILE
-    log
-    rm_file "$TODO_FILE"
+  if [ ! -e "$CA_PEM_ALL_FILE" ]; then
+    todo "Please copy your CA's root / intermediate certficiate PEM file into [$CA_PEM_ALL_FILE]"
   fi
 }
 
-# --- Main logic --
+# --- Main Logic --
 
-# Either create defined keys & certs
-# Or configure an additonal cert
-# syntax: name cert-subject cert-dns
-# example: traveler "/O=$acme/CN=traveler" traveler.acme.com 
+# a.) Create defined keys & certs
+# b.) Configure an additonal cert
+
+# Syntax: name cert-subject cert-dns
+# Example: traveler "/O=$acme/CN=traveler" traveler.acme.com 
 
 check_create_dirs
 
+rm_file "$TODO_FILE"
+
 if [ -z "$1" ]; then
 
-  # create CA if not present but configured
+  # Create CA if not present but configured
   create_ca
 
   if [ "$CREATE_CONFIGURED_CERTS" = "yes" ]; then
-    generate_keys_and_certs
+    generate_config_keys_and_certs
   fi
   
-  # check all certs and show details
+  # Check all certs and show details
   check_keys_and_certs
 
 else
-  # create one specific cert
+  # Generate one specific key/cert
   create_key_cert "$1" "$2" "$3"
+  create_pem_kyr "$1"
   check_cert "$1"
+fi
+
+if [ -e "$TODO_FILE" ]; then
+  cat $TODO_FILE
+  log
+  rm_file "$TODO_FILE"
 fi
 
