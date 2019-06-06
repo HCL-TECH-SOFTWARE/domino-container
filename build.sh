@@ -35,6 +35,7 @@ TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
 # With NGINX container you could chose your own local directory or if variable is empty use the default "software" subdirectory 
 # SOFTWARE_DIR=/local/software
 
+DominoMoveInstallData=yes
 
 # Update CentOS while building the image
 LinuxYumUpdate=yes
@@ -147,6 +148,7 @@ if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
 fi
 
 export LinuxYumUpdate
+export DominoMoveInstallData
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 

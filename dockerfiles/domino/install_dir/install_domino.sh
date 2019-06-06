@@ -838,13 +838,6 @@ install_file "$INSTALL_DIR/create_keyring.sh" "create_keyring.sh" root root 755
 # Copy tools required for automating Domino Server configuration
 install_file "$INSTALL_DIR/DatabaseSigner.jar" "/local/notesdata/DatabaseSigner.jar" notes notes 644
 
-# Move installed templates, etc. to install directory
-if [ ! -z "$DominoMoveInstallData" ]; then
-  echo "Moving install data /local/notesdata -> $DominoMoveInstallData"
-  mv -f /local/notesdata "$DominoMoveInstallData"
-  create_directory /local/notesdata notes notes 770
-fi
-
 # --- Cleanup Routines to reduce image size ---
 
 # Remove Fixpack/Hotfix backup files
@@ -874,7 +867,25 @@ chown -R notes:notes /local/notesdata
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Prepare data directory (compact NSFs and NTFs)
 
+  header "Prepare /local/notesdata via compact"
+
   su - notes -c $INSTALL_DIR/domino_install_data_prep.sh
+fi
+
+# If configured, move data directory to a compressed tar file
+
+if [ ! -z "$DominoMoveInstallData" ]; then
+
+  INSTALL_DATA_TAR=/local/install_data_domino.taz
+
+  header "Moving install data /local/notesdata -> [$INSTALL_DATA_TAR]"
+
+  cd $DOMINO_DATA_PATH
+  remove_file "$INSTALL_DATA_TAR"
+  tar -czf "$INSTALL_DATA_TAR" .
+
+  rm -rf $DOMINO_DATA_PATH
+  create_directory $DOMINO_DATA_PATH notes notes 770
 fi
 
 header "Successfully completed installation!"

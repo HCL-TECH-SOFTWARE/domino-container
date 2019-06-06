@@ -68,6 +68,26 @@ copy_files_for_version ()
   return 0
 }
 
+copy_data_directory ()
+{
+  if [ -e "$DOMINO_DATA_PATH/notes.ini" ]; then
+    log "Data directory already exists - nothing to copy."
+    return 0
+  fi 
+
+  INSTALL_DATA_TAR=/local/install_data_domino.taz
+
+  if [ ! -e "$INSTALL_DATA_TAR" ]; then
+    log "Install data [$INSTALL_DATA_TAR] does not exist - cannot create data directory!!"
+    return 0
+  fi 
+
+  log "Extracting install data directory from [$INSTALL_DATA_TAR]"
+  
+  tar xvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE
+  log
+}
+
 copy_files_for_addon ()
 {
   PROD_NAME=$1
@@ -120,6 +140,8 @@ echo $NOW > $UPDATE_CHECK_STATUS_FILE
 log --------------------------------------------------
 log $NOW
 log --------------------------------------------------
+
+copy_data_directory
 
 log Checking for Data Directory Update
 

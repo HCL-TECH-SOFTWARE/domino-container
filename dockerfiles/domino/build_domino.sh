@@ -165,6 +165,7 @@ docker_build ()
   BUILD_ARG_DOCKER_TZ="--build-arg DOCKER_TZ=$DOCKER_TZ"
   BUILD_ARG_DOWNLOAD_FROM="--build-arg DownloadFrom=$DOWNLOAD_FROM"
   BUILD_ARG_LINUX_YUM_UPDATE="--build-arg LinuxYumUpdate=$LinuxYumUpdate"
+  BUILD_ARG_MOVE_INSTALL_DATA="--build-arg DominoMoveInstallData=$DominoMoveInstallData"
 
   # Switch to current directory and remember current directory
   pushd .
@@ -179,7 +180,7 @@ docker_build ()
     -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
     -f $DOCKER_FILE \
     $BUILD_ARG_LINUX_YUM_UPDATE $BUILD_ARG_DOWNLOAD_FROM $BUILD_ARG_PROD_NAME $BUILD_ARG_DOCKER_TZ \
-    $BUILD_ARG_PROD_VER $BUILD_ARG_PROD_FP $BUILD_ARG_PROD_HF .
+    $BUILD_ARG_PROD_VER $BUILD_ARG_PROD_FP $BUILD_ARG_PROD_HF $BUILD_ARG_MOVE_INSTALL_DATA .
 
   popd
   echo
