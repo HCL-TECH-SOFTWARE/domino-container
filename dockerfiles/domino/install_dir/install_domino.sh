@@ -742,6 +742,12 @@ echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 
+# Install CentOS updates if requested
+if [ ! -z "$LinuxYumUpdate" ]; then
+  header "Updating CentOS via yum"
+  yum update -y
+fi
+
 # This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
 if [ -e /opt/ibm/domino ]; then
   FIRST_TIME_SETUP=0
