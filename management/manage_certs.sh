@@ -39,6 +39,7 @@
 #  BEGIN MAIN CONFIGURATION  #
 # -------------------------- #
 
+# Create the following specified certs (for AppDevPack)
 CREATE_CONFIGURED_CERTS="yes"
 
 DOMIMO_ORG="Acme"
@@ -149,8 +150,7 @@ if [ -r "$CERTMGR_CONFIG_FILE" ]; then
   echo "(Using config file $CERTMGR_CONFIG_FILE)"
   . $CERTMGR_CONFIG_FILE
 else
-  echo "Cannot read config file [$CERTMGR_CONFIG_FILE]" 
-  exit 1
+  echo "Info: Using default configuration in script" 
 fi
 
 # Set correct directories based on main path
