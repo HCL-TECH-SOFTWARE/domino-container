@@ -145,20 +145,17 @@ get_current_version ()
     WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
     if [ ! -z "$WGET_RET_OK" ]; then
       DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
-      echo "Getting software version from [$DOWNLOAD_VERSION_FILE]"
-    else
-      echo "test3"
     fi
   fi
 
   if [ ! -z "$DOWNLOAD_VERSION_FILE" ]; then
-    echo "Getting current version from [$DOWNLOAD_VERSION_FILE]"
+    echo "Getting current software version from [$DOWNLOAD_VERSION_FILE]"
     LINE=`$WGET_COMMAND -qO- $DOWNLOAD_VERSION_FILE | grep "^$1|"`
   else
     if [ ! -r $VERSION_FILE ]; then
       echo "No current version file found! [$VERSION_FILE]"
     else
-      echo "Getting current version from [$VERSION_FILE]"
+      echo "Getting current software version from [$VERSION_FILE]"
       LINE=`grep "^$1|" $VERSION_FILE`
     fi
   fi
