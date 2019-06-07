@@ -145,7 +145,9 @@ get_current_version ()
     WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
     if [ ! -z "$WGET_RET_OK" ]; then
       DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
-      log_debug "Getting software version from [$DOWNLOAD_VERSION_FILE]"
+      echo "Getting software version from [$DOWNLOAD_VERSION_FILE]"
+    else
+      echo "test3"
     fi
   fi
 
@@ -168,6 +170,7 @@ get_current_version ()
   return 0
 }
 
+WGET_COMMAND="wget --connect-timeout=20"
 VERSION_FILE_NAME=current_version.txt
 VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
@@ -261,9 +264,7 @@ TARGET_DIR=`echo $TARGET_IMAGE | cut -f 1 -d"-"`
 
 # In case software directory is not set and the well know location is filled with software
 if [ -z "$SOFTWARE_DIR" ]; then
-  if [ -e /local/software/software.txt ]; then
-    SOFTWARE_DIR=/local/software
-  fi
+  SOFTWARE_DIR=./software
 fi
 
 if [ -z "$DOWNLOAD_FROM" ]; then
@@ -272,17 +273,24 @@ if [ -z "$DOWNLOAD_FROM" ]; then
   if [ -z "$SOFTWARE_DIR" ]; then
     SOFTWARE_DIR=$PWD/software
   fi
+fi
+
+VERSION_FILE_NAME=current_version.txt
+VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
+
+if [ -z "$DOWNLOAD_FROM" ]; then
 
   echo "Getting software from [$SOFTWARE_DIR]"
 else
-  echo "Getting software from [$DOWNLOAD_FORM]"
+  echo "Getting software from [$DOWNLOAD_FROM]"
 fi
-
-dump_config
 
 if [ -z "$PROD_VER" ]; then
   PROD_VER="latest"
 fi
+
+dump_config
+
 
 if [ "$PROD_VER" = "latest" ]; then
   get_current_version "$PROD_NAME"
