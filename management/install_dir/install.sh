@@ -457,9 +457,7 @@ if [ ! -z $DownloadFrom ]; then
   # download_and_check_hash $DownloadFrom/text.txt "My Install Directory"
 fi
 
-echo "LinuxYumUpdate: [$LinuxYumUpdate]"
-
-if [ ! -z "$LinuxYumUpdate" ]; then
+if [ "$LinuxYumUpdate" = "yes" ]; then
   header "Updating CentOS via yum"
   yum update -y
 fi

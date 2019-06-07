@@ -743,7 +743,7 @@ echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 
 # Install CentOS updates if requested
-if [ ! -z "$LinuxYumUpdate" ]; then
+if [ "$LinuxYumUpdate" = "yes" ]; then
   header "Updating CentOS via yum"
   yum update -y
 fi
