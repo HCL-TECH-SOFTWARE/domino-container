@@ -85,7 +85,17 @@ if [ -z "$DOMINO_CONFIGURED" ]; then
   fi
 fi
 
+check if running inside a container
 if [ -e "/.dockerenv" ]; then
+  DOCKER_ENV=yes
+fi
+
+# Podman has it's own name
+if [ -e "/run/.containerenv" ]; then
+  DOCKER_ENV=yes
+fi
+
+if [ "$DOCKER_ENV" = "yes" ]; then
   # On Docker allow additional configuration file in data directory
   if [ -r "$DOMINO_DATA_PATH/rc_domino_config" ]; then
     . $DOMINO_DATA_PATH/rc_domino_config

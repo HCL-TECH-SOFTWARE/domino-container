@@ -29,11 +29,9 @@ DOMINO_SERVER_ID=/local/notesdata/server.id
 DOMINO_DOCKER_CFG_SCRIPT=/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
 
-if [ -e "/.dockerenv" ]; then
-  # in docker environment the LOGNAME is not set
-  if [ -z "$LOGNAME" ]; then
-    LOGNAME=`whoami`
-  fi
+# in docker environment the LOGNAME is not set
+if [ -z "$LOGNAME" ]; then
+  LOGNAME=`whoami`
 fi
 
 stop_server ()
@@ -90,6 +88,8 @@ fi
 # Finally start server
 
 echo "--- Starting Domino Server ---"
+
+echo "LOGNAME: [$LOGNAME]"
 
 if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
   $DOMINO_START_SCRIPT start

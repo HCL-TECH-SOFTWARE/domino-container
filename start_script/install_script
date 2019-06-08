@@ -195,7 +195,17 @@ if [ ! -e /usr/bin/domino ] ; then
   ln -s /etc/init.d/rc_domino /usr/bin/domino
 fi
 
+# check if running inside a container
 if [ -e "/.dockerenv" ]; then
+  DOCKER_ENV=yes
+fi
+
+# Podman has it's own name
+if [ -e "/run/.containerenv" ]; then
+  DOCKER_ENV=yes
+fi
+
+if [ "$DOCKER_ENV" = "yes" ]; then
   # when running in a Docker environment, don't use systemd/init.d
   echo "Docker Environment detected!"
   

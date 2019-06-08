@@ -810,6 +810,9 @@ header "Installing Start Script"
 cd $INSTALL_DIR
 tar -xf start_script.tar
 
+# explicitly set docker environment to ensure any Docker implementation works
+export DOCKER_ENV=yes
+
 # Run start script installer
 $INSTALL_DIR/start_script/install_script
 
