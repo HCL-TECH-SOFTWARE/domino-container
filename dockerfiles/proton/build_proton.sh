@@ -50,7 +50,7 @@ DOCKER_FILE=dockerfile
 
 # Latest Tag not set when specifying explicit version
 
-if [ -z "$CUSTOM_VER" ]; then
+if [ "$TAG_LATEST" = "yes" ]; then
   DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 fi
 

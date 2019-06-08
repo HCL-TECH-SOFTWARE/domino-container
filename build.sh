@@ -294,6 +294,8 @@ if [ "$PROD_VER" = "latest" ]; then
   echo
   echo "Product to install: $PROD_NAME $PROD_VER $PROD_FP $PROD_HF"
   echo
+  
+  export TAG_LATEST="yes"
 fi
 
 if [ "$CHECK_SOFTWARE" = "yes" ]; then
