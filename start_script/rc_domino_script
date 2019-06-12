@@ -85,7 +85,7 @@ if [ -z "$DOMINO_CONFIGURED" ]; then
   fi
 fi
 
-check if running inside a container
+# check if running inside a container
 if [ -e "/.dockerenv" ]; then
   DOCKER_ENV=yes
 fi
