@@ -53,15 +53,24 @@ if [ -z "$DOMINO_SERVICE_NAME" ]; then
 fi
 DOMINO_SERVICE_NAME=`basename $DOMINO_SERVICE_NAME`
 
+if [ -z "$LOGNAME" ]; then
+  LOGNAME=`whoami`
+fi
+
 # Docker Operations
 
+ check if running inside a container
 if [ -e "/.dockerenv" ]; then
-  # in Docker environment directly start main script
-  
-  if [ -z "$LOGNAME" ]; then
-    LOGNAME=`whoami`
-  fi
+  DOCKER_ENV=yes
+fi
 
+# Podman has it's own name
+if [ -e "/run/.containerenv" ]; then
+  DOCKER_ENV=yes
+fi
+
+if [ "$DOCKER_ENV" = "yes" ]; then
+  
   if [ "$LOGNAME" = "$DOMINO_USER" ]; then
     $DOMINO_START_SCRIPT "$1" "$2" "$3" "$4" "$5" "$6"
   else

@@ -17,6 +17,9 @@
 #                                                                          #
 ############################################################################
 
+# Updated 06.06.2019
+
+
 INSTALL_DIR=`dirname $0`
 
 # export required environment variables
@@ -654,6 +657,12 @@ echo "DownloadFrom          = [$DownloadFrom]"
 echo "Product               = [$PROD_NAME]"
 echo "Version               = [$PROD_VER]"
 echo "DominoUserID          = [$DominoUserID]"
+
+# Install CentOS updates if requested
+if [ "$LinuxYumUpdate" = "yes" ]; then
+  header "Updating CentOS via yum"
+  yum update -y
+fi
 
 cd "$INSTALL_DIR"
 

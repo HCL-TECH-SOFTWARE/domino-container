@@ -24,6 +24,9 @@ DOCKER_VOLUMES="-v data_iam:/data"
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_iam
 
+# Update CentOS while building the image
+#LinuxYumUpdate=yes
+
 # Configure software download location.
 # You can either use your own software repository remotely.
 # Or use a local software image hosted via NGINX temporary image.

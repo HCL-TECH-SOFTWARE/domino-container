@@ -50,7 +50,7 @@ DOCKER_FILE=dockerfile
 
 # Latest Tag not set when specifying explicit version
 
-if [ -z "$CUSTOM_VER" ]; then
+if [ "$TAG_LATEST" = "yes" ]; then
   DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 fi
 
@@ -115,6 +115,7 @@ docker_build ()
   BUILD_ARG_PROD_NAME="--build-arg PROD_NAME=$PROD_NAME"
   BUILD_ARG_PROD_VER="--build-arg PROD_VER=$PROD_VER"
   BUILD_ARG_DOWNLOAD_FROM="--build-arg DownloadFrom=$DOWNLOAD_FROM"
+  BUILD_ARG_LINUX_YUM_UPDATE="--build-arg LinuxYumUpdate=$LinuxYumUpdate"
 
   # Switch to current directory and remember current directory
   pushd .
@@ -128,7 +129,7 @@ docker_build ()
    --label "$PROD_LABEL.buildtime"="$BUILDTIME" \
    -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
    -f $DOCKER_FILE \
-   $BUILD_ARG_DOWNLOAD_FROM $BUILD_ARG_PROD_NAME $BUILD_ARG_PROD_VER .
+   $BUILD_ARG_LINUX_YUM_UPDATE $BUILD_ARG_DOWNLOAD_FROM $BUILD_ARG_PROD_NAME $BUILD_ARG_PROD_VER .
 
   popd
   echo

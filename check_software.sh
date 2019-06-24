@@ -8,16 +8,11 @@ if [ -z "$DOWNLOAD_FROM" ]; then
   DOWNLOAD_FROM=
 fi
 
-CHECK_HASH=no
-DOWNLOAD_URLS_SHOW=yes
-
 # -----------------------
 
 SCRIPT_NAME=$0
 SOFTWARE_FILE_NAME=software.txt
 SOFTWARE_FILE=$SOFTWARE_DIR/software.txt
-VERSION_FILE_NAME=current_version.txt
-VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
 DOWNLOAD_LINK_IBM_PA_PARTNO="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal="
 DOWNLOAD_LINK_IBM_PA_SEARCH="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_PART_NO_OR_DESCRIPTION"
@@ -36,42 +31,6 @@ log_debug ()
 {
   return 0
   echo "$1" "$2" "$3"
-}
-
-get_current_version ()
-{
- if [ ! -z "$DOWNLOAD_FROM" ]; then
-
-    DOWNLOAD_FILE=$DOWNLOAD_FROM/$VERSION_FILE_NAME
-
-    WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-    if [ ! -z "$WGET_RET_OK" ]; then
-      DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
-      log_debug "Getting software version from [$DOWNLOAD_VERSION_FILE]"
-    fi
-  fi
-
-  if [ ! -z "$DOWNLOAD_VERSION_FILE" ]; then
-    echo "Getting current version from [$DOWNLOAD_VERSION_FILE]"
-    LINE=`$WGET_COMMAND -qO- $DOWNLOAD_VERSION_FILE | grep "^$1|"`
-  else
-    if [ ! -r $VERSION_FILE ]; then
-      echo "No current version file found! [$VERSION_FILE]"
-    else
-      echo "Getting current version from [$VERSION_FILE]"
-      LINE=`grep "^$1|" $VERSION_FILE`
-    fi
-  fi
-
-  PROD_VER=`echo $LINE|cut -d'|' -f2` 
-  PROD_FP=`echo $LINE|cut -d'|' -f3` 
-  PROD_HF=`echo $LINE|cut -d'|' -f4` 
-
-  export PROD_VER
-  export PROD_FP
-  export PROD_HF
-
-  return 0
 }
 
 check_software ()
@@ -140,7 +99,7 @@ check_software ()
           FOUND=TRUE
         fi
       fi
-  	fi
+    fi
   	
     if [ ! "$FOUND" = "TRUE" ]; then
       CURRENT_STATUS="NA"
@@ -163,7 +122,7 @@ check_software ()
   fi
 
   case "$CURRENT_NAME" in
-    domino|traveler|appdevpack)
+    domino|traveler|proton|iam)
 
       if [ -z "$CURRENT_PARTNO" ]; then
         CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_IBM_PA_SEARCH"
@@ -248,11 +207,10 @@ check_software_file ()
         count=$((count+1));
       done;
 
-      echo "$CURRENT_VER [NF]  Not found in download file!"
+      echo "$CURRENT_VER [NF]  Not found in software file!"
       error_count_inc
     fi
   fi
-
 }
 
 check_software_status ()
@@ -282,6 +240,7 @@ check_software_status ()
     check_software_file "domino" 
     check_software_file "domino-ce"
     check_software_file "traveler"
+    check_software_file "proton"
   else
     echo
 
@@ -306,14 +265,6 @@ PROD_NAME=$1
 PROD_VER=`echo "$2" | awk '{print toupper($0)}'`
 PROD_FP=`echo "$3" | awk '{print toupper($0)}'`
 PROD_HF=`echo "$4" | awk '{print toupper($0)}'`
-
-case "$PROD_VER" in
-  .|LATEST)
-    get_current_version "$PROD_NAME"
-    echo
-    echo "Current Version: $PROD_NAME $PROD_VER$PROD_FP$PROD_HF"
-    ;;
- esac
 
 if [ "$ERROR_COUNT" = "0" ]; then
   check_software_status

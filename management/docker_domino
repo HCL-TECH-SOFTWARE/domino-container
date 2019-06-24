@@ -83,7 +83,7 @@ DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
 
 BUILDTIME=`date +"%d.%m.%Y %H:%M:%S"`
 
-DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
+#DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 
 if [ -z "$DOWNLOAD_FROM" ]; then
   if [ -z "$SOFTWARE_USE_NGINX" ]; then
@@ -456,7 +456,7 @@ docker_build ()
     nginx_start
   fi
 
-  docker build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" -t $DOCKER_IMAGE_NAMEVERSION $DOCKER_TAG_LATEST_CMD -f $DOCKER_FILE --build-arg DownloadFrom=$DOWNLOAD_FROM  .
+  docker build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" -t $DOCKER_IMAGE_NAMEVERSION $DOCKER_TAG_LATEST_CMD -f $DOCKER_FILE --build-arg DownloadFrom=$DOWNLOAD_FROM --build-arg LinuxYumUpdate=$LinuxYumUpdate .
   echo
 
   if [ "$SOFTWARE_USE_NGINX" = "1" ]; then

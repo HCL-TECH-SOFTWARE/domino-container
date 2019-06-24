@@ -457,6 +457,11 @@ if [ ! -z $DownloadFrom ]; then
   # download_and_check_hash $DownloadFrom/text.txt "My Install Directory"
 fi
 
+if [ "$LinuxYumUpdate" = "yes" ]; then
+  header "Updating CentOS via yum"
+  yum update -y
+fi
+
 header "Installing Domino related Files"
 
 # install servertasks 

@@ -21,6 +21,7 @@ FROM ibmcom/domino-ce:latest
 LABEL DominoDocker.maintainer="thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de"
 
 # External arguments with a default value
+ARG LinuxYumUpdate=
 ARG DownloadFrom=
 ARG PROD_NAME=
 ARG PROD_VER=
@@ -36,8 +37,7 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN yum update -y && \
-  $LocalInstallDir/install_domino.sh && \
+RUN $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
   rm -rf $LocalInstallDir 

@@ -262,8 +262,8 @@ create_keyring ()
   PEM_ALL_FILE=$PEM_DIR/${1}_all.pem
 
   if [ -e "$KYR_FILE" ]; then 
-  	log "Keyring file [$KYR_FILE] already exists"
-  	return 0
+    log "Keyring file [$KYR_FILE] already exists"
+    return 0
   fi
   
   check_kyrtool
@@ -327,7 +327,7 @@ create_key_cert()
 
   # PEM is named CRT internally
   if [ -e "$PEM_FILE" ]; then
-    CRT_FILE = "$PEM_FILE"
+    CRT_FILE="$PEM_FILE"
   fi
       
   if [ -e "$CRT_FILE" ]; then
@@ -387,6 +387,11 @@ create_pem_kyr()
   PEM_ALL_FILE=$PEM_DIR/${NAME}_all.pem
   KYR_FILE=$KYR_DIR/$NAME.kyr
 
+  # PEM is named CRT internally
+  if [ -e "$PEM_FILE" ]; then
+    CRT_FILE="$PEM_FILE"
+  fi
+
   if [ ! -e "$CRT_FILE" ]; then
     
     # Convert from PFX format to PEM
@@ -418,11 +423,18 @@ check_cert()
   if [ "$NAME" = "ca" ]; then
     KEY_FILE=$CA_DIR/$NAME.key
     CRT_FILE=$CA_DIR/$NAME.crt
+    PEM_FILE=$CA_DIR/$NAME.pem
     CSR_FILE=""
   else
     KEY_FILE=$KEY_DIR/$NAME.key
     CRT_FILE=$CRT_DIR/$NAME.crt
+    PEM_FILE=$CRT_DIR/$NAME.pem
     CSR_FILE=$CSR_DIR/$NAME.csr
+  fi
+
+  # PEM is named CRT internally
+  if [ -e "$PEM_FILE" ]; then
+    CRT_FILE="$PEM_FILE"
   fi
 
   STATUS=""
