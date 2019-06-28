@@ -19,6 +19,11 @@
 
 # Configure server based on environment variables
 
+if [ -z "$ServerName" ]; then
+  echo "No Setup Environment Configuration. Skipping setup"
+  exit 0
+fi
+
 dominosilentsetup=/local/notesdata/SetupProfile.pds
 dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
 

@@ -74,7 +74,7 @@ if [ ! -e "$DOMINO_SERVER_ID" ]; then
 fi 
 
 # Check if server is configured. Else start remote configuation on port 1352
-if [ ! -e "/local/notesdata/server.id" ]; then
+if [ ! -e "$DOMINO_SERVER_ID" ]; then
 
   echo "Configuration for automated setup not found."
   echo "Starting Domino Server in listen mode"
