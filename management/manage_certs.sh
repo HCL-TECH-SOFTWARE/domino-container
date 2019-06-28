@@ -238,17 +238,17 @@ check_kyrtool ()
 {
   if [ ! -x "$KYRTOOL_BIN" ]; then
     echo "Kyrtool not found or cannot be executed [$KYRTOOL_BIN]"
-    exit 1
+    return 1
   fi	
  
   if [ ! $LOGNAME = "notes" ]; then
     echo "You have be 'notes' to execute the kyrtool"
-    exit 1
+    return 1
   fi	
 
   if [ ! -r "$DOMINO_DATA_PATH/notes.ini" ]; then
     echo "Cannot read notes.ini"
-    exit 1
+    return 1
   fi	
 }
 
@@ -556,6 +556,13 @@ check_keys_and_certs ()
 # Example: traveler "/O=$acme/CN=traveler" traveler.acme.com 
 
 check_create_dirs
+
+if [ "$CREATE_KEYRINGS" = "yes" ]; then
+  if [ ! $LOGNAME = "notes" ]; then
+    echo "You have be 'notes' to execute the kyrtool"
+    CREATE_KEYRINGS="no"
+  fi	
+fi
 
 rm_file "$TODO_FILE"
 
