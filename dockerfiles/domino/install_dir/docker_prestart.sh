@@ -30,7 +30,12 @@ dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerPr
 cd /opt/ibm/domino/notes/latest/linux/
 echo $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
 
-[ ! -z "$isFirstServer" ] && $dominoprofileedit -isFirstServer $isFirstServer $dominosilentsetup
+# in case this is an additional server in an existing environment switch to different pds file
+# because variable isFirstServer can not be changed programmatically
+[ ! -z "$isFirstServer" ] && if [ "false" = tr '[:upper:]' '[:lower:]' <<<"$isFirstServer"] ; then
+  dominosilentsetup=/local/notesdata/SetupProfileSecondServer.pds
+fi
+
 [ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
 [ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile $AdminIDFile $dominosilentsetup
 [ ! -z "$AdminLastName" ] && $dominoprofileedit -AdminLastName $AdminLastName $dominosilentsetup

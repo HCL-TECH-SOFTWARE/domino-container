@@ -8,7 +8,7 @@ To build the latest available image
 1. Download the required [software packages](https://github.com/IBM/domino-docker/blob/master/software/README.md) to the 'software' directory
 2. From the root folder of this repository issue the following command 
 ```bash
-build domino
+./build domino
 ```
 The process will perform all required actions to create the image in the version requested. Usually it takes less than 5 minutes to build the image.
 
@@ -16,6 +16,11 @@ The process will perform all required actions to create the image in the version
 When a new container is created from the IBM Domino Docker image, it takes [environment variables](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md)
 
 * Domino Data directory needs to be a persistent volume.
+
+### Management Script
+The folder [Management](https://github.com/IBM/domino-docker/tree/master/management) contains a script that simplifies the management of containers. The script is supposed to run on the docker host.
+
+For details see the documentation of the [Management Script](https://github.com/IBM/domino-docker/blob/master/documentation/management.md)
 
 ### Manually creating a new container from an image
 First create a new/empty persistent volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
@@ -36,7 +41,7 @@ docker run -it -e "ServerName=Server1" \
     -p 1352:1352 \
     -v dominodata_demo1:/local/notesdata \
     --name server1 \
-    ibmcom/domino:10.0.0
+    ibmcom/domino:10.0.1FP1
 ```
 ## Runtime configuration
 

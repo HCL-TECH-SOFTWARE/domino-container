@@ -15,6 +15,21 @@ The inspect/info command queries a lot of information from the running Domino se
 This management script can be used to create custom images and to run them.
 
 ----------
+## Basics
+
+For each container there are two files that belong together. One containing the configuration and variables, and one for the script itself:
+
+- management script : "docker_"
+- configuration file : "config_"
+
+Both file names will refer to each other using the custom string right of "_".
+
+### Example: 
+- "docker_123" will use the configuration from "config_123"
+- "docker_paul" will use the configuration from "config_paul"
+
+
+----------
 
 ## Quick Config
 
@@ -27,9 +42,10 @@ for the "FROM" statement. This is usually set to something like "FROM ibmcom/dom
 There are multiple example files for different targets like Domino, Domino CE or Traveler.
 
 Afterwards build and run the image.
-
+```bash
 docker_domino build
 docker_domino run
+```
 
 ----------
 

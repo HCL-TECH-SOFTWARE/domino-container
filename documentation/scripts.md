@@ -14,7 +14,7 @@ Currently supported are the following images
 Inside this script you can also configure a download http target if you are hosting the downloaded software on a different machine
 You can also specify a download directoy on your Docker host which will be served by a temporary Docker image running a NGINX server to provide the software
 
-So there are 3 choices
+So there are three choices
 1. Remote Download specified with example: DOWNLOAD_FROM=http://192.168.1.1
 2. Local directory specified with example: SOFTWARE_DIR=/local/software hosted via NGINX server
 3. Standard location in the software sub-directory hosted via NGINX server
