@@ -14,6 +14,11 @@ SCRIPT_NAME=$0
 SOFTWARE_FILE_NAME=software.txt
 SOFTWARE_FILE=$SOFTWARE_DIR/software.txt
 
+# if software file isn't found check standard location (check might lead to the same directory if standard location already)
+if [ ! -e "$SOFTWARE_FILE" ]; then
+  SOFTWARE_FILE=$PWD/software/$SOFTWARE_FILE_NAME
+fi
+
 DOWNLOAD_LINK_IBM_PA_PARTNO="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal="
 DOWNLOAD_LINK_IBM_PA_SEARCH="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_PART_NO_OR_DESCRIPTION"
 DOWNLOAD_LINK_IBM_CE="http://ibm.biz/NDCommunityFiles"

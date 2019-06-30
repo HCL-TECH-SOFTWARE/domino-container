@@ -168,8 +168,6 @@ get_current_version ()
 }
 
 WGET_COMMAND="wget --connect-timeout=20"
-VERSION_FILE_NAME=current_version.txt
-VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
 SOFTWARE_PORT=7777
@@ -261,19 +259,20 @@ TARGET_DIR=`echo $TARGET_IMAGE | cut -f 1 -d"-"`
 
 # In case software directory is not set and the well know location is filled with software
 if [ -z "$SOFTWARE_DIR" ]; then
-  SOFTWARE_DIR=./software
+  SOFTWARE_DIR=$PWD/software
 fi
 
 if [ -z "$DOWNLOAD_FROM" ]; then
   SOFTWARE_USE_NGINX=1
-
-  if [ -z "$SOFTWARE_DIR" ]; then
-    SOFTWARE_DIR=$PWD/software
-  fi
 fi
 
 VERSION_FILE_NAME=current_version.txt
 VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
+
+# if version file isn't found check standard location (check might lead to the same directory if standard location already)
+if [ ! -e "$VERSION_FILE" ]; then
+  VERSION_FILE=$PWD/software/$VERSION_FILE_NAME  
+fi
 
 if [ -z "$DOWNLOAD_FROM" ]; then
 
@@ -287,7 +286,6 @@ if [ -z "$PROD_VER" ]; then
 fi
 
 dump_config
-
 
 if [ "$PROD_VER" = "latest" ]; then
   get_current_version "$PROD_NAME"
