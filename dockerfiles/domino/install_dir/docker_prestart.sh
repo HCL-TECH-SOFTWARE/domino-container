@@ -36,6 +36,9 @@ echo $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
   dominosilentsetup=/local/notesdata/SetupProfileSecondServer.pds
 fi
 
+# download ID file if $ServerName contains a value that starts with "http"
+# wget ....
+
 [ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
 [ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile $AdminIDFile $dominosilentsetup
 [ ! -z "$AdminLastName" ] && $dominoprofileedit -AdminLastName $AdminLastName $dominosilentsetup
