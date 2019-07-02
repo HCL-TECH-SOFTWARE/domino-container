@@ -24,6 +24,7 @@ if [ -z "$ServerName" ]; then
   exit 0
 fi
 
+WGET_COMMAND="wget --connect-timeout=20" 
 dominosilentsetup=/local/notesdata/SetupProfile.pds
 dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
 
@@ -37,7 +38,54 @@ echo $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
 fi
 
 # download ID file if $ServerName contains a value that starts with "http"
-# wget ....
+download_file ()
+{
+  DOWNLOAD_URL=$1
+  DOWNLOAD_FILE=$2
+
+  if [ -z "$DOWNLOAD_FILE" ]; then
+    log_error "No download file specified!"
+    exit 1
+  fi
+
+  WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_URL" 2>&1 | grep 'HTTP/1.1 200 OK'`
+  if [ -z "$WGET_RET_OK" ]; then
+    echo "Download file does not exist [$DOWNLOAD_FILE]"
+    return 0
+  fi
+
+  if [ -e "$DOWNLOAD_FILE" ]; then
+    echo
+    echo "Replacing existing file [$DOWNLOAD_FILE]"
+    rm -f "$DOWNLOAD_FILE"
+  fi
+
+  $WGET_COMMAND "$DOWNLOAD_URL" 2>/dev/null
+
+  if [ "$?" = "0" ]; then
+    echo "Successfully downloaded: [$DOWNLOAD_FILE] "
+    echo
+    return 0
+  else
+    echo "File [$DOWNLOAD_FILE] not downloaded correctly"
+    exit 1
+  fi
+}
+
+# if downlaod URL defined, download from remove location and set variable to server.id filename
+case "$ServerIDFile" in
+  http*)
+    FileName=`basename $ServerIDFile`
+    download_file "$ServerIDFile" "$FileName"
+    ServerIDFile=$FileName
+    ;;
+esac
+
+if [ -e "$ServerIDFile" ]; then
+  echo ServerIDFile: [$ServerIDFile] exists
+else
+  echo ServerIDFile: [$ServerIDFile] does not exist!
+fi 
 
 [ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
 [ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile $AdminIDFile $dominosilentsetup
