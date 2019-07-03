@@ -159,8 +159,7 @@ Used by :
 * docker_prestart.sh
 
 ### ServerName
-Common Name of the Domino Server - if this is the first server of the Domain the ID file will be created by the server setup.
-If this is not the first server of the Domain this name will be used to look up the OtherDirectoryServer's names.nsf
+Common Name of the Domino Server - if this is the first server of the Domain the ID file will be created by the server setup otherwise you have to supply the ServerIDFile. 
 
 Used by : 
 * docker_prestart.sh
