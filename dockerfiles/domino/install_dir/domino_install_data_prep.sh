@@ -1,6 +1,9 @@
 #!/bin/sh
 
-LOG_FILE=/local/domino_install_data_prep.log
+DOMINO_DATA_PATH=/local/notesdata
+DOMDOCK_LOG_DIR=/domino-docker
+LOG_FILE=$DOMDOCK_LOG_DIR/domino_install_data_prep.log
+LOTUS=/opt/ibm/domino
 
 log ()
 {
@@ -11,7 +14,7 @@ echo
 echo Compacting install data directory ...
 echo
 
-cd /local/notesdata
+cd $DOMINO_DATA_PATH
 echo "create_r10_databases=1" >> notes.ini
 echo "create_r85_log=1" >> notes.ini
 
@@ -27,7 +30,7 @@ log "--------------------"
 df -h  >> $LOG_FILE
 log "--------------------"
 
-/opt/ibm/domino/bin/compact -# 4 -* -C -D -n -v -upgrade >> $LOG_FILE
+$LOTUS/bin/compact -# 4 -* -C -D -n -v -upgrade >> $LOG_FILE
 
 log "--------------------"
 df -h  >> $LOG_FILE

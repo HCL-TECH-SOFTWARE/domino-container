@@ -20,10 +20,16 @@
 # limitations under the License.                                          #
 ###########################################################################
 
+export DOMDOCK_DIR=/domino-docker
+export DOMDOCK_LOG_DIR=/domino-docker
+export DOMDOCK_TXT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker
+
 export INSTALL_DIR=/tmp/install_dir
 export LOTUS=/opt/ibm/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
+export DOMINO_DATA_PATH=/local/notesdata
 export NUI_NOTESDIR=$LOTUS
 export LANG=C
 
@@ -41,11 +47,10 @@ HF_UNINSTALL_STRING_OK="The installation completed successfully."
 JVM_STRING_OK="Patch was successfully applied."
 JVM_STRING_FP_OK="Tree diff file patch successful!"
 
-
-INST_DOM_LOG=/local/install_domino.log
-INST_FP_LOG=/local/install_fp.log
-INST_HF_LOG=/local/install_hf.log
-INST_TRAVELER_LOG=/local/install_traveler.log
+INST_DOM_LOG=$DOMDOCK_LOG_DIR/install_domino.log
+INST_FP_LOG=$DOMDOCK_LOG_DIR/install_fp.log
+INST_HF_LOG=$DOMDOCK_LOG_DIR/install_hf.log
+INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 
 pushd()
 {

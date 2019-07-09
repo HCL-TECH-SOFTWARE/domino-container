@@ -19,6 +19,11 @@
 
 INSTALL_DIR=`dirname $0`
 
+export DOMDOCK_DIR=/domino-docker
+export DOMDOCK_LOG_DIR=/domino-docker
+export DOMDOCK_TXT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker
+
 # export required environment variables
 export LOGNAME=notes
 export LOTUS=/opt/ibm/domino
@@ -44,10 +49,10 @@ JVM_STRING_OK="Patch was successfully applied."
 JVM_STRING_FP_OK="Tree diff file patch successful!"
 
 
-INST_DOM_LOG=/local/install_domino.log
-INST_FP_LOG=/local/install_fp.log
-INST_HF_LOG=/local/install_hf.log
-INST_TRAVELER_LOG=/local/install_traveler.log
+INST_DOM_LOG=$DOMDOCK_LOG_DIR/install_domino.log
+INST_FP_LOG=$DOMDOCK_LOG_DIR/install_fp.log
+INST_HF_LOG=$DOMDOCK_LOG_DIR/install_hf.log
+INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 
 pushd()
 {
@@ -490,13 +495,13 @@ get_domino_version ()
 set_domino_version ()
 {
   get_domino_version
-  echo $DOMINO_VERSION > /local/domino_$1.txt
-  echo $DOMINO_VERSION > /local/notesdata/domino_$1.txt
+  echo $DOMINO_VERSION > $DOMDOCK_TXT_DIR/domino_$1.txt
+  echo $DOMINO_VERSION > $DOMINO_DATA_PATH/domino_$1.txt
 }
 
 check_installed_version ()
 {
-  VersionFile=/local/domino_$1.txt
+  VersionFile=$DOMDOCK_TXT_DIR/domino_$1.txt
   
   if [ ! -r $VersionFile ]; then
     return 0
@@ -627,7 +632,7 @@ install_domino ()
 
     ./install -script script.dat > $INST_FP_LOG
 
-    echo $INST_FP >/local/notesdata/data_version.txt
+    echo $INST_FP >$DOMINO_DATA_PATH/data_version.txt
 
     check_file_str "$INST_FP_LOG" "$FP_STRING_OK"
 
@@ -778,9 +783,10 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   echo 'notes soft nofile 60000' >> /etc/security/limits.conf
   echo 'notes hard nofile 60000' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
-
+ 
+  create_directory $DOMDOCK_DIR notes notes 770
   create_directory /local notes notes 770
-  create_directory /local/notesdata notes notes 770
+  create_directory $DOMINO_DATA_PATH notes notes 770
   create_directory /local/translog notes notes 770
   create_directory /local/daos notes notes 770
 
@@ -817,29 +823,29 @@ export DOCKER_ENV=yes
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "/local/notesdata/SetupProfile.pds" notes notes 644
+install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMINO_DATA_PATH/SetupProfile.pds" notes notes 644
 
 header "Final Steps & Configuration"
 
 # Copy pre-start configuration
-install_file "$INSTALL_DIR/docker_prestart.sh" "/docker_prestart.sh" notes notes 770
+install_file "$INSTALL_DIR/docker_prestart.sh" "$DOMDOCK_SCRIPT_DIR/docker_prestart.sh" notes notes 770
 
 # Copy Docker specific start script configuration if provided
-install_file "$INSTALL_DIR/rc_domino_config" "/local/notesdata/rc_domino_config" notes notes 644 
+install_file "$INSTALL_DIR/rc_domino_config" "$DOMINO_DATA_PATH/rc_domino_config" notes notes 644 
 install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/domino_docker_entrypoint.sh" notes notes 755
 
 # Install Data Directory Copy File 
-install_file "$INSTALL_DIR/domino_install_data_copy.sh" "/domino_install_data_copy.sh" root root 755
+install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
 
 # Install health check script
 install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
 
 # Install keyring create/update script
 
-install_file "$INSTALL_DIR/create_keyring.sh" "create_keyring.sh" root root 755
+install_file "$INSTALL_DIR/create_keyring.sh" "$DOMDOCK_SCRIPT_DIR/create_keyring.sh" root root 755
 
 # Copy tools required for automating Domino Server configuration
-install_file "$INSTALL_DIR/DatabaseSigner.jar" "/local/notesdata/DatabaseSigner.jar" notes notes 644
+install_file "$INSTALL_DIR/DatabaseSigner.jar" "$DOMINO_DATA_PATH/DatabaseSigner.jar" notes notes 644
 
 # --- Cleanup Routines to reduce image size ---
 
@@ -847,11 +853,11 @@ install_file "$INSTALL_DIR/DatabaseSigner.jar" "/local/notesdata/DatabaseSigner.
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
 
 # Remove not needed domino/html data to keep image smaller
-find /local/notesdata/domino/html -name "*.dll" -exec rm -rf {} \;
-find /local/notesdata/domino/html -name "*.msi" -exec rm -rf {} \;
+find $DOMINO_DATA_PATH/domino/html -name "*.dll" -exec rm -rf {} \;
+find $DOMINO_DATA_PATH/domino/html -name "*.msi" -exec rm -rf {} \;
 
-remove_directory /local/notesdata/domino/html/download/filesets
-remove_directory /local/notesdata/domino/html/help
+remove_directory $DOMINO_DATA_PATH/domino/html/download/filesets
+remove_directory $DOMINO_DATA_PATH/domino/html/help
 
 # Remove uninstaller --> we never uninstall but rebuild from scratch
 remove_directory $Notes_ExecDirectory/_uninst
@@ -865,12 +871,12 @@ install_res_links
 remove_file /opt/ibm/domino/notes/latest/linux/tunekrnl
 
 # Ensure permissons are set correctly for data directory
-chown -R notes:notes /local/notesdata
+chown -R notes:notes $DOMINO_DATA_PATH
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Prepare data directory (compact NSFs and NTFs)
 
-  header "Prepare /local/notesdata via compact"
+  header "Prepare $DOMINO_DATA_PATH via compact"
 
   su - notes -c $INSTALL_DIR/domino_install_data_prep.sh
 fi
@@ -879,9 +885,9 @@ fi
 
 if [ ! -z "$DominoMoveInstallData" ]; then
 
-  INSTALL_DATA_TAR=/local/install_data_domino.taz
+  INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
-  header "Moving install data /local/notesdata -> [$INSTALL_DATA_TAR]"
+  header "Moving install data $DOMINO_DATA_PATH -> [$INSTALL_DATA_TAR]"
 
   cd $DOMINO_DATA_PATH
   remove_file "$INSTALL_DATA_TAR"

@@ -25,16 +25,16 @@ if [ -z "$ServerName" ]; then
 fi
 
 WGET_COMMAND="wget --connect-timeout=20" 
-dominosilentsetup=/local/notesdata/SetupProfile.pds
+dominosilentsetup=$DOMINO_DATA_PATH/SetupProfile.pds
 dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
 
-cd /opt/ibm/domino/notes/latest/linux/
+cd $Notes_ExecDirectory
 echo $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
 
 # in case this is an additional server in an existing environment switch to different pds file
 # because variable isFirstServer can not be changed programmatically
 [ ! -z "$isFirstServer" ] && if [ "false" = tr '[:upper:]' '[:lower:]' <<<"$isFirstServer"] ; then
-  dominosilentsetup=/local/notesdata/SetupProfileSecondServer.pds
+  dominosilentsetup=$DOMINO_DATA_PATH/SetupProfileSecondServer.pds
 fi
 
 # download ID file if $ServerName contains a value that starts with "http"
@@ -111,13 +111,13 @@ fi
 echo "Silent setup of server with the following settings:"
 $dominoprofileedit -dump $dominosilentsetup
 
-cd /local/notesdata 
+cd $DOMINO_DATA_PATH 
 touch setuplog.txt 
-/opt/ibm/domino/bin/server -silent $dominosilentsetup /local/notesdata/setuplog.txt
+$LOTUS/bin/server -silent $dominosilentsetup $DOMINO_DATA_PATH/setuplog.txt
 
 # add notes.ini variables if requested
 if [ ! -z "$Notesini" ]; then
-	echo $Notesini >> /local/notesdata/notes.ini
+	echo $Notesini >> $DOMINO_DATA_PATH/notes.ini
 	unset Notesini
 fi
 
