@@ -446,7 +446,9 @@ docker_logs ()
 docker_build ()
 {
   if [ -z $DOCKER_FILE ]; then
-    echo "No dockerfile configured"
+    echo "No dockerfile specified in config file."
+    echo "If you would like to build a custom image please provide a dockerfile name"
+    echo "otherwise the default image is being used to 'run' a container"
     return 0
   fi
 
