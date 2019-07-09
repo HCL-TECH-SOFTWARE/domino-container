@@ -17,10 +17,12 @@
 #                                                                          #
 ############################################################################
 
-# Updated 06.06.2019
-
-
 INSTALL_DIR=`dirname $0`
+
+DOMDOCK_DIR=/domino-docker
+DOMDOCK_LOG_DIR=/domino-docker
+DOMDOCK_TXT_DIR=/domino-docker
+DOMDOCK_SCRIPT_DIR=/domino-docker
 
 # export required environment variables
 export LOGNAME=notes
@@ -37,7 +39,7 @@ SOFTWARE_FILE=$INSTALL_DIR/software.txt
 WGET_COMMAND="wget --connect-timeout=20"
 
 TRAVELER_STRING_OK="Installation completed with warnings."
-INST_TRAVELER_LOG=/local/install_traveler.log
+INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 
 pushd()
 {
@@ -572,7 +574,7 @@ install_traveler ()
 
   ./silentInstall > $INST_TRAVELER_LOG
 
-  cp /local/notesdata/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log /local
+  cp $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log $DOMDOCK_LOG_DIR
 
   check_file_str "$INST_TRAVELER_LOG" "$TRAVELER_STRING_OK"
 
@@ -644,8 +646,8 @@ install_proton ()
 
 set_version ()
 {
-  echo $PROD_VER > "/local/${PROD_NAME}_ver.txt"
-  echo $PROD_VER > "/local/notesdata/${PROD_NAME}_ver.txt"
+  echo $PROD_VER > "$DOMDOCK_LTXT_DIR/${PROD_NAME}_ver.txt"
+  echo $PROD_VER > "$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt"
 }
 
 # --- Main Install Logic ---
@@ -688,7 +690,7 @@ esac
 header "Final Steps & Configuration"
 
 # Install Data Directory Copy File 
-install_file "$INSTALL_DIR/domino_install_data_copy.sh" "/domino_install_data_copy.sh" root root 755
+install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
 
 # Install health check script
 install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
@@ -700,21 +702,20 @@ remove_directory $Notes_ExecDirectory/_uninst
 
 
 # Ensure permissons are set correctly for data directory
-chown -R notes:notes /local/notesdata
+chown -R notes:notes $DOMINO_DATA_PATH
 
 # Take a backup copy of Product Data Files
-
 
 case "$PROD_NAME" in
 
   traveler)
     cd $DOMINO_DATA_PATH
-    tar -czf /local/install_data_${PROD_NAME}_${PROD_VER}.taz traveler domino/workspace
+    tar -czf $DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz traveler domino/workspace
     ;;
 
   proton)
     cd $DOMINO_DATA_PATH
-    tar -czf /local/install_data_${PROD_NAME}_${PROD_VER}.taz iam-store.ntf
+    tar -czf $DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz iam-store.ntf
     ;;
 
 esac

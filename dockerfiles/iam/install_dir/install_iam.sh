@@ -536,51 +536,6 @@ install_binary()
   return 0
 }
 
-install_traveler ()
-{
-  header "$PROD_NAME Installation"
-
-  INST_VER=$PROD_VER
-
-  if [ ! -z "$INST_VER" ]; then
-    get_download_name $PROD_NAME $INST_VER
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME traveler
-  else
-    log_error "No Target Version specified"
-    exit 1
-  fi
-
-  header "Installing $PROD_NAME $INST_VER"
-
-  pushd .
-
-  cd traveler
-
-  ./silentInstall > $INST_TRAVELER_LOG
-
-  cp /local/notesdata/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log /local
-
-  check_file_str "$INST_TRAVELER_LOG" "$TRAVELER_STRING_OK"
-
-  if [ "$?" = "1" ]; then
-    echo
-    log_ok "$PROD_NAME $INST_VER installed successfully"
-
-  else
-
-    print_delim
-    cat $INST_TRAVELER_LOG
-    print_delim
-
-    log_error "Traveler Installation failed!!!"
-    exit 1
-  fi
-
-  popd
-  rm -rf traveler 
-
-  return 0
-}
 
 install_iam ()
 {
@@ -623,7 +578,7 @@ install_iam ()
   return 0
 }
 
-set_version ()
+/ ()
 {
   echo $PROD_VER > "/local/${PROD_NAME}_ver.txt"
   #echo $PROD_VER > "/local/notesdata/${PROD_NAME}_ver.txt"

@@ -1,12 +1,8 @@
 #!/bin/bash
 
-LOTUS=/opt/ibm/domino
-Notes_ExecDirectory=$LOTUS/notes/latest/linux
-DOMINO_DATA_PATH=/local/notesdata
 DOMINO_INSTDATA_BACKUP=$Notes_ExecDirectory/data1_bck
-UPDATE_CHECK_STATUS_FILE=/local/data_update_checked.txt
-
-LOG_FILE=/local/domino_data_update.log
+UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
+LOG_FILE=$DOMDOCK_LOG_DIR/domino_data_update.log
 
 log ()
 {
@@ -34,8 +30,8 @@ copy_files ()
 
 copy_files_for_version ()
 {
-  VersionFile=/local/domino_$1.txt
-  InstalledFile=/local/notesdata/domino_$1.txt
+  VersionFile=$DOMDOCK_TXT_DIR/domino_$1.txt
+  InstalledFile=$DOMINO_DATA_PATH/domino_$1.txt
 
   if [ ! -r $VersionFile ]; then
     return 1
@@ -71,8 +67,8 @@ copy_files_for_version ()
 copy_files_for_addon ()
 {
   PROD_NAME=$1
-  VersionFile=/local/${PROD_NAME}_ver.txt
-  InstalledFile=/local/notesdata/${PROD_NAME}_ver.txt
+  VersionFile=$DOMDOCK_TXT_DIR/${PROD_NAME}_ver.txt
+  InstalledFile=$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt
 
   if [ ! -r $VersionFile ]; then
     return 1
@@ -97,7 +93,7 @@ copy_files_for_addon ()
   log "Copying new data files for $PROD_NAME $PROD_VER"
   log
 
-  tar xvf /local/install_data_${PROD_NAME}_${PROD_VER}.taz -C $DOMINO_DATA_PATH >> $LOG_FILE
+  tar xvf $DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz -C $DOMINO_DATA_PATH >> $LOG_FILE
 
   echo $PROD_VER > $InstalledFile
 

@@ -24,9 +24,20 @@
 # You can still interact with the start script invoking rc_domino which is Docker aware.
 # This entry point is invoked by Docker to start the Domino server and also acts as a shutdown monitor.
 
-DOMINO_USER=notes
-DOMINO_SERVER_ID=/local/notesdata/server.id
-DOMINO_DOCKER_CFG_SCRIPT=/docker_prestart.sh
+export DOMDOCK_DIR=/domino-docker
+export DOMDOCK_LOG_DIR=/domino-docker
+export DOMDOCK_TXT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker
+
+# export required environment variables
+export DOMINO_USER=notes
+export LOGNAME=notes
+export LOTUS=/opt/ibm/domino
+export Notes_ExecDirectory=$LOTUS/notes/latest/linux
+export DOMINO_DATA_PATH=/local/notesdata
+
+DOMINO_SERVER_ID=$DOMINO_DATA_PATH/server.id
+DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
 
 # in docker environment the LOGNAME is not set
@@ -55,9 +66,9 @@ trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
 
 # Data Update Operations
 if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-  /domino_install_data_copy.sh
+  $DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
 else
-  su - notes -c /domino_install_data_copy.sh
+  su - notes -c $DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
 fi
 
 # Check if server is configured. Else start custom configuration script
@@ -82,10 +93,10 @@ if [ ! -e "$DOMINO_SERVER_ID" ]; then
   echo "--- Configuring Domino Server ---"
 
   if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-    cd /local/notesdata
+    cd $DOMINO_DATA_PATH
     /opt/ibm/domino/bin/server -listen 1352
   else
-    su - $DOMINO_USER -c "cd /local/notesdata; /opt/ibm/domino/bin/server -listen 1352"
+    su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; /opt/ibm/domino/bin/server -listen 1352"
   fi
 
   echo "--- Configuration ended ---"
