@@ -339,7 +339,7 @@ create_key_cert()
       log "Certificate Sign Request (CSR) already exists [$CSR_FILE]"
     else
       log "Creating certificate Sign Request (CSR) [$CSR_FILE]"
-      openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "$SUBJ" $CRT_SIGN_ALG > /dev/null
+      openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "$SUBJ" $CERT_SIGN_ALG > /dev/null
       
       if [ ! -z $SANS ]; then
         echo >> $CSR_FILE
