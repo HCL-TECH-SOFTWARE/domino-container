@@ -121,6 +121,27 @@ if [ ! -z "$Notesini" ]; then
   unset Notesini
 fi
 
+# If CustomNotesdataZip file downlaod URL defined, download from remote location and unzip 
+case "$CustomNotesdataZip" in
+  http*)
+    FileName=`basename $CustomNotesdataZip`
+    download_file "$CustomNotesdataZip" "$FileName"
+    CustomNotesdataZip=$FileName
+    ;;
+esac
+
+if [ ! -z "$CustomNotesdataZip" ]; then
+  if [ -e "$CustomNotesdataZip" ]; then
+    echo Extracting custom notesdata file [$CustomNotesdataZip]
+
+    echo "---------------------------------------"
+    unzip -o "$CustomNotesdataZip"
+    rm -f "$CustomNotesdataZip"
+    echo "---------------------------------------"
+  else
+    echo "Custom notesdata [$CustomNotesdataZip] not found!"
+  fi
+fi
 
 # If config.json file downlaod URL defined, download from remote location and set variable to downloaded filename
 case "$ConfigFile" in

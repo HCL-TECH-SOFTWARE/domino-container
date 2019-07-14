@@ -23,7 +23,7 @@ INSTALL_DIR=`dirname $0`
 export LANG=C
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-WGET_COMMAND="wget --connect-timeout=20"
+WGET_COMMAND="wget --connect-timeout=10 --tries=1"
 
 pushd()
 {
