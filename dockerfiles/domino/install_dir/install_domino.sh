@@ -846,6 +846,7 @@ install_file "$INSTALL_DIR/create_keyring.sh" "$DOMDOCK_SCRIPT_DIR/create_keyrin
 
 # Copy tools required for automating Domino Server configuration
 install_file "$INSTALL_DIR/DatabaseSigner.jar" "$DOMINO_DATA_PATH/DatabaseSigner.jar" notes notes 644
+install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpdateConfig.jar" notes notes 644
 
 # --- Cleanup Routines to reduce image size ---
 

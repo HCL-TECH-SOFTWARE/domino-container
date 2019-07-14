@@ -475,10 +475,12 @@ install_all_servertasks "$INSTALL_DIR/servertasks"
 # install extmgrs
 install_all_extmgr "$INSTALL_DIR/extmgr"
 
-
 # install health check script
 
 install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
+
+# copy pre-start configuration
+install_file "$INSTALL_DIR/docker_prestart.sh" "$DOMDOCK_SCRIPT_DIR/docker_prestart.sh" notes notes 770
 
 header "Successfully completed installation!"
 

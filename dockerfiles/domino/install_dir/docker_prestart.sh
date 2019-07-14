@@ -72,7 +72,7 @@ download_file ()
   fi
 }
 
-# if downlaod URL defined, download from remove location and set variable to server.id filename
+# If server.id downlaod URL defined, download from remote location and set variable to server.id filename
 case "$ServerIDFile" in
   http*)
     FileName=`basename $ServerIDFile`
@@ -117,8 +117,30 @@ $LOTUS/bin/server -silent $dominosilentsetup $DOMINO_DATA_PATH/setuplog.txt
 
 # add notes.ini variables if requested
 if [ ! -z "$Notesini" ]; then
-	echo $Notesini >> $DOMINO_DATA_PATH/notes.ini
-	unset Notesini
+  echo $Notesini >> $DOMINO_DATA_PATH/notes.ini
+  unset Notesini
+fi
+
+
+# If config.json file downlaod URL defined, download from remote location and set variable to downloaded filename
+case "$ConfigFile" in
+  http*)
+    FileName=`basename $ConfigFile`
+    download_file "$ConfigFile" "$FileName"
+    ConfigFile=$FileName
+    ;;
+esac
+
+if [ ! -z "$ConfigFile" ]; then
+  if [ -e "$ConfigFile" ]; then
+    echo Using [$ConfigFile] for server configuration 
+
+    echo "---------------------------------------"
+    /opt/ibm/domino/bin/java -jar ./DominoUpdateConfig.jar "$ConfigFile"
+    echo "---------------------------------------"
+  else
+    echo "ConfigFile [$ConfigFile] not found!"
+  fi
 fi
 
 # cleaning up environment variabels as they might contain sensitive data
@@ -140,6 +162,7 @@ unset OrganizationPassword
 unset OtherDirectoryServerAddress
 unset OtherDirectoryServerName
 unset ServerIDFile
+unset ConfigFile 
 unset ServerName
 unset SystemDatabasePath
 unset ServerPassword
