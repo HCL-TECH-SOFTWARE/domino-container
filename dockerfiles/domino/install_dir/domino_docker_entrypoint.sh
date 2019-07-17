@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Docker Entrypoint - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.2.2 16.05.2019                                                #
+# Version 3.3.0 17.07.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -38,7 +38,7 @@ export DOMINO_DATA_PATH=/local/notesdata
 
 DOMINO_SERVER_ID=$DOMINO_DATA_PATH/server.id
 DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
-DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
+DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 
 # in docker environment the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
@@ -94,9 +94,9 @@ if [ ! -e "$DOMINO_SERVER_ID" ]; then
 
   if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
     cd $DOMINO_DATA_PATH
-    /opt/ibm/domino/bin/server -listen 1352
+    $LOTUS/bin/server -listen 1352
   else
-    su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; /opt/ibm/domino/bin/server -listen 1352"
+    su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; $LOTUS/server -listen 1352"
   fi
 
   echo "--- Configuration ended ---"

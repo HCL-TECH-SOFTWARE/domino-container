@@ -1,6 +1,6 @@
 ###########################################################################
 # README - Start/Stop Script for Domino on xLinux/zLinux/AIX              #
-# Version 3.2.2 16.05.2019                                                #
+# Version 3.3.0 17.07.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -52,7 +52,7 @@ The default configuration is
 
 User : notes
 Group: notes
-Binary Directory: /opt/ibm/domino/bin
+Binary Directory: /opt/ibm/domino
 Data Directory  : /local/notesdata
 
 The standard configuration is highly recommended. This will make your life easier for installing the server.
@@ -119,19 +119,17 @@ Quick manual Configuration
 
 1.) Copy Script Files 
 
-a.) Copy the script rc_domino_script into your Domino binary directory (e.g. /opt/ibm/domino)
+a.) Copy the script rc_domino_script into your Nash!Com start script directory /opt/nashcom/startscript 
 b.) Copy rc_domino into /etc/init.d 
-c.) Ensure the variable DOMINO_START_SCRIPT (default is /opt/ibm/domino/rc_domino_script) 
-    matches the location of your main start script.
 
-d.) For systemd copy the domino.service file to /etc/systemd/system
+c.) For systemd copy the domino.service file to /etc/systemd/system
     And ensure that rc_domino contains the right location for the service file
 	  configured in the top section of your rc_domino file -> DOMINO_SYSTEMD_NAME=domino.service.
 		
 2.) Ensure the script files are executable by the notes user
 
     Example: 
-    chmod 755 /opt/ibm/domino/rc_domino_script
+    chmod 755 /opt/nashcom/starscript/rc_domino_script
     chmod 755 /etc/init.d/rc_domino
 
 	
@@ -259,8 +257,8 @@ By default the name is "domino.pid" in your data directory.
 You can change the location if you set the configuration variable "DOMINO_PID_FILE" 
 to override the default configuration if really needed.
 	
-ExecStart=/opt/ibm/domino/rc_domino_script start
-ExecStop=/opt/ibm/domino/rc_domino_script stop
+ExecStart=/opt/nashcom/startscript/rc_domino_script start
+ExecStop=/opt/nashcom/startscript/rc_domino_script stop
 ------------------------------------------------
 	
 Those two lines need to match the location of the main domino script including the start/stop command parameter.
@@ -421,7 +419,8 @@ Components of the Script
    
   - The script contains the location of the rc_domino_script. 
     You have to specify the location in DOMINO_START_SCRIPT
-    (default is /opt/ibm/domino/rc_domino_script).
+    (default is /opt/nashcom/startscript/rc_domino_script).
+    It is not recommended to change this default location because of systemd configuration.
       
 
 2.) rc_domino_script 
@@ -1603,8 +1602,8 @@ Type=forking
 User=notes 
 LimitNOFILE=60000 
 PIDFile=/local/notesdata/domino.pid 
-ExecStart=/opt/ibm/domino/rc_domino_script start
-ExecStop=/opt/ibm/domino/rc_domino_script stop
+ExecStart=/opt/nashcom/startscript/rc_domino_script start
+ExecStop=/opt/nashcom/startscript/rc_domino_script stop
 TimeoutSec=100 
 TimeoutStopSec=300 
 KillMode=none 

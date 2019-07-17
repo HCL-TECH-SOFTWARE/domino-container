@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version 3.2.2 16.05.2019                                                #
+# Version 3.3.0 17.07.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -25,21 +25,20 @@ PARAM1=$1
 
 DOMINO_INSTALL_CONFIG_FILE=rc_domino_config
 DOMINO_INSTALL_CONFIG_FILEPATH=/etc/sysconfig/$DOMINO_INSTALL_CONFIG_FILE
+DOMINO_START_SCRIPT_DIR=/opt/nashcom/startscript
 DOMINO_DOCKER_SCRIPT=domino_docker_entrypoint.sh
+VERSION=330
+
+DOMINO_USER=notes
+DOMINO_GROUP=notes
+DOMINO_DATA_PATH=/local/notesdata
+
 #DOMINO_DEBUG_MODE="yes"
 
 START_SCRIPT_DIR=`dirname $0`
 
 if [ "$START_SCRIPT_DIR" = "/" ]; then
   START_SCRIPT_DIR=""
-fi
-
-DOMINO_USER=notes
-DOMINO_GROUP=notes
-DOMINO_DATA_PATH=/local/notesdata
-
-if [ -z "$LOTUS" ]; then
-  LOTUS=/opt/ibm/domino
 fi
 
 if [ ! $EUID = "0" ]; then
@@ -152,11 +151,9 @@ echo
 echo "Installing StartScript & Config"
 echo
 
-if [ -z "DOMINO_START_SCRIPT" ]; then
-  DOMINO_START_SCRIPT=$LOTUS/rc_domino_script
+if [ ! -e "$DOMINO_START_SCRIPT_DIR" ]; then
+  mkdir -p "$DOMINO_START_SCRIPT_DIR"
 fi
-
-DOMINO_START_SCRIPT_README=`dirname $DOMINO_START_SCRIPT`/rc_domino_readme.txt
 
 DebugText "DOMINO_USER: [$DOMINO_USER]" 
 DOMINO_USER_GROUPID=`id -g "$DOMINO_USER" 2>/dev/null;`
@@ -168,19 +165,25 @@ if [ -z "$DOMINO_USER_GROUPID" ]; then
   exit 1
 fi
 
-if [ ! -e "$LOTUS" ]; then
-  echo "Terminating installation - Domino program directory '$LOTUS' does not exist"
-  exit 1
-fi
-
 if [ ! -e "$DOMINO_DATA_PATH" ]; then
-  echo "Terminating installation - Domino data directory directory '$LOTUS' does not exist"
+  echo "Terminating installation - Domino data directory directory '$DOMINO_DATA_PATH' does not exist"
   exit 1
 fi
 
 install_file $START_SCRIPT_DIR/rc_domino /etc/init.d/$DOMINO_RC_NAME root root 755
-install_file $START_SCRIPT_DIR/rc_domino_script $DOMINO_START_SCRIPT root root 755
-install_file $START_SCRIPT_DIR/rc_domino_readme.txt $DOMINO_START_SCRIPT_README notes notes 644
+install_file $START_SCRIPT_DIR/rc_domino_script $DOMINO_START_SCRIPT_DIR/rc_domino_script root root 755
+install_file $START_SCRIPT_DIR/rc_domino_readme.txt $DOMINO_START_SCRIPT_DIR/rc_domino_readme.txt notes notes 644
+
+START_SCRIPT_CONFIG_VER=$DOMINO_START_SCRIPT_DIR/rc_domino_config_$VERSION.txt
+START_SCRIPT_CONFIG_LATEST=$DOMINO_START_SCRIPT_DIR/rc_domino_config_latest.txt
+
+install_file $START_SCRIPT_DIR/rc_domino_config $START_SCRIPT_CONFIG_VER "$DOMINO_USER" "$DOMINO_GROUP" 644
+
+if [ -e "$START_SCRIPT_CONFIG_LATEST" ]; then
+  rm -f "$START_SCRIPT_CONFIG_LATEST"
+fi
+
+ln -s $START_SCRIPT_CONFIG_VER $START_SCRIPT_CONFIG_LATEST
 
 if [ "$PARAM1" = "upd" ] ; then
   install_file $START_SCRIPT_DIR/rc_domino_config $DOMINO_INSTALL_CONFIG_FILEPATH "$DOMINO_USER" "$DOMINO_GROUP" 644
@@ -188,6 +191,17 @@ if [ "$PARAM1" = "upd" ] ; then
 else
   install_file_noupdate $START_SCRIPT_DIR/rc_domino_config $DOMINO_INSTALL_CONFIG_FILEPATH  "$DOMINO_USER" "$DOMINO_GROUP" 644
   install_file_noupdate $START_SCRIPT_DIR/systemdbs.ind $DOMINO_DATA_PATH/systemdbs.ind "$DOMINO_USER" "$DOMINO_GROUP" 644
+fi
+
+
+# if old start script location exists, replace it with link to new start script location 
+
+OLD_RC_DOMINO_SCRIPT_LOCATION=/opt/ibm/domino/rc_domino_script
+
+if [ -e "$OLD_RC_DOMINO_SCRIPT_LOCATION" ] ; then
+  rm -f "$OLD_RC_DOMINO_SCRIPT_LOCATION"
+  ln -s $DOMINO_START_SCRIPT_DIR/rc_domino_script $OLD_RC_DOMINO_SCRIPT_LOCATION
+  echo link for legacy start script location created [$OLD_RC_DOMINO_SCRIPT_LOCATION]
 fi
 
 # set link to include script as 'domino' into path

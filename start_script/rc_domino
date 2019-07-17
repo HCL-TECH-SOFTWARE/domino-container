@@ -8,7 +8,7 @@
 # You may use and distribute the unmodified version of this script.
 # Use at your own risk. No implied or specific warranties are given.
 # You may change it for your own usage only
-# Version 3.2.2 16.05.2019
+# Version 3.3.0 17.07.2019
 ###########################################################################
 # chkconfig: 345 66 19
 # description: IBM Domino Server (notes)
@@ -33,7 +33,7 @@ fi
 
 # The following configuration could be read from config file
 # But from security point of view this config belowns into a root owned file
-DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
+DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 DOMINO_SYSTEMD_NAME=domino.service
 
 # Read configuration for service from central config file

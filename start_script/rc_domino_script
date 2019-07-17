@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.2.2 16.05.2019                                                #
+# Version 3.3.0 17.07.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=3.2.2
+DOMINO_SCRIPT_VERSION=3.3.0
 
 # VERBOSE_INFO="yes"
 
@@ -60,29 +60,12 @@ if [ -r "$DOMINO_CONFIG_FILE" ]; then
   fi
 fi
 
-# --- Configuration per Domino Partition - if not already specified in separate config file ---
-
 if [ -z "$DOMINO_CONFIGURED" ]; then
-  # Use configuration in this routine if no external configuration specified 
-  # Either in environment or in external config file
+  # Configuraiton is either loaded from external config file /etc/sysconfig/rc_domino_config.
+  # or defined in environment variables (not recommended).yyo
 
-  if [ "$DOMINO_USER" = "notes" ]; then
-
-    # standard partition for standard user "notes"
-    LOTUS=/opt/ibm/domino
-    DOMINO_DATA_PATH=/local/notesdata
-    DOMINO_SHUTDOWN_TIMEOUT=600
-    DOMINO_CONFIGURED="yes"
-
-  elif [ "$DOMINO_USER" = "notes1" ]; then
-
-    # ... cloned section for each domino partition ... 
-    DOMINO_CONFIGURED="yes"
-
-  else
-   echo "Domino Server for '$DOMINO_USER' not configured"
-   exit 1
-  fi
+  echo "Domino Server for '$DOMINO_USER' not configured"
+  exit 1
 fi
 
 # check if running inside a container
@@ -417,7 +400,7 @@ DOMINO_SYSTEMD_NAME=domino.service
 DOMINO_PID_FILE=/tmp/domino.pid
 
 # -- Location of main start script --
-DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
+DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 
 # Special Parameters
 
