@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Docker Entrypoint - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.2.2 16.05.2019                                                #
+# Version 3.3.0 17.07.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -27,7 +27,9 @@
 DOMINO_USER=notes
 DOMINO_SERVER_ID=/local/notesdata/server.id
 DOMINO_DOCKER_CFG_SCRIPT=/docker_prestart.sh
-DOMINO_START_SCRIPT=/opt/ibm/domino/rc_domino_script
+DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
+LOTUS=/opt/ibm/domino
+DOMINO_DATA_PATH=/local/notesdata
 
 # in docker environment the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
@@ -67,7 +69,7 @@ if [ ! -e "$DOMINO_SERVER_ID" ]; then
 fi 
 
 # Check if server is configured. Else start remote configuation on port 1352
-if [ ! -e "/local/notesdata/server.id" ]; then
+if [ ! -e "$DOMINO_DATA_PATH/server.id" ]; then
 
   echo "Configuration for automated setup not found."
   echo "Starting Domino Server in listen mode"
@@ -75,10 +77,10 @@ if [ ! -e "/local/notesdata/server.id" ]; then
   echo "--- Configuring Domino Server ---"
 
   if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-    cd /local/notesdata
-    /opt/ibm/domino/bin/server -listen 1352
+    cd $DOMINO_DATA_PATH
+    $LOTUS/bin/server -listen 1352
   else
-    su - $DOMINO_USER -c "cd /local/notesdata; /opt/ibm/domino/bin/server -listen 1352"
+    su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; $LOTUS/bin/server -listen 1352"
   fi
 
   echo "--- Configuration ended ---"
