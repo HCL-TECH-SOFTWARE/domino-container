@@ -1,6 +1,8 @@
 #!/bin/bash
 
-DOMINO_RUNNING=`ps -fu notes | grep "/opt/ibm/domino/notes" | grep "server" | grep -v " -jc"`
+LOTUS=/opt/ibm/domino
+
+DOMINO_RUNNING=`ps -fu notes | grep "$LOTUS/notes" | grep "server" | grep -v " -jc"`
 
 if [ -z "$DOMINO_RUNNING" ]; then
   exit 1

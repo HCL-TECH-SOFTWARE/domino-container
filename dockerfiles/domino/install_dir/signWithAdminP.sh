@@ -17,6 +17,8 @@
 #                                                                          #
 ############################################################################
 
+LOTUS=/opt/ibm/domino
+
 signWithAdminP=/local/notesdata/signWithAdminP.txt
 
 # For every file name listed in the text file above, 
@@ -25,10 +27,10 @@ signWithAdminP=/local/notesdata/signWithAdminP.txt
 if [ -f "$signWithAdminP" ]; then
 echo "Creating AdminP request 'sign with server id' as requested" 
 for i in `cat $signWithAdminP`
-	do
-		echo "Signing request for " $i
-		cd /local/notesdata 
-		/opt/ibm/domino/bin/java -jar ./DatabaseSigner.jar $i
-	done
-	rm -f $signWithAdminP
+  do
+    echo "Signing request for " $i
+    cd /local/notesdata 
+    $LOTUS/bin/java -jar ./DatabaseSigner.jar $i
+  done
+  rm -f $signWithAdminP
 fi

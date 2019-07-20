@@ -754,7 +754,7 @@ if [ "$LinuxYumUpdate" = "yes" ]; then
 fi
 
 # This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
-if [ -e /opt/ibm/domino ]; then
+if [ -e $LOTUS ]; then
   FIRST_TIME_SETUP=0
   echo
   echo "!! Incremantal install based on exiting Domino image !!"
@@ -871,7 +871,7 @@ create_startup_link kyrtool
 create_startup_link dbmt
 install_res_links
 
-remove_file /opt/ibm/domino/notes/latest/linux/tunekrnl
+remove_file $LOTUS/notes/latest/linux/tunekrnl
 
 # Ensure permissons are set correctly for data directory
 chown -R notes:notes $DOMINO_DATA_PATH

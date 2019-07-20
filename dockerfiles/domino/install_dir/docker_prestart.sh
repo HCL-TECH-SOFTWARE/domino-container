@@ -19,6 +19,8 @@
 
 # Configure server based on environment variables
 
+LOTUS=/opt/ibm/domino
+
 if [ -z "$ServerName" ]; then
   echo "No Setup Environment Configuration. Skipping setup"
   exit 0
@@ -157,7 +159,7 @@ if [ ! -z "$ConfigFile" ]; then
     echo Using [$ConfigFile] for server configuration 
 
     echo "---------------------------------------"
-    /opt/ibm/domino/bin/java -jar ./DominoUpdateConfig.jar "$ConfigFile"
+    $LOTUS/bin/java -jar ./DominoUpdateConfig.jar "$ConfigFile"
     echo "---------------------------------------"
   else
     echo "ConfigFile [$ConfigFile] not found!"
