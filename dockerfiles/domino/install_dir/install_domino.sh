@@ -789,6 +789,8 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   create_directory $DOMINO_DATA_PATH notes notes 770
   create_directory /local/translog notes notes 770
   create_directory /local/daos notes notes 770
+  create_directory /local/nif notes notes 770
+  create_directory /local/ft notes notes 770
 
   docker_set_timezone
 
