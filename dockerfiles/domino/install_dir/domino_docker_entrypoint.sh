@@ -29,10 +29,18 @@ export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker
 
+
+if [ -z "$LOTUS" ]; then
+  if [ -x /opt/hcl/domino/bin/server ]; then
+    export LOTUS=/opt/hcl/domino
+  else
+    export LOTUS=/opt/ibm/domino
+  fi
+fi
+
 # export required environment variables
 export DOMINO_USER=notes
 export LOGNAME=notes
-export LOTUS=/opt/ibm/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DOMINO_DATA_PATH=/local/notesdata
 

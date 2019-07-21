@@ -19,7 +19,13 @@
 
 # Configure server based on environment variables
 
-LOTUS=/opt/ibm/domino
+if [ -z "$LOTUS" ]; then
+  if [ -x /opt/hcl/domino/bin/server ]; then
+    LOTUS=/opt/hcl/domino
+  else
+    LOTUS=/opt/ibm/domino
+  fi
+fi
 
 if [ -z "$ServerName" ]; then
   echo "No Setup Environment Configuration. Skipping setup"

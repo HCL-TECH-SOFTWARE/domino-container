@@ -12,7 +12,13 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-LOTUS=/opt/ibm/domino
+if [ -z "$LOTUS" ]; then
+  if [ -x /opt/hcl/domino/bin/server ]; then
+    LOTUS=/opt/hcl/domino
+  else
+    LOTUS=/opt/ibm/domino
+  fi
+fi
 
 PEM_FILE=`realpath "$1"`
 KEYRING_FILE="$2"

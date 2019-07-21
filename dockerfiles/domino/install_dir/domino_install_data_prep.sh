@@ -3,7 +3,14 @@
 DOMINO_DATA_PATH=/local/notesdata
 DOMDOCK_LOG_DIR=/domino-docker
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_install_data_prep.log
-LOTUS=/opt/ibm/domino
+
+if [ -z "$LOTUS" ]; then
+  if [ -x /opt/hcl/domino/bin/server ]; then
+    LOTUS=/opt/hcl/domino
+  else
+    LOTUS=/opt/ibm/domino
+  fi
+fi
 
 log ()
 {
