@@ -10,6 +10,7 @@
   - [AdminMiddleName](#AdminMiddleName)
   - [AdminPassword](#AdminPassword)
   - [CountryCode](#CountryCode)
+  - [CustomNotesdataZip](#CustomNotesdataZip)
   - [DominoDomainName](#DominoDomainName)
   - [HostName](#HostName)
   - [OrgUnitIDFile](#OrgUnitIDFile)
@@ -89,6 +90,12 @@ Default value : (empty)
 
 Used by : 
 * docker_prestart.sh
+
+### CustomNotesdataZip
+Path and filename of a zip file containing files that will be extracted into the Domino Data directory.
+Values starting with 'http' will be handled as URL. The file will be downloaded from this URL.
+
+Intended to be used for deploying *.ntf and config.json file that will be used further on for auto-configuration of the Domino server.
 
 ### DominoDomainName
 Name of the Domino domain
