@@ -12,6 +12,14 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
+if [ -z "$LOTUS" ]; then
+  if [ -x /opt/hcl/domino/bin/server ]; then
+    LOTUS=/opt/hcl/domino
+  else
+    LOTUS=/opt/ibm/domino
+  fi
+fi
+
 PEM_FILE=`realpath "$1"`
 KEYRING_FILE="$2"
 KEYRING_PASSWORD="$3"
@@ -32,8 +40,8 @@ if [ -z "$KEYRING_PASSWORD" ]; then
   KEYRING_PASSWORD=`sha1sum /local/notesdata/notes.ini`
 fi
 
-/opt/ibm/domino/bin/kyrtool create -k "$KEYRING_FILE" -p "$KEYRING_PASSWORD"
-/opt/ibm/domino/bin/kyrtool import all -k "$KEYRING_FILE" -i "$PEM_FILE"
+$LOTUS/bin/kyrtool create -k "$KEYRING_FILE" -p "$KEYRING_PASSWORD"
+$LOTUS/bin/kyrtool import all -k "$KEYRING_FILE" -i "$PEM_FILE"
 
 echo
 echo "Successfully created/updated [$KEYRING_FILE] with [$PEM_FILE]"

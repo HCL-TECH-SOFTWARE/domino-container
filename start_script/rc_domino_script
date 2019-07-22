@@ -213,9 +213,16 @@ if [ -z "$DOMINO_SHUTDOWN_TIMEOUT" ]; then
   DOMINO_SHUTDOWN_TIMEOUT=600
 fi
 
-# Set Domino binary directory
+# Set Domino binary directory if not yet set
 if [ -z "$LOTUS" ]; then
-  LOTUS=/opt/ibm/domino
+
+  if [ -x /opt/hcl/domino/bin/server ]; then
+    LOTUS=/opt/hcl/domino
+  elif [ -x /opt/ibm/domino/bin/server ]; then
+    LOTUS=/opt/ibm/domino
+  else
+    LOTUS=/opt/ibm/domino
+  fi
 fi
 
 # --- Default configuration end ---

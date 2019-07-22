@@ -19,14 +19,21 @@
 
 INSTALL_DIR=`dirname $0`
 
-DOMDOCK_DIR=/domino-docker
-DOMDOCK_LOG_DIR=/domino-docker
-DOMDOCK_TXT_DIR=/domino-docker
-DOMDOCK_SCRIPT_DIR=/domino-docker
+export DOMDOCK_DIR=/domino-docker
+export DOMDOCK_LOG_DIR=/domino-docker
+export DOMDOCK_TXT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker
+
+if [ -z "$LOTUS" ]; then
+  if [ -x /opt/hcl/domino/bin/server ]; then
+    export LOTUS=/opt/hcl/domino
+  else
+    export LOTUS=/opt/ibm/domino
+  fi
+fi
 
 # export required environment variables
 export LOGNAME=notes
-export LOTUS=/opt/ibm/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DYLD_LIBRARY_PATH=$Notes_ExecDirectory:$DYLD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
@@ -34,6 +41,8 @@ export NUI_NOTESDIR=$LOTUS
 export DOMINO_DATA_PATH=/local/notesdata
 export PATH=$PATH:$DOMINO_DATA_PATH
 export LANG=C
+
+INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
 WGET_COMMAND="wget --connect-timeout=10 --tries=1"
@@ -364,9 +373,9 @@ remove_directory ()
   rm -rf "$1"
 
   if [ -e "$1" ]; then
-  	echo " --- directory not completely deleted! ---"
-  	ls -l "$1"
-  	echo " --- directory not completely deleted! ---"
+    echo " --- directory not completely deleted! ---"
+    ls -l "$1"
+    echo " --- directory not completely deleted! ---"
   fi
   
   return 0
@@ -568,9 +577,19 @@ install_traveler ()
 
   header "Installing $PROD_NAME $INST_VER"
 
+  create_directory $DOMINO_DATA_PATH notes notes 770
+  create_directory $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT notes notes 770
+
+  if [ ! -e "$DOMINO_DATA_PATH/notes.ini" ]; then
+    log_ok "Extracting install notesdata for Traveler install"
+    tar xf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH"
+  fi
+
   pushd .
 
   cd traveler
+
+  header "Running Traveler silent install"
 
   ./silentInstall > $INST_TRAVELER_LOG
 
@@ -593,7 +612,8 @@ install_traveler ()
   fi
 
   popd
-  rm -rf traveler 
+  remove_directory traveler 
+  create_directory $DOMINO_DATA_PATH notes notes 770
 
   return 0
 }
@@ -639,14 +659,14 @@ install_proton ()
   # log_error "$PROD_NAME $INST_VER Installation failed!!!"
 
   popd
-  rm -rf appdevpack 
+  remove_directory appdevpack 
 
   return 0
 }
 
 set_version ()
 {
-  echo $PROD_VER > "$DOMDOCK_LTXT_DIR/${PROD_NAME}_ver.txt"
+  echo $PROD_VER > "$DOMDOCK_TXT_DIR/${PROD_NAME}_ver.txt"
   echo $PROD_VER > "$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt"
 }
 
@@ -704,13 +724,18 @@ remove_directory $Notes_ExecDirectory/_uninst
 # Ensure permissons are set correctly for data directory
 chown -R notes:notes $DOMINO_DATA_PATH
 
+set_version
+
 # Take a backup copy of Product Data Files
 
 case "$PROD_NAME" in
 
   traveler)
     cd $DOMINO_DATA_PATH
-    tar -czf $DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz traveler domino/workspace
+    tar -czf $DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz traveler domino/workspace notes.ini ${PROD_NAME}_ver.txt
+    cd /
+    remove_directory $DOMINO_DATA_PATH
+    create_directory $DOMINO_DATA_PATH notes notes 770
     ;;
 
   proton)
@@ -721,8 +746,6 @@ case "$PROD_NAME" in
 esac
 
 # Set Installed Version
-
-set_version
 
 header "Successfully completed installation!"
 
