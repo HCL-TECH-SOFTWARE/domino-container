@@ -1,29 +1,31 @@
 
-- [Introduction](#Introduction)
-- [Special](#Special)
-  - [Notesini](#Notesini)
-- [Environment Variables](#Environment-Variables)
-  - [isFirstServer](#isFirstServer)
-  - [AdminFirstName](#AdminFirstName)
-  - [AdminIDFile](#AdminIDFile)
-  - [AdminLastName](#AdminLastName)
-  - [AdminMiddleName](#AdminMiddleName)
-  - [AdminPassword](#AdminPassword)
-  - [CountryCode](#CountryCode)
-  - [DominoDomainName](#DominoDomainName)
-  - [HostName](#HostName)
-  - [OrgUnitIDFile](#OrgUnitIDFile)
-  - [OrgUnitName](#OrgUnitName)
-  - [OrgUnitPassword](#OrgUnitPassword)
-  - [OrganizationIDFile](#OrganizationIDFile)
-  - [OrganizationName](#OrganizationName)
-  - [OrganizationPassword](#OrganizationPassword)
-  - [OtherDirectoryServerAddress](#OtherDirectoryServerAddress)
-  - [OtherDirectoryServerName](#OtherDirectoryServerName)
-  - [ServerIDFile](#ServerIDFile)
-  - [ServerName](#ServerName)
-  - [SystemDatabasePath](#SystemDatabasePath)
-  - [ServerPassword](#ServerPassword)
+- [Introduction](#introduction)
+- [Special](#special)
+  - [Notesini](#notesini)
+- [Environment Variables](#environment-variables)
+  - [isFirstServer](#isfirstserver)
+  - [AdminFirstName](#adminfirstname)
+  - [AdminIDFile](#adminidfile)
+  - [AdminLastName](#adminlastname)
+  - [AdminMiddleName](#adminmiddlename)
+  - [AdminPassword](#adminpassword)
+  - [CountryCode](#countrycode)
+  - [CustomNotesdataZip](#customnotesdatazip)
+  - [ConfigFile](#configfile)
+  - [DominoDomainName](#dominodomainname)
+  - [HostName](#hostname)
+  - [OrgUnitIDFile](#orgunitidfile)
+  - [OrgUnitName](#orgunitname)
+  - [OrgUnitPassword](#orgunitpassword)
+  - [OrganizationIDFile](#organizationidfile)
+  - [OrganizationName](#organizationname)
+  - [OrganizationPassword](#organizationpassword)
+  - [OtherDirectoryServerAddress](#otherdirectoryserveraddress)
+  - [OtherDirectoryServerName](#otherdirectoryservername)
+  - [ServerIDFile](#serveridfile)
+  - [ServerName](#servername)
+  - [SystemDatabasePath](#systemdatabasepath)
+  - [ServerPassword](#serverpassword)
 
 ## Introduction
 This article describes the different variables that can be passed to the container when using Docker RUN
@@ -89,6 +91,22 @@ Default value : (empty)
 
 Used by : 
 * docker_prestart.sh
+
+### CustomNotesdataZip
+Path and filename of a zip file containing files that will be extracted into the Domino Data directory.
+Values starting with 'http' will be handled as URL. The file will be downloaded from this URL.
+
+Intended to be used for deploying *.ntf and config.json file that will be used further on for auto-configuration of the Domino server.
+
+### ConfigFile
+File name of the JSON file that will be used for automated server configuration.
+
+Usage:
+- file name only : file is expected to be located in the Domino data directory.
+- path and file name : path and file name will be used
+- Values starting with 'http' will be handled as URL. The file will be downloaded from this URL.
+
+Useful in combination with CustomNotesdataZip since the zip file will be extracted before searching for the JSON config file. e.g.: ConfigFile=config.json
 
 ### DominoDomainName
 Name of the Domino domain
