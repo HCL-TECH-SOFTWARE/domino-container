@@ -172,7 +172,7 @@ fi
 
 install_file $START_SCRIPT_DIR/rc_domino /etc/init.d/$DOMINO_RC_NAME root root 755
 install_file $START_SCRIPT_DIR/rc_domino_script $DOMINO_START_SCRIPT_DIR/rc_domino_script root root 755
-install_file $START_SCRIPT_DIR/rc_domino_readme.txt $DOMINO_START_SCRIPT_DIR/rc_domino_readme.txt notes notes 644
+install_file $START_SCRIPT_DIR/rc_domino_readme.txt $DOMINO_START_SCRIPT_DIR/rc_domino_readme.txt "$DOMINO_USER" "$DOMINO_GROUP" 644
 
 START_SCRIPT_CONFIG_VER=$DOMINO_START_SCRIPT_DIR/rc_domino_config_$VERSION.txt
 START_SCRIPT_CONFIG_LATEST=$DOMINO_START_SCRIPT_DIR/rc_domino_config_latest.txt
@@ -184,6 +184,12 @@ if [ -e "$START_SCRIPT_CONFIG_LATEST" ]; then
 fi
 
 ln -s $START_SCRIPT_CONFIG_VER $START_SCRIPT_CONFIG_LATEST
+
+# create /etc/sysconfig if not present
+if [ ! -e "/etc/sysconfig" ] ; then
+  mkdir /etc/sysconfig
+  chmod 755 /etc/sysconfig
+fi
 
 if [ "$PARAM1" = "upd" ] ; then
   install_file $START_SCRIPT_DIR/rc_domino_config $DOMINO_INSTALL_CONFIG_FILEPATH "$DOMINO_USER" "$DOMINO_GROUP" 644

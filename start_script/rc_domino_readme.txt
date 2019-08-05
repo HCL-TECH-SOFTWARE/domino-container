@@ -1722,8 +1722,11 @@ You could create a sym link for your locale. This will ensure it works also with
 all add-on applications and in upgrade scenarios.
 
 cd /opt/ibm/domino/notes/latest/linux/res
-ln -s C de_DE.UTF-8 
-ln -s C en_US.UTF-8
+ln -s de_DE.UTF-8 C
+ln -s en_US.UTF-8 C
+
+
+In some cases when the installer created the directory for a specific locale, you should make sure that you also have directory or sym link to a directory for C. So the ln -s command would have the opposite order.
 
 
 Long user name issues
