@@ -1,6 +1,6 @@
 # Fail2Ban filter default configuration for HCL Domino (HTTP, SMTP, LDAP, POP3, IMAP)
 # Date  :  09.08.2019
-# Author: Daniel Nashed (NashCom)
+# Author: Daniel Nashed (Nash!Com)
 
 
 # Set meaningful defaults and override per protocol
