@@ -692,36 +692,6 @@ docker_domino_cmd ()
   return 0
 }
 
-get_domino_version ()
-{
-  LOTUS=/opt/ibm/domino
-  DOMINO_INSTALL_DAT=$LOTUS/.install.dat
-
-  if [ -e $DOMINO_INSTALL_DAT ]; then
-
-    find_str=`tail "$DOMINO_INSTALL_DAT" | grep "rev = " | awk -F " = " '{print $2}' | tr -d '"'`
-
-    if [ ! -z "$find_str" ]; then
-      DOMINO_VERSION=$find_str
-
-      if [ "$DOMINO_VERSION" = "10000000" ]; then
-        DOMINO_VERSION=1000
-      fi
-
-      if [ "$DOMINO_VERSION" = "90010" ]; then
-        DOMINO_VERSION=901
-      fi
-
-    else
-      DOMINO_VERSION="UNKNOWN"
-    fi
-  else
-    DOMINO_VERSION="NONE"
-  fi
-
-  return 0
-}
-
 docker_inspect_image
 docker_inspect_container
 config_warnings

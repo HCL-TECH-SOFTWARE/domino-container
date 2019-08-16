@@ -95,6 +95,37 @@ else
   echo ServerIDFile: [$ServerIDFile] does not exist!
 fi 
 
+# If certfier.id downlaod URL defined, download from remote location and set variable to certfier.id filename
+case "$OrganizationIDFile" in
+  http*)
+    FileName=`basename $OrganizationIDFile`
+    download_file "$OrganizationIDFile" "$FileName"
+    OrganizationIDFile=$FileName
+    ;;
+esac
+
+if [ -e "$OrganizationIDFile" ]; then
+  echo OrganizationIDFile: [$OrganizationIDFile] exists
+else
+  echo OrganizationIDFile: [$OrganizationIDFile] does not exist!
+fi
+
+# If certfier.id downlaod URL defined, download from remote location and set variable to certfier.id filename
+case "$SafeIDFile" in
+  http*)
+    FileName=`basename $SafeIDFile`
+    download_file "$SafeIDFile" "$FileName"
+    SafeIDFile=$FileName
+    ;;
+esac
+
+if [ -e "$SafeIDFile" ]; then
+  echo SafeIDFile: [$SafeIDFile] exists
+else
+  echo SafeIDFile: [$SafeIDFile] does not exist!
+fi
+
+
 [ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
 [ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile $AdminIDFile $dominosilentsetup
 [ ! -z "$AdminLastName" ] && $dominoprofileedit -AdminLastName $AdminLastName $dominosilentsetup
