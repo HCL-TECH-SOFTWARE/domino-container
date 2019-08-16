@@ -41,7 +41,7 @@ IAM_CLIENT_NAME="/O=$DOMIMO_ORG/CN=$IAM_CLIENT"
 # a.) a local, simple CA should be used
 # b.) a public or corporate CA should be used
 
-USE_LOCAL_CA="no"
+USE_LOCAL_CA="yes"
 
 CA_ORG=NashCom
 CA_PASSWORD=domino4ever
