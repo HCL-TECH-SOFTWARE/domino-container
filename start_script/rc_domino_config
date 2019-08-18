@@ -20,7 +20,7 @@
 
 # -- Mandatory Configuration --
 
-LOTUS=/opt/ibm/domino
+#LOTUS=/opt/ibm/domino
 DOMINO_DATA_PATH=/local/notesdata
 DOMINO_SHUTDOWN_TIMEOUT=180
 DOMINO_CONFIGURED="yes"

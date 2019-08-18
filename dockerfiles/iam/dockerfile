@@ -29,8 +29,6 @@ ARG PROD_VER=
 ARG PROD_FP=
 ARG PROD_HF=
 ARG LocalInstallDir=/tmp/install
-ARG DominoUserID=
-ARG DOMINO_LANG=
 
 USER root
 

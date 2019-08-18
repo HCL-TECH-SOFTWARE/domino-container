@@ -42,6 +42,9 @@ DOCKER_VOLUMES="-v notesdata:/local/notesdata"
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_domino
 
+# Update CentOS while building the image
+LinuxYumUpdate=yes
+
 # Configure software download location.
 # You can either use your own software repository remotely.
 # Or use a local software image hosted via NGINX temporary image.
@@ -93,12 +96,15 @@ fi
 
 DOCKER_IMAGE_NAMEVERSION=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_BUILD_VERSION
 
-if [ -z "$DOCKER_TAG_LATEST" ]; then
-  DOCKER_IMAGE=$DOCKER_IMAGE_NAMEVERSION
-  DOCKER_TAG_LATEST_CMD=""
-else
-  DOCKER_IMAGE=$DOCKER_TAG_LATEST
-  DOCKER_TAG_LATEST_CMD="-t $DOCKER_TAG_LATEST"
+if [ -z "$DOCKER_IMAGE" ]; then
+  if [ -z "$DOCKER_TAG_LATEST" ]; then
+
+    DOCKER_IMAGE=$DOCKER_IMAGE_NAMEVERSION
+    DOCKER_TAG_LATEST_CMD=""
+  else
+    DOCKER_IMAGE=$DOCKER_TAG_LATEST
+    DOCKER_TAG_LATEST_CMD="-t $DOCKER_TAG_LATEST"
+  fi
 fi
 
 # Get OS type

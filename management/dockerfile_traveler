@@ -8,7 +8,7 @@ LABEL  description="IBM Domino Server 10 with Traveler" \
 
 ARG LinuxYumUpdate=
 ARG DownloadFrom=
-ARG DominoResponseFile=domino10_response.dat
+ARG DominoResponseFile=
 
 USER root
 

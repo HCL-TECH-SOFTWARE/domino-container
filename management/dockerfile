@@ -7,7 +7,7 @@ LABEL description="IBM Domino Server 10 Acme Customized" \
   maintainer="Daniel Nashed <nsh@nashcom.de>" 
 
 ARG DownloadFrom=
-ARG DominoResponseFile=domino10_response.dat
+ARG DominoResponseFile=
 ARG LinuxYumUpdate=
 
 USER root

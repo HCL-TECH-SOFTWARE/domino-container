@@ -26,7 +26,19 @@ export DOMDOCK_SCRIPT_DIR=/domino-docker
 
 # export required environment variables
 export LOGNAME=notes
-export LOTUS=/opt/ibm/domino
+
+# Since Domino 11 the new install directory is /opt/hcl/domino
+case "$PROD_VER" in
+  10*)
+    INSTALLER_VERSION=10
+    export LOTUS=/opt/ibm/domino
+    ;;
+  *)
+    INSTALLER_VERSION=11
+    export LOTUS=/opt/hcl/domino
+    ;;
+esac
+
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DYLD_LIBRARY_PATH=$Notes_ExecDirectory:$DYLD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
@@ -39,7 +51,8 @@ WGET_COMMAND="wget --connect-timeout=10 --tries=1"
 
 # Helper Functions
 
-DOM_STRING_OK="Dominoserver Installation successful"
+DOM_V10_STRING_OK="Dominoserver Installation successful"
+DOM_V11_STRING_OK="install Domino Server Installation Successful"
 LP_STRING_OK="Selected Language Packs are successfully installed."
 FP_STRING_OK="The installation completed successfully."
 HF_STRING_OK="The installation completed successfully."
@@ -453,10 +466,11 @@ create_startup_link ()
     return 0
   fi
   
-  cd $LOTUS/bin
+  TARGET_PATH=$LOTUS/bin/$1
+  SOURCE_PATH=$LOTUS/bin/tools/startup
   
-  if [ ! -e "$" ]; then
-    ln -f -s tools/startup "$1"
+  if [ ! -e "$TARGET_PATH" ]; then
+    ln -f -s $SOURCE_PATH $TARGET_PATH 
     echo "installed startup link for [$1]"
   fi
 
@@ -473,6 +487,10 @@ get_domino_version ()
 
     if [ ! -z "$find_str" ]; then
       DOMINO_VERSION=$find_str
+
+      if [ "$DOMINO_VERSION" = "11000000" ]; then
+        DOMINO_VERSION=1100
+      fi
 
       if [ "$DOMINO_VERSION" = "10000000" ]; then
         DOMINO_VERSION=1001
@@ -573,31 +591,71 @@ install_domino ()
     header "Installing $PROD_NAME $INST_VER"
     pushd .
 
-    case "$PROD_NAME" in
-      domino)
-        cd domino_server/linux64/domino
-        ;;
-
-      domino-ce)
-        cd domino_server/linux64/DominoEval
-      ;;
-
-      *)
-        log_error "Unknown product [$PROD_NAME] - Terminating installation"
-        popd
-        exit 1
-        ;;
-    esac
-
     echo
     echo "Running Domino Silent Install -- This takes a while ..."
     echo
 
-    ./install -silent -options "$INSTALL_DIR/$DominoResponseFile"
+    if [ "$INSTALLER_VERSION" = "10" ]; then
 
-    mv "$Notes_ExecDirectory/DominoInstall.log" "$INST_DOM_LOG"
+      # Install Domino 10 (Older Installer InstallShield Multi Platform)
 
-    check_file_str "$INST_DOM_LOG" "$DOM_STRING_OK"
+      if [ -z "$DominoResponseFile" ]; then
+        DominoResponseFile=domino10_response.dat
+      fi
+
+      case "$PROD_NAME" in
+        domino)
+          cd domino_server/linux64/domino
+          ;;
+
+        domino-ce)
+          cd domino_server/linux64/DominoEval
+          ;;
+
+        *)
+          log_error "Unknown product [$PROD_NAME] - Terminating installation"
+          popd
+          exit 1
+          ;;
+      esac
+
+      ./install -silent -options "$INSTALL_DIR/$DominoResponseFile"
+      
+      mv "$Notes_ExecDirectory/DominoInstall.log" "$INST_DOM_LOG"
+      check_file_str "$INST_DOM_LOG" "$DOM_V10_STRING_OK"
+
+    else
+
+      # Install Domino 11 and higher (Installer changed to InstallAnyware Multi Platform)
+
+      if [ -z "$DominoResponseFile" ]; then
+        DominoResponseFile=domino11_install.properties
+      fi
+
+      case "$PROD_NAME" in
+        domino)
+          cd domino_server/linux64
+          ;;
+
+        domino-ce)
+          cd domino_server/linux64/DominoEval
+          ;;
+
+        *)
+          log_error "Unknown product [$PROD_NAME] - Terminating installation"
+          popd
+          exit 1
+          ;;
+      esac
+
+
+      ./install -f "$INSTALL_DIR/$DominoResponseFile" -i silent
+
+      INSTALL_LOG=`find $LOTUS -name "HCL_Domino_Install_*.log"`
+
+      mv "$INSTALL_LOG" "$INST_DOM_LOG"
+      check_file_str "$INST_DOM_LOG" "$DOM_V11_STRING_OK"
+   fi
 
     if [ "$?" = "1" ]; then
       echo
@@ -746,6 +804,7 @@ echo "DominoResponseFile    = [$DominoResponseFile]"
 echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
+echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 
 # Install CentOS updates if requested
 if [ "$LinuxYumUpdate" = "yes" ]; then
