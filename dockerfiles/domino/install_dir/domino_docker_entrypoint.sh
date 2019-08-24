@@ -80,7 +80,7 @@ else
 fi
 
 # Check if server is configured. Else start custom configuration script
-if [ ! -e "$DOMINO_SERVER_ID" ]; then
+if [ -z `grep -i "ServerSetupx=" $DOMINO_DATA_PATH/notes.ini` ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
       if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
@@ -93,7 +93,7 @@ if [ ! -e "$DOMINO_SERVER_ID" ]; then
 fi 
 
 # Check if server is configured. Else start remote configuation on port 1352
-if [ ! -e "$DOMINO_SERVER_ID" ]; then
+if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
 
   echo "Configuration for automated setup not found."
   echo "Starting Domino Server in listen mode"

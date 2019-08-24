@@ -95,6 +95,16 @@ else
   echo ServerIDFile: [$ServerIDFile] does not exist!
 fi 
 
+# if server.id has a different name, rename it to server.id
+if [ -e "$ServerIDFile" ]; then
+  if [ ! "$ServerIDFile" = "server.id" ]; then
+    mv "$ServerIDFile" server.id
+    ServerIDFile=server.id
+  fi
+fi
+
+ServerIDFile=server.id
+
 # If certfier.id downlaod URL defined, download from remote location and set variable to certfier.id filename
 case "$OrganizationIDFile" in
   http*)

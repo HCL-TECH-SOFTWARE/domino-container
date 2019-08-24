@@ -69,12 +69,47 @@ copy_files_for_version ()
   return 0
 }
 
+create_directory ()
+{
+  TARGET_FILE=$1
+  OWNER=$2
+  GROUP=$3
+  PERMS=$4
+
+  if [ -z "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  if [ -e "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  mkdir -p "$TARGET_FILE"
+
+  if [ ! -z "$OWNER" ]; then
+    chown $OWNER:$GROUP "$TARGET_FILE"
+  fi
+
+  if [ ! -z "$PERMS" ]; then
+    chmod "$PERMS" "$TARGET_FILE"
+  fi
+
+  return 0
+}
+
 copy_data_directory ()
 {
   if [ -e "$DOMINO_DATA_PATH/notes.ini" ]; then
     log "Data directory already exists - nothing to copy."
     return 0
   fi 
+
+
+  create_directory $DOMINO_DATA_PATH notes notes 770
+  create_directory /local/translog notes notes 770
+  create_directory /local/daos notes notes 770
+  create_directory /local/nif notes notes 770
+  create_directory /local/ft notes notes 770
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 

@@ -518,7 +518,7 @@ docker_run ()
     DOCKER_ENV_FILE_OPTION="--env-file $DOCKER_ENV_FILE"
   fi
 
-  docker run $DOCKER_IT $DOCKER_PORTS -e TZ=Europe/Berlin --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_IMAGE
+  docker run $DOCKER_IT $DOCKER_PORTS --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_IMAGE
 
   return 0
 }
@@ -654,7 +654,7 @@ usage ()
 {
   show_version
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | port | version | help}"
+  echo "Usage: `basename $SCRIPT_NAME` { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | env | port | version | help}"
 
   return 0
 }
@@ -679,6 +679,7 @@ help ()
   echo "update          updates the container if referenced image has changed (stops Domino, stops the container, runs a new image)"
   echo "port            show used tcp/ip ports for container"
   echo "config|cfg      edit configuration"
+  echo "env             edit environment file"
   echo "version         shows script version information"
   echo "help            you already figured out what help does ;-)"
 
@@ -778,6 +779,10 @@ case "$PARAM1" in
 
   config|cfg)
     vi $CONFIG_FILE
+    ;;
+
+ env)
+    vi $DOCKER_ENV_FILE
     ;;
 
  dockerfile)
