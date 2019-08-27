@@ -371,11 +371,11 @@ create_key_cert()
       fi
       
       echo >> $CSR_FILE
-      if [ ! -z $SUBJ ]; then
+      if [ ! -z "$SUBJ" ]; then
         echo $SUBJ >> $CSR_FILE
       fi
 
-      if [ ! -z $SANS ]; then
+      if [ ! -z "$SANS" ]; then
         echo "DNS: "$SANS >> $CSR_FILE
       fi
 
