@@ -89,18 +89,23 @@ case "$ServerIDFile" in
     ;;
 esac
 
-if [ -e "$ServerIDFile" ]; then
-  echo ServerIDFile: [$ServerIDFile] exists
-else
-  echo ServerIDFile: [$ServerIDFile] does not exist!
-fi 
 
-# if server.id has a different name, rename it to server.id
-if [ -e "$ServerIDFile" ]; then
-  if [ ! "$ServerIDFile" = "server.id" ]; then
-    mv "$ServerIDFile" server.id
-    ServerIDFile=server.id
+if [ ! -z "$ServerIDFile" ]; then
+
+  if [ -e "$ServerIDFile" ]; then
+    echo ServerIDFile: [$ServerIDFile] exists
+  else
+    echo ServerIDFile: [$ServerIDFile] does not exist!
+  fi 
+
+  # if server.id has a different name, rename it to server.id
+  if [ -e "$ServerIDFile" ]; then
+    if [ ! "$ServerIDFile" = "server.id" ]; then
+      mv "$ServerIDFile" server.id
+      ServerIDFile=server.id
+    fi
   fi
+
 fi
 
 ServerIDFile=server.id
