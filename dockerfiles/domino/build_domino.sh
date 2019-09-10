@@ -89,9 +89,11 @@ fi
 case "$PROD_VER" in
   10*)
     DOCKER_IMAGE_NAME="ibmcom/$PROD_NAME"
+    COMPANY=IBM
     ;;
   *)
     DOCKER_IMAGE_NAME="hclcom/$PROD_NAME"
+    COMPANY=HCL
     ;;
 esac
 
@@ -150,11 +152,11 @@ docker_build ()
 
   case "$PROD_NAME" in
     domino)
-      DOCKER_DESCRIPTION="IBM Domino Enterprise Server"
+      DOCKER_DESCRIPTION="$COMPANY Domino Enterprise Server"
       ;;
 
     domino-ce)
-      DOCKER_DESCRIPTION="IBM Domino Community Edition Server"
+      DOCKER_DESCRIPTION="$COMPANY Domino Community Edition Server"
       ;;
 
     *)

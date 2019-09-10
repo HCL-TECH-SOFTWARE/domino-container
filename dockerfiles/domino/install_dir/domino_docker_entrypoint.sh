@@ -80,7 +80,7 @@ else
 fi
 
 # Check if server is configured. Else start custom configuration script
-if [ -z `grep -i "ServerSetupx=" $DOMINO_DATA_PATH/notes.ini` ]; then
+if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
       if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
