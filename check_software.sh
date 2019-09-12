@@ -23,6 +23,10 @@ DOWNLOAD_LINK_IBM_PA_PARTNO="https://www.ibm.com/software/howtobuy/passportadvan
 DOWNLOAD_LINK_IBM_PA_SEARCH="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_PART_NO_OR_DESCRIPTION"
 DOWNLOAD_LINK_IBM_CE="http://ibm.biz/NDCommunityFiles"
 
+DOWNLOAD_LINK_FLEXNET="https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search="
+DOWNLOAD_LINK_FLEXNET_OPTIONS="+&resultType=Files&sortBy=eff_date&listButton=Search"
+
+
 WGET_COMMAND="wget --connect-timeout=20"
 
 ERROR_COUNT=0
@@ -42,30 +46,30 @@ check_software ()
 {
   CURRENT_NAME=`echo $1|cut -d'|' -f1` 
   CURRENT_VER=`echo $1|cut -d'|' -f2` 
-  CURRENT_FILE=`echo $1|cut -d'|' -f3` 
+  CURRENT_FILES=`echo $1|cut -d'|' -f3` 
   CURRENT_PARTNO=`echo $1|cut -d'|' -f4` 
   CURRENT_HASH=`echo $1|cut -d'|' -f5` 
 
   if [ -z "$DOWNLOAD_FROM" ]; then
-  	
+ 
     FOUND=
-    CHECK_FILE=`echo "$CURRENT_FILE" | awk -F "," '{print $1}'`
-    if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
-      CURRENT_FILE="$CHECK_FILE"
-      FOUND=TRUE
-    else
-      CHECK_FILE=`echo "$CURRENT_FILE" | awk -F "," '{print $2}'`
-      if [ ! -z "$CHECK_FILE" ]; then
-        if [ -r $SOFTWARE_DIR/$CHECK_FILE ]; then
-          CURRENT_FILE="$CHECK_FILE"
-          FOUND=TRUE
-        fi
+    DOWNLOAD_1ST_FILE=
+ 
+    for CHECK_FILE in `echo "$CURRENT_FILES" | tr "," "\n"` ; do
+      if [ -z "$DOWNLOAD_1ST_FILE" ]; then
+        DOWNLOAD_1ST_FILE=$CHECK_FILE
       fi
-    fi
+    	
+      if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
+        CURRENT_FILE="$CHECK_FILE"
+        FOUND=TRUE
+        break
+      fi
+    done
   	
     if [ "$FOUND" = "TRUE" ]; then
       if [ -z "$CURRENT_HASH" ]; then
-        CURRENT_STATUS="NF"
+        CURRENT_STATUS="NA"
       else
         if [ ! "$CHECK_HASH" = "yes" ]; then
           CURRENT_STATUS="OK"
@@ -80,31 +84,28 @@ check_software ()
         fi
       fi
     else
-      CURRENT_STATUS="NF"
+      CURRENT_STATUS="NA"
     fi
   else
 
     FOUND=
-    CHECK_FILE=`echo "$CURRENT_FILE" | awk -F "," '{print $1}'`
+    DOWNLOAD_1ST_FILE=
+  
+    for CHECK_FILE in `echo "$CURRENT_FILES" | tr "," "\n"` ; do
 
-    DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
-    WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-
-    if [ ! -z "$WGET_RET_OK" ]; then
-      CURRENT_FILE="$CHECK_FILE"
-      FOUND=TRUE
-    else
-      CHECK_FILE=`echo "$CURRENT_FILE" | awk -F "," '{print $2}'`
-      if [ ! -z "$CHECK_FILE" ]; then
-        DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
-        WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-
-        if [ ! -z "$WGET_RET_OK" ]; then
-          CURRENT_FILE="$CHECK_FILE"
-          FOUND=TRUE
-        fi
+      if [ -z "$DOWNLOAD_1ST_FILE" ]; then
+        DOWNLOAD_1ST_FILE=$CHECK_FILE
       fi
-    fi
+
+      DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
+      WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
+
+      if [ ! -z "$WGET_RET_OK" ]; then
+        CURRENT_FILE="$CHECK_FILE"
+        FOUND=TRUE
+        break
+      fi
+    done
   	
     if [ ! "$FOUND" = "TRUE" ]; then
       CURRENT_STATUS="NA"
@@ -130,11 +131,12 @@ check_software ()
     domino|traveler|proton|iam)
 
       if [ -z "$CURRENT_PARTNO" ]; then
-        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_IBM_PA_SEARCH"
+        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
       elif [ "$CURRENT_PARTNO" = "-" ]; then
-        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_IBM_PA_SEARCH"
+        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
       else
         CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_IBM_PA_PARTNO$CURRENT_PARTNO"
+        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
       fi
       ;;
 
@@ -154,7 +156,7 @@ check_software ()
     count=$((count+1));
   done;
 
-  echo "$CURRENT_VER [$CURRENT_STATUS]  $CURRENT_FILE  ($CURRENT_PARTNO)"
+  echo "$CURRENT_VER [$CURRENT_STATUS]  $DOWNLOAD_1ST_FILE  ($CURRENT_PARTNO)"
 
   if [ ! -z "$DOWNLOAD_URLS_SHOW" ]; then
     echo $CURRENT_DOWNLOAD_URL
@@ -212,7 +214,7 @@ check_software_file ()
         count=$((count+1));
       done;
 
-      echo "$CURRENT_VER [NF]  Not found in software file!"
+      echo "$CURRENT_VER [NA] Not found in software file!"
       error_count_inc
     fi
   fi

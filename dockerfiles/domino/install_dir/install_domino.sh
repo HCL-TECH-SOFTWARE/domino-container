@@ -196,28 +196,18 @@ download_and_check_hash ()
 
   # check if file exists before downloading
 
-  FOUND=
-  CHECK_FILE=`echo "$DOWNLOAD_STR" | awk -F "," '{print $1}'`
-  DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
-  echo "Checking PassportAdvantage Download: [$DOWNLOAD_FILE]"
-  WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
+  for CHECK_FILE in `echo "$DOWNLOAD_STR" | tr "," "\n"` ; do
 
-  if [ ! -z "$WGET_RET_OK" ]; then
-    FOUND=TRUE
-  else
-    CHECK_FILE=`echo "$DOWNLOAD_STR" | awk -F "," '{print $2}'`
-    if [ ! -z "$CHECK_FILE" ]; then
-      DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
-      echo "Checking FixCentral Download: [$DOWNLOAD_FILE]"
-      WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
+    DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
+    WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
 
-      if [ ! -z "$WGET_RET_OK" ]; then
-        CURRENT_FILE="$CHECK_FILE"
-        FOUND=TRUE
-      fi
+    if [ ! -z "$WGET_RET_OK" ]; then
+      CURRENT_FILE="$CHECK_FILE"
+      FOUND=TRUE
+      break
     fi
-  fi
-  	
+  done
+
   if [ ! "$FOUND" = "TRUE" ]; then
     log_error "File [$DOWNLOAD_SERVER/$DOWNLOAD_STR] does not exist"
     exit 1
