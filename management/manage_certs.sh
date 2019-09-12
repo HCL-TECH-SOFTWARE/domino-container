@@ -42,7 +42,7 @@
 # Create the following specified certs (for AppDevPack)
 CREATE_CONFIGURED_CERTS="yes"
 
-DOMIMO_ORG="Acme"
+DOMINO_ORG="Acme"
 
 DOMINO_SERVER="domino"
 DOMINO_DNS="domino.acme.com"
@@ -54,7 +54,7 @@ IAM_SERVER="iam_server"
 IAM_SERVER_DNS="iam.acme.com"
 
 IAM_CLIENT="iam_client"
-IAM_CLIENT_NAME="/O=$DOMIMO_ORG/CN=$IAM_CLIENT"
+IAM_CLIENT_NAME="/O=$DOMINO_ORG/CN=$IAM_CLIENT"
 
 # You can choose between two different configurations 
 
@@ -146,9 +146,9 @@ OPENSSL_CONFIG_FILE=/etc/pki/tls/openssl.cnf
 
 # Specific Server Name Configuration
 
-PROTON_SERVER_NAME="/O=$DOMIMO_ORG/CN=$PROTON_SERVER"
-DOMINO_SERVER_NAME="/O=$DOMIMO_ORG/CN=$DOMINO_SERVER"
-IAM_SERVER_NAME="/O=$DOMIMO_ORG/CN=$IAM_SERVER"
+PROTON_SERVER_NAME="/O=$DOMINO_ORG/CN=$PROTON_SERVER"
+DOMINO_SERVER_NAME="/O=$DOMINO_ORG/CN=$DOMINO_SERVER"
+IAM_SERVER_NAME="/O=$DOMINO_ORG/CN=$IAM_SERVER"
 
 TODO_FILE=/tmp/certmgr_todo.txt
 
