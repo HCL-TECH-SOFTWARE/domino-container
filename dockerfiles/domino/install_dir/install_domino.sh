@@ -680,8 +680,6 @@ install_domino ()
 
     ./install -script script.dat > $INST_FP_LOG
 
-    echo $INST_FP >$DOMINO_DATA_PATH/data_version.txt
-
     check_file_str "$INST_FP_LOG" "$FP_STRING_OK"
 
     if [ "$?" = "1" ]; then

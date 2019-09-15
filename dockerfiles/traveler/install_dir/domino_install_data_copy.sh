@@ -11,8 +11,74 @@ log ()
 
 print_delim ()
 {
-  echo "--------------------------------------------------------------------------------" >> LOG_FILE
+  echo "--------------------------------------------------------------------------------" >> $LOG_FILE
 }
+
+
+get_notes_ini_var()
+{
+  # $1 = filename
+  # $2 = ini.variable
+
+  ret_ini_var=""
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ -z "$2" ]; then
+    return 0
+  fi
+
+  ret_ini_var=`awk -F '=' -v SEARCH_STR="$2" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' $1 | xargs`
+  return 0
+}
+
+set_notes_ini_var()
+{
+  # updates or sets notes.ini parameter
+  file=$1
+  var=$2
+  new=$3
+
+  get_notes_ini_var "$file" "$var"
+
+  if [ "$ret_ini_var" = "$new" ]; then
+    return 0
+  fi
+
+  # check if entry exists empty. if not present just append new entry, else use replace code
+  if [ -z "$ret_ini_var" ]; then
+    found=`grep -i "^$var=" $file`
+    if [ -z "$found" ]; then
+      echo $var=$new >> $file
+      return 0
+    fi
+  fi
+
+  awk -v var="$var" -v new="$new" 'BEGIN{FS=OFS="=";IGNORECASE=1}match($1,"^"var"$") {$2=new}1' "$file" > $file.updated
+  mv $file.updated $file
+
+  return 0
+}
+
+remove_notes_ini_var()
+{
+  # updates or sets notes.ini parameter
+  file=$1
+  var=$2
+
+  found=`grep -i "^$var=" $file`
+  echo "found: [$found]"
+  if [ -z "$found" ]; then
+    return 0
+  fi
+
+  grep -v -i "^$var=" $file > $file.updated
+  mv $file.updated $file
+
+  return 0
+}
+
 
 copy_files ()
 {
@@ -32,6 +98,49 @@ copy_files ()
 
   return 0
 }
+
+copy_files_for_major_version ()
+{
+  VersionFile=$DOMDOCK_TXT_DIR/domino_ver.txt
+  InstalledFile=$DOMINO_DATA_PATH/domino_ver.txt
+
+  if [ ! -r $VersionFile ]; then
+    return 1
+  fi
+
+  DOMINO_VERSION=`cat $VersionFile`
+
+  if [ -r $InstalledFile ]; then
+    INSTALLED_VERSION=`cat $InstalledFile`
+  else
+    INSTALLED_VERSION=""
+  fi
+
+  # echo "DOMINO_VERSION: [$DOMINO_VERSION]"
+  # echo "INSTALLED_VERSION: [$INSTALLED_VERSION]"
+
+  if [ "$DOMINO_VERSION" = "$INSTALLED_VERSION" ]; then
+    log "Data already installed for $DOMINO_VERSION"
+    return 0
+  fi
+
+  # Set NotesProgram notes.ini
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "NotesProgram" "$Notes_ExecDirectory"
+
+  log "Copying new data files for Version $DOMINO_VERSION"
+  print_delim
+
+  # Extracting new data files 
+
+  INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
+
+  tar xzvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" *.ntf >> $LOG_FILE 
+
+  echo $DOMINO_VERSION > $InstalledFile
+
+  return 0
+}
+
 
 copy_files_for_version ()
 {
@@ -69,12 +178,47 @@ copy_files_for_version ()
   return 0
 }
 
+create_directory ()
+{
+  TARGET_FILE=$1
+  OWNER=$2
+  GROUP=$3
+  PERMS=$4
+
+  if [ -z "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  if [ -e "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  mkdir -p "$TARGET_FILE"
+
+  if [ ! -z "$OWNER" ]; then
+    chown $OWNER:$GROUP "$TARGET_FILE"
+  fi
+
+  if [ ! -z "$PERMS" ]; then
+    chmod "$PERMS" "$TARGET_FILE"
+  fi
+
+  return 0
+}
+
 copy_data_directory ()
 {
   if [ -e "$DOMINO_DATA_PATH/notes.ini" ]; then
     log "Data directory already exists - nothing to copy."
     return 0
   fi 
+
+
+  create_directory $DOMINO_DATA_PATH notes notes 770
+  create_directory /local/translog notes notes 770
+  create_directory /local/daos notes notes 770
+  create_directory /local/nif notes notes 770
+  create_directory /local/ft notes notes 770
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
@@ -84,10 +228,9 @@ copy_data_directory ()
   fi 
 
   log "Extracting install data directory from [$INSTALL_DATA_TAR]" 
-  log "$NOW"
   print_delim
   
-  tar xvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE
+  tar xzvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE
   log
 }
 
@@ -129,16 +272,16 @@ copy_files_for_addon ()
   fi
 
   log "Extracting add-on install data directory from [$INSTALL_DATA_TAR]"
-  log "$NOW" >> $LOG_FILE
   print_delim
 
-  tar xvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE
+  tar xzvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE
 
   echo $PROD_VER > $InstalledFile
 
   return 0
 }
 
+# --- Main Logic ---
 
 NOW=`date`
 
@@ -151,7 +294,6 @@ fi
 
 echo $NOW > $UPDATE_CHECK_STATUS_FILE
 
-
 print_delim
 log $NOW
 print_delim
@@ -160,6 +302,7 @@ copy_data_directory
 
 log Checking for Data Directory Update
 
+copy_files_for_major_version
 copy_files_for_version fp
 copy_files_for_version hf
 
