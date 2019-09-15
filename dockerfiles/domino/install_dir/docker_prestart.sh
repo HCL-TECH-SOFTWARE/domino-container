@@ -36,12 +36,10 @@ WGET_COMMAND="wget --connect-timeout=20"
 dominosilentsetup=$DOMINO_DATA_PATH/SetupProfile.pds
 dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
 
-cd $Notes_ExecDirectory
-echo $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
-
 # in case this is an additional server in an existing environment switch to different pds file
 # because variable isFirstServer can not be changed programmatically
-[ ! -z "$isFirstServer" ] && if [ "false" = tr '[:upper:]' '[:lower:]' <<<"$isFirstServer"] ; then
+
+if [ "$isFirstServer" = "false" ]; then
   dominosilentsetup=$DOMINO_DATA_PATH/SetupProfileSecondServer.pds
 fi
 
@@ -71,14 +69,17 @@ download_file ()
   $WGET_COMMAND "$DOWNLOAD_URL" 2>/dev/null
 
   if [ "$?" = "0" ]; then
-    echo "Successfully downloaded: [$DOWNLOAD_FILE] "
+    echo "Successfully downloaded: [$DOWNLOAD_FILE]"
     echo
     return 0
   else
-    echo "File [$DOWNLOAD_FILE] not downloaded correctly"
+    echo "File [$DOWNLOAD_FILE] not downloaded correctly from [$DOWNLOAD_URL]"
     exit 1
   fi
 }
+
+# switch to data directory for downloads
+cd $DOMINO_DATA_PATH 
 
 # If server.id downlaod URL defined, download from remote location and set variable to server.id filename
 case "$ServerIDFile" in
@@ -88,7 +89,6 @@ case "$ServerIDFile" in
     ServerIDFile=$FileName
     ;;
 esac
-
 
 if [ ! -z "$ServerIDFile" ]; then
 
@@ -140,6 +140,8 @@ else
   echo SafeIDFile: [$SafeIDFile] does not exist!
 fi
 
+# switch to executable directory for setup
+cd $Notes_ExecDirectory
 
 [ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
 [ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile $AdminIDFile $dominosilentsetup

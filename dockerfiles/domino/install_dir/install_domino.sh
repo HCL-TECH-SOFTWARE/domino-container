@@ -873,6 +873,7 @@ $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
 install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMINO_DATA_PATH/SetupProfile.pds" notes notes 644
+install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMINO_DATA_PATH/SetupProfileSecondServer.pds" notes notes 644
 
 header "Final Steps & Configuration"
 
