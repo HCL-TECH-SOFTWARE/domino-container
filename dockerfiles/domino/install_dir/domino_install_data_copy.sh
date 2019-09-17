@@ -14,6 +14,14 @@ print_delim ()
   echo "--------------------------------------------------------------------------------" >> $LOG_FILE
 }
 
+header ()
+{
+  echo >> $LOG_FILE
+  print_delim
+  echo "$1" >> $LOG_FILE
+  print_delim
+  echo >> $LOG_FILE
+}
 
 get_notes_ini_var()
 {
@@ -79,6 +87,56 @@ remove_notes_ini_var()
   return 0
 }
 
+update_traveler_ini_var()
+{
+  file=$1
+  var=$2
+  value=$3
+  UPD_INI=0
+
+  if [ -z "$var" ]; then
+    return 0
+  fi
+
+  get_notes_ini_var "$file" "$var"
+
+  if [ "$ret_ini_var" = "$val" ]; then
+    return 0
+  fi
+
+  if [ ! -z "$ret_ini_var" ]; then
+
+    if [ "$var" = "NTS_BUILD" ]; then
+      UPD_INI=1
+    else
+      return 0
+    fi
+  fi
+
+  set_notes_ini_var "$file" "$var" "$val"
+  log "[$var] -> [$val]"
+  UPD_INI=1
+}
+
+update_traveler_ini()
+{
+  file=$1
+  upd_file=$2
+
+  # change field separator
+  BAK_IFS=$IFS
+  IFS=$'\n'
+
+  for x in `grep "^NTS_" $upd_file` ; do
+    var=`echo "$x" | cut -d= -f1`
+    val=`echo "$x" | cut -d= -f2-`
+    update_traveler_ini_var "$file" "$var" "$val"
+  done
+
+  # restore seperator
+  IFS=$BAK_IFS
+  BAK_IFS=
+}
 
 copy_files ()
 {
@@ -127,14 +185,13 @@ copy_files_for_major_version ()
   # Set NotesProgram notes.ini
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "NotesProgram" "$Notes_ExecDirectory"
 
-  log "Copying new data files for Version $DOMINO_VERSION"
-  print_delim
+  header "Copying new data files for Version $DOMINO_VERSION"
 
   # Extracting new data files 
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
-  tar xzvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" *.ntf >> $LOG_FILE 
+  tar xzvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./dfc ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 
 
   echo $DOMINO_VERSION > $InstalledFile
 
@@ -227,8 +284,7 @@ copy_data_directory ()
     return 0
   fi 
 
-  log "Extracting install data directory from [$INSTALL_DATA_TAR]" 
-  print_delim
+  header "Extracting install data directory from [$INSTALL_DATA_TAR]" 
   
   tar xzvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE
   log
@@ -271,10 +327,18 @@ copy_files_for_addon ()
     return 0
   fi
 
-  log "Extracting add-on install data directory from [$INSTALL_DATA_TAR]"
-  print_delim
+  header "Extracting add-on install data directory from [$INSTALL_DATA_TAR]"
 
   tar xzvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE
+
+  if [ "$PROD_NAME" = "traveler" ]; then
+
+    # updating Traveler notes.ini parameters
+
+    header "Updating Traveler notes.ini parameters"
+
+    update_traveler_ini $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
+  fi
 
   echo $PROD_VER > $InstalledFile
 
@@ -294,9 +358,7 @@ fi
 
 echo $NOW > $UPDATE_CHECK_STATUS_FILE
 
-print_delim
-log $NOW
-print_delim
+header "$NOW"
 
 copy_data_directory
 

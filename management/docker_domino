@@ -262,6 +262,8 @@ docker_inspect_container ()
   DOCKER_CONTAINER_VOLUMES="$(docker inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
   DOCKER_CONTAINER_HEALTH="$(docker inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
 
+  DOCKER_CONTAINER_DOMINODOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)" 
+
   STARTDATE="$(docker inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_STARTED_AT=`date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE"`
 
@@ -336,53 +338,59 @@ docker_show_inspect ()
   docker_inspect_extras "$1"
 
   print_delim
-  echo " Status        :  $DOCKER_STATUS"
-  echo " Health        :  $DOCKER_CONTAINER_HEALTH"
-  echo " Started       :  $DOCKER_CONTAINER_STARTED_AT"
-  echo " Name          :  $DOCKER_CONTAINER_NAME"
-  echo " Image         :  $DOCKER_CONTAINER_IMAGE"
+  echo " Status         :  $DOCKER_STATUS"
+  echo " Health         :  $DOCKER_CONTAINER_HEALTH"
+  echo " Started        :  $DOCKER_CONTAINER_STARTED_AT"
+  echo " Name           :  $DOCKER_CONTAINER_NAME"
+  echo " Image          :  $DOCKER_CONTAINER_IMAGE"
 
   if [ "$DOCKER_IMAGE_VERSION" = "$DOCKER_CONTAINER_VERSION" ]; then 
-    echo " Version       :  $DOCKER_IMAGE_VERSION"
+    echo " Version        :  $DOCKER_IMAGE_VERSION"
   else
-    echo " Version CNT   :  $DOCKER_CONTAINER_VERSION"
-    echo " Version IMG   :  $DOCKER_IMAGE_VERSION"
+    echo " Version CNT    :  $DOCKER_CONTAINER_VERSION"
+    echo " Version IMG    :  $DOCKER_IMAGE_VERSION"
   fi
 
-  echo " Image Size    :  $DOCKER_IMAGE_SIZE_MB MB" 
+  echo " Image Size     :  $DOCKER_IMAGE_SIZE_MB MB" 
   echo
-  echo " Domino Ver    :  $DOCKER_IMAGE_DOMINODOCKER_VERSION"
-  echo " Domino Rev    :  $DOCKER_CONTAINER_DOMINO_REV"
+
+  
+  if [ "$DOCKER_CONTAINER_DOMINODOCKER_VERSION" = "$DOCKER_IMAGE_DOMINODOCKER_VERSION" ]; then 
+    echo " Domino Ver     :  $DOCKER_CONTAINER_DOMINODOCKER_VERSION"
+  else
+    echo " Domino Ver CNT :  $DOCKER_CONTAINER_DOMINODOCKER_VERSION"
+    echo " Domino Ver IMG :  $DOCKER_IMAGE_DOMINODOCKER_VERSION"
+  fi
 
   if [ "$DOCKER_IMAGE_BUILDTIME" = "$DOCKER_CONTAINER_BUILDTIME" ]; then 
-    echo " BuildTime     :  $DOCKER_IMAGE_BUILDTIME"
+    echo " BuildTime      :  $DOCKER_IMAGE_BUILDTIME"
   else
-    echo " BuildTime CNT :  $DOCKER_CONTAINER_BUILDTIME"
-    echo " BuildTime IMG :  $DOCKER_IMAGE_BUILDTIME"
+    echo " BuildTime CNT  :  $DOCKER_CONTAINER_BUILDTIME"
+    echo " BuildTime IMG  :  $DOCKER_IMAGE_BUILDTIME"
   fi
   
   if [ ! -z "$DOCKER_CONTAINER_IMAGE_ID" ]; then
 
     echo
-    echo " Hostname      :  $DOCKER_CONTAINER_HOSTNAME"
-    echo " Volumes       :  $DOCKER_CONTAINER_VOLUMES"
-    echo " NetworkMode   :  $DOCKER_CONTAINER_NETWORKMODE"
-    echo " IPAddress     :  $DOCKER_CONTAINER_IPAddress"
+    echo " Hostname       :  $DOCKER_CONTAINER_HOSTNAME"
+    echo " Volumes        :  $DOCKER_CONTAINER_VOLUMES"
+    echo " NetworkMode    :  $DOCKER_CONTAINER_NETWORKMODE"
+    echo " IPAddress      :  $DOCKER_CONTAINER_IPAddress"
     echo
-    echo " Platform      :  $DOCKER_CONTAINER_PLATFORM"
-    echo " Driver        :  $DOCKER_CONTAINER_DRIVER"
-    # echo " Container OS  :  $DOCKER_CONTAINER_OS_VERSION"
-    # echo " Kernel        :  $DOCKER_CONTAINER_OS_KERNEL"
+    echo " Platform       :  $DOCKER_CONTAINER_PLATFORM"
+    echo " Driver         :  $DOCKER_CONTAINER_DRIVER"
+    # echo " Container OS   :  $DOCKER_CONTAINER_OS_VERSION"
+    # echo " Kernel         :  $DOCKER_CONTAINER_OS_KERNEL"
   fi
 
   print_delim
 
-  echo " Container ID  :  $DOCKER_CONTAINER_SHORTID"
+  echo " Container ID   :  $DOCKER_CONTAINER_SHORTID"
   if [ "$DOCKER_IMAGE_ID" = "$DOCKER_CONTAINER_IMAGE_ID" ]; then 
-    echo " Image-ID      :  $DOCKER_IMAGE_SHORTID"
+    echo " Image-ID       :  $DOCKER_IMAGE_SHORTID"
   else
-    echo " Image-ID CNT  :  $DOCKER_CONTAINER_IMAGE_SHORTID"
-    echo " Image-ID IMG  :  $DOCKER_IMAGE_SHORTID"
+    echo " Image-ID CNT   :  $DOCKER_CONTAINER_IMAGE_SHORTID"
+    echo " Image-ID IMG   :  $DOCKER_IMAGE_SHORTID"
   fi
 
   print_delim
@@ -391,7 +399,7 @@ docker_show_inspect ()
 
     DOCKER_PORTS=`docker port "$DOCKER_CONTAINER"`    
 
-    echo " Docker Ports  :"
+    echo " Docker Ports   :"
     if [ ! -z "$DOCKER_PORTS" ]; then
       echo "$DOCKER_PORTS" | awk '{print "                  " $0}'
       print_delim
@@ -414,7 +422,7 @@ docker_start ()
   fi
 
   if [ ! -z "$DOCKER_IT" ]; then
-    echo "--- Starting Docker Container interative [ Use Ctrl + p q to exit ] ---"
+    echo "--- Starting Docker Container interactive [ Use Ctrl + p q to exit ] ---"
     echo
   fi
 
@@ -507,7 +515,7 @@ docker_run ()
   fi
 
   if [ ! -z "$DOCKER_IT" ]; then
-    echo "--- Running Docker Container interative [ Use Ctrl + p q to exit ] ---"
+    echo "--- Running Docker Container interactive [ Use Ctrl + p q to exit ] ---"
     echo
     DOCKER_IT="-it"
   else

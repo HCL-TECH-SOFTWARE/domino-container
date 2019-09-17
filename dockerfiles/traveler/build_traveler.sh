@@ -122,6 +122,8 @@ docker_build ()
   CURRENT_DIR=`dirname $SCRIPT_NAME`
   cd $CURRENT_DIR
 
+  DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
+
   # Finally build the image
   docker build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
     --label "TravelerDocker.description"="$DOCKER_DESCRIPTION" \
