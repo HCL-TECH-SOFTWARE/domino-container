@@ -41,7 +41,17 @@ if [ ! -z "$CUSTOM_VER" ]; then
   PROD_VER=$CUSTOM_VER
 fi
 
-DOCKER_IMAGE_NAME="ibmcom/$PROD_NAME"
+case "$PROD_VER" in
+  10*)
+    DOCKER_IMAGE_NAME="ibmcom/$PROD_NAME"
+    COMPANY=IBM
+    ;;
+  *)
+    DOCKER_IMAGE_NAME="hclcom/$PROD_NAME"
+    COMPANY=HCL
+    ;;
+esac
+
 DOCKER_IMAGE_VERSION=$PROD_VER
 
 if [ -z "$DOCKER_FILE" ]; then

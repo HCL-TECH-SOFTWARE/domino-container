@@ -461,7 +461,7 @@ create_startup_link ()
   
   if [ ! -e "$TARGET_PATH" ]; then
     ln -f -s $SOURCE_PATH $TARGET_PATH 
-    echo "installed startup link for [$1]"
+    echo "Installed startup link for [$1]"
   fi
 
   return 0
