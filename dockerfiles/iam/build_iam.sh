@@ -46,12 +46,15 @@ fi
 
 DOCKER_IMAGE_NAME="ibmcom/$PROD_NAME"
 DOCKER_IMAGE_VERSION=$PROD_VER
-DOCKER_FILE=dockerfile
 
-# Latest Tag not set when specifying explicit version
+if [ -z "$DOCKER_FILE" ]; then
+  DOCKER_FILE=dockerfile
+fi
 
-if [ "$TAG_LATEST" = "yes" ]; then
-  DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
+Set default or custom LATEST tag
+
+if [ ! -z "$TAG_LATEST" ]; then
+  DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:$TAG_LATEST"
 fi
 
 usage ()

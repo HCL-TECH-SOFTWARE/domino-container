@@ -69,19 +69,38 @@ usage ()
   return 0
 }
 
+
+print_delim ()
+{
+  echo "--------------------------------------------------------------------------------"
+}
+
+header ()
+{
+  echo
+  print_delim
+  echo "$1"
+  print_delim
+  echo
+}
+
 dump_config ()
 {
-  return 0
+  header "Build Configuration"
   echo "DOWNLOAD_FROM      : [$DOWNLOAD_FROM]"
   echo "SOFTWARE_DIR       : [$SOFTWARE_DIR]"
   echo "PROD_NAME          : [$PROD_NAME]"
   echo "PROD_VER           : [$PROD_VER]"
   echo "PROD_FP            : [$PROD_FP]"
   echo "PROD_HF            : [$PROD_HF]"
+  echo "PROD_EXT           : [$PROD_EXT]"
   echo "CHECK_SOFTWARE     : [$CHECK_SOFTWARE]"
   echo "CHECK_HASH         : [$CHECK_HASH]"
   echo "DOWNLOAD_URLS_SHOW : [$DOWNLOAD_URLS_SHOW]"
+  echo "TAG_LATEST         : [$TAG_LATEST]"
+  echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
+  echo 
   return 0
 }
 
@@ -202,6 +221,19 @@ for a in $@; do
       PROD_HF=$p
       ;;
 
+   _*)
+      PROD_EXT=$a
+      ;;
+
+    # special for other latest tags
+    latest*)
+      TAG_LATEST=$a
+      ;;
+
+    dockerfile*)
+      DOCKER_FILE=$a
+      ;;
+
     -checkonly)
       BUILD_IMAGE=no
       CHECK_SOFTWARE=yes
@@ -293,7 +325,9 @@ if [ "$PROD_VER" = "latest" ]; then
   echo "Product to install: $PROD_NAME $PROD_VER $PROD_FP $PROD_HF"
   echo
   
-  export TAG_LATEST="yes"
+  if [ -z "$TAG_LATEST" ]; then
+    TAG_LATEST="LATEST"
+  fi
 fi
 
 if [ "$CHECK_SOFTWARE" = "yes" ]; then
@@ -344,8 +378,20 @@ if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
   nginx_start
 fi
 
+export DOWNLOAD_FROM
+export SOFTWARE_DIR
+export PROD_NAME
+export PROD_VER
+export PROD_FP
+export PROD_HF
+export PROD_EXT
+export CHECK_SOFTWARE
+export CHECK_HASH
+export DOWNLOAD_URLS_SHOW
 export LinuxYumUpdate
 export DominoMoveInstallData
+export TAG_LATEST
+export DOCKER_FILE
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 
