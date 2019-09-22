@@ -94,6 +94,14 @@ if [ -z "$DOWNLOAD_FROM" ]; then
   fi
 fi
 
+if [ -z "$DOCKERD_NAME" ]; then
+  DOCKERD_NAME=dockerd
+fi
+
+if [ -z "$DOCKERD_CMD" ]; then
+  DOCKER_CMD=docker
+fi
+
 DOCKER_IMAGE_NAMEVERSION=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_BUILD_VERSION
 
 if [ -z "$DOCKER_IMAGE" ]; then
@@ -117,7 +125,7 @@ print_delim ()
 
 config_warnings ()
 {
-  DOCKER_STORAGE_DIRVER=`docker info 2>/dev/null |grep "Storage Driver: " | cut -d ":" -f2 | awk '{ sub(/^[ ]+/, ""); print }'`
+  DOCKER_STORAGE_DIRVER=`$DOCKER_CMD info 2>/dev/null |grep "Storage Driver: " | cut -d ":" -f2 | awk '{ sub(/^[ ]+/, ""); print }'`
 
   if [ "$DOCKER_STORAGE_DIRVER" = "overlay" ]; then 
     echo
@@ -160,19 +168,19 @@ nginx_start ()
   # Create a nginx container hosting software download locally
 
   # Check if we already have this container in status exited
-  STATUS="$(docker inspect --format "{{ .State.Status }}" $SOFTWARE_CONTAINER 2>/dev/null)"
+  STATUS="$($DOCKER_CMD inspect --format "{{ .State.Status }}" $SOFTWARE_CONTAINER 2>/dev/null)"
 
   if [ -z "$STATUS" ]; then
     echo "Creating Docker container: $SOFTWARE_CONTAINER"
-    docker run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
+    $DOCKER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
   elif [ "$STATUS" = "exited" ]; then
     echo "Starting existing Docker container: $SOFTWARE_CONTAINER"
-    docker start $SOFTWARE_CONTAINER
+    $DOCKER_CMD start $SOFTWARE_CONTAINER
   fi
 
   echo "Starting Docker container: $SOFTWARE_CONTAINER"
   # Start local nginx container to host SW Repository
-  SOFTWARE_REPO_IP="$(docker inspect --format "{{ .NetworkSettings.IPAddress }}" $SOFTWARE_CONTAINER 2>/dev/null)"
+  SOFTWARE_REPO_IP="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $SOFTWARE_CONTAINER 2>/dev/null)"
   if [ -z "$SOFTWARE_REPO_IP" ]; then
     echo "Unable to locate software repository."
   else
@@ -185,8 +193,8 @@ nginx_start ()
 nginx_stop ()
 {
   # Stop and remove SW repository
-  docker stop $SOFTWARE_CONTAINER
-  docker container rm $SOFTWARE_CONTAINER
+  $DOCKER_CMD stop $SOFTWARE_CONTAINER
+  $DOCKER_CMD container rm $SOFTWARE_CONTAINER
   echo "Stopped & Removed Software Repository Container"
   echo
 }
@@ -204,19 +212,19 @@ docker_show_status ()
 
 docker_status ()
 {
-  DOCKER_STATUS="$(docker inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_STATUS="$($DOCKER_CMD inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
 }
 
 docker_inspect_image ()
 {
-  DOCKER_IMAGE_ID="$(docker inspect --format "{{.Id}}" $DOCKER_IMAGE 2>/dev/null)"
+  DOCKER_IMAGE_ID="$($DOCKER_CMD inspect --format "{{.Id}}" $DOCKER_IMAGE 2>/dev/null)"
   DOCKER_IMAGE_SHORTID=`echo $DOCKER_IMAGE_ID | cut -d":" -f2 | cut -c1-12`
 
   if [ -z "$1" ]; then return 0; fi
 
-  DOCKER_IMAGE_VERSION="$(docker inspect --format "{{ .Config.Labels.version }}" $DOCKER_IMAGE 2>/dev/null)"
-  DOCKER_IMAGE_BUILDTIME="$(docker inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_IMAGE 2>/dev/null)" 
-  DOCKER_IMAGE_SIZE="$(docker inspect --format "{{.Size}}" $DOCKER_IMAGE 2>/dev/null)" 
+  DOCKER_IMAGE_VERSION="$($DOCKER_CMD inspect --format "{{ .Config.Labels.version }}" $DOCKER_IMAGE 2>/dev/null)"
+  DOCKER_IMAGE_BUILDTIME="$($DOCKER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_IMAGE 2>/dev/null)" 
+  DOCKER_IMAGE_SIZE="$($DOCKER_CMD inspect --format "{{.Size}}" $DOCKER_IMAGE 2>/dev/null)" 
 
   if [ -z "$DOCKER_IMAGE_SIZE" ]; then
     DOCKER_IMAGE_SIZE_MB=0
@@ -224,8 +232,8 @@ docker_inspect_image ()
     DOCKER_IMAGE_SIZE_MB=$(($DOCKER_IMAGE_SIZE / 1000 / 1000 )) 
   fi
 
-  DOCKER_IMAGE_DOMINODOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
-  DOCKER_IMAGE_TRAVELERDOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
+  DOCKER_IMAGE_DOMINODOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
+  DOCKER_IMAGE_TRAVELERDOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
 
   return 0
 }
@@ -233,40 +241,40 @@ docker_inspect_image ()
 
 docker_status ()
 {
-  DOCKER_STATUS="$(docker inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_STATUS="$($DOCKER_CMD inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
   if [ -z "$DOCKER_STATUS" ]; then return 0; fi
 }
 
 docker_inspect_container ()
 {
-  DOCKER_STATUS="$(docker inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_VERSION="$(docker inspect --format "{{ .Config.Labels.version }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_STATUS="$($DOCKER_CMD inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_VERSION="$($DOCKER_CMD inspect --format "{{ .Config.Labels.version }}" $DOCKER_CONTAINER 2>/dev/null)"
   if [ -z "$DOCKER_STATUS" ]; then return 0; fi
 
-  DOCKER_CONTAINER_IMAGE_ID="$(docker inspect --format "{{ .Image }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_ID="$(docker inspect --format "{{ .Id }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_IMAGE_ID="$($DOCKER_CMD inspect --format "{{ .Image }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_ID="$($DOCKER_CMD inspect --format "{{ .Id }}" $DOCKER_CONTAINER 2>/dev/null)"
 
   DOCKER_CONTAINER_SHORTID=`echo $DOCKER_CONTAINER_ID | cut -d":" -f2 | cut -c1-12`
   DOCKER_CONTAINER_IMAGE_SHORTID=`echo $DOCKER_CONTAINER_IMAGE_ID | cut -d":" -f2 | cut -c1-12`
 
   if [ -z "$1" ]; then return 0; fi
 
-  DOCKER_CONTAINER_NAME="$(docker inspect --format "{{ .Name }}" $DOCKER_CONTAINER | cut -d/ -f2 2>/dev/null)"
-  DOCKER_CONTAINER_IMAGE="$(docker inspect --format "{{ .Config.Image }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_NAME="$($DOCKER_CMD inspect --format "{{ .Name }}" $DOCKER_CONTAINER | cut -d/ -f2 2>/dev/null)"
+  DOCKER_CONTAINER_IMAGE="$($DOCKER_CMD inspect --format "{{ .Config.Image }}" $DOCKER_CONTAINER 2>/dev/null)"
 
-  DOCKER_CONTAINER_HOSTNAME="$(docker inspect --format "{{ .Config.Hostname }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_DRIVER="$(docker inspect --format "{{ .Driver }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_PLATFORM="$(docker inspect --format "{{ .Platform }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_NETWORKMODE="$(docker inspect --format "{{ .HostConfig.NetworkMode }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_IPAddress="$(docker inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_BUILDTIME="$(docker inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_VOLUMES="$(docker inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
-  DOCKER_CONTAINER_HEALTH="$(docker inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_HOSTNAME="$($DOCKER_CMD inspect --format "{{ .Config.Hostname }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_DRIVER="$($DOCKER_CMD inspect --format "{{ .Driver }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_PLATFORM="$($DOCKER_CMD inspect --format "{{ .Platform }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_NETWORKMODE="$($DOCKER_CMD inspect --format "{{ .HostConfig.NetworkMode }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_BUILDTIME="$($DOCKER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_VOLUMES="$($DOCKER_CMD inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
+  DOCKER_CONTAINER_HEALTH="$($DOCKER_CMD inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
 
-  DOCKER_CONTAINER_DOMINODOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)" 
-  DOCKER_CONTAINER_TRAVELERDOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)" 
+  DOCKER_CONTAINER_DOMINODOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_TRAVELERDOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)" 
 
-  STARTDATE="$(docker inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER 2>/dev/null)"
+  STARTDATE="$($DOCKER_CMD inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_STARTED_AT=`date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE"`
 
   return 0
@@ -277,9 +285,9 @@ docker_inspect_extras ()
   if [ -z "$1" ]; then return 0; fi
 
   if [ "$DOCKER_STATUS" = "running" ]; then 
-    # DOCKER_CONTAINER_OS_VERSION=`docker exec -it $DOCKER_CONTAINER cat /etc/redhat-release`
-    # DOCKER_CONTAINER_OS_KERNEL=`docker exec -it $DOCKER_CONTAINER uname -r`
-    DOCKER_CONTAINER_DOMINO_REV=`docker exec -it $DOCKER_CONTAINER cat /opt/ibm/domino/.install.dat | awk -F '(=| =)' -v SEARCH_STR="rev" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' | cut -d'"' -f2`
+    # DOCKER_CONTAINER_OS_VERSION=`$DOCKER_CMD exec -it $DOCKER_CONTAINER cat /etc/redhat-release`
+    # DOCKER_CONTAINER_OS_KERNEL=`$DOCKER_CMD exec -it $DOCKER_CONTAINER uname -r`
+    DOCKER_CONTAINER_DOMINO_REV=`$DOCKER_CMD exec -it $DOCKER_CONTAINER cat /opt/ibm/domino/.install.dat | awk -F '(=| =)' -v SEARCH_STR="rev" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' | cut -d'"' -f2`
   fi
 }
 
@@ -399,7 +407,7 @@ docker_show_inspect ()
 
   if [ ! -z "$DOCKER_CONTAINER_IMAGE_ID" ]; then
 
-    DOCKER_PORTS=`docker port "$DOCKER_CONTAINER"`    
+    DOCKER_PORTS=`$DOCKER_CMD port "$DOCKER_CONTAINER"`    
 
     echo " Docker Ports   :"
     if [ ! -z "$DOCKER_PORTS" ]; then
@@ -428,7 +436,7 @@ docker_start ()
     echo
   fi
 
-  docker start $DOCKER_IT $DOCKER_CONTAINER
+  $DOCKER_CMD start $DOCKER_IT $DOCKER_CONTAINER
  
   return 0
 }
@@ -439,10 +447,10 @@ docker_stop ()
   if [ "$DOCKER_STATUS" = "exited" ]; then echo "Container [$DOCKER_CONTAINER] already stopped"; return 1; fi
 
   if [ "$PARAM2" = "live" ]; then
-    docker attach $DOCKER_CONTAINER --no-stdin &
+    $DOCKER_CMD attach $DOCKER_CONTAINER --no-stdin &
   fi
 
-  docker stop --time=$DOMINO_SHUTDOWN_TIMEOUT $DOCKER_CONTAINER
+  $DOCKER_CMD stop --time=$DOMINO_SHUTDOWN_TIMEOUT $DOCKER_CONTAINER
 }
 
 docker_logs ()
@@ -451,7 +459,7 @@ docker_logs ()
 
   echo "--- [BEGIN - $DOCKER_CONTAINER - BEGIN] ---"
   echo
-  docker logs $DOCKER_CONTAINER
+  $DOCKER_CMD logs $DOCKER_CONTAINER
   echo
   echo "--- [END - $DOCKER_CONTAINER - END] ---"
 
@@ -474,7 +482,7 @@ docker_build ()
     nginx_start
   fi
 
-  docker build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" -t $DOCKER_IMAGE_NAMEVERSION $DOCKER_TAG_LATEST_CMD -f $DOCKER_FILE --build-arg DownloadFrom=$DOWNLOAD_FROM --build-arg LinuxYumUpdate=$LinuxYumUpdate .
+  $DOCKER_CMD build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" -t $DOCKER_IMAGE_NAMEVERSION $DOCKER_TAG_LATEST_CMD -f $DOCKER_FILE --build-arg DownloadFrom=$DOWNLOAD_FROM --build-arg LinuxYumUpdate=$LinuxYumUpdate .
   echo
 
   if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
@@ -528,7 +536,7 @@ docker_run ()
     DOCKER_ENV_FILE_OPTION="--env-file $DOCKER_ENV_FILE"
   fi
 
-  docker run $DOCKER_IT $DOCKER_PORTS --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_IMAGE
+  $DOCKER_CMD run $DOCKER_IT $DOCKER_PORTS --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_IMAGE
 
   return 0
 }
@@ -548,7 +556,7 @@ docker_remove ()
     fi
   fi
 
-  docker rm $DOCKER_CONTAINER	
+  $DOCKER_CMD rm $DOCKER_CONTAINER	
   return 0
 }
 
@@ -569,10 +577,10 @@ docker_removeimage ()
 
   # if configured remove latest tag first
   if [ ! -z "$DOCKER_TAG_LATEST" ]; then
-    docker rmi "$DOCKER_TAG_LATEST"
+    $DOCKER_CMD rmi "$DOCKER_TAG_LATEST"
   fi 
 
-  docker rmi "$DOCKER_IMAGE_NAMEVERSION"
+  $DOCKER_CMD rmi "$DOCKER_IMAGE_NAMEVERSION"
 
   return 0
 }
@@ -584,7 +592,7 @@ docker_attach ()
 
   echo "--- Attaching to Docker Container [ Use Ctrl + p q to exit ] ---"
   echo
-  docker attach $DOCKER_CONTAINER
+  $DOCKER_CMD attach $DOCKER_CONTAINER
 
   return 0
 }
@@ -596,7 +604,7 @@ docker_attach ()
 
   echo "--- Attaching to Docker Container [ Use Ctrl + p q to exit ] ---"
   echo
-  docker attach $DOCKER_CONTAINER
+  $DOCKER_CMD attach $DOCKER_CONTAINER
 
   return 0
 }
@@ -646,9 +654,9 @@ docker_bash ()
   echo
 
   if [ "$1" = "root" ]; then
-    docker exec -it --user 0 $DOCKER_CONTAINER /bin/bash
+    $DOCKER_CMD exec -it --user 0 $DOCKER_CONTAINER /bin/bash
   else
-    docker exec -it $DOCKER_CONTAINER /bin/bash
+    $DOCKER_CMD exec -it $DOCKER_CONTAINER /bin/bash
   fi
 
   return 0
@@ -704,10 +712,32 @@ docker_domino_cmd ()
     return 0
   fi
   
-  docker exec -it $DOCKER_CONTAINER "$1" "$2" "$3" "$4" "$5" "$6"
+  $DOCKER_CMD exec -it $DOCKER_CONTAINER "$1" "$2" "$3" "$4" "$5" "$6"
 
   return 0
 }
+
+check_dockerd_running()
+{
+
+  # some commands are ok, when dockerd isn't startred
+  if [ "$1" = "config" ]; then return 0; fi
+  if [ "$1" = "cfg" ]; then return 0; fi
+
+  DOCKERD_PROCESS=`ps -ef|grep "$DOCKERD_NAME"| grep -v grep`
+  
+  if [ -z "$DOCKERD_PROCESS" ]; then
+    echo
+    echo "dockerd not started"
+    echo
+    exit 1
+  fi
+  
+  return 0
+
+}
+
+check_dockerd_running "$PARAM1"
 
 docker_inspect_image
 docker_inspect_container
@@ -784,7 +814,7 @@ case "$PARAM1" in
 
 
   port)
-   docker port "$DOCKER_CONTAINER"
+   $DOCKER_CMD port "$DOCKER_CONTAINER"
    ;;
 
   config|cfg)
