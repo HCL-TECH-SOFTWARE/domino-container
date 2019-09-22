@@ -225,6 +225,7 @@ docker_inspect_image ()
   fi
 
   DOCKER_IMAGE_DOMINODOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
+  DOCKER_IMAGE_TRAVELERDOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
 
   return 0
 }
@@ -263,6 +264,7 @@ docker_inspect_container ()
   DOCKER_CONTAINER_HEALTH="$(docker inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
 
   DOCKER_CONTAINER_DOMINODOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)" 
+  DOCKER_CONTAINER_TRAVELERDOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)" 
 
   STARTDATE="$(docker inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_STARTED_AT=`date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE"`

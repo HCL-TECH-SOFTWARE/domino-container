@@ -43,6 +43,53 @@ if [ "$isFirstServer" = "false" ]; then
   dominosilentsetup=$DOMINO_DATA_PATH/SetupProfileSecondServer.pds
 fi
 
+secure_move_file()
+{
+  # routine to move a file with proper error checks and warnings
+
+  # check if source file is present
+  if [ ! -e "$1" ]; then
+    echo "cannot rename [$1] - file does not exist"
+    return 1
+  fi
+
+  # check if target already exist and try to remove first
+  if [ -e "$2" ]; then
+
+    rm -f "$2" > /dev/null 2>&1
+
+    if [ -e "$2" ]; then
+      echo "cannot rename [$1] to [$2]  - target cannot be removed"
+      return 1
+    else
+      echo "replacing file [$2] with [$1]"
+    fi
+
+  else
+    echo "renaming file [$2] to [$1]"
+  fi
+
+  # now copy file
+  cp -f "$1" "$2" > /dev/null 2>&1
+
+  if [ -e "$2" ]; then
+
+    # try to remove source file after copy
+    rm -f "$1" > /dev/null 2>&1
+
+    if [ -e "$1" ]; then
+      echo "warning: cannot remove source file [$1]"
+    fi
+
+    return 0
+
+  else
+    echo "error copying file [$1] to [$2]"
+    return 1
+  fi
+
+}
+
 # download ID file if $ServerName contains a value that starts with "http"
 download_file ()
 {
@@ -78,7 +125,7 @@ download_file ()
   fi
 }
 
-# switch to data directory for downloads
+# Switch to data directory for downloads
 cd $DOMINO_DATA_PATH 
 
 # If server.id downlaod URL defined, download from remote location and set variable to server.id filename
@@ -101,7 +148,7 @@ if [ ! -z "$ServerIDFile" ]; then
   # if server.id has a different name, rename it to server.id
   if [ -e "$ServerIDFile" ]; then
     if [ ! "$ServerIDFile" = "server.id" ]; then
-      mv "$ServerIDFile" server.id
+      secure_move_file "$ServerIDFile" "server.id"
       ServerIDFile=server.id
     fi
   fi

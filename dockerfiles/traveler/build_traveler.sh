@@ -110,7 +110,7 @@ docker_build ()
 
   case "$PROD_NAME" in
     traveler)
-      DOCKER_DESCRIPTION="IBM Traveler"
+      DOCKER_DESCRIPTION="$COMPANY Traveler"
       ;;
 
     *)
