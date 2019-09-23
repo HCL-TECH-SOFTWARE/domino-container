@@ -44,6 +44,7 @@ docker run -it -e "ServerName=Server1" \
     -p 80:80 \
     -p 1352:1352 \
     -v dominodata_demo1:/local/notesdata \
+    --stop-timeout=60 \
     --name server1 \
     ibmcom/domino:10.0.1FP2
 ```
