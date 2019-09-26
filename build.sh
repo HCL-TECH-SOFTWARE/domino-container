@@ -326,7 +326,7 @@ if [ "$PROD_VER" = "latest" ]; then
   echo
   
   if [ -z "$TAG_LATEST" ]; then
-    TAG_LATEST="LATEST"
+    TAG_LATEST="latest"
   fi
 fi
 
