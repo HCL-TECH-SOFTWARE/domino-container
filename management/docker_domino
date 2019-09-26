@@ -98,7 +98,7 @@ if [ -z "$DOCKERD_NAME" ]; then
   DOCKERD_NAME=dockerd
 fi
 
-if [ -z "$DOCKERD_CMD" ]; then
+if [ -z "$DOCKER_CMD" ]; then
   DOCKER_CMD=docker
 fi
 
@@ -717,27 +717,32 @@ docker_domino_cmd ()
   return 0
 }
 
-check_dockerd_running()
+check_docker_running()
 {
 
   # some commands are ok, when dockerd isn't startred
   if [ "$1" = "config" ]; then return 0; fi
   if [ "$1" = "cfg" ]; then return 0; fi
 
-  DOCKERD_PROCESS=`ps -ef|grep "$DOCKERD_NAME"| grep -v grep`
+  if [ -x /usr/bin/podman ]; then
+    DOCKER_CMD=podman
+    return 0
+  fi
   
+  DOCKERD_PROCESS=`ps -ef|grep "$DOCKERD_NAME"| grep -v grep`
+
   if [ -z "$DOCKERD_PROCESS" ]; then
     echo
     echo "dockerd not started"
     echo
     exit 1
   fi
-  
+
   return 0
 
 }
 
-check_dockerd_running "$PARAM1"
+check_docker_running "$PARAM1"
 
 docker_inspect_image
 docker_inspect_container
