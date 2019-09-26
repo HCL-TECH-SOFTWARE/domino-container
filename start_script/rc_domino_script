@@ -27,7 +27,7 @@ DOMINO_SCRIPT_VERSION=3.3.0
 
 if [ -e "/.dockerenv" ]; then
   if [ -z "$LOGNAME" ]; then
-     LOGNAME=`whoami`
+     export LOGNAME=`whoami`
   fi
 fi
 

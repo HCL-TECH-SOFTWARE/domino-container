@@ -24,8 +24,11 @@ export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker
 
-# export required environment variables
-export LOGNAME=notes
+# in docker environment the LOGNAME is not set
+if [ -z "$LOGNAME" ]; then
+  export LOGNAME=`whoami`
+fi
+
 
 # Since Domino 11 the new install directory is /opt/hcl/domino
 case "$PROD_VER" in
