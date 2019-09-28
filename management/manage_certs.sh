@@ -69,7 +69,7 @@ CA_PASSWORD=domino4ever
 CREATE_KEYRINGS="yes"
 KEYRING_PASSWORD=domino4ever
 
-#CERTMGR_CONFIG_FILE="/local/cfg/certmgr_config"
+CERTMGR_CONFIG_FILE="/local/cfg/certmgr_config"
 CERTMGR_DIR=`dirname $0`/certs
 
 if [ -z "$LOTUS" ]; then
