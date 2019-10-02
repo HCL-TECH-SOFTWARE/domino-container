@@ -32,7 +32,7 @@ fi
 
 # Since Domino 11 the new install directory is /opt/hcl/domino
 case "$PROD_VER" in
-  10*)
+  9*|10*)
     INSTALLER_VERSION=10
     export LOTUS=/opt/ibm/domino
     ;;

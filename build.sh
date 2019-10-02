@@ -209,7 +209,7 @@ for a in $@; do
       PROD_VER=$p
       ;;
 
-    10*|11*)
+    9*|10*|11*)
       PROD_VER=$p
       ;;
 

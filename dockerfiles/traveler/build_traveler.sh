@@ -42,7 +42,7 @@ if [ ! -z "$CUSTOM_VER" ]; then
 fi
 
 case "$PROD_VER" in
-  10*)
+  9*|10*)
     DOCKER_IMAGE_NAME="ibmcom/$PROD_NAME"
     COMPANY=IBM
     ;;
