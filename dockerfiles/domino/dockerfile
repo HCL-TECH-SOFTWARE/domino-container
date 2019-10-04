@@ -15,7 +15,7 @@
 #                                                                          #
 ############################################################################
   
-FROM centos:latest
+FROM centos:7
 
 # Headers
 LABEL DominoDocker.maintainer="thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de"
