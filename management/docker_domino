@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Nash!Com Domino Docker Management Script                                #
-# Version 1.0.5 11.05.2019                                                #
+# Version 1.0.6 05.10.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -63,17 +63,17 @@ if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
   DOMINO_DOCKER_CFG_DIR=/local/cfg
 fi
 
-DOCKER_SCRIPT_VERSION=1.0.3
+DOCKER_SCRIPT_VERSION=1.0.6
 
 # Get configuration from config file
 # First check in global config directory before checking in current directory
 
-CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/config_`basename $0 | awk -F "docker_" '{print $2}'`
+CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
 if [ -e "$CONFIG_FILE" ]; then
   echo "(Using config file $CONFIG_FILE)"
   . $CONFIG_FILE
 else
-  CONFIG_FILE=`dirname $0`/config_`basename $0 | awk -F "docker_" '{print $2}'`
+  CONFIG_FILE=`dirname $SCRIPT_NAME`/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
   if [ -e "$CONFIG_FILE" ]; then
     echo "(Using config file $CONFIG_FILE)"  
     . $CONFIG_FILE
@@ -92,14 +92,6 @@ if [ -z "$DOWNLOAD_FROM" ]; then
   if [ -z "$SOFTWARE_USE_NGINX" ]; then
     SOFTWARE_USE_NGINX=1
   fi
-fi
-
-if [ -z "$DOCKERD_NAME" ]; then
-  DOCKERD_NAME=dockerd
-fi
-
-if [ -z "$DOCKER_CMD" ]; then
-  DOCKER_CMD=docker
 fi
 
 DOCKER_IMAGE_NAMEVERSION=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_BUILD_VERSION
@@ -139,6 +131,79 @@ config_warnings ()
     fi
   fi
   
+  return 0
+}
+
+check_version ()
+{
+  count=1
+
+  while true
+  do
+    VER=`echo $1|cut -d"." -f $count`
+    CHECK=`echo $2|cut -d"." -f $count`
+
+    if [ -z "$VER" ]; then return 0; fi
+    if [ -z "$CHECK" ]; then return 0; fi
+
+    if [ $VER -gt $CHECK ]; then return 0; fi
+    if [ $VER -lt $CHECK ]; then
+      echo "Warning: Unsupported $3 version $1 - Must be at least $2 !"
+      sleep 5
+      return 1
+    fi
+
+    count=`expr $count + 1`
+  done
+
+  return 0
+}
+
+check_docker_environment()
+{
+  DOCKER_MINIMUM_VERSION="18.09.0"
+  PODMAN_MINIMUM_VERSION="1.0.5"
+
+  if [ -x /usr/bin/podman ]; then
+    # podman environment detected
+    DOCKER_CMD=podman
+    DOCKER_ENV_NAME=Podman
+    DOCKER_VERSION_STR=`podman -v`
+    DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
+    check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
+    return 0
+  fi
+
+  if [ -z "$DOCKERD_NAME" ]; then
+    DOCKERD_NAME=dockerd
+  fi
+
+  if [ -z "$DOCKER_CMD" ]; then
+    DOCKER_CMD=docker
+  fi
+
+  DOCKER_ENV_NAME=Docker
+
+  # check docker environment
+  DOCKER_VERSION_STR=`docker -v`
+  DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3|cut -d"," -f1`
+
+  check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$DOCKER_CMD"
+
+  # some commands are ok, when dockerd isn't startred
+  if [ -z "$1" ]; then return 0; fi
+  if [ "$1" = "config" ]; then return 0; fi
+  if [ "$1" = "cfg" ]; then return 0; fi
+
+  DOCKERD_PROCESS=`ps -ef|grep "$DOCKERD_NAME"| grep -v grep`
+
+  if [ -z "$DOCKERD_PROCESS" ]; then
+    echo
+    echo "Fatal: 'dockerd' not started!"
+    echo
+    exit 1
+  fi
+
   return 0
 }
 
@@ -665,6 +730,7 @@ docker_bash ()
 show_version ()
 {
   echo "Nash!Com Docker Script Version $DOCKER_SCRIPT_VERSION"
+  echo "(Running on $DOCKER_ENV_NAME Version $DOCKER_VERSION)" 
   return 0
 }
 
@@ -672,7 +738,7 @@ usage ()
 {
   show_version
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | env | port | version | help}"
+  echo "Usage: `basename $SCRIPT_NAME` { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | cpcfg | env | port | version | help}"
 
   return 0
 }
@@ -697,13 +763,13 @@ help ()
   echo "update          updates the container if referenced image has changed (stops Domino, stops the container, runs a new image)"
   echo "port            show used tcp/ip ports for container"
   echo "config|cfg      edit configuration"
+  echo "cpcfg           copy configuration file to local config directory"
   echo "env             edit environment file"
   echo "version         shows script version information"
   echo "help            you already figured out what help does ;-)"
 
   return 0
 }
-
 
 docker_domino_cmd ()
 {
@@ -717,33 +783,33 @@ docker_domino_cmd ()
   return 0
 }
 
-check_docker_running()
+copy_config_file()
 {
-
-  # some commands are ok, when dockerd isn't startred
-  if [ "$1" = "config" ]; then return 0; fi
-  if [ "$1" = "cfg" ]; then return 0; fi
-
-  if [ -x /usr/bin/podman ]; then
-    DOCKER_CMD=podman
-    return 0
-  fi
-  
-  DOCKERD_PROCESS=`ps -ef|grep "$DOCKERD_NAME"| grep -v grep`
-
-  if [ -z "$DOCKERD_PROCESS" ]; then
-    echo
-    echo "dockerd not started"
-    echo
-    exit 1
+  if [ -e "$CONFIG_FILE" ]; then
+    if [ "$1" = "force" ]; then
+      echo "Overwriting Config File [$CONFIG_FILE]"
+      rm -f "$CONFIG_FILE"
+    else
+      echo "Config File [$CONFIG_FILE] already exists!"
+      return 0
+    fi
   fi
 
-  return 0
+  CONFIG_TEMPLATE_FILE=`dirname $SCRIPT_NAME`/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
 
+  if [ -e "$CONFIG_TEMPLATE_FILE" ]; then
+    echo "New config file $CONFIG_TEMPLATE_FILE -> $CONFIG_FILE"
+
+    # just in case create directory if not present
+    mkdir -p $DOMINO_DOCKER_CFG_DIR
+    cp "$CONFIG_TEMPLATE_FILE" "$CONFIG_FILE" 
+
+  else
+    echo "Configuration template [$CONFIG_TEMPLATE_FILE] not found"
+  fi
 }
 
-check_docker_running "$PARAM1"
-
+check_docker_environment
 docker_inspect_image
 docker_inspect_container
 config_warnings
@@ -824,6 +890,10 @@ case "$PARAM1" in
 
   config|cfg)
     vi $CONFIG_FILE
+    ;;
+
+  cpcfg)
+    copy_config_file "$PARAM2"
     ;;
 
  env)
