@@ -107,6 +107,10 @@ if [ -z "$DOCKER_IMAGE" ]; then
   fi
 fi
 
+if [ -z "$EDIT_COMMAND" ]; then
+  EDIT_COMMAND="vi"
+fi
+
 # Get OS type
 LARCH=`uname`
 
@@ -889,7 +893,7 @@ case "$PARAM1" in
    ;;
 
   config|cfg)
-    vi $CONFIG_FILE
+    $EDIT_COMMAND $CONFIG_FILE
     ;;
 
   cpcfg)
@@ -897,14 +901,14 @@ case "$PARAM1" in
     ;;
 
  env)
-    vi $DOCKER_ENV_FILE
+    $EDIT_COMMAND $DOCKER_ENV_FILE
     ;;
 
  dockerfile)
     if [ -z $DOCKER_FILE ]; then
       echo "No dockerfile configured"
     else
-      vi $DOCKER_FILE
+      $EDIT_COMMAND $DOCKER_FILE
     fi
     ;;
 
