@@ -21,9 +21,11 @@ echo
 echo Compacting install data directory ...
 echo
 
+# Set inportant notes.ini defaults
 cd $DOMINO_DATA_PATH
 echo "create_r10_databases=1" >> notes.ini
 echo "create_r85_log=1" >> notes.ini
+echo "DOMINONOWEBADMIN=1" >> notes.ini
 
 # Backup notes.ini
 cp notes.ini notes.ini.orig
