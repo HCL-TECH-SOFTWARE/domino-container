@@ -809,12 +809,13 @@ copy_config_file()
   if [ -e "$CONFIG_TEMPLATE_FILE" ]; then
     echo "New config file $CONFIG_TEMPLATE_FILE -> $CONFIG_FILE"
 
-    # just in case create directory if not present
     mkdir -p $DOMINO_DOCKER_CFG_DIR
     cp "$CONFIG_TEMPLATE_FILE" "$CONFIG_FILE" 
 
   else
-    echo "Configuration template [$CONFIG_TEMPLATE_FILE] not found"
+    echo "Configuration template [$CONFIG_TEMPLATE_FILE] not found - using default config"
+     mkdir -p $DOMINO_DOCKER_CFG_DIR
+     cp "config_domino" "$CONFIG_FILE"
   fi
 }
 
