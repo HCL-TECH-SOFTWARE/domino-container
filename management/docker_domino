@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Nash!Com Domino Docker Management Script                                #
-# Version 1.0.6 05.10.2019                                                #
+# Version 1.0.7 07.10.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,6 +21,9 @@
 ###########################################################################
 
 SCRIPT_NAME=$0
+FULL_SCRIPT_NAME=`realpath $0`
+SCRIPT_DIR_NAME=`dirname $SCRIPT_NAME`
+FULL_SCRIPT_DIR_NAME=`dirname $FULL_SCRIPT_NAME`
 PARAM1=$1
 PARAM2=$2
 PARAM3=$3
@@ -73,11 +76,18 @@ if [ -e "$CONFIG_FILE" ]; then
   echo "(Using config file $CONFIG_FILE)"
   . $CONFIG_FILE
 else
-  CONFIG_FILE=`dirname $SCRIPT_NAME`/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
+  CONFIG_FILE=$SCRIPT_DIR_NAME/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
   if [ -e "$CONFIG_FILE" ]; then
     echo "(Using config file $CONFIG_FILE)"  
     . $CONFIG_FILE
   fi
+fi
+
+# check if environment file exists in config dir, else use local dir
+if [ -r "$DOMINO_DOCKER_CFG_DIR/$DOCKER_ENV_FILE" ]; then
+  DOCKER_FULL_ENV_FILE="$DOMINO_DOCKER_CFG_DIR/$DOCKER_ENV_FILE"
+else
+  DOCKER_FULL_ENV_FILE="$DOCKER_ENV_FILE"
 fi
 
 DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
@@ -109,11 +119,6 @@ fi
 
 if [ -z "$EDIT_COMMAND" ]; then
   EDIT_COMMAND="vi"
-fi
-
-# check if environment file exists in config dir, else use local dir
-if [ -r "$DOMINO_DOCKER_CFG_DIR/$DOMINO_ENV" ]; then
-  DOMINO_ENV="$DOMINO_DOCKER_CFG_DIR/DOMINO_ENV"
 fi
 
 # Get OS type
@@ -606,8 +611,14 @@ docker_run ()
     DOCKER_IT="-d -it"
   fi
 
-  if [ ! -z "$DOCKER_ENV_FILE" ]; then
-    DOCKER_ENV_FILE_OPTION="--env-file $DOCKER_ENV_FILE"
+  if [ ! -z "$DOCKER_FULL_ENV_FILE" ]; then
+    DOCKER_ENV_FILE_OPTION="--env-file $DOCKER_FULL_ENV_FILE"
+   
+    if [ ! -r "$DOCKER_FULL_ENV_FILE" ]; then
+      echo "Error - Cannot read environment file [$DOCKER_FULL_ENV_FILE]"
+      exit 1
+    fi
+
   fi
 
   $DOCKER_CMD run $DOCKER_IT $DOCKER_PORTS --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_IMAGE
@@ -747,7 +758,7 @@ usage ()
 {
   show_version
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | cpcfg | env | port | version | help}"
+  echo "Usage: $SCRIPT_NAME { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | env cpcfg | cpenv | port | version | help}"
 
   return 0
 }
@@ -772,8 +783,9 @@ help ()
   echo "update          updates the container if referenced image has changed (stops Domino, stops the container, runs a new image)"
   echo "port            show used tcp/ip ports for container"
   echo "config|cfg      edit configuration"
-  echo "cpcfg           copy configuration file to local config directory"
   echo "env             edit environment file"
+  echo "cpcfg           copy configuration file to config directory"
+  echo "cpenv           copy environment filei to config directory"
   echo "version         shows script version information"
   echo "help            you already figured out what help does ;-)"
 
@@ -810,18 +822,53 @@ copy_config_file()
     fi
   fi
 
-  CONFIG_TEMPLATE_FILE=`dirname $SCRIPT_NAME`/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
+  CONFIG_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
 
   if [ -e "$CONFIG_TEMPLATE_FILE" ]; then
-    echo "New config file $CONFIG_TEMPLATE_FILE -> [$NEW_CONFIG_FILE]"
+    echo "New config file [$CONFIG_TEMPLATE_FILE] -> [$NEW_CONFIG_FILE]"
 
-    mkdir -p $DOMINO_DOCKER_CFG_DIR
+    mkdir -p "$DOMINO_DOCKER_CFG_DIR"
     cp "$CONFIG_TEMPLATE_FILE" "$NEW_CONFIG_FILE" 
 
   else
-    echo "Configuration template [$CONFIG_TEMPLATE_FILE] not found - using default config -> [$NEW_CONFIG_FILE]"
-     mkdir -p $DOMINO_DOCKER_CFG_DIR
-     cp "config_domino" "$NEW_CONFIG_FILE"
+    echo "Configuration template [$CONFIG_TEMPLATE_FILE] not found - Using default config -> [$NEW_CONFIG_FILE]"
+    mkdir -p "$DOMINO_DOCKER_CFG_DIR"
+    CONFIG_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/config_domino
+    cp "$CONFIG_TEMPLATE_FILE" "$NEW_CONFIG_FILE" 
+  fi
+}
+
+copy_env_file()
+{
+  if [ ! -e "$DOMINO_DOCKER_CFG_DIR" ]; then
+    echo "No config directory configued"
+    return 0
+  fi
+
+  NEW_ENV_FILE=$DOMINO_DOCKER_CFG_DIR/$DOCKER_ENV_FILE
+  if [ -e "$NEW_ENV_FILE" ]; then
+    if [ "$1" = "force" ]; then
+      echo "Overwriting Domino Environment File [$NEW_ENV_FILE]"
+      rm -f "$NEW_ENV_FILE"
+    else
+      echo "Domino Environment File [$NEW_ENV_FILE] already exists!"
+      return 0
+    fi
+  fi
+
+  ENV_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/$DOCKER_ENV_FILE
+
+  if [ -e "$ENV_TEMPLATE_FILE" ]; then
+    echo "New config file $ENV_TEMPLATE_FILE -> [$NEW_ENV_FILE]"
+
+    mkdir -p "$DOMINO_DOCKER_CFG_DIR"
+    cp "$ENV_TEMPLATE_FILE" "$NEW_ENV_FILE"
+
+  else
+    echo "Configuration template [$ENV_TEMPLATE_FILE] not found - Using default config -> [$NEW_ENV_FILE]"
+    mkdir -p "$DOMINO_DOCKER_CFG_DIR"
+    ENV_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/env_domino
+    cp "$ENV_TEMPLATE_FILE" "$NEW_ENV_FILE"
   fi
 }
 
@@ -899,24 +946,27 @@ case "$PARAM1" in
     docker_domino_cmd domino "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
     ;;
 
-
   port)
    $DOCKER_CMD port "$DOCKER_CONTAINER"
    ;;
 
   config|cfg)
-    $EDIT_COMMAND $CONFIG_FILE
+    $EDIT_COMMAND "$CONFIG_FILE"
     ;;
 
   cpcfg)
     copy_config_file "$PARAM2"
     ;;
 
- env)
-    $EDIT_COMMAND $DOCKER_ENV_FILE
+  cpenv)
+    copy_env_file "$PARAM2"
     ;;
 
- dockerfile)
+  env)
+    $EDIT_COMMAND "$DOCKER_FULL_ENV_FILE"
+    ;;
+
+  dockerfile)
     if [ -z $DOCKER_FILE ]; then
       echo "No dockerfile configured"
     else
