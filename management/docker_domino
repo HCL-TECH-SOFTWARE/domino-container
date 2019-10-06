@@ -794,12 +794,18 @@ docker_domino_cmd ()
 
 copy_config_file()
 {
-  if [ -e "$CONFIG_FILE" ]; then
+  if [ ! -e "$DOMINO_DOCKER_CFG_DIR" ]; then
+    echo "No config directory configued"
+    return 0
+  fi
+
+  NEW_CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
+  if [ -e "$NEW_CONFIG_FILE" ]; then
     if [ "$1" = "force" ]; then
-      echo "Overwriting Config File [$CONFIG_FILE]"
-      rm -f "$CONFIG_FILE"
+      echo "Overwriting Config File [$NEW_CONFIG_FILE]"
+      rm -f "$NEW_CONFIG_FILE"
     else
-      echo "Config File [$CONFIG_FILE] already exists!"
+      echo "Config File [$NEW_CONFIG_FILE] already exists!"
       return 0
     fi
   fi
@@ -807,15 +813,15 @@ copy_config_file()
   CONFIG_TEMPLATE_FILE=`dirname $SCRIPT_NAME`/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
 
   if [ -e "$CONFIG_TEMPLATE_FILE" ]; then
-    echo "New config file $CONFIG_TEMPLATE_FILE -> $CONFIG_FILE"
+    echo "New config file $CONFIG_TEMPLATE_FILE -> [$NEW_CONFIG_FILE]"
 
     mkdir -p $DOMINO_DOCKER_CFG_DIR
-    cp "$CONFIG_TEMPLATE_FILE" "$CONFIG_FILE" 
+    cp "$CONFIG_TEMPLATE_FILE" "$NEW_CONFIG_FILE" 
 
   else
-    echo "Configuration template [$CONFIG_TEMPLATE_FILE] not found - using default config"
+    echo "Configuration template [$CONFIG_TEMPLATE_FILE] not found - using default config -> [$NEW_CONFIG_FILE]"
      mkdir -p $DOMINO_DOCKER_CFG_DIR
-     cp "config_domino" "$CONFIG_FILE"
+     cp "config_domino" "$NEW_CONFIG_FILE"
   fi
 }
 
