@@ -111,6 +111,11 @@ if [ -z "$EDIT_COMMAND" ]; then
   EDIT_COMMAND="vi"
 fi
 
+# check if environment file exists in config dir, else use local dir
+if [ -r "$DOMINO_DOCKER_CFG_DIR/$DOMINO_ENV" ]; then
+  DOMINO_ENV="$DOMINO_DOCKER_CFG_DIR/DOMINO_ENV"
+fi
+
 # Get OS type
 LARCH=`uname`
 
