@@ -190,8 +190,11 @@ copy_files_for_major_version ()
     return 0
   fi
 
-  # Set NotesProgram notes.ini
+  # Set NotesProgram notes.ini (required for Traveler, but should always point to the binary directoy)
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "NotesProgram" "$Notes_ExecDirectory"
+
+  # Avoid Domino Directory Design Update Prompt
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
 
   header "Copying new data files for Version $DOMINO_VERSION"
 
