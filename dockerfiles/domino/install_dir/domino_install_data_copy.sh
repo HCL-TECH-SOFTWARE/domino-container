@@ -4,17 +4,25 @@ DOMINO_INSTDATA_BACKUP=$Notes_ExecDirectory/data1_bck
 UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_data_update.log
 
-log ()
+log()
 {
   echo "$1 $2 $3 $4 $5" >> $LOG_FILE
 }
 
-print_delim ()
+log_space()
+{
+  echo  >> $LOG_FILE
+  echo "$1 $2 $3 $4 $5" >> $LOG_FILE
+  echo  >> $LOG_FILE
+}
+
+
+print_delim()
 {
   echo "--------------------------------------------------------------------------------" >> $LOG_FILE
 }
 
-header ()
+header()
 {
   echo >> $LOG_FILE
   print_delim
@@ -178,12 +186,15 @@ copy_files_for_major_version ()
   # echo "INSTALLED_VERSION: [$INSTALLED_VERSION]"
 
   if [ "$DOMINO_VERSION" = "$INSTALLED_VERSION" ]; then
-    log "Data already installed for $DOMINO_VERSION"
+    log_space "Data already installed for $DOMINO_VERSION"
     return 0
   fi
 
-  # Set NotesProgram notes.ini
+  # Set NotesProgram notes.ini (required for Traveler, but should always point to the binary directoy)
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "NotesProgram" "$Notes_ExecDirectory"
+
+  # Avoid Domino Directory Design Update Prompt
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
 
   header "Copying new data files for Version $DOMINO_VERSION"
 
@@ -220,11 +231,11 @@ copy_files_for_version ()
   # echo "INSTALLED_VERSION: [$INSTALLED_VERSION]"
 
   if [ "$DOMINO_VERSION" = "$INSTALLED_VERSION" ]; then
-    log "Data already installed for $DOMINO_VERSION"
+    log_space "Data already installed for $DOMINO_VERSION"
     return 0
   fi
 
-  log "Copying new data files for Version $DOMINO_VERSION"
+  header "Copying new data files for Version $DOMINO_VERSION"
 
   copy_files $DOMINO_INSTDATA_BACKUP/$DOMINO_VERSION/localnotesdata $DOMINO_DATA_PATH
   copy_files $DOMINO_INSTDATA_BACKUP/$DOMINO_VERSION/localnotesdataiNotes $DOMINO_DATA_PATH/iNotes
@@ -266,7 +277,7 @@ create_directory ()
 copy_data_directory ()
 {
   if [ -e "$DOMINO_DATA_PATH/notes.ini" ]; then
-    log "Data directory already exists - nothing to copy."
+    log_space "Data directory already exists - nothing to copy."
     return 0
   fi 
 
@@ -280,7 +291,7 @@ copy_data_directory ()
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
   if [ ! -e "$INSTALL_DATA_TAR" ]; then
-    log "Install data [$INSTALL_DATA_TAR] does not exist - cannot create data directory!!"
+    log_space "Install data [$INSTALL_DATA_TAR] does not exist - cannot create data directory!!"
     return 0
   fi 
 
@@ -297,7 +308,7 @@ copy_files_for_addon ()
   InstalledFile=$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt
 
   if [ ! -r $VersionFile ]; then
-    log "No Version File found for add-on [$VersionFile]"
+    log_space "No Version File found for add-on [$VersionFile]"
     return 1
   fi
 
@@ -313,17 +324,16 @@ copy_files_for_addon ()
   # echo "INST_VER: [$INST_VER]"
 
   if [ "$PROD_VER" = "$INST_VER" ]; then
-    log "Data already installed for $PROD_NAME $PROD_VER [$]"
+    log_space "Data already installed for $PROD_NAME $PROD_VER"
     return 0
   fi
 
-  log "Copying new data files for $PROD_NAME $PROD_VER"
-  log
+  header "Copying new data files for $PROD_NAME $PROD_VER"
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz
 
   if [ ! -e "$INSTALL_DATA_TAR" ]; then
-    log "Install data [$INSTALL_DATA_TAR] does not exist - cannot copy files to data directory!!"
+    log_space "Install data [$INSTALL_DATA_TAR] does not exist - cannot copy files to data directory!!"
     return 0
   fi
 
@@ -362,7 +372,7 @@ header "$NOW"
 
 copy_data_directory
 
-log Checking for Data Directory Update
+log_space Checking for Data Directory Update
 
 copy_files_for_major_version
 copy_files_for_version fp

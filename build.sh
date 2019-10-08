@@ -26,6 +26,7 @@ SCRIPT_NAME=$0
 TARGET_IMAGE=$1
 
 TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
+EDIT_COMMAND=vi
 
 # (Default) NIGX is used hosting software from the local "software" directory.
 # (Optional) Configure software download location.
@@ -42,8 +43,13 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
+# Default config directory. Can be overwritten by environment
+if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
+  DOMINO_DOCKER_CFG_DIR=/local/cfg
+fi
+
 # External configuration
-CONFIG_FILE=/local/cfg/build_config
+CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/build_config
 
 # use a config file if present
 if [ -e "$CONFIG_FILE" ]; then
@@ -62,6 +68,8 @@ usage ()
   echo "-(no)verify     checks downloaded file checksum (default: no)"
   echo "-(no)url        shows all download URLs (default: no)"
   echo "-(no)linuxupd   updates CentOS while building image (default: yes)"
+  echo "cfg|config      edits config file"
+  echo "cpcfg           copies the config file"
   echo
   echo "Example: `basename $SCRIPT_NAME` domino 10.0.1 fp2"
   echo
@@ -186,6 +194,17 @@ get_current_version ()
   return 0
 }
 
+copy_config_file()
+{
+  if [ -e "$CONFIG_FILE" ]; then
+    echo "Config File [$CONFIG_FILE] already exists!"
+    return 0
+  fi
+
+  mkdir -p $DOMINO_DOCKER_CFG_DIR 
+  cp sample_build_config $CONFIG_FILE
+}
+
 WGET_COMMAND="wget --connect-timeout=20"
 
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
@@ -209,7 +228,7 @@ for a in $@; do
       PROD_VER=$p
       ;;
 
-    10*|11*)
+    9*|10*|11*)
       PROD_VER=$p
       ;;
 
@@ -221,7 +240,7 @@ for a in $@; do
       PROD_HF=$p
       ;;
 
-   _*)
+    _*)
       PROD_EXT=$a
       ;;
 
@@ -232,6 +251,16 @@ for a in $@; do
 
     dockerfile*)
       DOCKER_FILE=$a
+      ;;
+
+    cfg|config)
+      $EDIT_COMMAND $CONFIG_FILE
+      exit 0
+      ;;
+
+    cpcfg)
+      copy_config_file
+      exit 0
       ;;
 
     -checkonly)
@@ -326,7 +355,7 @@ if [ "$PROD_VER" = "latest" ]; then
   echo
   
   if [ -z "$TAG_LATEST" ]; then
-    TAG_LATEST="LATEST"
+    TAG_LATEST="latest"
   fi
 fi
 

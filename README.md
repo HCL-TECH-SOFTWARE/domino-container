@@ -44,7 +44,7 @@ docker run -it -e "ServerName=Server1" \
     -p 80:80 \
     -p 1352:1352 \
     -v dominodata_demo1:/local/notesdata \
-    --stop-timeout=120 \
+    --stop-timeout=60 \
     --name server1 \
     ibmcom/domino:10.0.1FP2
 ```
@@ -53,11 +53,16 @@ docker run -it -e "ServerName=Server1" \
 During ```docker run``` you can setup a volume that mounts property files into `/local/notesdata`
 
 ### Stopping the Application Server gracefully
-Stopping a Domino server takes longer than the time a Docker server would expect by default, the recommended way is to add the parameter "--stop-timeout" already when starting the container. If the container was started with the parameter ```--stop-timeout=``` then you may stop the container using the following command:
+Stopping a Domino server takes longer than the time a Docker server would expect by default (10 seconds).
+Therefore it is recommended to run (initiate) the Docker container with the --stop-timeout <timeout seconds> parameter.
+This ensures a stop command will have sufficient time to shutdown the server.
 
-```docker stop <container-name>```
+Specifying the timeout via --time=<timeout seconds> when stopping the server, isn't really helpful in most cases.
+When stopping the Docker service, you can't specify the stop parameter mentioned below. 
+Therefore the --stop-timeout <timeout seconds> (see example above) is the recommended way to run the Docker container.
 
-If the container was started without specifying the parameter ```--stop-timeout=``` then use the following command to stop the container gracefully
+Reminder: In case of container orchestration, make sure your Domino Docker containers have sufficient time for shutdown as well.
+
 
 ```docker stop --time=<timeout> <container-name>```
 

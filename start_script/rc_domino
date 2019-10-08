@@ -54,7 +54,7 @@ fi
 DOMINO_SERVICE_NAME=`basename $DOMINO_SERVICE_NAME`
 
 if [ -z "$LOGNAME" ]; then
-  LOGNAME=`whoami`
+  export LOGNAME=`whoami`
 fi
 
 # Docker Operations
