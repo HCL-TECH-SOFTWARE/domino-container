@@ -57,6 +57,16 @@ if [ -e "$CONFIG_FILE" ]; then
   . $CONFIG_FILE
 fi
 
+
+
+if [ -z "$DOCKER_CMD" ]; then
+  if [ -x /usr/bin/podman ]; then
+    DOCKER_CMD=podman
+  else
+    DOCKER_CMD=docker
+  fi
+fi
+
 usage ()
 {
   echo
@@ -117,19 +127,19 @@ nginx_start ()
   # Create a nginx container hosting software download locally
 
   # Check if we already have this container in status exited
-  STATUS="$(docker inspect --format '{{ .State.Status }}' $SOFTWARE_CONTAINER 2>/dev/null)"
+  STATUS="$($DOCKER_CMD inspect --format '{{ .State.Status }}' $SOFTWARE_CONTAINER 2>/dev/null)"
 
   if [ -z "$STATUS" ]; then
     echo "Creating Docker container: $SOFTWARE_CONTAINER hosting [$SOFTWARE_DIR]"
-    docker run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
+    $DOCKER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
   elif [ "$STATUS" = "exited" ]; then
     echo "Starting existing Docker container: $SOFTWARE_CONTAINER"
-    docker start $SOFTWARE_CONTAINER
+    $DOCKER_CMD start $SOFTWARE_CONTAINER
   fi
 
   echo "Starting Docker container: $SOFTWARE_CONTAINER"
   # Start local nginx container to host SW Repository
-  SOFTWARE_REPO_IP="$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $SOFTWARE_CONTAINER 2>/dev/null)"
+  SOFTWARE_REPO_IP="$($DOCKER_CMD inspect --format '{{ .NetworkSettings.IPAddress }}' $SOFTWARE_CONTAINER 2>/dev/null)"
   if [ -z "$SOFTWARE_REPO_IP" ]; then
     echo "Unable to locate software repository."
   else
@@ -142,8 +152,8 @@ nginx_start ()
 nginx_stop ()
 {
   # Stop and remove SW repository
-  docker stop $SOFTWARE_CONTAINER
-  docker container rm $SOFTWARE_CONTAINER
+  $DOCKER_CMD stop $SOFTWARE_CONTAINER
+  $DOCKER_CMD container rm $SOFTWARE_CONTAINER
   echo "Stopped & Removed Software Repository Container"
   echo
 }
