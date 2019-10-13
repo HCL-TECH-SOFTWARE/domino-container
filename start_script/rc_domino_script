@@ -25,9 +25,20 @@ DOMINO_SCRIPT_VERSION=3.3.0
 
 # VERBOSE_INFO="yes"
 
+
+# check if inside docker 
 if [ -e "/.dockerenv" ]; then
-  if [ -z "$LOGNAME" ]; then
-     export LOGNAME=`whoami`
+  DOCKER_ENV=yes
+fi
+
+# other container run-time
+if [ -e "/run/.containerenv" ]; then
+  DOCKER_ENV=yes
+fi
+
+if [ -z "$LOGNAME" ]; then
+  if [ "$DOCKER_ENV"="yes" ]; then
+    export LOGNAME=`whoami`
   fi
 fi
 
@@ -66,16 +77,6 @@ if [ -z "$DOMINO_CONFIGURED" ]; then
 
   echo "Domino Server for '$DOMINO_USER' not configured"
   exit 1
-fi
-
-# check if running inside a container
-if [ -e "/.dockerenv" ]; then
-  DOCKER_ENV=yes
-fi
-
-# Podman has it's own name
-if [ -e "/run/.containerenv" ]; then
-  DOCKER_ENV=yes
 fi
 
 if [ "$DOCKER_ENV" = "yes" ]; then
