@@ -143,11 +143,6 @@ check_docker_environment()
 
   check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$DOCKER_CMD"
 
-  # some commands are ok, when dockerd isn't startred
-  if [ -z "$1" ]; then return 0; fi
-  if [ "$1" = "config" ]; then return 0; fi
-  if [ "$1" = "cfg" ]; then return 0; fi
-
   DOCKERD_PROCESS=`ps -ef|grep "$DOCKERD_NAME"| grep -v grep`
 
   if [ -z "$DOCKERD_PROCESS" ]; then
@@ -156,6 +151,18 @@ check_docker_environment()
     echo
     exit 1
   fi
+
+  # Use sudo for docker command if not root
+
+  if [ "$EUID" = "0" ]; then
+    return 0
+  fi
+
+  if [ "$DOCKER_USE_SUDO" = "no" ]; then
+    return 0
+  fi
+
+  DOCKER_CMD="sudo $DOCKER_CMD"
 
   return 0
 }

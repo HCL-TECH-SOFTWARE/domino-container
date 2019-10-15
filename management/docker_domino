@@ -218,6 +218,18 @@ check_docker_environment()
     exit 1
   fi
 
+  # Use sudo for docker command if not root
+
+  if [ "$EUID" = "0" ]; then
+    return 0
+  fi
+
+  if [ "$DOCKER_USE_SUDO" = "no" ]; then
+    return 0
+  fi
+
+  DOCKER_CMD="sudo $DOCKER_CMD"
+
   return 0
 }
 
@@ -872,7 +884,7 @@ copy_env_file()
   fi
 }
 
-check_docker_environment
+check_docker_environment "$PARAM1"
 docker_inspect_image
 docker_inspect_container
 config_warnings
