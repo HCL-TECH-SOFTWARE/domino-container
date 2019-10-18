@@ -84,18 +84,21 @@ fi
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler | proton } version fp hf"
+  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler } version fp hf"
   echo
   echo "-checkonly      checks without build"
   echo "-verifyonly     checks download file checksum without build"
   echo "-(no)check      checks if files exist (default: yes)"
   echo "-(no)verify     checks downloaded file checksum (default: no)"
-  echo "-(no)url        shows all download URLs (default: no)"
-  echo "-(no)linuxupd   updates CentOS while building image (default: yes)"
-  echo "cfg|config      edits config file"
-  echo "cpcfg           copies the config file"
+  echo "-(no)url        shows all download URLs, even if file is downloaded (default: no)"
+  echo "-(no)linuxupd   updates container Linux  while building image (default: yes)"
+  echo "cfg|config      edits config file (either in current directory or if created in /local/cfg)"
+  echo "cpcfg           copies the config file to config directory (default: /local/cfg/build_config)"
   echo
-  echo "Example: `basename $SCRIPT_NAME` domino 10.0.1 fp2"
+  echo "Examples:"
+  echo
+  echo "  `basename $SCRIPT_NAME` domino 10.0.1 fp3"
+  echo "  `basename $SCRIPT_NAME` traveler 10.0.1.2"
   echo
 
   return 0
