@@ -817,9 +817,9 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
   # Add notes:notes user
   if [ -z "$DominoUserID" ]; then
-    adduser notes -U
+    useradd notes -U -m
   else
-    adduser notes -U -u $DominoUserID 
+    useradd notes -U -m -u $DominoUserID 
   fi
 
   # Set User Local if configured

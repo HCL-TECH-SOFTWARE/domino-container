@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ###########################################################################
 # Docker Entrypoint - Start/Stop Script for Domino on xLinux/zLinux/AIX   #

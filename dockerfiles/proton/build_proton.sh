@@ -102,7 +102,7 @@ check_version ()
     if [ $VER -gt $CHECK ]; then return 0; fi
     if [ $VER -lt $CHECK ]; then
       echo "Warning: Unsupported $3 version $1 - Must be at least $2 !"
-      sleep 5
+      sleep 1
       return 1
     fi
 
@@ -115,7 +115,7 @@ check_version ()
 check_docker_environment()
 {
   DOCKER_MINIMUM_VERSION="18.09.0"
-  PODMAN_MINIMUM_VERSION="1.0.5"
+  PODMAN_MINIMUM_VERSION="1.5.0"
 
   if [ -x /usr/bin/podman ]; then
     # podman environment detected

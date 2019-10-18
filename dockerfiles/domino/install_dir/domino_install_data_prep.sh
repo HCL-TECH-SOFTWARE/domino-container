@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 DOMINO_DATA_PATH=/local/notesdata
 DOMDOCK_LOG_DIR=/domino-docker
