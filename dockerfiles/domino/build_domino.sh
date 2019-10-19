@@ -194,15 +194,6 @@ check_docker_environment()
 
   check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$DOCKER_CMD"
 
-  DOCKERD_PROCESS=`ps -ef|grep "$DOCKERD_NAME"| grep -v grep`
-
-  if [ -z "$DOCKERD_PROCESS" ]; then
-    echo
-    echo "Fatal: 'dockerd' not started!"
-    echo
-    exit 1
-  fi
-
   # Use sudo for docker command if not root
 
   if [ "$EUID" = "0" ]; then
