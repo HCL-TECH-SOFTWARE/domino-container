@@ -14,9 +14,8 @@
 # limitations under the License.                                           #
 #                                                                          #
 ############################################################################
-  
-FROM ibmcom/domino:latest
-#FROM hclcom/domino:11.0.0.BETA1
+
+FROM hclcom/domino:LATEST11_UBI
 
 # Headers
 LABEL DominoDocker.maintainer="thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de"
@@ -41,7 +40,7 @@ COPY install_dir $LocalInstallDir
 RUN $LocalInstallDir/install.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
-  rm -rf $LocalInstallDir 
+  rm -rf $LocalInstallDir
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
 

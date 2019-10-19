@@ -15,7 +15,7 @@
 #                                                                          #
 ############################################################################
   
-FROM centos:latest
+FROM centos:7
 
 # Headers
 LABEL DominoDocker.maintainer="thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de"
@@ -27,7 +27,7 @@ ARG PROD_NAME=
 ARG PROD_VER=
 ARG PROD_FP=
 ARG PROD_HF=
-ARG DominoResponseFile=domino10_response.dat
+ARG DominoResponseFile=
 ARG DominoMoveInstallData=
 ARG LocalInstallDir=/tmp/install
 ARG DominoUserID=

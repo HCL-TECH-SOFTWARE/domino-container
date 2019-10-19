@@ -49,7 +49,7 @@ Name of the Domino Server base image file. The build script will use this parame
 
 ### DominoResponseFile
 
-Default value : domino10_response.dat
+Default value : not set and determined by the install script depending on the Domino version
 
 Name of the response file that will be used for unattended Domino Server setup (phase 1). This file is part of the scripts that will be added to the image at build time. 
 

@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Nash!Com Certificate Management Script                                  #
-# Version 1.1.0 28.05.2019                                                #
+# Version 1.2.0 15.08.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -42,7 +42,7 @@
 # Create the following specified certs (for AppDevPack)
 CREATE_CONFIGURED_CERTS="yes"
 
-DOMIMO_ORG="Acme"
+DOMINO_ORG="Acme"
 
 DOMINO_SERVER="domino"
 DOMINO_DNS="domino.acme.com"
@@ -54,7 +54,7 @@ IAM_SERVER="iam_server"
 IAM_SERVER_DNS="iam.acme.com"
 
 IAM_CLIENT="iam_client"
-IAM_CLIENT_NAME="/O=$DOMIMO_ORG/CN=$IAM_CLIENT"
+IAM_CLIENT_NAME="/O=$DOMINO_ORG/CN=$IAM_CLIENT"
 
 # You can choose between two different configurations 
 
@@ -69,10 +69,17 @@ CA_PASSWORD=domino4ever
 CREATE_KEYRINGS="yes"
 KEYRING_PASSWORD=domino4ever
 
-#CERTMGR_CONFIG_FILE="/local/cfg/certmgr_config"
+CERTMGR_CONFIG_FILE="/local/cfg/certmgr_config"
 CERTMGR_DIR=`dirname $0`/certs
 
-LOTUS=/opt/ibm/domino
+if [ -z "$LOTUS" ]; then
+  if [ -x /opt/hcl/domino/bin/server ]; then
+    LOTUS=/opt/hcl/domino
+  else
+    LOTUS=/opt/ibm/domino
+  fi
+fi
+
 KYRTOOL_BIN=$LOTUS/bin/kyrtool
 DOMINO_DATA_PATH=/local/notesdata
 
@@ -133,11 +140,15 @@ CERT_SIGN_ALG=-sha256
 CLIENT_KEYLEN=4096
 CLIENT_VALID_DAYS=825
 
+# openssl Configuration
+
+OPENSSL_CONFIG_FILE=/etc/pki/tls/openssl.cnf
+
 # Specific Server Name Configuration
 
-PROTON_SERVER_NAME="/O=$DOMIMO_ORG/CN=$PROTON_SERVER"
-DOMINO_SERVER_NAME="/O=$DOMIMO_ORG/CN=$DOMINO_SERVER"
-IAM_SERVER_NAME="/O=$DOMIMO_ORG/CN=$IAM_SERVER"
+PROTON_SERVER_NAME="/O=$DOMINO_ORG/CN=$PROTON_SERVER"
+DOMINO_SERVER_NAME="/O=$DOMINO_ORG/CN=$DOMINO_SERVER"
+IAM_SERVER_NAME="/O=$DOMINO_ORG/CN=$IAM_SERVER"
 
 TODO_FILE=/tmp/certmgr_todo.txt
 
@@ -313,6 +324,19 @@ create_key_cert()
     log "No configuration for [$NAME]"
   fi
 
+  # Support for multiple SANS
+
+  SANS_DNS=""
+  if [ ! -z "$SANS" ]; then
+    for i in `echo $SANS | tr ',' '\n'` ; do
+      if [ -z "$SANS_DNS" ]; then
+        SANS_DNS=DNS:$i
+      else
+        SANS_DNS=$SANS_DNS,DNS:$i
+      fi
+    done
+  fi
+
   if [ -e "$KEY_FILE" ]; then
     log "Key [$KEY_FILE] already exists"
   else
@@ -339,10 +363,19 @@ create_key_cert()
       log "Certificate Sign Request (CSR) already exists [$CSR_FILE]"
     else
       log "Creating certificate Sign Request (CSR) [$CSR_FILE]"
-      openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "$SUBJ" $CERT_SIGN_ALG > /dev/null
+
+      if [ -z "$SANS_DNS" ]; then 
+        openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "$SUBJ" $CERT_SIGN_ALG > /dev/null
+      else
+        openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "$SUBJ" $CERT_SIGN_ALG -reqexts SAN -config <(cat $OPENSSL_CONFIG_FILE <(printf "[SAN]\nsubjectAltName=$SANS_DNS")) > /dev/null
+      fi
       
-      if [ ! -z $SANS ]; then
-        echo >> $CSR_FILE
+      echo >> $CSR_FILE
+      if [ ! -z "$SUBJ" ]; then
+        echo $SUBJ >> $CSR_FILE
+      fi
+
+      if [ ! -z "$SANS" ]; then
         echo "DNS: "$SANS >> $CSR_FILE
       fi
 
@@ -359,12 +392,12 @@ create_key_cert()
     if [ "$USE_LOCAL_CA" = "yes" ]; then
 
       log "Signing CSR [$CSR_FILE] with local CA"
-      if [ -z "$SANS" ]; then
+      if [ -z "$SANS_DNS" ]; then
         openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
           -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = clientAuth") > /dev/null
       else
         openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
-          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = serverAuth \n subjectAltName=DNS:$SANS") > /dev/null
+         -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = serverAuth \n subjectAltName=$SANS_DNS") > /dev/null
       fi
 
       if [ -e "$CSR_FILE" ]; then

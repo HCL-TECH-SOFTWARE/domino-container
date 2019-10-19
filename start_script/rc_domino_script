@@ -25,9 +25,20 @@ DOMINO_SCRIPT_VERSION=3.3.0
 
 # VERBOSE_INFO="yes"
 
+
+# check if inside docker 
 if [ -e "/.dockerenv" ]; then
-  if [ -z "$LOGNAME" ]; then
-     LOGNAME=`whoami`
+  DOCKER_ENV=yes
+fi
+
+# other container run-time
+if [ -e "/run/.containerenv" ]; then
+  DOCKER_ENV=yes
+fi
+
+if [ -z "$LOGNAME" ]; then
+  if [ "$DOCKER_ENV"="yes" ]; then
+    export LOGNAME=`whoami`
   fi
 fi
 
@@ -66,16 +77,6 @@ if [ -z "$DOMINO_CONFIGURED" ]; then
 
   echo "Domino Server for '$DOMINO_USER' not configured"
   exit 1
-fi
-
-# check if running inside a container
-if [ -e "/.dockerenv" ]; then
-  DOCKER_ENV=yes
-fi
-
-# Podman has it's own name
-if [ -e "/run/.containerenv" ]; then
-  DOCKER_ENV=yes
 fi
 
 if [ "$DOCKER_ENV" = "yes" ]; then
@@ -154,6 +155,20 @@ fi
 if [ -z "$DOMINO_TIKA_SHUTDOWN_TERM_SECONDS" ]; then
   DOMINO_TIKA_SHUTDOWN_TERM_SECONDS=30
 fi
+
+
+# -- init.d service name used for configuration --
+
+if [ -z "$DOMINO_RC_NAME" ]; then
+  DOMINO_RC_NAME=rc_domino
+fi
+
+# -- systemd service name used for configuration --
+
+if [ -z "$DOMINO_SYSTEMD_NAME" ]; then
+  DOMINO_SYSTEMD_NAME=domino.service
+fi
+
 
 # --- End of special configuration parameters ---
 
@@ -344,7 +359,6 @@ export DOMINO_LOG_PATH
 export DOMINO_LOG_DIR
 export DOMINO_LOG_BACKUP_DIR
 
-export DOMINO_START_SCRIPT
 export DOMINO_SHUTDOWN_TIMEOUT
 export DOMINO_INSDIR
 export DOMINO_VIEW_REBUILD_DIR
@@ -397,17 +411,8 @@ export DOMINO_DOMLOG_DB_BACKUP_DIR
 # -- Monitor Filter String --
 #DOMINO_MONITOR_FILTER_STRING="Opened session for|Closed session for"
 
-# -- init.d service name --
-DOMINO_RC_NAME=rc_domino
-
-# -- systemd service name --
-DOMINO_SYSTEMD_NAME=domino.service
-
 # -- Domino PID file per Partition which has to match the PIDFile setting in the "domino.service" --
 DOMINO_PID_FILE=/tmp/domino.pid
-
-# -- Location of main start script --
-DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 
 # Special Parameters
 

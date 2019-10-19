@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ###########################################################################
 # Docker Entrypoint - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
@@ -33,7 +33,7 @@ DOMINO_DATA_PATH=/local/notesdata
 
 # in docker environment the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
-  LOGNAME=`whoami`
+  export LOGNAME=`whoami`
 fi
 
 stop_server ()

@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/bash 
 
 SCRIPT_NAME=$0
 PARAM1=$1

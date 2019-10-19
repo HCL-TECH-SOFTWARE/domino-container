@@ -4,14 +4,146 @@ DOMINO_INSTDATA_BACKUP=$Notes_ExecDirectory/data1_bck
 UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_data_update.log
 
-log ()
+log()
 {
   echo "$1 $2 $3 $4 $5" >> $LOG_FILE
 }
 
-print_delim ()
+log_space()
+{
+  echo  >> $LOG_FILE
+  echo "$1 $2 $3 $4 $5" >> $LOG_FILE
+  echo  >> $LOG_FILE
+}
+
+
+print_delim()
 {
   echo "--------------------------------------------------------------------------------" >> $LOG_FILE
+}
+
+header()
+{
+  echo >> $LOG_FILE
+  print_delim
+  echo "$1" >> $LOG_FILE
+  print_delim
+  echo >> $LOG_FILE
+}
+
+get_notes_ini_var()
+{
+  # $1 = filename
+  # $2 = ini.variable
+
+  ret_ini_var=""
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ -z "$2" ]; then
+    return 0
+  fi
+
+  ret_ini_var=`awk -F '=' -v SEARCH_STR="$2" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' $1 | xargs`
+  return 0
+}
+
+set_notes_ini_var()
+{
+  # updates or sets notes.ini parameter
+  file=$1
+  var=$2
+  new=$3
+
+  get_notes_ini_var "$file" "$var"
+
+  if [ "$ret_ini_var" = "$new" ]; then
+    return 0
+  fi
+
+  # check if entry exists empty. if not present just append new entry, else use replace code
+  if [ -z "$ret_ini_var" ]; then
+    found=`grep -i "^$var=" $file`
+    if [ -z "$found" ]; then
+      echo $var=$new >> $file
+      return 0
+    fi
+  fi
+
+  awk -v var="$var" -v new="$new" 'BEGIN{FS=OFS="=";IGNORECASE=1}match($1,"^"var"$") {$2=new}1' "$file" > $file.updated
+  mv $file.updated $file
+
+  return 0
+}
+
+remove_notes_ini_var()
+{
+  # updates or sets notes.ini parameter
+  file=$1
+  var=$2
+
+  found=`grep -i "^$var=" $file`
+  echo "found: [$found]"
+  if [ -z "$found" ]; then
+    return 0
+  fi
+
+  grep -v -i "^$var=" $file > $file.updated
+  mv $file.updated $file
+
+  return 0
+}
+
+update_traveler_ini_var()
+{
+  file=$1
+  var=$2
+  value=$3
+  UPD_INI=0
+
+  if [ -z "$var" ]; then
+    return 0
+  fi
+
+  get_notes_ini_var "$file" "$var"
+
+  if [ "$ret_ini_var" = "$val" ]; then
+    return 0
+  fi
+
+  if [ ! -z "$ret_ini_var" ]; then
+
+    if [ "$var" = "NTS_BUILD" ]; then
+      UPD_INI=1
+    else
+      return 0
+    fi
+  fi
+
+  set_notes_ini_var "$file" "$var" "$val"
+  log "[$var] -> [$val]"
+  UPD_INI=1
+}
+
+update_traveler_ini()
+{
+  file=$1
+  upd_file=$2
+
+  # change field separator
+  BAK_IFS=$IFS
+  IFS=$'\n'
+
+  for x in `grep "^NTS_" $upd_file` ; do
+    var=`echo "$x" | cut -d= -f1`
+    val=`echo "$x" | cut -d= -f2-`
+    update_traveler_ini_var "$file" "$var" "$val"
+  done
+
+  # restore seperator
+  IFS=$BAK_IFS
+  BAK_IFS=
 }
 
 copy_files ()
@@ -32,6 +164,51 @@ copy_files ()
 
   return 0
 }
+
+copy_files_for_major_version ()
+{
+  VersionFile=$DOMDOCK_TXT_DIR/domino_ver.txt
+  InstalledFile=$DOMINO_DATA_PATH/domino_ver.txt
+
+  if [ ! -r $VersionFile ]; then
+    return 1
+  fi
+
+  DOMINO_VERSION=`cat $VersionFile`
+
+  if [ -r $InstalledFile ]; then
+    INSTALLED_VERSION=`cat $InstalledFile`
+  else
+    INSTALLED_VERSION=""
+  fi
+
+  # echo "DOMINO_VERSION: [$DOMINO_VERSION]"
+  # echo "INSTALLED_VERSION: [$INSTALLED_VERSION]"
+
+  if [ "$DOMINO_VERSION" = "$INSTALLED_VERSION" ]; then
+    log_space "Data already installed for $DOMINO_VERSION"
+    return 0
+  fi
+
+  # Set NotesProgram notes.ini (required for Traveler, but should always point to the binary directoy)
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "NotesProgram" "$Notes_ExecDirectory"
+
+  # Avoid Domino Directory Design Update Prompt
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
+
+  header "Copying new data files for Version $DOMINO_VERSION"
+
+  # Extracting new data files 
+
+  INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
+
+  tar xzvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./dfc ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 
+
+  echo $DOMINO_VERSION > $InstalledFile
+
+  return 0
+}
+
 
 copy_files_for_version ()
 {
@@ -54,11 +231,11 @@ copy_files_for_version ()
   # echo "INSTALLED_VERSION: [$INSTALLED_VERSION]"
 
   if [ "$DOMINO_VERSION" = "$INSTALLED_VERSION" ]; then
-    log "Data already installed for $DOMINO_VERSION"
+    log_space "Data already installed for $DOMINO_VERSION"
     return 0
   fi
 
-  log "Copying new data files for Version $DOMINO_VERSION"
+  header "Copying new data files for Version $DOMINO_VERSION"
 
   copy_files $DOMINO_INSTDATA_BACKUP/$DOMINO_VERSION/localnotesdata $DOMINO_DATA_PATH
   copy_files $DOMINO_INSTDATA_BACKUP/$DOMINO_VERSION/localnotesdataiNotes $DOMINO_DATA_PATH/iNotes
@@ -69,25 +246,58 @@ copy_files_for_version ()
   return 0
 }
 
+create_directory ()
+{
+  TARGET_FILE=$1
+  OWNER=$2
+  GROUP=$3
+  PERMS=$4
+
+  if [ -z "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  if [ -e "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  mkdir -p "$TARGET_FILE"
+
+  if [ ! -z "$OWNER" ]; then
+    chown $OWNER:$GROUP "$TARGET_FILE"
+  fi
+
+  if [ ! -z "$PERMS" ]; then
+    chmod "$PERMS" "$TARGET_FILE"
+  fi
+
+  return 0
+}
+
 copy_data_directory ()
 {
   if [ -e "$DOMINO_DATA_PATH/notes.ini" ]; then
-    log "Data directory already exists - nothing to copy."
+    log_space "Data directory already exists - nothing to copy."
     return 0
   fi 
+
+
+  create_directory $DOMINO_DATA_PATH notes notes 770
+  create_directory /local/translog notes notes 770
+  create_directory /local/daos notes notes 770
+  create_directory /local/nif notes notes 770
+  create_directory /local/ft notes notes 770
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
   if [ ! -e "$INSTALL_DATA_TAR" ]; then
-    log "Install data [$INSTALL_DATA_TAR] does not exist - cannot create data directory!!"
+    log_space "Install data [$INSTALL_DATA_TAR] does not exist - cannot create data directory!!"
     return 0
   fi 
 
-  log "Extracting install data directory from [$INSTALL_DATA_TAR]" 
-  log "$NOW"
-  print_delim
+  header "Extracting install data directory from [$INSTALL_DATA_TAR]" 
   
-  tar xvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE
+  tar xzvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE
   log
 }
 
@@ -98,7 +308,7 @@ copy_files_for_addon ()
   InstalledFile=$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt
 
   if [ ! -r $VersionFile ]; then
-    log "No Version File found for add-on [$VersionFile]"
+    log_space "No Version File found for add-on [$VersionFile]"
     return 1
   fi
 
@@ -114,31 +324,38 @@ copy_files_for_addon ()
   # echo "INST_VER: [$INST_VER]"
 
   if [ "$PROD_VER" = "$INST_VER" ]; then
-    log "Data already installed for $PROD_NAME $PROD_VER [$]"
+    log_space "Data already installed for $PROD_NAME $PROD_VER"
     return 0
   fi
 
-  log "Copying new data files for $PROD_NAME $PROD_VER"
-  log
+  header "Copying new data files for $PROD_NAME $PROD_VER"
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz
 
   if [ ! -e "$INSTALL_DATA_TAR" ]; then
-    log "Install data [$INSTALL_DATA_TAR] does not exist - cannot copy files to data directory!!"
+    log_space "Install data [$INSTALL_DATA_TAR] does not exist - cannot copy files to data directory!!"
     return 0
   fi
 
-  log "Extracting add-on install data directory from [$INSTALL_DATA_TAR]"
-  log "$NOW" >> $LOG_FILE
-  print_delim
+  header "Extracting add-on install data directory from [$INSTALL_DATA_TAR]"
 
-  tar xvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE
+  tar xzvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE
+
+  if [ "$PROD_NAME" = "traveler" ]; then
+
+    # updating Traveler notes.ini parameters
+
+    header "Updating Traveler notes.ini parameters"
+
+    update_traveler_ini $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
+  fi
 
   echo $PROD_VER > $InstalledFile
 
   return 0
 }
 
+# --- Main Logic ---
 
 NOW=`date`
 
@@ -151,15 +368,13 @@ fi
 
 echo $NOW > $UPDATE_CHECK_STATUS_FILE
 
-
-print_delim
-log $NOW
-print_delim
+header "$NOW"
 
 copy_data_directory
 
-log Checking for Data Directory Update
+log_space Checking for Data Directory Update
 
+copy_files_for_major_version
 copy_files_for_version fp
 copy_files_for_version hf
 

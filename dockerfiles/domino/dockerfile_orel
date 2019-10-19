@@ -15,8 +15,7 @@
 #                                                                          #
 ############################################################################
   
-FROM ibmcom/domino:latest
-#FROM hclcom/domino:11.0.0.BETA1
+FROM orel:latest
 
 # Headers
 LABEL DominoDocker.maintainer="thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de"
@@ -28,20 +27,34 @@ ARG PROD_NAME=
 ARG PROD_VER=
 ARG PROD_FP=
 ARG PROD_HF=
+ARG DominoResponseFile=
+ARG DominoMoveInstallData=
 ARG LocalInstallDir=/tmp/install
+ARG DominoUserID=
+ARG DOMINO_LANG=
+ARG DOCKER_TZ
 
 USER root
 
 # Copy Install Files to container
 COPY install_dir $LocalInstallDir
+COPY dummy /license/accepted
 
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN $LocalInstallDir/install.sh && \
-  yum clean all >/dev/null && \
-  rm -fr /var/cache/yum && \
-  rm -rf $LocalInstallDir 
+# Set distribution to CentOS until Astra Linux is supported
+# Confirm License and copy back the bash to original location
+
+
+RUN echo "CentOS Linux release 7.6.1810 (Core)" > /etc/centos-release && \
+  echo "deb http://mirror.yandex.ru/astra/stable/orel/repository orel main contrib non-free" > /etc/apt/sources.list && \
+  cp -f /bin/bash.orig /bin/bash && \
+  apt-get update && \
+  apt-get install -y apt-utils && \
+  apt-get  install -y bc unzip rsync lsof gdb cpio && \
+  $LocalInstallDir/install_domino.sh && \
+  rm -rf $LocalInstallDir
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
 

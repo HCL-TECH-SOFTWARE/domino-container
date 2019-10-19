@@ -15,8 +15,7 @@
 #                                                                          #
 ############################################################################
   
-FROM ibmcom/domino:latest
-#FROM hclcom/domino:11.0.0.BETA1
+FROM centos:8
 
 # Headers
 LABEL DominoDocker.maintainer="thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de"
@@ -28,7 +27,12 @@ ARG PROD_NAME=
 ARG PROD_VER=
 ARG PROD_FP=
 ARG PROD_HF=
+ARG DominoResponseFile=
+ARG DominoMoveInstallData=
 ARG LocalInstallDir=/tmp/install
+ARG DominoUserID=
+ARG DOMINO_LANG=
+ARG DOCKER_TZ
 
 USER root
 
@@ -38,10 +42,11 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN $LocalInstallDir/install.sh && \
+RUN yum install -y openssl bc perl which wget nano unzip rsync lsof gdb file hostname cpio procps-ng diffutils && \
+  $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
-  rm -rf $LocalInstallDir 
+  rm -rf $LocalInstallDir
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
 

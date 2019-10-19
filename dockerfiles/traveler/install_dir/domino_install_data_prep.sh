@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_install_data_prep.log
 

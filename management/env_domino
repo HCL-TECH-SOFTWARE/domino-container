@@ -7,3 +7,4 @@ OrganizationPassword=domino4ever
 DominoDomainName=Acme
 OrganizationName=Acme
 ServerName=domino-acme-01
+LANG=de_DE.UTF-8

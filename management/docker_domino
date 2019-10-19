@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Nash!Com Domino Docker Management Script                                #
-# Version 1.0.5 11.05.2019                                                #
+# Version 1.0.7 07.10.2019                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,6 +21,9 @@
 ###########################################################################
 
 SCRIPT_NAME=$0
+FULL_SCRIPT_NAME=`realpath $0`
+SCRIPT_DIR_NAME=`dirname $SCRIPT_NAME`
+FULL_SCRIPT_DIR_NAME=`dirname $FULL_SCRIPT_NAME`
 PARAM1=$1
 PARAM2=$2
 PARAM3=$3
@@ -42,6 +45,9 @@ DOCKER_VOLUMES="-v notesdata:/local/notesdata"
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_domino
 
+# Update CentOS while building the image
+LinuxYumUpdate=yes
+
 # Configure software download location.
 # You can either use your own software repository remotely.
 # Or use a local software image hosted via NGINX temporary image.
@@ -60,21 +66,28 @@ if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
   DOMINO_DOCKER_CFG_DIR=/local/cfg
 fi
 
-DOCKER_SCRIPT_VERSION=1.0.3
+DOCKER_SCRIPT_VERSION=1.0.6
 
 # Get configuration from config file
 # First check in global config directory before checking in current directory
 
-CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/config_`basename $0 | awk -F "docker_" '{print $2}'`
+CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
 if [ -e "$CONFIG_FILE" ]; then
   echo "(Using config file $CONFIG_FILE)"
   . $CONFIG_FILE
 else
-  CONFIG_FILE=`dirname $0`/config_`basename $0 | awk -F "docker_" '{print $2}'`
+  CONFIG_FILE=$SCRIPT_DIR_NAME/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
   if [ -e "$CONFIG_FILE" ]; then
     echo "(Using config file $CONFIG_FILE)"  
     . $CONFIG_FILE
   fi
+fi
+
+# check if environment file exists in config dir, else use local dir
+if [ -r "$DOMINO_DOCKER_CFG_DIR/$DOCKER_ENV_FILE" ]; then
+  DOCKER_FULL_ENV_FILE="$DOMINO_DOCKER_CFG_DIR/$DOCKER_ENV_FILE"
+else
+  DOCKER_FULL_ENV_FILE="$DOCKER_ENV_FILE"
 fi
 
 DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
@@ -93,12 +106,19 @@ fi
 
 DOCKER_IMAGE_NAMEVERSION=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_BUILD_VERSION
 
-if [ -z "$DOCKER_TAG_LATEST" ]; then
-  DOCKER_IMAGE=$DOCKER_IMAGE_NAMEVERSION
-  DOCKER_TAG_LATEST_CMD=""
-else
-  DOCKER_IMAGE=$DOCKER_TAG_LATEST
-  DOCKER_TAG_LATEST_CMD="-t $DOCKER_TAG_LATEST"
+if [ -z "$DOCKER_IMAGE" ]; then
+  if [ -z "$DOCKER_TAG_LATEST" ]; then
+
+    DOCKER_IMAGE=$DOCKER_IMAGE_NAMEVERSION
+    DOCKER_TAG_LATEST_CMD=""
+  else
+    DOCKER_IMAGE=$DOCKER_TAG_LATEST
+    DOCKER_TAG_LATEST_CMD="-t $DOCKER_TAG_LATEST"
+  fi
+fi
+
+if [ -z "$EDIT_COMMAND" ]; then
+  EDIT_COMMAND="vi"
 fi
 
 # Get OS type
@@ -111,7 +131,7 @@ print_delim ()
 
 config_warnings ()
 {
-  DOCKER_STORAGE_DIRVER=`docker info 2>/dev/null |grep "Storage Driver: " | cut -d ":" -f2 | awk '{ sub(/^[ ]+/, ""); print }'`
+  DOCKER_STORAGE_DIRVER=`$DOCKER_CMD info 2>/dev/null |grep "Storage Driver: " | cut -d ":" -f2 | awk '{ sub(/^[ ]+/, ""); print }'`
 
   if [ "$DOCKER_STORAGE_DIRVER" = "overlay" ]; then 
     echo
@@ -125,6 +145,91 @@ config_warnings ()
     fi
   fi
   
+  return 0
+}
+
+check_version ()
+{
+  count=1
+
+  while true
+  do
+    VER=`echo $1|cut -d"." -f $count`
+    CHECK=`echo $2|cut -d"." -f $count`
+
+    if [ -z "$VER" ]; then return 0; fi
+    if [ -z "$CHECK" ]; then return 0; fi
+
+    if [ $VER -gt $CHECK ]; then return 0; fi
+    if [ $VER -lt $CHECK ]; then
+      echo "Warning: Unsupported $3 version $1 - Must be at least $2 !"
+      sleep 1
+      return 1
+    fi
+
+    count=`expr $count + 1`
+  done
+
+  return 0
+}
+
+check_docker_environment()
+{
+  DOCKER_MINIMUM_VERSION="18.09.0"
+  PODMAN_MINIMUM_VERSION="1.0.5"
+
+  if [ -x /usr/bin/podman ]; then
+    # podman environment detected
+    DOCKER_CMD=podman
+    DOCKER_ENV_NAME=Podman
+    DOCKER_VERSION_STR=`podman -v`
+    DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
+    check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
+    return 0
+  fi
+
+  if [ -z "$DOCKERD_NAME" ]; then
+    DOCKERD_NAME=dockerd
+  fi
+
+  if [ -z "$DOCKER_CMD" ]; then
+    DOCKER_CMD=docker
+  fi
+
+  DOCKER_ENV_NAME=Docker
+
+  # check docker environment
+  DOCKER_VERSION_STR=`docker -v`
+  DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3|cut -d"," -f1`
+
+  check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$DOCKER_CMD"
+
+  # some commands are ok, when dockerd isn't startred
+  if [ -z "$1" ]; then return 0; fi
+  if [ "$1" = "config" ]; then return 0; fi
+  if [ "$1" = "cfg" ]; then return 0; fi
+
+  DOCKERD_PROCESS=`ps -ef|grep "$DOCKERD_NAME"| grep -v grep`
+
+  if [ -z "$DOCKERD_PROCESS" ]; then
+    echo
+    echo "Fatal: 'dockerd' not started!"
+    echo
+    exit 1
+  fi
+
+  # Use sudo for docker command if not root
+
+  if [ "$EUID" = "0" ]; then
+    return 0
+  fi
+
+  if [ "$DOCKER_USE_SUDO" = "no" ]; then
+    return 0
+  fi
+
+  DOCKER_CMD="sudo $DOCKER_CMD"
+
   return 0
 }
 
@@ -154,19 +259,19 @@ nginx_start ()
   # Create a nginx container hosting software download locally
 
   # Check if we already have this container in status exited
-  STATUS="$(docker inspect --format "{{ .State.Status }}" $SOFTWARE_CONTAINER 2>/dev/null)"
+  STATUS="$($DOCKER_CMD inspect --format "{{ .State.Status }}" $SOFTWARE_CONTAINER 2>/dev/null)"
 
   if [ -z "$STATUS" ]; then
     echo "Creating Docker container: $SOFTWARE_CONTAINER"
-    docker run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
+    $DOCKER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
   elif [ "$STATUS" = "exited" ]; then
     echo "Starting existing Docker container: $SOFTWARE_CONTAINER"
-    docker start $SOFTWARE_CONTAINER
+    $DOCKER_CMD start $SOFTWARE_CONTAINER
   fi
 
   echo "Starting Docker container: $SOFTWARE_CONTAINER"
   # Start local nginx container to host SW Repository
-  SOFTWARE_REPO_IP="$(docker inspect --format "{{ .NetworkSettings.IPAddress }}" $SOFTWARE_CONTAINER 2>/dev/null)"
+  SOFTWARE_REPO_IP="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $SOFTWARE_CONTAINER 2>/dev/null)"
   if [ -z "$SOFTWARE_REPO_IP" ]; then
     echo "Unable to locate software repository."
   else
@@ -179,8 +284,8 @@ nginx_start ()
 nginx_stop ()
 {
   # Stop and remove SW repository
-  docker stop $SOFTWARE_CONTAINER
-  docker container rm $SOFTWARE_CONTAINER
+  $DOCKER_CMD stop $SOFTWARE_CONTAINER
+  $DOCKER_CMD container rm $SOFTWARE_CONTAINER
   echo "Stopped & Removed Software Repository Container"
   echo
 }
@@ -198,19 +303,19 @@ docker_show_status ()
 
 docker_status ()
 {
-  DOCKER_STATUS="$(docker inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_STATUS="$($DOCKER_CMD inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
 }
 
 docker_inspect_image ()
 {
-  DOCKER_IMAGE_ID="$(docker inspect --format "{{.Id}}" $DOCKER_IMAGE 2>/dev/null)"
+  DOCKER_IMAGE_ID="$($DOCKER_CMD inspect --format "{{.Id}}" $DOCKER_IMAGE 2>/dev/null)"
   DOCKER_IMAGE_SHORTID=`echo $DOCKER_IMAGE_ID | cut -d":" -f2 | cut -c1-12`
 
   if [ -z "$1" ]; then return 0; fi
 
-  DOCKER_IMAGE_VERSION="$(docker inspect --format "{{ .Config.Labels.version }}" $DOCKER_IMAGE 2>/dev/null)"
-  DOCKER_IMAGE_BUILDTIME="$(docker inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_IMAGE 2>/dev/null)" 
-  DOCKER_IMAGE_SIZE="$(docker inspect --format "{{.Size}}" $DOCKER_IMAGE 2>/dev/null)" 
+  DOCKER_IMAGE_VERSION="$($DOCKER_CMD inspect --format "{{ .Config.Labels.version }}" $DOCKER_IMAGE 2>/dev/null)"
+  DOCKER_IMAGE_BUILDTIME="$($DOCKER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_IMAGE 2>/dev/null)" 
+  DOCKER_IMAGE_SIZE="$($DOCKER_CMD inspect --format "{{.Size}}" $DOCKER_IMAGE 2>/dev/null)" 
 
   if [ -z "$DOCKER_IMAGE_SIZE" ]; then
     DOCKER_IMAGE_SIZE_MB=0
@@ -218,7 +323,8 @@ docker_inspect_image ()
     DOCKER_IMAGE_SIZE_MB=$(($DOCKER_IMAGE_SIZE / 1000 / 1000 )) 
   fi
 
-  DOCKER_IMAGE_DOMINODOCKER_VERSION="$(docker inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
+  DOCKER_IMAGE_DOMINODOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
+  DOCKER_IMAGE_TRAVELERDOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $DOCKER_IMAGE 2>/dev/null)" 
 
   return 0
 }
@@ -226,37 +332,40 @@ docker_inspect_image ()
 
 docker_status ()
 {
-  DOCKER_STATUS="$(docker inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_STATUS="$($DOCKER_CMD inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
   if [ -z "$DOCKER_STATUS" ]; then return 0; fi
 }
 
 docker_inspect_container ()
 {
-  DOCKER_STATUS="$(docker inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_VERSION="$(docker inspect --format "{{ .Config.Labels.version }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_STATUS="$($DOCKER_CMD inspect --format "{{ .State.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_VERSION="$($DOCKER_CMD inspect --format "{{ .Config.Labels.version }}" $DOCKER_CONTAINER 2>/dev/null)"
   if [ -z "$DOCKER_STATUS" ]; then return 0; fi
 
-  DOCKER_CONTAINER_IMAGE_ID="$(docker inspect --format "{{ .Image }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_ID="$(docker inspect --format "{{ .Id }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_IMAGE_ID="$($DOCKER_CMD inspect --format "{{ .Image }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_ID="$($DOCKER_CMD inspect --format "{{ .Id }}" $DOCKER_CONTAINER 2>/dev/null)"
 
   DOCKER_CONTAINER_SHORTID=`echo $DOCKER_CONTAINER_ID | cut -d":" -f2 | cut -c1-12`
   DOCKER_CONTAINER_IMAGE_SHORTID=`echo $DOCKER_CONTAINER_IMAGE_ID | cut -d":" -f2 | cut -c1-12`
 
   if [ -z "$1" ]; then return 0; fi
 
-  DOCKER_CONTAINER_NAME="$(docker inspect --format "{{ .Name }}" $DOCKER_CONTAINER | cut -d/ -f2 2>/dev/null)"
-  DOCKER_CONTAINER_IMAGE="$(docker inspect --format "{{ .Config.Image }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_NAME="$($DOCKER_CMD inspect --format "{{ .Name }}" $DOCKER_CONTAINER | cut -d/ -f2 2>/dev/null)"
+  DOCKER_CONTAINER_IMAGE="$($DOCKER_CMD inspect --format "{{ .Config.Image }}" $DOCKER_CONTAINER 2>/dev/null)"
 
-  DOCKER_CONTAINER_HOSTNAME="$(docker inspect --format "{{ .Config.Hostname }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_DRIVER="$(docker inspect --format "{{ .Driver }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_PLATFORM="$(docker inspect --format "{{ .Platform }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_NETWORKMODE="$(docker inspect --format "{{ .HostConfig.NetworkMode }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_IPAddress="$(docker inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_BUILDTIME="$(docker inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_VOLUMES="$(docker inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
-  DOCKER_CONTAINER_HEALTH="$(docker inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_HOSTNAME="$($DOCKER_CMD inspect --format "{{ .Config.Hostname }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_DRIVER="$($DOCKER_CMD inspect --format "{{ .Driver }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_PLATFORM="$($DOCKER_CMD inspect --format "{{ .Platform }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_NETWORKMODE="$($DOCKER_CMD inspect --format "{{ .HostConfig.NetworkMode }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_BUILDTIME="$($DOCKER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_VOLUMES="$($DOCKER_CMD inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
+  DOCKER_CONTAINER_HEALTH="$($DOCKER_CMD inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
 
-  STARTDATE="$(docker inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_DOMINODOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)"
+  DOCKER_CONTAINER_TRAVELERDOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)" 
+
+  STARTDATE="$($DOCKER_CMD inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_STARTED_AT=`date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE"`
 
   return 0
@@ -267,9 +376,9 @@ docker_inspect_extras ()
   if [ -z "$1" ]; then return 0; fi
 
   if [ "$DOCKER_STATUS" = "running" ]; then 
-    # DOCKER_CONTAINER_OS_VERSION=`docker exec -it $DOCKER_CONTAINER cat /etc/redhat-release`
-    # DOCKER_CONTAINER_OS_KERNEL=`docker exec -it $DOCKER_CONTAINER uname -r`
-    DOCKER_CONTAINER_DOMINO_REV=`docker exec -it $DOCKER_CONTAINER cat /opt/ibm/domino/.install.dat | awk -F '(=| =)' -v SEARCH_STR="rev" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' | cut -d'"' -f2`
+    # DOCKER_CONTAINER_OS_VERSION=`$DOCKER_CMD exec -it $DOCKER_CONTAINER cat /etc/redhat-release`
+    # DOCKER_CONTAINER_OS_KERNEL=`$DOCKER_CMD exec -it $DOCKER_CONTAINER uname -r`
+    DOCKER_CONTAINER_DOMINO_REV=`$DOCKER_CMD exec -it $DOCKER_CONTAINER cat /opt/ibm/domino/.install.dat | awk -F '(=| =)' -v SEARCH_STR="rev" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' | cut -d'"' -f2`
   fi
 }
 
@@ -330,62 +439,68 @@ docker_show_inspect ()
   docker_inspect_extras "$1"
 
   print_delim
-  echo " Status        :  $DOCKER_STATUS"
-  echo " Health        :  $DOCKER_CONTAINER_HEALTH"
-  echo " Started       :  $DOCKER_CONTAINER_STARTED_AT"
-  echo " Name          :  $DOCKER_CONTAINER_NAME"
-  echo " Image         :  $DOCKER_CONTAINER_IMAGE"
+  echo " Status         :  $DOCKER_STATUS"
+  echo " Health         :  $DOCKER_CONTAINER_HEALTH"
+  echo " Started        :  $DOCKER_CONTAINER_STARTED_AT"
+  echo " Name           :  $DOCKER_CONTAINER_NAME"
+  echo " Image          :  $DOCKER_CONTAINER_IMAGE"
 
   if [ "$DOCKER_IMAGE_VERSION" = "$DOCKER_CONTAINER_VERSION" ]; then 
-    echo " Version       :  $DOCKER_IMAGE_VERSION"
+    echo " Version        :  $DOCKER_IMAGE_VERSION"
   else
-    echo " Version CNT   :  $DOCKER_CONTAINER_VERSION"
-    echo " Version IMG   :  $DOCKER_IMAGE_VERSION"
+    echo " Version CNT    :  $DOCKER_CONTAINER_VERSION"
+    echo " Version IMG    :  $DOCKER_IMAGE_VERSION"
   fi
 
-  echo " Image Size    :  $DOCKER_IMAGE_SIZE_MB MB" 
+  echo " Image Size     :  $DOCKER_IMAGE_SIZE_MB MB" 
   echo
-  echo " Domino Ver    :  $DOCKER_IMAGE_DOMINODOCKER_VERSION"
-  echo " Domino Rev    :  $DOCKER_CONTAINER_DOMINO_REV"
+
+  
+  if [ "$DOCKER_CONTAINER_DOMINODOCKER_VERSION" = "$DOCKER_IMAGE_DOMINODOCKER_VERSION" ]; then 
+    echo " Domino Ver     :  $DOCKER_CONTAINER_DOMINODOCKER_VERSION"
+  else
+    echo " Domino Ver CNT :  $DOCKER_CONTAINER_DOMINODOCKER_VERSION"
+    echo " Domino Ver IMG :  $DOCKER_IMAGE_DOMINODOCKER_VERSION"
+  fi
 
   if [ "$DOCKER_IMAGE_BUILDTIME" = "$DOCKER_CONTAINER_BUILDTIME" ]; then 
-    echo " BuildTime     :  $DOCKER_IMAGE_BUILDTIME"
+    echo " BuildTime      :  $DOCKER_IMAGE_BUILDTIME"
   else
-    echo " BuildTime CNT :  $DOCKER_CONTAINER_BUILDTIME"
-    echo " BuildTime IMG :  $DOCKER_IMAGE_BUILDTIME"
+    echo " BuildTime CNT  :  $DOCKER_CONTAINER_BUILDTIME"
+    echo " BuildTime IMG  :  $DOCKER_IMAGE_BUILDTIME"
   fi
   
   if [ ! -z "$DOCKER_CONTAINER_IMAGE_ID" ]; then
 
     echo
-    echo " Hostname      :  $DOCKER_CONTAINER_HOSTNAME"
-    echo " Volumes       :  $DOCKER_CONTAINER_VOLUMES"
-    echo " NetworkMode   :  $DOCKER_CONTAINER_NETWORKMODE"
-    echo " IPAddress     :  $DOCKER_CONTAINER_IPAddress"
+    echo " Hostname       :  $DOCKER_CONTAINER_HOSTNAME"
+    echo " Volumes        :  $DOCKER_CONTAINER_VOLUMES"
+    echo " NetworkMode    :  $DOCKER_CONTAINER_NETWORKMODE"
+    echo " IPAddress      :  $DOCKER_CONTAINER_IPAddress"
     echo
-    echo " Platform      :  $DOCKER_CONTAINER_PLATFORM"
-    echo " Driver        :  $DOCKER_CONTAINER_DRIVER"
-    # echo " Container OS  :  $DOCKER_CONTAINER_OS_VERSION"
-    # echo " Kernel        :  $DOCKER_CONTAINER_OS_KERNEL"
+    echo " Platform       :  $DOCKER_CONTAINER_PLATFORM"
+    echo " Driver         :  $DOCKER_CONTAINER_DRIVER"
+    # echo " Container OS   :  $DOCKER_CONTAINER_OS_VERSION"
+    # echo " Kernel         :  $DOCKER_CONTAINER_OS_KERNEL"
   fi
 
   print_delim
 
-  echo " Container ID  :  $DOCKER_CONTAINER_SHORTID"
+  echo " Container ID   :  $DOCKER_CONTAINER_SHORTID"
   if [ "$DOCKER_IMAGE_ID" = "$DOCKER_CONTAINER_IMAGE_ID" ]; then 
-    echo " Image-ID      :  $DOCKER_IMAGE_SHORTID"
+    echo " Image-ID       :  $DOCKER_IMAGE_SHORTID"
   else
-    echo " Image-ID CNT  :  $DOCKER_CONTAINER_IMAGE_SHORTID"
-    echo " Image-ID IMG  :  $DOCKER_IMAGE_SHORTID"
+    echo " Image-ID CNT   :  $DOCKER_CONTAINER_IMAGE_SHORTID"
+    echo " Image-ID IMG   :  $DOCKER_IMAGE_SHORTID"
   fi
 
   print_delim
 
   if [ ! -z "$DOCKER_CONTAINER_IMAGE_ID" ]; then
 
-    DOCKER_PORTS=`docker port "$DOCKER_CONTAINER"`    
+    DOCKER_PORTS=`$DOCKER_CMD port "$DOCKER_CONTAINER"`    
 
-    echo " Docker Ports  :"
+    echo " Docker Ports   :"
     if [ ! -z "$DOCKER_PORTS" ]; then
       echo "$DOCKER_PORTS" | awk '{print "                  " $0}'
       print_delim
@@ -408,11 +523,11 @@ docker_start ()
   fi
 
   if [ ! -z "$DOCKER_IT" ]; then
-    echo "--- Starting Docker Container interative [ Use Ctrl + p q to exit ] ---"
+    echo "--- Starting Docker Container interactive [ Use Ctrl + p q to exit ] ---"
     echo
   fi
 
-  docker start $DOCKER_IT $DOCKER_CONTAINER
+  $DOCKER_CMD start $DOCKER_IT $DOCKER_CONTAINER
  
   return 0
 }
@@ -423,10 +538,10 @@ docker_stop ()
   if [ "$DOCKER_STATUS" = "exited" ]; then echo "Container [$DOCKER_CONTAINER] already stopped"; return 1; fi
 
   if [ "$PARAM2" = "live" ]; then
-    docker attach $DOCKER_CONTAINER --no-stdin &
+    $DOCKER_CMD attach $DOCKER_CONTAINER --no-stdin &
   fi
 
-  docker stop --time=$DOMINO_SHUTDOWN_TIMEOUT $DOCKER_CONTAINER
+  $DOCKER_CMD stop --time=$DOMINO_SHUTDOWN_TIMEOUT $DOCKER_CONTAINER
 }
 
 docker_logs ()
@@ -435,7 +550,7 @@ docker_logs ()
 
   echo "--- [BEGIN - $DOCKER_CONTAINER - BEGIN] ---"
   echo
-  docker logs $DOCKER_CONTAINER
+  $DOCKER_CMD logs $DOCKER_CONTAINER
   echo
   echo "--- [END - $DOCKER_CONTAINER - END] ---"
 
@@ -458,7 +573,7 @@ docker_build ()
     nginx_start
   fi
 
-  docker build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" -t $DOCKER_IMAGE_NAMEVERSION $DOCKER_TAG_LATEST_CMD -f $DOCKER_FILE --build-arg DownloadFrom=$DOWNLOAD_FROM --build-arg LinuxYumUpdate=$LinuxYumUpdate .
+  $DOCKER_CMD build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" -t $DOCKER_IMAGE_NAMEVERSION $DOCKER_TAG_LATEST_CMD -f $DOCKER_FILE --build-arg DownloadFrom=$DOWNLOAD_FROM --build-arg LinuxYumUpdate=$LinuxYumUpdate .
   echo
 
   if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
@@ -501,18 +616,24 @@ docker_run ()
   fi
 
   if [ ! -z "$DOCKER_IT" ]; then
-    echo "--- Running Docker Container interative [ Use Ctrl + p q to exit ] ---"
+    echo "--- Running Docker Container interactive [ Use Ctrl + p q to exit ] ---"
     echo
     DOCKER_IT="-it"
   else
     DOCKER_IT="-d -it"
   fi
 
-  if [ ! -z "$DOCKER_ENV_FILE" ]; then
-    DOCKER_ENV_FILE_OPTION="--env-file $DOCKER_ENV_FILE"
+  if [ ! -z "$DOCKER_FULL_ENV_FILE" ]; then
+    DOCKER_ENV_FILE_OPTION="--env-file $DOCKER_FULL_ENV_FILE"
+   
+    if [ ! -r "$DOCKER_FULL_ENV_FILE" ]; then
+      echo "Error - Cannot read environment file [$DOCKER_FULL_ENV_FILE]"
+      exit 1
+    fi
+
   fi
 
-  docker run $DOCKER_IT $DOCKER_PORTS -e TZ=Europe/Berlin --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_IMAGE
+  $DOCKER_CMD run $DOCKER_IT $DOCKER_PORTS --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_IMAGE
 
   return 0
 }
@@ -532,7 +653,7 @@ docker_remove ()
     fi
   fi
 
-  docker rm $DOCKER_CONTAINER	
+  $DOCKER_CMD rm $DOCKER_CONTAINER	
   return 0
 }
 
@@ -553,10 +674,10 @@ docker_removeimage ()
 
   # if configured remove latest tag first
   if [ ! -z "$DOCKER_TAG_LATEST" ]; then
-    docker rmi "$DOCKER_TAG_LATEST"
+    $DOCKER_CMD rmi "$DOCKER_TAG_LATEST"
   fi 
 
-  docker rmi "$DOCKER_IMAGE_NAMEVERSION"
+  $DOCKER_CMD rmi "$DOCKER_IMAGE_NAMEVERSION"
 
   return 0
 }
@@ -568,7 +689,7 @@ docker_attach ()
 
   echo "--- Attaching to Docker Container [ Use Ctrl + p q to exit ] ---"
   echo
-  docker attach $DOCKER_CONTAINER
+  $DOCKER_CMD attach $DOCKER_CONTAINER
 
   return 0
 }
@@ -580,7 +701,7 @@ docker_attach ()
 
   echo "--- Attaching to Docker Container [ Use Ctrl + p q to exit ] ---"
   echo
-  docker attach $DOCKER_CONTAINER
+  $DOCKER_CMD attach $DOCKER_CONTAINER
 
   return 0
 }
@@ -630,9 +751,9 @@ docker_bash ()
   echo
 
   if [ "$1" = "root" ]; then
-    docker exec -it --user 0 $DOCKER_CONTAINER /bin/bash
+    $DOCKER_CMD exec -it --user 0 $DOCKER_CONTAINER /bin/bash
   else
-    docker exec -it $DOCKER_CONTAINER /bin/bash
+    $DOCKER_CMD exec -it $DOCKER_CONTAINER /bin/bash
   fi
 
   return 0
@@ -641,6 +762,7 @@ docker_bash ()
 show_version ()
 {
   echo "Nash!Com Docker Script Version $DOCKER_SCRIPT_VERSION"
+  echo "(Running on $DOCKER_ENV_NAME Version $DOCKER_VERSION)" 
   return 0
 }
 
@@ -648,7 +770,7 @@ usage ()
 {
   show_version
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | port | version | help}"
+  echo "Usage: $SCRIPT_NAME { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | env cpcfg | cpenv | port | version | help}"
 
   return 0
 }
@@ -673,12 +795,14 @@ help ()
   echo "update          updates the container if referenced image has changed (stops Domino, stops the container, runs a new image)"
   echo "port            show used tcp/ip ports for container"
   echo "config|cfg      edit configuration"
+  echo "env             edit environment file"
+  echo "cpcfg           copy configuration file to config directory"
+  echo "cpenv           copy environment filei to config directory"
   echo "version         shows script version information"
   echo "help            you already figured out what help does ;-)"
 
   return 0
 }
-
 
 docker_domino_cmd ()
 {
@@ -687,41 +811,80 @@ docker_domino_cmd ()
     return 0
   fi
   
-  docker exec -it $DOCKER_CONTAINER "$1" "$2" "$3" "$4" "$5" "$6"
+  $DOCKER_CMD exec -it $DOCKER_CONTAINER "$1" "$2" "$3" "$4" "$5" "$6"
 
   return 0
 }
 
-get_domino_version ()
+copy_config_file()
 {
-  LOTUS=/opt/ibm/domino
-  DOMINO_INSTALL_DAT=$LOTUS/.install.dat
-
-  if [ -e $DOMINO_INSTALL_DAT ]; then
-
-    find_str=`tail "$DOMINO_INSTALL_DAT" | grep "rev = " | awk -F " = " '{print $2}' | tr -d '"'`
-
-    if [ ! -z "$find_str" ]; then
-      DOMINO_VERSION=$find_str
-
-      if [ "$DOMINO_VERSION" = "10000000" ]; then
-        DOMINO_VERSION=1000
-      fi
-
-      if [ "$DOMINO_VERSION" = "90010" ]; then
-        DOMINO_VERSION=901
-      fi
-
-    else
-      DOMINO_VERSION="UNKNOWN"
-    fi
-  else
-    DOMINO_VERSION="NONE"
+  if [ ! -e "$DOMINO_DOCKER_CFG_DIR" ]; then
+    echo "No config directory configued"
+    return 0
   fi
 
-  return 0
+  NEW_CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
+  if [ -e "$NEW_CONFIG_FILE" ]; then
+    if [ "$1" = "force" ]; then
+      echo "Overwriting Config File [$NEW_CONFIG_FILE]"
+      rm -f "$NEW_CONFIG_FILE"
+    else
+      echo "Config File [$NEW_CONFIG_FILE] already exists!"
+      return 0
+    fi
+  fi
+
+  CONFIG_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
+
+  if [ -e "$CONFIG_TEMPLATE_FILE" ]; then
+    echo "New config file [$CONFIG_TEMPLATE_FILE] -> [$NEW_CONFIG_FILE]"
+
+    mkdir -p "$DOMINO_DOCKER_CFG_DIR"
+    cp "$CONFIG_TEMPLATE_FILE" "$NEW_CONFIG_FILE" 
+
+  else
+    echo "Configuration template [$CONFIG_TEMPLATE_FILE] not found - Using default config -> [$NEW_CONFIG_FILE]"
+    mkdir -p "$DOMINO_DOCKER_CFG_DIR"
+    CONFIG_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/config_domino
+    cp "$CONFIG_TEMPLATE_FILE" "$NEW_CONFIG_FILE" 
+  fi
 }
 
+copy_env_file()
+{
+  if [ ! -e "$DOMINO_DOCKER_CFG_DIR" ]; then
+    echo "No config directory configued"
+    return 0
+  fi
+
+  NEW_ENV_FILE=$DOMINO_DOCKER_CFG_DIR/$DOCKER_ENV_FILE
+  if [ -e "$NEW_ENV_FILE" ]; then
+    if [ "$1" = "force" ]; then
+      echo "Overwriting Domino Environment File [$NEW_ENV_FILE]"
+      rm -f "$NEW_ENV_FILE"
+    else
+      echo "Domino Environment File [$NEW_ENV_FILE] already exists!"
+      return 0
+    fi
+  fi
+
+  ENV_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/$DOCKER_ENV_FILE
+
+  if [ -e "$ENV_TEMPLATE_FILE" ]; then
+    echo "New config file $ENV_TEMPLATE_FILE -> [$NEW_ENV_FILE]"
+
+    mkdir -p "$DOMINO_DOCKER_CFG_DIR"
+    cp "$ENV_TEMPLATE_FILE" "$NEW_ENV_FILE"
+
+  else
+    echo "Configuration template [$ENV_TEMPLATE_FILE] not found - Using default config -> [$NEW_ENV_FILE]"
+    mkdir -p "$DOMINO_DOCKER_CFG_DIR"
+    ENV_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/env_domino
+    cp "$ENV_TEMPLATE_FILE" "$NEW_ENV_FILE"
+  fi
+}
+
+check_docker_environment "$PARAM1"
 docker_inspect_image
 docker_inspect_container
 config_warnings
@@ -795,20 +958,31 @@ case "$PARAM1" in
     docker_domino_cmd domino "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
     ;;
 
-
   port)
-   docker port "$DOCKER_CONTAINER"
+   $DOCKER_CMD port "$DOCKER_CONTAINER"
    ;;
 
   config|cfg)
-    vi $CONFIG_FILE
+    $EDIT_COMMAND "$CONFIG_FILE"
     ;;
 
- dockerfile)
+  cpcfg)
+    copy_config_file "$PARAM2"
+    ;;
+
+  cpenv)
+    copy_env_file "$PARAM2"
+    ;;
+
+  env)
+    $EDIT_COMMAND "$DOCKER_FULL_ENV_FILE"
+    ;;
+
+  dockerfile)
     if [ -z $DOCKER_FILE ]; then
       echo "No dockerfile configured"
     else
-      vi $DOCKER_FILE
+      $EDIT_COMMAND $DOCKER_FILE
     fi
     ;;
 

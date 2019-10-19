@@ -41,14 +41,27 @@ if [ ! -z "$CUSTOM_VER" ]; then
   PROD_VER=$CUSTOM_VER
 fi
 
-DOCKER_IMAGE_NAME="ibmcom/$PROD_NAME"
-DOCKER_IMAGE_VERSION=$PROD_VER
-DOCKER_FILE=dockerfile
+case "$PROD_VER" in
+  9*|10*)
+    DOCKER_IMAGE_NAME="ibmcom/$PROD_NAME"
+    COMPANY=IBM
+    ;;
+  *)
+    DOCKER_IMAGE_NAME="hclcom/$PROD_NAME"
+    COMPANY=HCL
+    ;;
+esac
 
-# Latest Tag not set when specifying explicit version
+DOCKER_IMAGE_VERSION=$PROD_VER$PROD_EXT
 
-if [ "$TAG_LATEST" = "yes" ]; then
-  DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
+if [ -z "$DOCKER_FILE" ]; then
+  DOCKER_FILE=dockerfile
+fi
+
+# Set default or custom LATEST tag
+
+if [ ! -z "$TAG_LATEST" ]; then
+  DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:$TAG_LATEST"
 fi
 
 usage ()
@@ -80,6 +93,86 @@ print_runtime()
   else echo "Completed in $seconds second$s"; fi
 }
 
+check_version ()
+{
+  count=1
+
+  while true
+  do
+    VER=`echo $1|cut -d"." -f $count`
+    CHECK=`echo $2|cut -d"." -f $count`
+
+    if [ -z "$VER" ]; then return 0; fi
+    if [ -z "$CHECK" ]; then return 0; fi
+
+    if [ $VER -gt $CHECK ]; then return 0; fi
+    if [ $VER -lt $CHECK ]; then
+      echo "Warning: Unsupported $3 version $1 - Must be at least $2 !"
+      sleep 1
+      return 1
+    fi
+
+    count=`expr $count + 1`
+  done
+
+  return 0
+}
+
+check_docker_environment()
+{
+  DOCKER_MINIMUM_VERSION="18.09.0"
+  PODMAN_MINIMUM_VERSION="1.5.0"
+
+  if [ -x /usr/bin/podman ]; then
+    # podman environment detected
+    DOCKER_CMD=podman
+    DOCKER_ENV_NAME=Podman
+    DOCKER_VERSION_STR=`podman -v`
+    DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
+    check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
+    return 0
+  fi
+
+  if [ -z "$DOCKERD_NAME" ]; then
+    DOCKERD_NAME=dockerd
+  fi
+
+  if [ -z "$DOCKER_CMD" ]; then
+    DOCKER_CMD=docker
+  fi
+
+  DOCKER_ENV_NAME=Docker
+
+  # check docker environment
+  DOCKER_VERSION_STR=`docker -v`
+  DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3|cut -d"," -f1`
+
+  check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$DOCKER_CMD"
+
+  DOCKERD_PROCESS=`ps -ef|grep "$DOCKERD_NAME"| grep -v grep`
+
+  if [ -z "$DOCKERD_PROCESS" ]; then
+    echo
+    echo "Fatal: 'dockerd' not started!"
+    echo
+    exit 1
+  fi
+
+ # Use sudo for docker command if not root
+
+  if [ "$EUID" = "0" ]; then
+    return 0
+  fi
+
+  if [ "$DOCKER_USE_SUDO" = "no" ]; then
+    return 0
+  fi
+
+  DOCKER_CMD="sudo $DOCKER_CMD"
+
+  return 0
+}
+
 docker_build ()
 {
   echo "Building Image : " $IMAGENAME
@@ -97,7 +190,7 @@ docker_build ()
 
   case "$PROD_NAME" in
     traveler)
-      DOCKER_DESCRIPTION="IBM Traveler"
+      DOCKER_DESCRIPTION="$COMPANY Traveler"
       ;;
 
     *)
@@ -119,8 +212,10 @@ docker_build ()
   CURRENT_DIR=`dirname $SCRIPT_NAME`
   cd $CURRENT_DIR
 
+  DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
+
   # Finally build the image
-  docker build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
+  $DOCKER_CMD build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
     --label "TravelerDocker.description"="$DOCKER_DESCRIPTION" \
     --label "TravelerDocker.version"="$DOCKER_IMAGE_VERSION" \
     --label "TravelerDocker.buildtime"="$BUILDTIME" -t \
@@ -144,6 +239,7 @@ if [ -z "$DOWNLOAD_FROM" ]; then
   exit 0
 fi
 
+check_docker_environment
 docker_build
 
 echo

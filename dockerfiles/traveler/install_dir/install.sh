@@ -27,8 +27,10 @@ export DOMDOCK_SCRIPT_DIR=/domino-docker
 if [ -z "$LOTUS" ]; then
   if [ -x /opt/hcl/domino/bin/server ]; then
     export LOTUS=/opt/hcl/domino
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_hcl.properties
   else
     export LOTUS=/opt/ibm/domino
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_ibm.properties
   fi
 fi
 
@@ -47,7 +49,8 @@ INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
 WGET_COMMAND="wget --connect-timeout=10 --tries=1"
 
-TRAVELER_STRING_OK="Installation completed with warnings."
+TRAVELER_STRING_OK="Installation completed successfully."
+TRAVELER_STRING_WARNINGS="Installation completed with warnings."
 INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 
 pushd()
@@ -168,8 +171,9 @@ download_file_ifpresent ()
 
 download_and_check_hash ()
 {
-  DOWNLOAD_FILE=$1
-  TARGET_DIR=$2
+  DOWNLOAD_SERVER=$1
+  DOWNLOAD_STR=$2
+  TARGET_DIR=$3
 
   if [ -z "$DOWNLOAD_FILE" ]; then
     log_error "No download file specified!"
@@ -178,9 +182,20 @@ download_and_check_hash ()
 
   # check if file exists before downloading
 
-  WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-  if [ -z "$WGET_RET_OK" ]; then
-    log_error "File [$DOWNLOAD_FILE] does not exist"
+  for CHECK_FILE in `echo "$DOWNLOAD_STR" | tr "," "\n"` ; do
+
+    DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
+    WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
+
+    if [ ! -z "$WGET_RET_OK" ]; then
+      CURRENT_FILE="$CHECK_FILE"
+      FOUND=TRUE
+      break
+    fi
+  done
+
+  if [ ! "$FOUND" = "TRUE" ]; then
+    log_error "File [$DOWNLOAD_SERVER/$DOWNLOAD_STR] does not exist"
     exit 1
   fi
 
@@ -249,6 +264,87 @@ download_and_check_hash ()
 
   popd
   return 0
+}
+
+check_binary_busy()
+{
+  if [ ! -e "$1" ]; then
+    return 0
+  fi
+
+  TARGET_REAL_BIN=`readlink -f $1`
+  FOUND_TARGETS=`lsof | awk '{print $9}' | grep "$TARGET_REAL_BIN"`
+
+  if [ -n "$FOUND_TARGETS" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+check_file_busy()
+{
+  if [ ! -e "$1" ]; then
+    return 0
+  fi
+
+  TARGET_REAL_BIN=`readlink -f $1`
+  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
+
+  if [ -n "$FOUND_TARGETS" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+install_file()
+{
+  SOURCE_FILE=$1
+  TARGET_FILE=$2
+  OWNER=$3
+  GROUP=$4
+  PERMS=$5
+
+  if [ ! -r "$SOURCE_FILE" ]; then
+    echo "[$SOURCE_FILE] Can not read source file"
+    return 1
+  fi
+
+  if [ -e "$TARGET_FILE" ]; then
+
+    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
+    if [ $? -eq 0 ]; then
+      echo "[$TARGET_FILE] File did not change -- No update needed"
+      return 0
+    fi
+
+    if [ ! -w "$TARGET_FILE" ]; then
+      echo "[$TARGET_FILE] Can not update binary -- No write permissions"
+      return 1
+    fi
+
+    check_file_busy "$TARGET_FILE"
+
+    if [ $? -eq 1 ]; then
+      echo "[$TARGET_FILE] Error - Can not update file -- Binary in use"
+      return 1
+    fi
+  fi
+  
+  cp -f "$SOURCE_FILE" "$TARGET_FILE"
+ 
+  if [ ! -z "$OWNER" ]; then
+    chown $OWNER:$GROUP "$TARGET_FILE"
+  fi
+
+  if [ ! -z "$PERMS" ]; then
+    chmod "$PERMS" "$TARGET_FILE"
+  fi
+
+  echo "[$TARGET_FILE] copied"
+
+  return 2
 }
 
 check_binary_busy()
@@ -569,7 +665,7 @@ install_traveler ()
 
   if [ ! -z "$INST_VER" ]; then
     get_download_name $PROD_NAME $INST_VER
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME traveler
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" traveler
   else
     log_error "No Target Version specified"
     exit 1
@@ -591,9 +687,10 @@ install_traveler ()
 
   header "Running Traveler silent install"
 
-  ./silentInstall > $INST_TRAVELER_LOG
 
-  cp $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log $DOMDOCK_LOG_DIR
+  ./TravelerSetup -f $TRAVELER_INSTALLER_PROPERTIES -i SILENT -l en > $INST_TRAVELER_LOG
+
+  cp -f $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log $DOMDOCK_LOG_DIR
 
   check_file_str "$INST_TRAVELER_LOG" "$TRAVELER_STRING_OK"
 
@@ -603,12 +700,19 @@ install_traveler ()
 
   else
 
-    print_delim
-    cat $INST_TRAVELER_LOG
-    print_delim
+    check_file_str "$INST_TRAVELER_LOG" "$TRAVELER_STRING_WARNINGS"
 
-    log_error "Traveler Installation failed!!!"
-    exit 1
+    if [ "$?" = "1" ]; then
+      echo
+      log_ok "$PROD_NAME $INST_VER installed successfully (with warnings)"
+    else
+      print_delim
+      cat $INST_TRAVELER_LOG
+      print_delim
+
+      log_error "Traveler Installation failed!!!"
+      exit 1
+    fi
   fi
 
   popd
@@ -631,7 +735,7 @@ install_proton ()
 
   if [ ! -z "$INST_VER" ]; then
     get_download_name $PROD_NAME $INST_VER
-    download_and_check_hash $DownloadFrom/$DOWNLOAD_NAME 
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME"
   else
     log_error "No Target Version specified"
     exit 1
@@ -732,7 +836,8 @@ case "$PROD_NAME" in
 
   traveler)
     cd $DOMINO_DATA_PATH
-    tar -czf $DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz traveler domino/workspace notes.ini ${PROD_NAME}_ver.txt
+    tar -czf $DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz traveler domino/workspace ${PROD_NAME}_ver.txt
+    cp -f $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
     cd /
     remove_directory $DOMINO_DATA_PATH
     create_directory $DOMINO_DATA_PATH notes notes 770

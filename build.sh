@@ -26,6 +26,7 @@ SCRIPT_NAME=$0
 TARGET_IMAGE=$1
 
 TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
+EDIT_COMMAND=vi
 
 # (Default) NIGX is used hosting software from the local "software" directory.
 # (Optional) Configure software download location.
@@ -42,8 +43,13 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
+# Default config directory. Can be overwritten by environment
+if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
+  DOMINO_DOCKER_CFG_DIR=/local/cfg
+fi
+
 # External configuration
-CONFIG_FILE=/local/cfg/build_config
+CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/build_config
 
 # use a config file if present
 if [ -e "$CONFIG_FILE" ]; then
@@ -51,37 +57,85 @@ if [ -e "$CONFIG_FILE" ]; then
   . $CONFIG_FILE
 fi
 
+
+
+if [ -z "$DOCKER_CMD" ]; then
+
+  if [ -x /usr/bin/podman ]; then
+    DOCKER_CMD=podman
+
+  else
+    DOCKER_CMD=docker
+
+    # Use sudo for docker command if not root
+
+    if [ "$EUID" = "0" ]; then
+      return 0
+    fi
+
+    if [ "$DOCKER_USE_SUDO" = "no" ]; then
+      return 0
+    fi
+
+    DOCKER_CMD="sudo $DOCKER_CMD"
+  fi
+fi
+
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler | proton } version fp hf"
+  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler } version fp hf"
   echo
   echo "-checkonly      checks without build"
   echo "-verifyonly     checks download file checksum without build"
   echo "-(no)check      checks if files exist (default: yes)"
   echo "-(no)verify     checks downloaded file checksum (default: no)"
-  echo "-(no)url        shows all download URLs (default: no)"
-  echo "-(no)linuxupd   updates CentOS while building image (default: yes)"
+  echo "-(no)url        shows all download URLs, even if file is downloaded (default: no)"
+  echo "-(no)linuxupd   updates container Linux  while building image (default: yes)"
+  echo "cfg|config      edits config file (either in current directory or if created in /local/cfg)"
+  echo "cpcfg           copies the config file to config directory (default: /local/cfg/build_config)"
   echo
-  echo "Example: `basename $SCRIPT_NAME` domino 10.0.1 fp2"
+  echo "Examples:"
+  echo
+  echo "  `basename $SCRIPT_NAME` domino 10.0.1 fp3"
+  echo "  `basename $SCRIPT_NAME` traveler 10.0.1.2"
   echo
 
   return 0
 }
 
+
+print_delim ()
+{
+  echo "--------------------------------------------------------------------------------"
+}
+
+header ()
+{
+  echo
+  print_delim
+  echo "$1"
+  print_delim
+  echo
+}
+
 dump_config ()
 {
-  return 0
+  header "Build Configuration"
   echo "DOWNLOAD_FROM      : [$DOWNLOAD_FROM]"
   echo "SOFTWARE_DIR       : [$SOFTWARE_DIR]"
   echo "PROD_NAME          : [$PROD_NAME]"
   echo "PROD_VER           : [$PROD_VER]"
   echo "PROD_FP            : [$PROD_FP]"
   echo "PROD_HF            : [$PROD_HF]"
+  echo "PROD_EXT           : [$PROD_EXT]"
   echo "CHECK_SOFTWARE     : [$CHECK_SOFTWARE]"
   echo "CHECK_HASH         : [$CHECK_HASH]"
   echo "DOWNLOAD_URLS_SHOW : [$DOWNLOAD_URLS_SHOW]"
+  echo "TAG_LATEST         : [$TAG_LATEST]"
+  echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
+  echo 
   return 0
 }
 
@@ -90,19 +144,19 @@ nginx_start ()
   # Create a nginx container hosting software download locally
 
   # Check if we already have this container in status exited
-  STATUS="$(docker inspect --format '{{ .State.Status }}' $SOFTWARE_CONTAINER 2>/dev/null)"
+  STATUS="$($DOCKER_CMD inspect --format '{{ .State.Status }}' $SOFTWARE_CONTAINER 2>/dev/null)"
 
   if [ -z "$STATUS" ]; then
     echo "Creating Docker container: $SOFTWARE_CONTAINER hosting [$SOFTWARE_DIR]"
-    docker run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
+    $DOCKER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
   elif [ "$STATUS" = "exited" ]; then
     echo "Starting existing Docker container: $SOFTWARE_CONTAINER"
-    docker start $SOFTWARE_CONTAINER
+    $DOCKER_CMD start $SOFTWARE_CONTAINER
   fi
 
   echo "Starting Docker container: $SOFTWARE_CONTAINER"
   # Start local nginx container to host SW Repository
-  SOFTWARE_REPO_IP="$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $SOFTWARE_CONTAINER 2>/dev/null)"
+  SOFTWARE_REPO_IP="$($DOCKER_CMD inspect --format '{{ .NetworkSettings.IPAddress }}' $SOFTWARE_CONTAINER 2>/dev/null)"
   if [ -z "$SOFTWARE_REPO_IP" ]; then
     echo "Unable to locate software repository."
   else
@@ -115,8 +169,8 @@ nginx_start ()
 nginx_stop ()
 {
   # Stop and remove SW repository
-  docker stop $SOFTWARE_CONTAINER
-  docker container rm $SOFTWARE_CONTAINER
+  $DOCKER_CMD stop $SOFTWARE_CONTAINER
+  $DOCKER_CMD container rm $SOFTWARE_CONTAINER
   echo "Stopped & Removed Software Repository Container"
   echo
 }
@@ -167,6 +221,17 @@ get_current_version ()
   return 0
 }
 
+copy_config_file()
+{
+  if [ -e "$CONFIG_FILE" ]; then
+    echo "Config File [$CONFIG_FILE] already exists!"
+    return 0
+  fi
+
+  mkdir -p $DOMINO_DOCKER_CFG_DIR 
+  cp sample_build_config $CONFIG_FILE
+}
+
 WGET_COMMAND="wget --connect-timeout=20"
 
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
@@ -190,7 +255,7 @@ for a in $@; do
       PROD_VER=$p
       ;;
 
-    10*|11*)
+    9*|10*|11*)
       PROD_VER=$p
       ;;
 
@@ -200,6 +265,29 @@ for a in $@; do
 
     hf*|if*)
       PROD_HF=$p
+      ;;
+
+    _*)
+      PROD_EXT=$a
+      ;;
+
+    # special for other latest tags
+    latest*)
+      TAG_LATEST=$a
+      ;;
+
+    dockerfile*)
+      DOCKER_FILE=$a
+      ;;
+
+    cfg|config)
+      $EDIT_COMMAND $CONFIG_FILE
+      exit 0
+      ;;
+
+    cpcfg)
+      copy_config_file
+      exit 0
       ;;
 
     -checkonly)
@@ -293,7 +381,9 @@ if [ "$PROD_VER" = "latest" ]; then
   echo "Product to install: $PROD_NAME $PROD_VER $PROD_FP $PROD_HF"
   echo
   
-  export TAG_LATEST="yes"
+  if [ -z "$TAG_LATEST" ]; then
+    TAG_LATEST="latest"
+  fi
 fi
 
 if [ "$CHECK_SOFTWARE" = "yes" ]; then
@@ -344,8 +434,20 @@ if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
   nginx_start
 fi
 
+export DOWNLOAD_FROM
+export SOFTWARE_DIR
+export PROD_NAME
+export PROD_VER
+export PROD_FP
+export PROD_HF
+export PROD_EXT
+export CHECK_SOFTWARE
+export CHECK_HASH
+export DOWNLOAD_URLS_SHOW
 export LinuxYumUpdate
 export DominoMoveInstallData
+export TAG_LATEST
+export DOCKER_FILE
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 
