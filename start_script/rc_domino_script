@@ -169,6 +169,10 @@ if [ -z "$DOMINO_SYSTEMD_NAME" ]; then
   DOMINO_SYSTEMD_NAME=domino.service
 fi
 
+# -- by default use server -c ... to send server command  --
+if [ -z "$DOMINO_CONSOLE_SERVERC" ]; then
+  DOMINO_CONSOLE_SERVERC =yes
+fi
 
 # --- End of special configuration parameters ---
 
@@ -1444,7 +1448,12 @@ run_monitor ()
       stop_monitor
       return 0
     else
-      echo "$var" >> $DOMINO_INPUT_FILE
+      if [ "$DOMINO_CONSOLE_SERVERC" = "yes" ]; then
+        cd "$DOMINO_DATA_PATH"
+        $DOMINO_BIN -c "$var"
+      else
+        echo "$var" >> $DOMINO_INPUT_FILE
+      fi
     fi
   done
 

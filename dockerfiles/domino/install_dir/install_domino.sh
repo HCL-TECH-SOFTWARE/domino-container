@@ -781,6 +781,42 @@ docker_set_timezone ()
   return 0
 }
 
+yum_glibc_lang_update()
+{
+ # on CentOS/RHEL 7 the locale is not containing all langauges
+ # removing override_install_langs from /etc/yum.conf and reinstalling glibc-common
+ # reinstall does only work if package is up to date
+
+
+  local STR="override_install_langs="
+  local FILE="/etc/yum.conf"
+
+  FOUND=`grep "$STR" "$FILE"`
+
+  if [ -z "$FOUND" ]; then
+    return 0
+  fi
+
+  grep -v -i "$STR" "$FILE" > "$FILE.updated"
+  mv "$FILE.updated" "$FILE"
+
+  echo
+  echo Updating glibc locale ...
+  echo
+
+
+  if [ "$LinuxYumUpdate" = "yes" ]; then
+    # packages have been already updated, just need reinstall
+    yum reinstall -y glibc-common
+  else  
+    # update first before reinstall
+    yum update -y glibc-common
+    yum reinstall -y glibc-common
+  fi
+
+  return 0
+}
+
 # --- Main Install Logic ---
 
 header "Environment Setup"
@@ -802,6 +838,8 @@ if [ "$LinuxYumUpdate" = "yes" ]; then
   header "Updating CentOS via yum"
   yum update -y
 fi
+
+yum_glibc_lang_update
 
 # This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
 if [ -e $LOTUS ]; then
