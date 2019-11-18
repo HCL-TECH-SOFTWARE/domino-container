@@ -771,7 +771,7 @@ help ()
   usage
   echo
   echo "build           builds a current image -- even image tags might not have changed to ensure OS patches are installed"
-  echo "run [live]      runs a container -- will initiate a container if not present ('live' shows start script output, alias 'runit')"
+  echo "run   [live]    runs a container -- will initiate a container if not present ('live' shows start script output, alias 'runit')"
   echo "start [live]    start an existing container (the 'live' option shows start script output)"
   echo "stop  [live]    stops container (the 'live' option shows start script output)"
   echo "status          shows container status (running, exited, notexisting)"
@@ -780,7 +780,7 @@ help ()
   echo "logs            shows container logs (output from entry point script/start script)"
   echo "attach          attach to entry point script"
   echo "domino          pass a command to start script (e.g. domino nsd)"
-  echo "bash            invokes a bash in the running container"
+  echo "bash [root]     invokes a bash in the running container. optionally run as root instead of notes user"
   echo "remove|rm       removes the container (if not running)"
   echo "removeimage|rmi removes the current container (you have to remove the container first)"
   echo "update          updates the container if referenced image has changed (stops Domino, stops the container, runs a new image)"
