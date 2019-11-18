@@ -1448,11 +1448,13 @@ run_monitor ()
       stop_monitor
       return 0
     else
-      if [ "$DOMINO_CONSOLE_SERVERC" = "yes" ]; then
-        cd "$DOMINO_DATA_PATH"
-        $DOMINO_BIN -c "$var"
-      else
-        echo "$var" >> $DOMINO_INPUT_FILE
+      if [ ! -z "$var" ]; then
+        if [ "$DOMINO_CONSOLE_SERVERC" = "yes" ]; then
+          cd "$DOMINO_DATA_PATH"
+          $DOMINO_BIN -c "$var"
+        else
+          echo "$var" >> $DOMINO_INPUT_FILE
+        fi
       fi
     fi
   done

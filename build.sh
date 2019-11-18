@@ -70,11 +70,11 @@ if [ -z "$DOCKER_CMD" ]; then
     # Use sudo for docker command if not root
 
     if [ "$EUID" = "0" ]; then
-      return 0
+      exit 0
     fi
 
     if [ "$DOCKER_USE_SUDO" = "no" ]; then
-      return 0
+      exit 0
     fi
 
     DOCKER_CMD="sudo $DOCKER_CMD"

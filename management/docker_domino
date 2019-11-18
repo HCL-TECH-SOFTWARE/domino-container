@@ -761,7 +761,7 @@ usage ()
 {
   show_version
   echo
-  echo "Usage: $SCRIPT_NAME { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | env cpcfg | cpenv | port | version | help}"
+  echo "Usage: $SCRIPT_NAME { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | env | cpcfg | cpenv | port | version | help}"
 
   return 0
 }
