@@ -35,14 +35,13 @@ DOCKER_IMAGE_NAME=nashcom/domino
 DOCKER_IMAGE_VERSION=10.0.0
 DOCKER_IMAGE_RELEASE_DATE=2019-01-01
 DOCKER_FILE=dockerfile_domino
-#DOCKER_SPECIAL_OPTIONS="--ip=172.17.0.11"
 
-DOCKER_HOSTNAME=nsh-domino
 DOMINO_SHUTDOWN_TIMEOUT=60
-# DOCKER_NETWORK=--network=host
+DOCKER_HOSTNAME=nsh-domino
+# DOCKER_NETWORK_NAME=host
+# DOCKER_SPECIAL_OPTIONS="--ip 172.17.0.1"
 DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 DOCKER_VOLUMES="-v notesdata:/local/notesdata"
-#DOCKER_SPECIAL_OPTIONS="--ip 172.17.0.1"
 
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_domino
@@ -349,8 +348,16 @@ docker_inspect_container ()
   DOCKER_CONTAINER_HOSTNAME="$($DOCKER_CMD inspect --format "{{ .Config.Hostname }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_DRIVER="$($DOCKER_CMD inspect --format "{{ .Driver }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_PLATFORM="$($DOCKER_CMD inspect --format "{{ .Platform }}" $DOCKER_CONTAINER 2>/dev/null)"
+
+
   DOCKER_CONTAINER_NETWORKMODE="$($DOCKER_CMD inspect --format "{{ .HostConfig.NetworkMode }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+
+  if [ -z "$DOCKER_NETWORK_NAME" ]; then
+    DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+  else
+    DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.Networks.$DOCKER_NETWORK_NAME.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+  fi
+
   DOCKER_CONTAINER_BUILDTIME="$($DOCKER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_VOLUMES="$($DOCKER_CMD inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
   DOCKER_CONTAINER_HEALTH="$($DOCKER_CMD inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
@@ -614,6 +621,14 @@ docker_run ()
     DOCKER_IT="-it"
   else
     DOCKER_IT="-d -it"
+  fi
+
+
+  if [ -z "$DOCKER_NETWORK" ]; then
+   
+    if [ ! -z "$DOCKER_NETWORK_NAME" ]; then
+      DOCKER_NETWORK="--network=$DOCKER_NETWORK_NAME"       
+    fi
   fi
 
   if [ ! -z "$DOCKER_FULL_ENV_FILE" ]; then
