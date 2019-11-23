@@ -74,10 +74,9 @@ if [ -z "$DOCKER_CMD" ]; then
           echo "Docker needs root permissions on Linux!"
           exit 1
         fi
+        DOCKER_CMD="sudo $DOCKER_CMD"
       fi
     fi
-
-    DOCKER_CMD="sudo $DOCKER_CMD"
   fi
 fi
 
