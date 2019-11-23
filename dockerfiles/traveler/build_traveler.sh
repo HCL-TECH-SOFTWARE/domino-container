@@ -149,17 +149,22 @@ check_docker_environment()
 
   check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$DOCKER_CMD"
 
- # Use sudo for docker command if not root
+  if [ -z "$DOCKER_CMD" ]; then
 
-  if [ "$EUID" = "0" ]; then
-    return 0
+    DOCKER_CMD=docker
+
+    # Use sudo for docker command if not root on Linux
+
+    if [ `uname` = "Linux" ]; then
+      if [ ! "$EUID" = "0" ]; then
+        if [ "$DOCKER_USE_SUDO" = "no" ]; then
+          echo "Docker needs root permissions on Linux!"
+          exit 1
+        fi
+        DOCKER_CMD="sudo $DOCKER_CMD"
+      fi
+    fi
   fi
-
-  if [ "$DOCKER_USE_SUDO" = "no" ]; then
-    return 0
-  fi
-
-  DOCKER_CMD="sudo $DOCKER_CMD"
 
   return 0
 }
