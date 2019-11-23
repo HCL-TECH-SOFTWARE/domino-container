@@ -58,7 +58,6 @@ if [ -e "$CONFIG_FILE" ]; then
 fi
 
 
-
 if [ -z "$DOCKER_CMD" ]; then
 
   if [ -x /usr/bin/podman ]; then
@@ -67,14 +66,15 @@ if [ -z "$DOCKER_CMD" ]; then
   else
     DOCKER_CMD=docker
 
-    # Use sudo for docker command if not root
+    # Use sudo for docker command if not root on Linux
 
-    if [ "$EUID" = "0" ]; then
-      exit 0
-    fi
-
-    if [ "$DOCKER_USE_SUDO" = "no" ]; then
-      exit 0
+    if [ `uname` = "Linux" ]; then
+      if [ ! "$EUID" = "0" ]; then
+        if [ "$DOCKER_USE_SUDO" = "no" ]; then
+          echo "Docker needs root permissions on Linux!"
+          exit 1
+        fi
+      fi
     fi
 
     DOCKER_CMD="sudo $DOCKER_CMD"
