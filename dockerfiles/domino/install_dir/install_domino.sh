@@ -948,11 +948,18 @@ find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
 find $DOMINO_DATA_PATH/domino/html -name "*.dll" -exec rm -rf {} \;
 find $DOMINO_DATA_PATH/domino/html -name "*.msi" -exec rm -rf {} \;
 
-remove_directory $DOMINO_DATA_PATH/domino/html/download/filesets
-remove_directory $DOMINO_DATA_PATH/domino/html/help
+remove_directory "$DOMINO_DATA_PATH/domino/html/download/filesets"
+remove_directory "$DOMINO_DATA_PATH/domino/html/help"
 
-# Remove uninstaller --> we never uninstall but rebuild from scratch
-remove_directory $Notes_ExecDirectory/_uninst
+# Remove Domino 10 and earlier uninstaller --> we never uninstall but rebuild from scratch
+remove_directory "$Notes_ExecDirectory/_uninst"
+
+
+# Remove Domino 11 and  higher uninstaller --> we never uninstall but rebuild from scratch
+remove_directory "$Notes_ExecDirectory/_HCL Domino_installation"
+
+# Domino 11 uses InstallAnywhere, which has it's own install JRE (see above)
+remove_directory "$Notes_ExecDirectory/jre"
 
 # Create missing links
 
@@ -960,7 +967,7 @@ create_startup_link kyrtool
 create_startup_link dbmt
 install_res_links
 
-remove_file $LOTUS/notes/latest/linux/tunekrnl
+remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 
 # Ensure permissons are set correctly for data directory
 chown -R notes:notes $DOMINO_DATA_PATH
