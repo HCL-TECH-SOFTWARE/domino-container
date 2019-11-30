@@ -13,7 +13,7 @@ To build the latest available image
 The process will perform all required actions to create the image in the version requested. Usually it takes less than 5 minutes to build the image.
 
 Other options available:
-* ```build domion-ce``` - Domino Server Community Edition
+* ```build domino-ce``` - Domino Server Community Edition
 * ```build traveler``` - Traveler on Domino
 
 ## How to use this image
