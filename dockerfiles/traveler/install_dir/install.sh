@@ -234,7 +234,7 @@ download_and_check_hash ()
   else
     if [ -e $SOFTWARE_FILE ]; then
       HASH=`$WGET_COMMAND -qO- $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1`
-      FOUND=`grep $HASH $SOFTWARE_FILE | wc -l`
+      FOUND=`grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l`
 
       if [ "$FOUND" = "1" ]; then
         log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
