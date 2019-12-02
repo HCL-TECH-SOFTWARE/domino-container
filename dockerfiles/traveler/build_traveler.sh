@@ -137,10 +137,6 @@ check_docker_environment()
     DOCKERD_NAME=dockerd
   fi
 
-  if [ -z "$DOCKER_CMD" ]; then
-    DOCKER_CMD=docker
-  fi
-
   DOCKER_ENV_NAME=Docker
 
   # check docker environment
