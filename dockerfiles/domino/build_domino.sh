@@ -172,7 +172,7 @@ check_docker_environment()
     # podman environment detected
     DOCKER_CMD=podman
     DOCKER_ENV_NAME=Podman
-    DOCKER_VERSION_STR=`podman -v`
+    DOCKER_VERSION_STR=`podman version | head -1`
     DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
     check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
     return 0
