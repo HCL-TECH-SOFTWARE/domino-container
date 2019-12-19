@@ -171,7 +171,7 @@ fi
 
 # -- by default use server -c ... to send server command  --
 if [ -z "$DOMINO_CONSOLE_SERVERC" ]; then
-  DOMINO_CONSOLE_SERVERC =yes
+  DOMINO_CONSOLE_SERVERC="yes"
 fi
 
 # --- End of special configuration parameters ---
@@ -180,14 +180,6 @@ fi
 if [ `uname` = AIX ]; then
   LARCH=ibmpow
   PLATFORM_NAME=AIX
-elif [ `uname` = SunOS ]; then
-  if [ `uname -p` = sparc ]; then
-    LARCH=sunspa
-    PLATFORM_NAME=Solaris
-  else
-    LARCH=sunx86
-    PLATFORM_NAME=Solaris/x86
-  fi
 elif [ `uname` = Linux ]; then
   LARCH=linux
   UNAME=`uname -m`
@@ -1380,12 +1372,21 @@ pre_status_operations()
 
 run_monitor ()
 {
+  CONTROLLER_FILE=""
   if [ "$DOMINO_USE_JAVA_CONTROLLER" = "yes" ]; then
-    echo "Warning: Monitor and live operations cannot be used in combination with server controller"
+    #echo "Warning: Monitor and live operations cannot be used in combination with server controller"
+
+    get_notes_ini_var "$DOMINO_INI_PATH" "DominoControllerCurrentLog"
+    DebugText "DominoControllerCurrentLog = '$ret_ini_var'"
+    echo  "DominoControllerCurrentLog = $DominoControllerCurrentLog"
+    CONTROLLER_FILE=$ret_ini_var
+    TAIL_FILE=$DOMINO_DATA_PATH/$CONTROLLER_FILE
+  else
+    TAIL_FILE=$DOMINO_OUTPUT_LOG
   fi
 
-  if [ ! -r $DOMINO_OUTPUT_LOG ]; then
-    errmsg_and_exit "Cannot read server-log ($DOMINO_OUTPUT_LOG) - exiting"
+  if [ ! -r "$TAIL_FILE" ]; then
+    errmsg_and_exit "Cannot read server-log ($TAIL_FILE) - exiting"
   fi
 
   if [ ! -w $DOMINO_INPUT_FILE ]; then
@@ -1414,9 +1415,9 @@ run_monitor ()
   DebugText "FILTER_STRING:" [$FILTER_STRING]
 
   if [ -z "$FILTER_STRING" ]; then
-    $TAIL_CMD -f $DOMINO_OUTPUT_LOG &
+    $TAIL_CMD -f $TAIL_FILE &
   else
-    $TAIL_CMD -f $DOMINO_OUTPUT_LOG | grep -v -E "$FILTER_STRING" &
+    $TAIL_CMD -f $TAIL_FILE | grep -v -E "$FILTER_STRING" &
   fi
 
   MONITOR_PID=$!
