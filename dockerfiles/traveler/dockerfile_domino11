@@ -15,7 +15,7 @@
 #                                                                          #
 ############################################################################
   
-FROM hclcom/domino:11.0.0.BETA2
+FROM hclcom/domino:11.0.0
 
 # Headers
 LABEL DominoDocker.maintainer="thomas.hampel@de.ibm.com, daniel.nashed@nashcom.de"
