@@ -868,8 +868,8 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Set security limits for pam modules (su needs it)
   echo >> /etc/security/limits.conf
   echo '# -- Begin Changes Domino --' >> /etc/security/limits.conf
-  echo 'notes soft nofile 60000' >> /etc/security/limits.conf
-  echo 'notes hard nofile 60000' >> /etc/security/limits.conf
+  echo 'notes soft nofile 65535' >> /etc/security/limits.conf
+  echo 'notes hard nofile 65535' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
  
   create_directory $DOMDOCK_DIR notes notes 770
