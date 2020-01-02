@@ -3,9 +3,9 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.3.0 17.07.2019                                                #
+# Version 3.3.0 01.01.2020                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -1427,21 +1427,32 @@ run_monitor ()
   # avoid expansion of wildcards like star
   set -f 
 
+  var=dummy
   while true
   do
+    lastvar=$var
     var="PIPE-DEAD"
     read var
-
+    
     if [ "$var" = "PIPE-DEAD" ]; then
-      echo "Terminating monitor - Input Pipe is dead!"
+      echo "Terminating live console - Input Pipe is dead!"
       stop_monitor
       exit 0
     fi
     
+    CHARS=`echo "$var" | wc -m`
+    if [ "$CHARS" -lt 5 ]; then # includes the new line -> means commands 3 chars or less
+      if [ "$var" = "$lastvar" ]; then
+        echo "Terminating live console - Repeated short command!"
+        stop_monitor
+        exit 0
+      fi
+    fi
+
     if [ "$var" = "exit" ]; then
-      echo "'exit' ignored. use 'EXIT' to shutdown the server. use 'close' or 'stop' to close monitor"
+      echo "'exit' ignored. use 'EXIT' to shutdown the server. use 'close' or 'stop' to close live console"
     elif [ "$var" = "quit" ]; then
-      echo "'quit' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close monitor"
+      echo "'quit' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
     elif [ "$var" = "stop" ]; then
       stop_monitor
       return 0
@@ -1450,11 +1461,17 @@ run_monitor ()
       return 0
     else
       if [ ! -z "$var" ]; then
-        if [ "$DOMINO_CONSOLE_SERVERC" = "yes" ]; then
-          cd "$DOMINO_DATA_PATH"
-          $DOMINO_BIN -c "$var"
+
+        domino_is_running
+        if [ $? -eq 1 ]; then
+          if [ "$DOMINO_CONSOLE_SERVERC" = "yes" ]; then
+            cd "$DOMINO_DATA_PATH"
+            $DOMINO_BIN -c "$var"
+          else
+            echo "$var" >> $DOMINO_INPUT_FILE
+          fi
         else
-          echo "$var" >> $DOMINO_INPUT_FILE
+          echo "Warning: Server not running -- Command ignored"
         fi
       fi
     fi
