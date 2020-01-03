@@ -251,7 +251,7 @@ download_and_check_hash ()
   else
     if [ -e $SOFTWARE_FILE ]; then
       HASH=`$WGET_COMMAND -qO- $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1`
-      FOUND=`grep $HASH $SOFTWARE_FILE | wc -l`
+      FOUND=`grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l`
 
       if [ "$FOUND" = "1" ]; then
         log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
@@ -781,6 +781,42 @@ docker_set_timezone ()
   return 0
 }
 
+yum_glibc_lang_update()
+{
+ # on CentOS/RHEL 7 the locale is not containing all langauges
+ # removing override_install_langs from /etc/yum.conf and reinstalling glibc-common
+ # reinstall does only work if package is up to date
+
+
+  local STR="override_install_langs="
+  local FILE="/etc/yum.conf"
+
+  FOUND=`grep "$STR" "$FILE"`
+
+  if [ -z "$FOUND" ]; then
+    return 0
+  fi
+
+  grep -v -i "$STR" "$FILE" > "$FILE.updated"
+  mv "$FILE.updated" "$FILE"
+
+  echo
+  echo Updating glibc locale ...
+  echo
+
+
+  if [ "$LinuxYumUpdate" = "yes" ]; then
+    # packages have been already updated, just need reinstall
+    yum reinstall -y glibc-common
+  else  
+    # update first before reinstall
+    yum update -y glibc-common
+    yum reinstall -y glibc-common
+  fi
+
+  return 0
+}
+
 # --- Main Install Logic ---
 
 header "Environment Setup"
@@ -802,6 +838,8 @@ if [ "$LinuxYumUpdate" = "yes" ]; then
   header "Updating CentOS via yum"
   yum update -y
 fi
+
+yum_glibc_lang_update
 
 # This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
 if [ -e $LOTUS ]; then
@@ -830,8 +868,8 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Set security limits for pam modules (su needs it)
   echo >> /etc/security/limits.conf
   echo '# -- Begin Changes Domino --' >> /etc/security/limits.conf
-  echo 'notes soft nofile 60000' >> /etc/security/limits.conf
-  echo 'notes hard nofile 60000' >> /etc/security/limits.conf
+  echo 'notes soft nofile 65535' >> /etc/security/limits.conf
+  echo 'notes hard nofile 65535' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
  
   create_directory $DOMDOCK_DIR notes notes 770
@@ -910,11 +948,18 @@ find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
 find $DOMINO_DATA_PATH/domino/html -name "*.dll" -exec rm -rf {} \;
 find $DOMINO_DATA_PATH/domino/html -name "*.msi" -exec rm -rf {} \;
 
-remove_directory $DOMINO_DATA_PATH/domino/html/download/filesets
-remove_directory $DOMINO_DATA_PATH/domino/html/help
+remove_directory "$DOMINO_DATA_PATH/domino/html/download/filesets"
+remove_directory "$DOMINO_DATA_PATH/domino/html/help"
 
-# Remove uninstaller --> we never uninstall but rebuild from scratch
-remove_directory $Notes_ExecDirectory/_uninst
+# Remove Domino 10 and earlier uninstaller --> we never uninstall but rebuild from scratch
+remove_directory "$Notes_ExecDirectory/_uninst"
+
+
+# Remove Domino 11 and  higher uninstaller --> we never uninstall but rebuild from scratch
+remove_directory "$Notes_ExecDirectory/_HCL Domino_installation"
+
+# Domino 11 uses InstallAnywhere, which has it's own install JRE (see above)
+remove_directory "$Notes_ExecDirectory/jre"
 
 # Create missing links
 
@@ -922,7 +967,7 @@ create_startup_link kyrtool
 create_startup_link dbmt
 install_res_links
 
-remove_file $LOTUS/notes/latest/linux/tunekrnl
+remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 
 # Ensure permissons are set correctly for data directory
 chown -R notes:notes $DOMINO_DATA_PATH

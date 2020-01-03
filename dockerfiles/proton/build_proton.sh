@@ -121,7 +121,7 @@ check_docker_environment()
     # podman environment detected
     DOCKER_CMD=podman
     DOCKER_ENV_NAME=Podman
-    DOCKER_VERSION_STR=`podman -v`
+    DOCKER_VERSION_STR=`podman version | head -1`
     DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
     check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
     return 0
@@ -129,10 +129,6 @@ check_docker_environment()
 
   if [ -z "$DOCKERD_NAME" ]; then
     DOCKERD_NAME=dockerd
-  fi
-
-  if [ -z "$DOCKER_CMD" ]; then
-    DOCKER_CMD=docker
   fi
 
   DOCKER_ENV_NAME=Docker
@@ -143,17 +139,22 @@ check_docker_environment()
 
   check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$DOCKER_CMD"
 
-  # Use sudo for docker command if not root
+  if [ -z "$DOCKER_CMD" ]; then
 
-  if [ "$EUID" = "0" ]; then
-    return 0
+    DOCKER_CMD=docker
+
+    # Use sudo for docker command if not root on Linux
+
+    if [ `uname` = "Linux" ]; then
+      if [ ! "$EUID" = "0" ]; then
+        if [ "$DOCKER_USE_SUDO" = "no" ]; then
+          echo "Docker needs root permissions on Linux!"
+          exit 1
+        fi
+        DOCKER_CMD="sudo $DOCKER_CMD"
+      fi
+    fi
   fi
-
-  if [ "$DOCKER_USE_SUDO" = "no" ]; then
-    return 0
-  fi
-
-  DOCKER_CMD="sudo $DOCKER_CMD"
 
   return 0
 }

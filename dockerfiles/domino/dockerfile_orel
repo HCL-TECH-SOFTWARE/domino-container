@@ -48,7 +48,6 @@ COPY dummy /license/accepted
 
 
 RUN echo "CentOS Linux release 7.6.1810 (Core)" > /etc/centos-release && \
-  echo "deb http://mirror.yandex.ru/astra/stable/orel/repository orel main contrib non-free" > /etc/apt/sources.list && \
   cp -f /bin/bash.orig /bin/bash && \
   apt-get update && \
   apt-get install -y apt-utils && \

@@ -4,11 +4,11 @@
 # RC RunLevel Entry Point
 ###########################################################################
 # Start/Stop Script for Domino on xLinux/zLinux/AIX
-# 2005-2019 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
+# 2005-2020 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
 # You may use and distribute the unmodified version of this script.
 # Use at your own risk. No implied or specific warranties are given.
 # You may change it for your own usage only
-# Version 3.3.0 17.07.2019
+# Version 3.3.0 01.01.2020
 ###########################################################################
 # chkconfig: 345 66 19
 # description: IBM Domino Server (notes)
@@ -46,12 +46,42 @@ DOMINO_SYSTEMD_NAME=domino.service
 
 # VERBOSE_INFO="yes"
 
-# Determine script name. for symbolic link check real name
-DOMINO_SERVICE_NAME=`readlink $0`
-if [ -z "$DOMINO_SERVICE_NAME" ]; then
-  DOMINO_SERVICE_NAME=$0
+
+# Determine architecture and platform
+if [ `uname` = AIX ]; then
+  LARCH=ibmpow
+  PLATFORM_NAME=AIX
+elif [ `uname` = Linux ]; then
+  LARCH=linux
+  UNAME=`uname -m`
+  if [ $UNAME = s390 ]; then
+    PLATFORM_NAME=zLinux
+  elif [ $UNAME = s390x ]; then
+    PLATFORM_NAME=zLinux
+  else
+    PLATFORM_NAME=xLinux
+  fi
+
+  # Query linux distribution
+  if [ ${LARCH} = "linux" ]; then
+    if [ -e /etc/SuSE-release ]; then
+      LINUX_DISTRIBUTION=suse
+    elif [ -e /etc/redhat-release ]; then
+      LINUX_DISTRIBUTION=redhat
+    else
+      LINUX_DISTRIBUTION=unknown
+    fi
+  fi
 fi
-DOMINO_SERVICE_NAME=`basename $DOMINO_SERVICE_NAME`
+
+if [ ${LARCH} = "linux" ]; then
+  # Determine script name. for symbolic link check real name
+  DOMINO_SERVICE_NAME=`readlink $0`
+  if [ -z "$DOMINO_SERVICE_NAME" ]; then
+    DOMINO_SERVICE_NAME=$0
+  fi
+  DOMINO_SERVICE_NAME=`basename $DOMINO_SERVICE_NAME`
+fi
 
 if [ -z "$LOGNAME" ]; then
   export LOGNAME=`whoami`
@@ -237,15 +267,6 @@ fi
 if [ "$1" = "setenv" ]; then
   echo "'setenv' can be only used directly from 'rc_domino_script' invoked with the right user"
   exit 1
-fi
-
-# Check Linux release
-if [ -e /etc/SuSE-release ]; then
-  LINUX_DISTRIBUTION=suse
-elif [ -e /etc/redhat-release ]; then
-  LINUX_DISTRIBUTION=redhat
-else
-  LINUX_DISTRIBUTION=unknown
 fi
 
 # Special handling for CentOS/RedHat start/stop

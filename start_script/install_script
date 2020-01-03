@@ -2,9 +2,9 @@
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version 3.3.0 17.07.2019                                                #
+# Version 3.3.0 01.01.2020                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -31,6 +31,10 @@ VERSION=330
 
 DOMINO_USER=notes
 DOMINO_GROUP=notes
+
+ROOT_USER=root
+ROOT_GROUP=root
+
 DOMINO_DATA_PATH=/local/notesdata
 
 #DOMINO_DEBUG_MODE="yes"
@@ -53,6 +57,38 @@ else
   exit 1
 fi
 
+INIT_PATH=/etc/init.d
+
+# Determine architecture and platform
+if [ `uname` = AIX ]; then
+  LARCH=ibmpow
+  PLATFORM_NAME=AIX
+  INIT_PATH=/etc/rc.d
+  ROOT_GROUP=system
+elif [ `uname` = Linux ]; then
+  LARCH=linux
+  UNAME=`uname -m`
+  if [ $UNAME = s390 ]; then
+    PLATFORM_NAME=zLinux
+  elif [ $UNAME = s390x ]; then
+    PLATFORM_NAME=zLinux
+  else
+    PLATFORM_NAME=xLinux
+  fi
+
+  # Query linux distribution
+  if [ ${LARCH} = "linux" ]; then
+    if [ -e /etc/SuSE-release ]; then
+      LINUX_DISTRIBUTION=suse
+    elif [ -e /etc/redhat-release ]; then
+      LINUX_DISTRIBUTION=redhat
+    else
+      LINUX_DISTRIBUTION=unknown
+    fi
+  fi
+fi
+
+
 DebugText ()
 {
   if [ "$DOMINO_DEBUG_MODE" = "yes" ]; then
@@ -73,7 +109,8 @@ check_file_busy()
     return 0
   fi
 
-  TARGET_REAL_BIN=`readlink -f $1`
+  #TARGET_REAL_BIN=`readlink -f $1`
+  TARGET_REAL_BIN=$1
   FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
@@ -170,8 +207,8 @@ if [ ! -e "$DOMINO_DATA_PATH" ]; then
   exit 1
 fi
 
-install_file $START_SCRIPT_DIR/rc_domino /etc/init.d/$DOMINO_RC_NAME root root 755
-install_file $START_SCRIPT_DIR/rc_domino_script $DOMINO_START_SCRIPT_DIR/rc_domino_script root root 755
+install_file $START_SCRIPT_DIR/rc_domino $INIT_PATH/$DOMINO_RC_NAME $ROOT_USER $ROOT_GROUP 755
+install_file $START_SCRIPT_DIR/rc_domino_script $DOMINO_START_SCRIPT_DIR/rc_domino_script $ROOT_USER $ROOT_GROUP 755
 install_file $START_SCRIPT_DIR/rc_domino_readme.txt $DOMINO_START_SCRIPT_DIR/rc_domino_readme.txt "$DOMINO_USER" "$DOMINO_GROUP" 644
 
 START_SCRIPT_CONFIG_VER=$DOMINO_START_SCRIPT_DIR/rc_domino_config_$VERSION.txt
@@ -212,7 +249,7 @@ fi
 
 # set link to include script as 'domino' into path
 if [ ! -e /usr/bin/domino ] ; then
-  ln -s /etc/init.d/rc_domino /usr/bin/domino
+  ln -s $INIT_PATH/$DOMINO_RC_NAME /usr/bin/domino
 fi
 
 # check if running inside a container
@@ -230,22 +267,23 @@ if [ "$DOCKER_ENV" = "yes" ]; then
   echo "Docker Environment detected!"
   
   if [ "$PARAM1" = "upd" ] ; then
-    install_file "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" root root 755
+    install_file "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
   else
-    install_file_noupdate "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" root root 755
+    install_file_noupdate "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
   fi
-  
 else
-  if [ -e /etc/systemd/system ] ; then
-    install_file $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME root root 644
+  if [ ${LARCH} = "linux" ]; then
+    if [ -e /etc/systemd/system ] ; then
+      install_file $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
   
-    if [ $? -eq 2 ]; then
-      systemctl daemon-reload
+      if [ $? -eq 2 ]; then
+        systemctl daemon-reload
+      fi
     fi
-  fi
 
-  # add domino service (systemd/init.d)
-  /etc/init.d/rc_domino service add
+    # add domino service (systemd/init.d)
+    $INIT_PATH/$DOMINO_RC_NAME service add
+  fi
 fi
 
 echo

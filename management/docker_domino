@@ -36,9 +36,10 @@ DOCKER_IMAGE_VERSION=10.0.0
 DOCKER_IMAGE_RELEASE_DATE=2019-01-01
 DOCKER_FILE=dockerfile_domino
 
-DOCKER_HOSTNAME=nsh-domino
 DOMINO_SHUTDOWN_TIMEOUT=60
-# DOCKER_NETWORK=--network=host
+DOCKER_HOSTNAME=nsh-domino
+# DOCKER_NETWORK_NAME=host
+# DOCKER_SPECIAL_OPTIONS="--ip 172.17.0.1"
 DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 DOCKER_VOLUMES="-v notesdata:/local/notesdata"
 
@@ -209,17 +210,17 @@ check_docker_environment()
   if [ "$1" = "config" ]; then return 0; fi
   if [ "$1" = "cfg" ]; then return 0; fi
 
-  # Use sudo for docker command if not root
+  # Use sudo for docker command if not root on Linux
 
-  if [ "$EUID" = "0" ]; then
-    return 0
+  if [ `uname` = "Linux" ]; then
+    if [ ! "$EUID" = "0" ]; then
+      if [ "$DOCKER_USE_SUDO" = "no" ]; then
+        echo "Docker needs root permissions on Linux!"
+        exit 1
+      fi
+      DOCKER_CMD="sudo $DOCKER_CMD"
+    fi
   fi
-
-  if [ "$DOCKER_USE_SUDO" = "no" ]; then
-    return 0
-  fi
-
-  DOCKER_CMD="sudo $DOCKER_CMD"
 
   return 0
 }
@@ -347,8 +348,16 @@ docker_inspect_container ()
   DOCKER_CONTAINER_HOSTNAME="$($DOCKER_CMD inspect --format "{{ .Config.Hostname }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_DRIVER="$($DOCKER_CMD inspect --format "{{ .Driver }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_PLATFORM="$($DOCKER_CMD inspect --format "{{ .Platform }}" $DOCKER_CONTAINER 2>/dev/null)"
+
+
   DOCKER_CONTAINER_NETWORKMODE="$($DOCKER_CMD inspect --format "{{ .HostConfig.NetworkMode }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+
+  if [ -z "$DOCKER_NETWORK_NAME" ]; then
+    DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+  else
+    DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.Networks.$DOCKER_NETWORK_NAME.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+  fi
+
   DOCKER_CONTAINER_BUILDTIME="$($DOCKER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_VOLUMES="$($DOCKER_CMD inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
   DOCKER_CONTAINER_HEALTH="$($DOCKER_CMD inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
@@ -614,6 +623,14 @@ docker_run ()
     DOCKER_IT="-d -it"
   fi
 
+
+  if [ -z "$DOCKER_NETWORK" ]; then
+   
+    if [ ! -z "$DOCKER_NETWORK_NAME" ]; then
+      DOCKER_NETWORK="--network=$DOCKER_NETWORK_NAME"       
+    fi
+  fi
+
   if [ ! -z "$DOCKER_FULL_ENV_FILE" ]; then
     DOCKER_ENV_FILE_OPTION="--env-file $DOCKER_FULL_ENV_FILE"
    
@@ -624,7 +641,7 @@ docker_run ()
 
   fi
 
-  $DOCKER_CMD run $DOCKER_IT $DOCKER_PORTS --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_IMAGE
+  $DOCKER_CMD run $DOCKER_IT $DOCKER_PORTS --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_SPECIAL_OPTIONS $DOCKER_IMAGE
 
   return 0
 }
@@ -761,7 +778,7 @@ usage ()
 {
   show_version
   echo
-  echo "Usage: $SCRIPT_NAME { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | env cpcfg | cpenv | port | version | help}"
+  echo "Usage: $SCRIPT_NAME { build | run | start | stop | status | inspect | logs | attach | domino | bash | remove | removeimage | update | config | env | cpcfg | cpenv | port | version | help}"
 
   return 0
 }
@@ -771,7 +788,7 @@ help ()
   usage
   echo
   echo "build           builds a current image -- even image tags might not have changed to ensure OS patches are installed"
-  echo "run [live]      runs a container -- will initiate a container if not present ('live' shows start script output, alias 'runit')"
+  echo "run   [live]    runs a container -- will initiate a container if not present ('live' shows start script output, alias 'runit')"
   echo "start [live]    start an existing container (the 'live' option shows start script output)"
   echo "stop  [live]    stops container (the 'live' option shows start script output)"
   echo "status          shows container status (running, exited, notexisting)"
@@ -780,7 +797,7 @@ help ()
   echo "logs            shows container logs (output from entry point script/start script)"
   echo "attach          attach to entry point script"
   echo "domino          pass a command to start script (e.g. domino nsd)"
-  echo "bash            invokes a bash in the running container"
+  echo "bash [root]     invokes a bash in the running container. optionally run as root instead of notes user"
   echo "remove|rm       removes the container (if not running)"
   echo "removeimage|rmi removes the current container (you have to remove the container first)"
   echo "update          updates the container if referenced image has changed (stops Domino, stops the container, runs a new image)"

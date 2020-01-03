@@ -1,8 +1,8 @@
 ###########################################################################
 # README - Start/Stop Script for Domino on xLinux/zLinux/AIX              #
-# Version 3.3.0 17.07.2019                                                #
+# Version 3.3.0 01.01.2020                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -1442,6 +1442,14 @@ DOMINO_LOG_START_COMPACT_OPTIONS
 (Optional)
 Start log compact options
 
+DOMINO_CONSOLE_SERVERC
+----------------------
+
+By default live console uses server -c "cmd" to run server commands.
+This new functionality can be reverted back to the previous functionality via DOMINO_CONSOLE_SERVERC=NO.
+In this case a echo "cmd" > notes.input is used.
+Switching back to the old behavior disables support for the live console in combination with the server controller.
+
 
 DOMINO_PID_FILE
 ---------------
@@ -1808,6 +1816,35 @@ SLES10 does contain this setting by default.
 The default settings have been enhanced and different parts use include files.
 The include file used for "session" settings contains this entry already.
 
+--------------
+Change History
+--------------
+
+V3.3.0 01.01.2020
+
+
+New Features
+------------
+
+Updated container support for other container environments than Docker (detecting other container run-time environments)
+
+Updated support for AIX including install script
+
+
+Changes
+-------
+
+Changed live console functionality
+
+Up to now the live console wrote into the notes.input file which is connected to the server process (< input file).
+With the new functionality the commands are send to the server via server -c  "command".
+This change is intended to solve an issue with a stall console in some situations.
+In addition this allows live console functionality also in combination with the server controller.
+The script detects the current server controller file (via notes.ini setting DominoControllerCurrentLog).
+You can switch to the previous behavior via DOMINO_CONSOLE_SERVERC=NO.
+
+
+Removed legacy configuration from rc_domino_script, which was confusing
 
 
 --------------

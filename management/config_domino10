@@ -3,23 +3,24 @@
 # You can clone the domino_docker script and have a corresponding configuration with a matching name
 # You should always make configuration changes in the config file instead of docker_domino
 
-DOCKER_CONTAINER=acme-domino11
-DOCKER_IMAGE=hclcom/domino:11.0.0.BETA1
-DOCKER_IMAGE_NAME=nashcom/domino
-DOCKER_IMAGE_VERSION=11.0.0.BETA1
-DOCKER_IMAGE_RELEASE_DATE=2019-08-17
+DOCKER_CONTAINER=acme-domino
+DOCKER_IMAGE_NAME=ibmcom/domino
+DOCKER_IMAGE_VERSION=latest
+DOCKER_IMAGE_RELEASE_DATE=2019-05-10
 DOCKER_FILE="dockerfile"
 
 DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 
-DOCKER_HOSTNAME=acme-domino11
 DOMINO_SHUTDOWN_TIMEOUT=60
+DOCKER_HOSTNAME=acme-domino
 
-# DOCKER_NETWORK=--network=host
+# DOCKER_NETWORK_NAME=host
+# DOCKER_SPECIAL_OPTIONS="--ip 172.17.0.1"
+
 # DOCKER_PORTS="-p 192.168.100.109:1352:1352 -p 192.168.100.109:80:80 -p 192.168.100.109:443:443"
-
 DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
-DOCKER_VOLUMES="-v notesdata_domino:/local/notesdata"
+
+DOCKER_VOLUMES="-v notesdata:/local/notesdata"
 
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_domino

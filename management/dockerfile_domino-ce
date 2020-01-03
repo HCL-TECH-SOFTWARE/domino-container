@@ -1,4 +1,3 @@
-
 FROM ibmcom/domino-ce:latest
 
 # Headers
