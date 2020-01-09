@@ -1,6 +1,6 @@
 ###########################################################################
 # README - Start/Stop Script for Domino on xLinux/zLinux/AIX              #
-# Version 3.3.0 01.01.2020                                                #
+# Version 3.3.1 10.01.2020                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -923,6 +923,14 @@ Language setting used to determine local settings
 Examples: DOMINO_LANG=en_US.UTF-8
 Default: not set --> uses the setting of the UNIX/Linux user
 
+DOMINO_ENV_FILE
+---------------
+
+(Optional)
+Environment file, which is particular useful for systemd environments, where the profile cannot be used to set variables, because systemd starts the process
+You can source in the file into your profile for processes starting from a shell and have it included into the server running under systemd.
+systemd invokes rc_domino_script which sets the parameters if the configured file exists and can be read.
+
 
 DOMINO_UMASK
 ------------
@@ -1819,6 +1827,22 @@ The include file used for "session" settings contains this entry already.
 --------------
 Change History
 --------------
+
+V3.3.1 10.01.2020
+
+New Features
+------------
+
+New configuration variable DOMINO_ENV_FILE
+
+Environment file, which is particular useful for systemd environments, where the profile cannot be used to set variables, because systemd starts the process
+You can source in the file into your profile for processes starting from a shell and have it included into the server running under systemd.
+systemd invokes rc_domino_script which sets the parameters if the configured file exists and can be read.
+
+
+Additional check for live console to ignore "e" and "q" to stop the server.
+This helps to avoid  accidential server shutdowns. "qu", "ex" and other short-cuts for "quit" and "exit" will still work.
+
 
 V3.3.0 01.01.2020
 

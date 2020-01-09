@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.3.0 01.01.2020                                                #
+# Version 3.3.1 10.01.2020                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=3.3.0
+DOMINO_SCRIPT_VERSION=3.3.1
 
 # VERBOSE_INFO="yes"
 
@@ -48,6 +48,14 @@ DOMINO_USER=$LOGNAME
 if [ -z "$DOMINO_USER" ]; then
   echo "Empty login name. Please check your configuration"
   exit 1
+fi
+
+# Reading environment variable file before reading configuration (variables defined in config file overwrirte environment)
+if [ -r "$DOMINO_ENV_FILE" ]; then
+  . $DOMINO_ENV_FILE
+  if [ "$VERBOSE_INFO" = "yes" ]; then
+    echo "Using environment File [$DOMINO_ENV_FILE]"
+  fi
 fi
 
 # Reading global and specifiy configuration if present
@@ -1450,9 +1458,13 @@ run_monitor ()
     fi
 
     if [ "$var" = "exit" ]; then
-      echo "'exit' ignored. use 'EXIT' to shutdown the server. use 'close' or 'stop' to close live console"
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
     elif [ "$var" = "quit" ]; then
-      echo "'quit' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+    elif [ "$var" = "e" ]; then
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+    elif [ "$var" = "q" ]; then
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
     elif [ "$var" = "stop" ]; then
       stop_monitor
       return 0
