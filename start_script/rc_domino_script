@@ -50,14 +50,6 @@ if [ -z "$DOMINO_USER" ]; then
   exit 1
 fi
 
-# Reading environment variable file before reading configuration (variables defined in config file overwrirte environment)
-if [ -r "$DOMINO_ENV_FILE" ]; then
-  . $DOMINO_ENV_FILE
-  if [ "$VERBOSE_INFO" = "yes" ]; then
-    echo "Using environment File [$DOMINO_ENV_FILE]"
-  fi
-fi
-
 # Reading global and specifiy configuration if present
 DOMINO_CONFIG_FILE=/etc/sysconfig/rc_domino_config_$DOMINO_USER
 DOMINO_DEFAULT_CONFIG_FILE=/etc/sysconfig/rc_domino_config
@@ -76,6 +68,14 @@ if [ -r "$DOMINO_CONFIG_FILE" ]; then
   
   if [ "$VERBOSE_INFO" = "yes" ]; then
     echo "Using Domino config File [$DOMINO_CONFIG_FILE]"
+  fi
+fi
+
+# Reading environment variable file (variables defined in config file overwrirte environment)
+if [ -r "$DOMINO_ENV_FILE" ]; then
+  . $DOMINO_ENV_FILE
+  if [ "$VERBOSE_INFO" = "yes" ]; then
+    echo "Using environment File [$DOMINO_ENV_FILE]"
   fi
 fi
 
