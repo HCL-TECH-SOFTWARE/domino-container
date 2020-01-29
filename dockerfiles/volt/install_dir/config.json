@@ -1,12 +1,77 @@
 {
     "title": "HCL Domino Volt",
     "owner": "Thomas Hampel",
+    "debug": false,
     "notesini": {
        "HTTPEnableMethods": "GET,POST,PUT,DELETE,HEAD",
        "ServerTasks": "Update,Replica,Router,AMgr,AdminP,http",
        "HTTPPublicURLs": "/iwaredir.nsf/*:.well-known*"
     },
     "database": [
+        {
+            "create": true,
+            "filename": "domcfg.nsf",
+            "title": "Domino Web Server Configuration",
+            "template": "domcfg5.ntf",
+            "signwithadminp": true,
+            "acl": [
+                {
+                    "name": "-Default-",
+                    "level": "2",
+                    "type": "0"
+                }
+            ],
+            "documents": [
+                {
+                    "create": true,
+                    "fields": [
+                        {
+                            "name": "Form",
+                            "value": "LoginMap"
+                        },
+                        {
+                            "name": "LF_LoginForm",
+                            "value": "DWALoginForm"
+                        },
+                        {
+                            "name": "LF_LoginFormDB",
+                            "value": "iwaredir.nsf"
+                        },
+                        {
+                            "name": "LF_ServerType",
+                            "value": "0"
+                        },
+                        {
+                            "name": "LF_IP",
+                            "value": ""
+                        },
+                        {
+                            "name": "$PublicAccess ",
+                            "value": "1"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "create": true,
+            "filename": "volt/VoltBuilder.nsf",
+            "title": "Domino Volt Builder",
+            "template": "volt/VoltBuilder.ntf",
+            "signwithadminp": true,
+            "acl": [
+                {
+                    "name": "Volt Authors",
+                    "level": "4",
+                    "type": "0"
+                },
+                {
+                    "name": "-Default-",
+                    "level": "2",
+                    "type": "0"
+                }
+            ]
+        },
         {
             "create": false,
             "filename": "names.nsf",
@@ -50,6 +115,7 @@
                 ]
                 },
                 {
+                    "create": false,
                     "type": "Server",
                     "fields": [
                         {
@@ -97,25 +163,6 @@
                             "value": "LocalDomainAdmins"
                         }
                     ]
-                }
-            ]
-        },
-        {
-            "create": true,
-            "filename": "volt/VoltBuilder.nsf",
-            "title": "Domino Volt Builder",
-            "template": "volt/VoltBuilder.ntf",
-            "signwithadminp": true,
-            "acl": [
-                {
-                    "name": "Volt Authors",
-                    "level": "4",
-                    "type": "0"
-                },
-                {
-                    "name": "-Default-",
-                    "level": "2",
-                    "type": "0"
                 }
             ]
         },
@@ -256,51 +303,6 @@
                         {
                             "name": "dWMRNewLogoName",
                             "value": ""
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "create": true,
-            "filename": "domcfg.nsf",
-            "title": "Domino Web Server Configuration",
-            "template": "domcfg5.ntf",
-            "signwithadminp": true,
-            "acl": [
-                {
-                    "name": "-Default-",
-                    "level": "2",
-                    "type": "0"
-                }
-            ],
-            "documents": [
-                {
-                    "create": true,
-                    "fields": [
-                        {
-                            "name": "Form",
-                            "value": "LoginMap"
-                        },
-                        {
-                            "name": "LF_LoginForm",
-                            "value": "DWALoginForm"
-                        },
-                        {
-                            "name": "LF_LoginFormDB",
-                            "value": "iwaredir.nsf"
-                        },
-                        {
-                            "name": "LF_ServerType",
-                            "value": "0"
-                        },
-                        {
-                            "name": "LF_IP",
-                            "value": ""
-                        },
-                        {
-                            "name": "$PublicAccess ",
-                            "value": "1"
                         }
                     ]
                 }
