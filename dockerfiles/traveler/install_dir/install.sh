@@ -298,55 +298,6 @@ check_file_busy()
   fi
 }
 
-install_file()
-{
-  SOURCE_FILE=$1
-  TARGET_FILE=$2
-  OWNER=$3
-  GROUP=$4
-  PERMS=$5
-
-  if [ ! -r "$SOURCE_FILE" ]; then
-    echo "[$SOURCE_FILE] Can not read source file"
-    return 1
-  fi
-
-  if [ -e "$TARGET_FILE" ]; then
-
-    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
-    if [ $? -eq 0 ]; then
-      echo "[$TARGET_FILE] File did not change -- No update needed"
-      return 0
-    fi
-
-    if [ ! -w "$TARGET_FILE" ]; then
-      echo "[$TARGET_FILE] Can not update binary -- No write permissions"
-      return 1
-    fi
-
-    check_file_busy "$TARGET_FILE"
-
-    if [ $? -eq 1 ]; then
-      echo "[$TARGET_FILE] Error - Can not update file -- Binary in use"
-      return 1
-    fi
-  fi
-  
-  cp -f "$SOURCE_FILE" "$TARGET_FILE"
- 
-  if [ ! -z "$OWNER" ]; then
-    chown $OWNER:$GROUP "$TARGET_FILE"
-  fi
-
-  if [ ! -z "$PERMS" ]; then
-    chmod "$PERMS" "$TARGET_FILE"
-  fi
-
-  echo "[$TARGET_FILE] copied"
-
-  return 2
-}
-
 check_binary_busy()
 {
   if [ ! -e "$1" ]; then
@@ -355,22 +306,6 @@ check_binary_busy()
 
   TARGET_REAL_BIN=`readlink -f $1`
   FOUND_TARGETS=`lsof | awk '{print $9}' | grep "$TARGET_REAL_BIN"`
-
-  if [ -n "$FOUND_TARGETS" ]; then
-    return 1
-  else
-    return 0
-  fi
-}
-
-check_file_busy()
-{
-  if [ ! -e "$1" ]; then
-    return 0
-  fi
-
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -535,55 +470,6 @@ check_binary_busy()
   else
     return 0
   fi
-}
-
-install_file()
-{
-  SOURCE_FILE=$1
-  TARGET_FILE=$2
-  OWNER=$3
-  GROUP=$4
-  PERMS=$5
-
-  if [ ! -r "$SOURCE_FILE" ]; then
-    echo "[$SOURCE_FILE] Can not read source file"
-    return 1
-  fi
-
-  if [ -e "$TARGET_FILE" ]; then
-
-    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
-    if [ $? -eq 0 ]; then
-      echo "[$TARGET_FILE] File did not change -- No update needed"
-      return 0
-    fi
-
-    if [ ! -w "$TARGET_FILE" ]; then
-      echo "[$TARGET_FILE] Can not update binary -- No write permissions"
-      return 1
-    fi
-
-    check_binary_busy "$TARGET_FILE"
-
-    if [ $? -eq 1 ]; then
-      echo "[$TARGET_FILE] Error - Can not update file -- Binary in use"
-      return 1
-    fi
-  fi
-
-  cp -f "$SOURCE_FILE" "$TARGET_FILE"
-
-  if [ ! -z "$OWNER" ]; then
-    chown $OWNER:$GROUP "$TARGET_FILE"
-  fi
-
-  if [ ! -z "$PERMS" ]; then
-    chmod "$PERMS" "$TARGET_FILE"
-  fi
-
-  echo "[$TARGET_FILE] copied"
-
-  return 2
 }
 
 install_binary()

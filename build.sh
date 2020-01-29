@@ -246,7 +246,7 @@ for a in $@; do
 
   p=`echo "$a" | awk '{print tolower($0)}'`
   case "$p" in
-    domino|domino-ce|traveler|proton|iam)
+    domino|domino-ce|traveler|proton|iam|volt)
       PROD_NAME=$p
       ;;
 
