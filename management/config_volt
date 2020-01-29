@@ -18,7 +18,7 @@ DOMINO_SHUTDOWN_TIMEOUT=60
 DOCKER_PORTS="-p 192.168.100.107:1352:1352 -p 192.168.100.107:80:80 -p 192.168.100.107:443:443"
 
 #DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
-DOCKER_VOLUMES="-v notesdata_volt:/local/notesdata"
+DOCKER_VOLUMES="-v local_volt:/local"
 
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_volt

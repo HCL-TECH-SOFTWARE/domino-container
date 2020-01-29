@@ -7,5 +7,5 @@ OrganizationPassword=domino4ever
 DominoDomainName=Acme
 OrganizationName=Acme
 ServerName=volt-acme-01
-LANG=de_DE.UTF-8
 ConfigFile=config.json
+LANG=en_US.UTF-8

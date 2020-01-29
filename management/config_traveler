@@ -18,7 +18,6 @@ DOMINO_SHUTDOWN_TIMEOUT=60
 
 DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 
-#DOCKER_VOLUMES="-v nfs_notesdata:/local/notesdata"
 DOCKER_VOLUMES="-v traveler_notesdata:/local/notesdata"
 
 # Environment file is used for first container start (run) to pass setup parameters

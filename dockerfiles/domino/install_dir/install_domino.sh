@@ -884,6 +884,9 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
 fi
 
+# temporary install perl for installers 
+yum -y install perl
+
 cd "$INSTALL_DIR"
 
 # Download updated software.txt file if available
@@ -899,6 +902,9 @@ case "$PROD_NAME" in
     exit 1
     ;;
 esac
+
+# removing perl 
+yum -y remove perl
 
 header "Installing Start Script"
 
