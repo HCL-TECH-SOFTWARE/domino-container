@@ -21,9 +21,10 @@
 ###########################################################################
 
 SCRIPT_NAME=$0
-FULL_SCRIPT_NAME=`realpath $0`
+FULL_SCRIPT_NAME=$0
 SCRIPT_DIR_NAME=`dirname $SCRIPT_NAME`
 FULL_SCRIPT_DIR_NAME=`dirname $FULL_SCRIPT_NAME`
+CONFIG_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
 PARAM1=$1
 PARAM2=$2
 PARAM3=$3
