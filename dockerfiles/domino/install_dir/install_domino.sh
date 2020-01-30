@@ -835,7 +835,7 @@ echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 
 # Install CentOS updates if requested
 if [ "$LinuxYumUpdate" = "yes" ]; then
-  header "Updating CentOS via yum"
+  header "Updating Linux via yum"
   yum update -y
 fi
 
@@ -885,6 +885,8 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
 fi
 
 # temporary install perl for installers 
+
+header "Installing perl"
 yum -y install perl
 
 cd "$INSTALL_DIR"
@@ -904,6 +906,7 @@ case "$PROD_NAME" in
 esac
 
 # removing perl 
+header "Uninstalling perl"
 yum -y remove perl
 
 header "Installing Start Script"
@@ -946,8 +949,6 @@ install_file "$INSTALL_DIR/create_ca_kyr.sh" "$DOMINO_DATA_PATH/create_ca_kyr.sh
 install_file "$INSTALL_DIR/DatabaseSigner.jar" "$DOMINO_DATA_PATH/DatabaseSigner.jar" notes notes 644
 install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpdateConfig.jar" notes notes 644
 
-create_ca_kyr.sh
-
 # --- Cleanup Routines to reduce image size ---
 
 # Remove Fixpack/Hotfix backup files
@@ -977,6 +978,9 @@ create_startup_link dbmt
 install_res_links
 
 remove_file "$LOTUS/notes/latest/linux/tunekrnl"
+
+# In some versions the Tika file is also in the data directory.
+remove_file $DOMINO_DATA_PATH/tika-server.jar
 
 # Ensure permissons are set correctly for data directory
 chown -R notes:notes $DOMINO_DATA_PATH
