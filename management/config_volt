@@ -5,24 +5,16 @@
 
 DOCKER_CONTAINER=acme-volt
 DOCKER_IMAGE=hclcom/volt:latest
-DOCKER_IMAGE_NAME=nashcom/domino
-DOCKER_IMAGE_VERSION=latest
-DOCKER_IMAGE_RELEASE_DATE=2020-01-28
-
-DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
 
 DOCKER_HOSTNAME=volt.acme.com
 DOMINO_SHUTDOWN_TIMEOUT=60
 
 # DOCKER_NETWORK_NAME=host
-DOCKER_PORTS="-p 192.168.100.107:1352:1352 -p 192.168.100.107:80:80 -p 192.168.100.107:443:443"
+# DOCKER_PORTS="-p 192.168.100.107:1352:1352 -p 192.168.100.107:80:80 -p 192.168.100.107:443:443"
 
-#DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
+DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 DOCKER_VOLUMES="-v local_volt:/local"
 
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_volt
-
-# Update CentOS while building the image
-#LinuxYumUpdate=yes
 
