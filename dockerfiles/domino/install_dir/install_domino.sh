@@ -884,10 +884,13 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
 fi
 
-# temporary install perl for installers 
+# temporary install perl for installers if not already installed
 
-header "Installing perl"
-yum -y install perl
+if [ ! -e /usr/bin/perl ]; then
+  header "Installing perl"
+  yum -y install perl
+  UNINSTALL_PERL_AFTER_INSTALL=yes
+fi
 
 cd "$INSTALL_DIR"
 
@@ -905,9 +908,13 @@ case "$PROD_NAME" in
     ;;
 esac
 
-# removing perl 
-header "Uninstalling perl"
-yum -y remove perl
+# removing perl if temporary installed
+
+if [ "$UNINSTALL_PERL_AFTER_INSTALL" = "yes" ]; then
+  # removing perl 
+  header "Uninstalling perl"
+  yum -y remove perl
+fi
 
 header "Installing Start Script"
 
