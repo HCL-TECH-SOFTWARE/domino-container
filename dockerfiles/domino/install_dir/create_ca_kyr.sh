@@ -2,9 +2,9 @@
 
 ###########################################################################
 # Nash!Com Certificate Management Script                                  #
-# Version 1.2.0 15.08.2019                                                #
+# Version 1.0.0 30.01.2020                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2019                                #
+# (C) Copyright Daniel Nashed/NashCom 2020                                #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -23,54 +23,18 @@
 
 # This script is intended to automate the X.509 certificate generation process.
 # Keys, Certificates and PEM files to be used by the Domino kyrtool are automatically created if you use the local CA.
-# For a public or corporate CA this script helps you generate the private key pair, signing requests (CSRs).
-# And it also helps to build a PEM file which can be used for example the Domino kyrtool.
-
-# Certificate Authority (CA) Configuration
-
-# If you don't have a company CA configuration this script can create a simple,local CA.
-# It will be used to generate all certificates needed. This is the default configuration.
-
-# The following section defines the local CA.
-
-# Please configure your company specific settings
 
 # -------------------------- #
 #  BEGIN MAIN CONFIGURATION  #
 # -------------------------- #
 
-# Create the following specified certs (for AppDevPack)
-CREATE_CONFIGURED_CERTS="no"
-
-DOMINO_ORG="Acme"
-
-DOMINO_SERVER="domino"
-DOMINO_DNS="domino.acme.com"
-
-PROTON_SERVER="proton"
-PROTON_DNS="proton.acme.com"
-
-IAM_SERVER="iam_server"
-IAM_SERVER_DNS="iam.acme.com"
-
-IAM_CLIENT="iam_client"
-IAM_CLIENT_NAME="/O=$DOMINO_ORG/CN=$IAM_CLIENT"
-
-# You can choose between two different configurations 
-
-# a.) a local, simple CA should be used
-# b.) a public or corporate CA should be used
-
-USE_LOCAL_CA=yes
-
-CA_ORG=Acme
-CA_PASSWORD=domino4ever
+DOMINO_ORG=$OrganizationName
+CA_ORG=$OrganizationName
+CA_PASSWORD=TemporaryCaPassword
 
 CREATE_KEYRINGS="yes"
-KEYRING_PASSWORD=domino4ever
-
-CERTMGR_CONFIG_FILE="/local/cfg/certmgr_config"
-CERTMGR_DIR=`dirname $0`/certs
+USE_LOCAL_CA=yes
+KEYRING_PASSWORD=KyrSafePassword
 
 if [ -z "$LOTUS" ]; then
   if [ -x /opt/hcl/domino/bin/server ]; then
@@ -81,7 +45,10 @@ if [ -z "$LOTUS" ]; then
 fi
 
 KYRTOOL_BIN=$LOTUS/bin/kyrtool
-DOMINO_DATA_PATH=/local/notesdata
+
+if [ -z "$DOMINO_DATA_PATH" ]; then
+  DOMINO_DATA_PATH=/local/notesdata
+fi
 
 # -------------------------- #
 #   END MAIN CONFIGURATION   #
@@ -96,30 +63,6 @@ DOMINO_DATA_PATH=/local/notesdata
 # The whole operation is processed in one step. However the script is designed to allow to update/regenerate keys and certificates.
 
 
-# Public/Company CA 
-# -----------------
-
-# When using a public or company CA, this script automatically creates the private keys and certificate signing requests (CSRs).
-# You have send those CSR files (*.csr) to the external CA and get back a certificate file (*.crt) in PEM format.
-# To import the certificate automatically, the *.crt needs to have a matching name used for the *.csr file.
-
-# IMPORTANT: For external CAs you have to also provide a PEM file (ca_all.pem) with the public key of the Root CA 
-# and all intermediate certificates (ordered from most specific to Root CA cert).
-
-# Steps:
-
-# 1. Run this script once to generate the *.key files and *.csr files
-# 2. Let the *.csr files sign from the external CA
-# 3. Get the *.crt file with a matching name (before the dot) and copy it back to this directory
-#    (You can also pass a .pfx or a .cer (DER encoded) certificate file. They just have to match the naming and will be converted to PEM)
-# 4. Ensure a certificate PEM file for the CA and all intermediate files is stored in the "pem" directory. "ca_all.pem" is stored in the ca directory.
-# 5. Invoke the script again to generate a xxx_all.pem file for each certificate
-# 6. The final PEM file contains the private key, certificate, intermediate certs and the CA's root certificate in the right order to be user by the kyrtool
-
-# The following configuration is optional for special cases and documentation purposes.
-# It shows all local CA related default values which can be modified if needed for your convenience.
-
-
 # Optional/Specific Configuration
 # -------------------------------
 
@@ -127,10 +70,11 @@ DOMINO_DATA_PATH=/local/notesdata
 
 # Optional Specific CA Configuration
 
+CERTMGR_DIR=/local/certs
 CA_VALID_DAYS=3650
 CA_KEY=ca.key
 CA_CERT=ca.crt
-CA_SUBJECT="/O=$CA_ORG/CN=CA"
+CA_SUBJECT="/O=$CA_ORG/CN=DominoDocker-CA"
 CA_KEYLEN=4096
 CA_ENCRYPTION=-aes256
 CERT_SIGN_ALG=-sha256
@@ -145,12 +89,6 @@ CLIENT_VALID_DAYS=825
 OPENSSL_CONFIG_FILE=/etc/pki/tls/openssl.cnf
 
 # Specific Server Name Configuration
-
-PROTON_SERVER_NAME="/O=$DOMINO_ORG/CN=$PROTON_SERVER"
-DOMINO_SERVER_NAME="/O=$DOMINO_ORG/CN=$DOMINO_SERVER"
-IAM_SERVER_NAME="/O=$DOMINO_ORG/CN=$IAM_SERVER"
-
-TODO_FILE=/tmp/certmgr_todo.txt
 
 # Use a config file if present
 if [ -z "$CERTMGR_CONFIG_FILE" ]; then
@@ -195,11 +133,6 @@ popd()
 log ()
 {
   echo $1 $2 $3 $4 
-}
-
-todo ()
-{
-  echo $1 $2 $3 $4 >> "$TODO_FILE"
 }
 
 remove_file()
@@ -499,10 +432,6 @@ check_cert()
       KEYLEN=""
       STATUS="NO RSA Private/Public Key"
     fi
-
-    if [ -e "$CSR_FILE" ]; then
-      todo "Please send CSR [$CSR_FILE] to external CA for signing"
-    fi
   fi
 
   if [ -z "$STATUS" ]; then
@@ -538,14 +467,6 @@ check_create_dirs ()
   mkdir -p $KYR_DIR
 }
 
-generate_config_keys_and_certs ()
-{
-  create_key_cert domino     "$DOMINO_SERVER_NAME" "$DOMINO_DNS"
-  create_key_cert proton     "$PROTON_SERVER_NAME" "$PROTON_DNS"
-  create_key_cert iam_server "$IAM_SERVER_NAME"    "$IAM_SERVER_DNS"
-  create_key_cert iam_client "$IAM_CLIENT_NAME"    ""
-}
-
 check_keys_and_certs ()
 {
   log
@@ -574,53 +495,17 @@ check_keys_and_certs ()
   fi
   
   log
-
-  if [ ! -e "$CA_PEM_ALL_FILE" ]; then
-    todo "Please copy your CA's root / intermediate certficiate PEM file into [$CA_PEM_ALL_FILE]"
-  fi
 }
 
 # --- Main Logic --
 
-# a.) Create defined keys & certs
-# b.) Configure an additonal cert
-
-# Syntax: name cert-subject cert-dns
-# Example: traveler "/O=$acme/CN=traveler" traveler.acme.com 
+if [ -z "$DOMINO_HOST_NAME" ]; then
+  DOMINO_HOST_NAME=`hostname`
+fi
 
 check_create_dirs
-
-if [ "$CREATE_KEYRINGS" = "yes" ]; then
-  if [ ! $LOGNAME = "notes" ]; then
-    echo "You have be 'notes' to execute the kyrtool"
-    CREATE_KEYRINGS="no"
-  fi	
-fi
-
-rm_file "$TODO_FILE"
-
-if [ -z "$1" ]; then
-
-  # Create CA if not present but configured
-  create_ca
-
-  if [ "$CREATE_CONFIGURED_CERTS" = "yes" ]; then
-    generate_config_keys_and_certs
-  fi
-  
-  # Check all certs and show details
-  check_keys_and_certs
-
-else
-  # Generate one specific key/cert
-  create_key_cert "$1" "$2" "$3"
-  create_pem_kyr "$1"
-  check_cert "$1"
-fi
-
-if [ -e "$TODO_FILE" ]; then
-  cat $TODO_FILE
-  log
-  rm_file "$TODO_FILE"
-fi
-
+create_ca
+create_key_cert keyfile "/O=$DOMINO_ORG/CN=$DOMINO_HOST_NAME" "$DOMINO_HOST_NAME"
+create_pem_kyr keyfile
+cp $KYR_DIR/* $DOMINO_DATA_PATH
+rm -rf $CERTMGR_DIR

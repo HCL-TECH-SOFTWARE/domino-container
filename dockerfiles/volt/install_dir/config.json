@@ -5,7 +5,8 @@
     "notesini": {
        "HTTPEnableMethods": "GET,POST,PUT,DELETE,HEAD",
        "ServerTasks": "Update,Replica,Router,AMgr,AdminP,http",
-       "HTTPPublicURLs": "/iwaredir.nsf/*:.well-known*"
+       "HTTPPublicURLs": "/iwaredir.nsf/*:.well-known*",
+       "SSL_DISABLE_TLS_10": "1"
     },
     "database": [
         {
@@ -139,6 +140,10 @@
                             "value": "0"
                         },
                         {
+                            "name": "HTTP_NormalMode",
+                            "value": "2"
+                        },
+                        {
                             "name": "HTTP_SSLMode",
                             "value": "1"
                         },
@@ -161,7 +166,53 @@
                         {
                             "name": "FltRcvryNot",
                             "value": "LocalDomainAdmins"
+                        },
+
+                        {
+                            "name": "MajVer",
+                            "value": 11
+                        },
+
+                        {
+                            "name": "SSLCipherList",
+                            "value": "C030"
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "9F",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "C02F",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "9E",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "C028",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "6B",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "C027",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "67",
+                            "append": true
                         }
+
                     ]
                 }
             ]

@@ -239,6 +239,29 @@ download_file_link()
   esac
 }
 
+check_kyr_name()
+{
+  # check if kyr file has .kyr extension and generate matching .sth file
+  local fname
+  local ext
+
+  if [ -z "DominoKyrFile" ]; then
+    DominoSthFile=
+    return 0
+  fi
+
+  fname=`echo $DominoKyrFile | awk -F"." '{print $1}'`
+  ext=`echo $DominoKyrFile | awk -F"." '{print $2}'`
+
+  if [ -z "$ext" ]; then
+    DominoKyrFile=$DominoKyrFile.kyr
+  fi
+
+  DominoSthFile=$fname.sth
+
+  return 0
+}
+
 check_download_file_links()
 {
   # Donwload ID files if they start with http(s):
@@ -256,6 +279,20 @@ check_download_file_links()
 
   download_file_link SafeIDFile
   SafeIDFile=$RET_DOWNLOADED_FILE
+
+  # Download kyr file 
+  if [ ! -z "$DominoKyrFile" ]; then
+
+    check_kyr_name
+
+    download_file_link DominoKyrFile
+    DominoKyrFile=$RET_DOWNLOADED_FILE
+
+    download_file_link DominoSthFile
+    DominoSthFile=$RET_DOWNLOADED_FILE
+  fi
+
+  return 0
 }
 
 # --- Main Logic ---
@@ -364,6 +401,12 @@ if [ ! -z "$ConfigFile" ]; then
     log "ConfigFile [$ConfigFile] not found!"
   fi
 fi
+
+if [ ! -e keyfile.kyr ]; then
+  header "Creating Domino Key Ring File from local CA"
+  ./create_ca_kyr.sh
+fi
+
 
 # .oO Neuralizer .oO
 # Cleaning up environment variabels & history to reduce exposure of sensitive data

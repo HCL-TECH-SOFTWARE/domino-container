@@ -223,7 +223,7 @@ if [ -z "$DOMINO_HOST_NAME" ]; then
 fi
 
 if [ -z "$DOMINO_VOLT_URL" ]; then
-  DOMINO_VOLT_URL="http://$DOMINO_HOST_NAME/volt-apps"
+  DOMINO_VOLT_URL="https://$DOMINO_HOST_NAME/volt-apps"
 fi
 
 set_notes_ini_var "$DOMINO_INI_PATH" "HTTPEnableMethods" "GET,POST,PUT,DELETE,HEAD"

@@ -940,10 +940,13 @@ install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthc
 # Install keyring create/update script
 
 install_file "$INSTALL_DIR/create_keyring.sh" "$DOMDOCK_SCRIPT_DIR/create_keyring.sh" root root 755
+install_file "$INSTALL_DIR/create_ca_kyr.sh" "$DOMINO_DATA_PATH/create_ca_kyr.sh" root root 755
 
 # Copy tools required for automating Domino Server configuration
 install_file "$INSTALL_DIR/DatabaseSigner.jar" "$DOMINO_DATA_PATH/DatabaseSigner.jar" notes notes 644
 install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpdateConfig.jar" notes notes 644
+
+create_ca_kyr.sh
 
 # --- Cleanup Routines to reduce image size ---
 
