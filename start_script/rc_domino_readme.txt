@@ -129,7 +129,7 @@ c.) For systemd copy the domino.service file to /etc/systemd/system
 2.) Ensure the script files are executable by the notes user
 
     Example: 
-    chmod 755 /opt/nashcom/starscript/rc_domino_script
+    chmod 755 /opt/nashcom/startscript/rc_domino_script
     chmod 755 /etc/init.d/rc_domino
 
 	

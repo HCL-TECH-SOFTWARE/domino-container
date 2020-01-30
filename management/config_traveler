@@ -4,39 +4,19 @@
 # You should always make configuration changes in the config file instead of docker_domino
 
 DOCKER_CONTAINER=acme-traveler
-DOCKER_IMAGE_NAME=ibmcom/traveler
-DOCKER_IMAGE_VERSION=latest
-DOCKER_IMAGE_RELEASE_DATE=2019-12-20
-DOCKER_FILE=
+DOCKER_IMAGE_NAME=hclcom/traveler
 
-DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
-
-DOCKER_HOSTNAME=acme-traveler
+DOCKER_HOSTNAME=traveler.acme.com
 DOMINO_SHUTDOWN_TIMEOUT=60
+
 # DOCKER_NETWORK=host
 # DOCKER_PORTS="-p 192.168.100.109:1352:1352 -p 192.168.100.109:80:80 -p 192.168.100.109:443:443"
 
 DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 
-#DOCKER_VOLUMES="-v nfs_notesdata:/local/notesdata"
 DOCKER_VOLUMES="-v traveler_notesdata:/local/notesdata"
+#DOCKER_VOLUMES="-v traveler_local:/local"
 
 # Environment file is used for first container start (run) to pass setup parameters
 DOCKER_ENV_FILE=env_domino
-
-# Update CentOS while building the image
-#LinuxYumUpdate=yes
-
-# Configure software download location.
-# You can either use your own software repository remotely.
-# Or use a local software image hosted via NGINX temporary image.
-# By default NIGX is used hosting software from the local "software" directory.
-
-DOWNLOAD_FROM=
-
-# Configuration for NGINX container
-SOFTWARE_USE_NGINX=0
-SOFTWARE_DIR=/local/software
-SOFTWARE_PORT=7777
-SOFTWARE_CONTAINER=ibmsoftware
 

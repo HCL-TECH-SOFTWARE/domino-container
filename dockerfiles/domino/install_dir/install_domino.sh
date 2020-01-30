@@ -835,7 +835,7 @@ echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 
 # Install CentOS updates if requested
 if [ "$LinuxYumUpdate" = "yes" ]; then
-  header "Updating CentOS via yum"
+  header "Updating Linux via yum"
   yum update -y
 fi
 
@@ -884,6 +884,11 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
 fi
 
+# temporary install perl for installers 
+
+header "Installing perl"
+yum -y install perl
+
 cd "$INSTALL_DIR"
 
 # Download updated software.txt file if available
@@ -899,6 +904,10 @@ case "$PROD_NAME" in
     exit 1
     ;;
 esac
+
+# removing perl 
+header "Uninstalling perl"
+yum -y remove perl
 
 header "Installing Start Script"
 
@@ -934,6 +943,7 @@ install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthc
 # Install keyring create/update script
 
 install_file "$INSTALL_DIR/create_keyring.sh" "$DOMDOCK_SCRIPT_DIR/create_keyring.sh" root root 755
+install_file "$INSTALL_DIR/create_ca_kyr.sh" "$DOMINO_DATA_PATH/create_ca_kyr.sh" root root 755
 
 # Copy tools required for automating Domino Server configuration
 install_file "$INSTALL_DIR/DatabaseSigner.jar" "$DOMINO_DATA_PATH/DatabaseSigner.jar" notes notes 644
@@ -968,6 +978,9 @@ create_startup_link dbmt
 install_res_links
 
 remove_file "$LOTUS/notes/latest/linux/tunekrnl"
+
+# In some versions the Tika file is also in the data directory.
+remove_file $DOMINO_DATA_PATH/tika-server.jar
 
 # Ensure permissons are set correctly for data directory
 chown -R notes:notes $DOMINO_DATA_PATH
