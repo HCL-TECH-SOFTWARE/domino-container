@@ -4,7 +4,7 @@
 # You should always make configuration changes in the config file instead of docker_domino
 
 DOCKER_CONTAINER=acme-traveler
-DOCKER_IMAGE_NAME=hclcom/traveler
+DOCKER_IMAGE=hclcom/traveler:latest
 
 DOCKER_HOSTNAME=traveler.acme.com
 DOMINO_SHUTDOWN_TIMEOUT=60

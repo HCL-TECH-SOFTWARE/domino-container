@@ -4,9 +4,7 @@
 # You should always make configuration changes in the config file instead of docker_domino
 
 DOCKER_CONTAINER=acme-domino-ce
-DOCKER_IMAGE_NAME=ibmcom/domino-ce
-
-DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:latest"
+DOCKER_IMAGE=ibmcom/domino-ce:latest
 
 DOCKER_HOSTNAME=domino.acme.com
 DOMINO_SHUTDOWN_TIMEOUT=60

@@ -42,7 +42,7 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN yum install -y openssl perl bc which wget nano unzip rsync lsof gdb file hostname cpio procps-ng diffutils && \
+RUN yum install -y openssl perl bc which wget nano unzip rsync lsof gdb file hostname cpio procps-ng diffutils langpacks-en glibc-all-langpacks && \
   $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
