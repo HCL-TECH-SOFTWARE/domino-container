@@ -321,7 +321,10 @@ fi
 
 # Set Domino PID File if not present
 if [ -z "$DOMINO_PID_FILE" ]; then
-  DOMINO_PID_FILE=$DOMINO_DATA_PATH/domino.pid
+
+  # -- Domino PID file per Partition which has to match the PIDFile setting in the "domino.service" --
+
+  DOMINO_PID_FILE=/tmp/domino.pid
 fi
 
 DOMINO_INI_PATH=$DOMINO_DATA_PATH/notes.ini
@@ -414,9 +417,6 @@ export DOMINO_DOMLOG_DB_BACKUP_DIR
 
 # -- Monitor Filter String --
 #DOMINO_MONITOR_FILTER_STRING="Opened session for|Closed session for"
-
-# -- Domino PID file per Partition which has to match the PIDFile setting in the "domino.service" --
-DOMINO_PID_FILE=/tmp/domino.pid
 
 # Special Parameters
 
