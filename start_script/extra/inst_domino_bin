@@ -2,9 +2,9 @@
 
 ###########################################################################
 # Install Binary - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version 3.2.0 30.10.2018                                                #
+# Version 3.3.1 10.01.2020                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2018                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -122,4 +122,18 @@ install_binary()
   return 0
 }
 
+if [ -z "$LOTUS" ]; then
+  if [ -x /opt/hcl/domino/bin/server ]; then
+    LOTUS=/opt/hcl/domino
+  else
+    LOTUS=/opt/ibm/domino
+  fi
+fi
+
+export LOTUS
+export Notes_ExecDirectory=$LOTUS/notes/latest/linux
+
+install_binary "$1"
+
+exit 0
 
