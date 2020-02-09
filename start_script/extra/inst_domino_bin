@@ -20,9 +20,6 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-export LOTUS=/opt/ibm/domino
-export Notes_ExecDirectory=$LOTUS/notes/latest/linux
-
 pushd()
 {
   command pushd "$@" > /dev/null
