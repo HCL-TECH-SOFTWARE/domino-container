@@ -426,14 +426,14 @@ export DOMINO_DOMLOG_DB_BACKUP_DIR
 AMQ_NO_SIGWAIT_SIGTRAP=1
 export AMQ_NO_SIGWAIT_SIGTRAP
 
-# RC routines for SuSE and dummy functions for other platforms
+# RC routines for older SuSE versions that need rc their routines for init.d and dummy functions for other platforms
 
-if [ "$LINUX_DISTRIBUTION" = "suse" ]; then
+if [ "$LINUX_DISTRIBUTION" = "suse" ] && [ -z "$DOMINO_SYSTEMD_NAME" ]; then
   # init suse rc
   . /etc/rc.status
 else
 
-  # Dummy functions for non-SuSE platforms
+  # Dummy functions for non-SuSE platforms and also for SLES with systemd
 
   rc_status ()
   {
