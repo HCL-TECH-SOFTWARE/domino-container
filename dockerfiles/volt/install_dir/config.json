@@ -1,13 +1,20 @@
 {
     "title": "HCL Domino Volt",
     "owner": "Thomas Hampel",
-    "debug": false,
+    "debug": true,
     "notesini": {
        "HTTPEnableMethods": "GET,POST,PUT,DELETE,HEAD",
        "ServerTasks": "Update,Replica,Router,AMgr,AdminP,http",
        "HTTPPublicURLs": "/iwaredir.nsf/*:.well-known*",
        "SSL_DISABLE_TLS_10": "1"
     },
+    "testusers": {
+        "certifierPassword": "passw0rd",
+        "count": 30,
+        "lastName": "Adams",
+        "firstName": "Testuser",
+        "userPassword": "voltuser"
+     },
     "database": [
         {
             "create": true,
@@ -100,6 +107,36 @@
                         {
                             "name": "ListMembers",
                             "value": "LocalDomainAdmins"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams1/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams2/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams3/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams4/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams5/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams6/O=AMP"
                         },
                         {
                             "name": "ListCategory",
