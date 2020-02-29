@@ -552,6 +552,9 @@ install_file "$INSTALL_DIR/config.json" "$DOMINO_DATA_PATH/config.json" $DOMINO_
 # Overwrite Install Data Directory Copy File
 install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
 
+# Overwrite Domino Update Config File
+install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpdateConfig.jar" notes notes 644
+
 popd
 remove_directory $PROD_NAME 
 
@@ -566,7 +569,7 @@ chown -R notes:notes $DOMINO_DATA_PATH
 set_version
 
 cd $DOMINO_DATA_PATH
-tar -czf $INSTALL_ADDON_DATA_TAR $VOLT_DIR/*.ntf config.json ${PROD_NAME}_ver.txt
+tar -czf $INSTALL_ADDON_DATA_TAR $VOLT_DIR/*.ntf config.json DominoUpdateConfig.jar ${PROD_NAME}_ver.txt
 
 remove_directory $DOMINO_DATA_PATH
 create_directory $DOMINO_DATA_PATH notes notes 770
