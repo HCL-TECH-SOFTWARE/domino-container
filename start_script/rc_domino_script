@@ -2558,7 +2558,17 @@ case "$PARAM1" in
       fi
     fi
     
-    $DOMINO_BIN $JAVA_CONTROLLER_STRING < $DOMINO_INPUT_FILE >> $DOMINO_OUTPUT_LOG 2>&1 &
+    if [ "$DOMINO_DOCKER_STDOUT" = "yes" ]; then
+
+      echo "---- Docker Container Output ----"
+      cat $DOMINO_OUTPUT_LOG
+      rm "$DOMINO_OUTPUT_LOG"
+      $DOMINO_BIN $JAVA_CONTROLLER_STRING &
+
+    else
+      $DOMINO_BIN $JAVA_CONTROLLER_STRING < $DOMINO_INPUT_FILE >> $DOMINO_OUTPUT_LOG 2>&1 &
+    fi
+
     DOMINO_PID=$!
  
     # For servers using id-file passwords,
