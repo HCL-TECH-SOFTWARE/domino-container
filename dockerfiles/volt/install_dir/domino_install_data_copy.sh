@@ -282,11 +282,11 @@ copy_data_directory ()
   fi 
 
 
-  create_directory $DOMINO_DATA_PATH notes notes 770
-  create_directory /local/translog notes notes 770
-  create_directory /local/daos notes notes 770
-  create_directory /local/nif notes notes 770
-  create_directory /local/ft notes notes 770
+  create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP 770
+  create_directory /local/translog $DOMINO_USER $DOMINO_GROUP 770
+  create_directory /local/daos $DOMINO_USER $DOMINO_GROUP 770
+  create_directory /local/nif $DOMINO_USER $DOMINO_GROUP 770
+  create_directory /local/ft $DOMINO_USER $DOMINO_GROUP 770
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 

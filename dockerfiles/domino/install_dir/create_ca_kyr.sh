@@ -185,8 +185,8 @@ check_kyrtool ()
     return 1
   fi	
  
-  if [ ! $LOGNAME = "notes" ]; then
-    echo "You have be 'notes' to execute the kyrtool"
+  if [ $LOGNAME = "root" ]; then
+    echo "You cannot be 'root' to execute the kyrtool"
     return 1
   fi	
 

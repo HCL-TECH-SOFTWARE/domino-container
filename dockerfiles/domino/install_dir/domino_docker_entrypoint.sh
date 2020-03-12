@@ -27,7 +27,7 @@
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
-export DOMDOCK_SCRIPT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 
 
 if [ -z "$LOTUS" ]; then
@@ -39,8 +39,6 @@ if [ -z "$LOTUS" ]; then
 fi
 
 # export required environment variables
-export DOMINO_USER=notes
-export LOGNAME=notes
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DOMINO_DATA_PATH=/local/notesdata
 
@@ -48,10 +46,40 @@ DOMINO_SERVER_ID=$DOMINO_DATA_PATH/server.id
 DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 
-# in docker environment the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
-  LOGNAME=`whoami`
+
+  # in Docker environments check LOGNAME first. If not present use whoami, which could also fail
+  # some environments use --user to map a name, which isn't listed in the container
+  # in that case use the UID
+
+  LOGNAME=`whoami 2>/dev/null`
+
+  if [ -z "$LOGNAME" ]; then
+    LOGNAME=`id -u`
+
+    # if the uid/user is not in /etc/passwd, fix it
+    $DOMDOCK_SCRIPT_DIR/nuid2pw $LOGNAME
+    LOGNAME=notes
+  fi
 fi
+
+# if root is used, assume default user "notes"
+# else set it to LOGNAME -- can be a user name or UID
+
+if [ "$LOGNAME" = "0" ]; then
+  DOMINO_USER="notes"
+else
+  DOMINO_USER=$LOGNAME
+fi
+
+DOMINO_GROUP=`id -gn`
+
+export LOGNAME
+export DOMINO_USER
+export DOMINO_GROUP
+
+# set more paranoid umask to ensure files can be only read by user
+umask 0077
 
 stop_server ()
 {
@@ -104,7 +132,7 @@ if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
     cd $DOMINO_DATA_PATH
     $LOTUS/bin/server -listen 1352
   else
-    su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; $LOTUS/server -listen 1352"
+    su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; $LOTUS/bin/server -listen 1352"
   fi
 
   echo "--- Configuration ended ---"

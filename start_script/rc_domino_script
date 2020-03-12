@@ -38,7 +38,18 @@ fi
 
 if [ -z "$LOGNAME" ]; then
   if [ "$DOCKER_ENV"="yes" ]; then
-    export LOGNAME=`whoami`
+
+    # in Docker environments check LOGNAME first. If not present use whoami, which could also fail 
+    # some environments use --user to map a name, which isn't listed in the container
+    # in that case use the UID
+
+    LOGNAME=`whoami 2>/dev/null`
+
+    if [ -z "$LOGNAME" ]; then
+      LOGNAME=`id -u`
+    fi
+
+    export LOGNAME
   fi
 fi
 
@@ -420,7 +431,7 @@ export DOMINO_DOMLOG_DB_BACKUP_DIR
 
 # Special Parameters
 
-# TN 1249226 / SPR DMAT6DTTHH / D7.0.x In certain cases, running NSD manually can cause a Domino® server to crash on Unix 3systems.
+# TN 1249226 / SPR DMAT6DTTHH / D7.0.x In certain cases, running NSD manually can cause a Domino server to crash on Unix 3systems.
 # This crash can occur when a process such as the Agent Manager (AMGR) or Web Server (HTTP) is executing Java code. 
 # This parameter prevents the crash.
 AMQ_NO_SIGWAIT_SIGTRAP=1
@@ -722,14 +733,14 @@ clear_backup_logs ()
   if [ -z "$DOMINO_LOG_BACKUP_DIR" ]; then
     if [ -w "$DOMINO_DATA_PATH" ]; then
       DebugText "Removing old log backup files from : $DOMINO_DATA_PATH"
-      echo "Removing old log-files from data dir: [$DOMINO_DATA_PATH/$DOMINO_USER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
-      find "$DOMINO_DATA_PATH" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_USER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
+      echo "Removing old log-files from data dir: [$DOMINO_DATA_PATH/$DOMINO_SERVER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
+      find "$DOMINO_DATA_PATH" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_SERVER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
     fi
   else
     if [ -w "$DOMINO_LOG_BACKUP_DIR" ]; then
       DebugText "Removing files from : $DOMINO_LOG_BACKUP_DIR"
-      echo "Removing log-files from backup dir: [$DOMINO_LOG_BACKUP_DIR/$DOMINO_USER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
-      find "$DOMINO_LOG_BACKUP_DIR" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_USER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
+      echo "Removing log-files from backup dir: [$DOMINO_LOG_BACKUP_DIR/$DOMINO_SERVER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
+      find "$DOMINO_LOG_BACKUP_DIR" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_SERVER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
     fi
   fi
 }

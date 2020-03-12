@@ -559,8 +559,8 @@ install_traveler ()
 
   header "Installing $PROD_NAME $INST_VER"
 
-  create_directory $DOMINO_DATA_PATH notes notes 770
-  create_directory $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT notes notes 770
+  create_directory $DOMINO_DATA_PATH root root 777
+  create_directory $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT root root 777 
 
   if [ ! -e "$DOMINO_DATA_PATH/notes.ini" ]; then
     log_ok "Extracting install notesdata for Traveler install"
@@ -603,7 +603,7 @@ install_traveler ()
 
   popd
   remove_directory traveler 
-  create_directory $DOMINO_DATA_PATH notes notes 770
+  create_directory $DOMINO_DATA_PATH root root 777 
 
   return 0
 }
@@ -726,7 +726,7 @@ case "$PROD_NAME" in
     cp -f $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
     cd /
     remove_directory $DOMINO_DATA_PATH
-    create_directory $DOMINO_DATA_PATH notes notes 770
+    create_directory $DOMINO_DATA_PATH root root 777
     ;;
 
   proton)
