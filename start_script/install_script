@@ -174,7 +174,7 @@ install_file_noupdate()
   SOURCE_FILE=$1
   TARGET_FILE=$2
 	
-  if [ -e "$TARGET_FILE" ] ; then
+  if [ -e "$TARGET_FILE" ]; then
     echo "[$TARGET_FILE] Skipping file -- Not overwriting"  
     return 0
   fi
@@ -223,12 +223,12 @@ fi
 ln -s $START_SCRIPT_CONFIG_VER $START_SCRIPT_CONFIG_LATEST
 
 # create /etc/sysconfig if not present
-if [ ! -e "/etc/sysconfig" ] ; then
+if [ ! -e "/etc/sysconfig" ]; then
   mkdir /etc/sysconfig
   chmod 755 /etc/sysconfig
 fi
 
-if [ "$PARAM1" = "upd" ] ; then
+if [ "$PARAM1" = "upd" ]; then
   install_file $START_SCRIPT_DIR/rc_domino_config $DOMINO_INSTALL_CONFIG_FILEPATH "$DOMINO_USER" "$DOMINO_GROUP" 644
   install_file $START_SCRIPT_DIR/systemdbs.ind $DOMINO_DATA_PATH/systemdbs.ind "$DOMINO_USER" "$DOMINO_GROUP" 644
 else
@@ -241,15 +241,10 @@ fi
 
 OLD_RC_DOMINO_SCRIPT_LOCATION=/opt/ibm/domino/rc_domino_script
 
-if [ -e "$OLD_RC_DOMINO_SCRIPT_LOCATION" ] ; then
+if [ -e "$OLD_RC_DOMINO_SCRIPT_LOCATION" ]; then
   rm -f "$OLD_RC_DOMINO_SCRIPT_LOCATION"
   ln -s $DOMINO_START_SCRIPT_DIR/rc_domino_script $OLD_RC_DOMINO_SCRIPT_LOCATION
   echo link for legacy start script location created [$OLD_RC_DOMINO_SCRIPT_LOCATION]
-fi
-
-# set link to include script as 'domino' into path
-if [ ! -e /usr/bin/domino ] ; then
-  ln -s $INIT_PATH/$DOMINO_RC_NAME /usr/bin/domino
 fi
 
 # check if running inside a container
@@ -262,18 +257,29 @@ if [ -e "/run/.containerenv" ]; then
   DOCKER_ENV=yes
 fi
 
+# set link to include script as 'domino' into path
+if [ "$DOCKER_ENV" = "yes" ]; then
+  # for Docker we just link the main script
+  ln -s $DOMINO_START_SCRIPT_DIR/rc_domino_script /usr/bin/domino
+
+else
+  if [ ! -e /usr/bin/domino ]; then
+    ln -s $INIT_PATH/$DOMINO_RC_NAME /usr/bin/domino
+  fi
+fi
+
 if [ "$DOCKER_ENV" = "yes" ]; then
   # when running in a Docker environment, don't use systemd/init.d
   echo "Docker Environment detected!"
   
-  if [ "$PARAM1" = "upd" ] ; then
+  if [ "$PARAM1" = "upd" ]; then
     install_file "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
   else
     install_file_noupdate "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
   fi
 else
   if [ ${LARCH} = "linux" ]; then
-    if [ -e /etc/systemd/system ] ; then
+    if [ -e /etc/systemd/system ]; then
       install_file $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
   
       if [ $? -eq 2 ]; then
