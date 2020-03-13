@@ -46,29 +46,24 @@ DOMINO_SERVER_ID=$DOMINO_DATA_PATH/server.id
 DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 
-if [ -z "$LOGNAME" ]; then
+# always use whoami
+LOGNAME=`whoami 2>/dev/null`
 
-  # in Docker environments check LOGNAME first. If not present use whoami, which could also fail
-  # some environments use --user to map a name, which isn't listed in the container
-  # in that case use the UID
+# check current UID - only reliable source
+CURRENT_UID=`id -u`
 
-  LOGNAME=`whoami 2>/dev/null`
-
-  if [ -z "$LOGNAME" ]; then
-    LOGNAME=`id -u`
-
-    # if the uid/user is not in /etc/passwd, fix it
-    $DOMDOCK_SCRIPT_DIR/nuid2pw $LOGNAME
-    LOGNAME=notes
-  fi
-fi
-
-# if root is used, assume default user "notes"
-# else set it to LOGNAME -- can be a user name or UID
-
-if [ "$LOGNAME" = "0" ]; then
+if [ "$CURRENT_UID" = "0" ]; then
+  # if running as root set user to "notes"
   DOMINO_USER="notes"
 else
+  
+  if [ ! "$LOGNAME" = "notes" ]; then
+    # if the uid/user is not in /etc/passwd, update notes entry and remove numeric entry for UID if present
+
+    $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
+    LOGNAME=notes
+  fi
+
   DOMINO_USER=$LOGNAME
 fi
 

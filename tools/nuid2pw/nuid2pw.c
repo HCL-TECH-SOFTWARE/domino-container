@@ -39,6 +39,9 @@ int update_passwd_notes (const char *passwd_file, const char *uid_str, const cha
   int  count;
   int  i;
   char line[MAX_LINES+1][MAX_TEXT_LINE+1];
+  char num_user[255];
+
+  sprintf (num_user, "%s:", uid_str);
 
   count = 0;
   fp = fopen (passwd_file, "r");
@@ -73,6 +76,10 @@ int update_passwd_notes (const char *passwd_file, const char *uid_str, const cha
     if (strbegins (line[i], "notes:"))
     {
       fprintf (fp, "notes:x:%s:0::%s:/bin/bash\n", uid_str, homedir);  
+    }
+    else if (strbegins (line[i], num_user))
+    {
+      // skip
     }
     else
     {
