@@ -437,6 +437,10 @@ unset ServerPassword
 unset SystemDatabasePath
 unset Notesini
 
-cat /dev/null > ~/.bash_history && history -c
+if [ -e ~/.bash_history ]; then
+  cat /dev/null > ~/.bash_history
+fi
+
+history -c
 
 exit 0

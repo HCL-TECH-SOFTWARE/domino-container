@@ -58,10 +58,18 @@ if [ "$CURRENT_UID" = "0" ]; then
 else
   
   if [ ! "$LOGNAME" = "notes" ]; then
-    # if the uid/user is not in /etc/passwd, update notes entry and remove numeric entry for UID if present
 
-    $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
-    LOGNAME=notes
+    if [ -z "$LOGNAME" ]; then
+      # if the uid/user is not in /etc/passwd, update notes entry --> empty if uid cannot be mapped
+      $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
+      LOGNAME=notes
+    else
+      if [ -z "$DOCKER_ALLOW_UID" ]; then
+        # if the uid/user is not in /etc/passwd, update notes entry and remove numeric entry for UID if present
+        $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
+        LOGNAME=notes
+      fi
+    fi
   fi
 
   DOMINO_USER=$LOGNAME
