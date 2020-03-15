@@ -64,7 +64,7 @@ else
       $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
       LOGNAME=notes
     else
-      if [ -z "$DOCKER_ALLOW_UID" ]; then
+      if [ ! -z "$DOCKER_UID_NOTES_MAP_FORCE" ]; then
         # if the uid/user is not in /etc/passwd, update notes entry and remove numeric entry for UID if present
         $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
         LOGNAME=notes
