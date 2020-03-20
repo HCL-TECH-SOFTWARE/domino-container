@@ -4,4 +4,4 @@ traveler|11.0.0
 appdevpack|1.0.1
 proton|1.0.1
 iam|1.0.1
-volt|0.0.9.5
+volt|0.2.0.7

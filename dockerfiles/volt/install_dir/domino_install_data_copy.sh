@@ -382,7 +382,7 @@ copy_files_for_addon traveler
 
 
 # Quick hack to get Volt data deployed
-$DOMDOCK_DIR/install_addon_volt.sh
+$DOMDOCK_SCRIPT_DIR/install_addon_volt.sh
 
 print_delim
 log

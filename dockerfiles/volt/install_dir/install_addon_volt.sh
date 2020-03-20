@@ -5,7 +5,7 @@ PROD_NAME=volt
 DOMDOCK_DIR=/domino-docker
 DOMDOCK_LOG_DIR=/domino-docker
 DOMDOCK_TXT_DIR=/domino-docker
-DOMDOCK_SCRIPT_DIR=/domino-docker
+DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 DOMINO_DATA_PATH=/local/notesdata
 DOMINO_INI_PATH=$DOMINO_DATA_PATH/notes.ini
 INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${PROD_NAME}.taz
@@ -215,6 +215,23 @@ remove_file ()
   return 0
 }
 
+
+set_java_options_file ()
+{
+
+  get_notes_ini_var "$DOMINO_INI_PATH" "JavaOptionsFile"
+
+  if [ -z "$ret_ini_var" ]; then
+    JAVA_OPTIONS_FILE="$DOMINO_DATA_PATH/javaOptions.txt"
+    set_notes_ini_var "$DOMINO_INI_PATH" "JavaOptionsFile" "$JAVA_OPTIONS_FILE"
+  else
+    JAVA_OPTIONS_FILE="$ret_ini_var"
+  fi
+
+  touch "$JAVA_OPTIONS_FILE"
+  set_notes_ini_var "$JAVA_OPTIONS_FILE" "-Dvolt.serverURI" "$DOMINO_VOLT_URL"
+}
+
 # --- Main Install Logic ---
 
 
@@ -228,18 +245,6 @@ fi
 
 set_notes_ini_var "$DOMINO_INI_PATH" "HTTPEnableMethods" "GET,POST,PUT,DELETE,HEAD"
 
-get_notes_ini_var "$DOMINO_INI_PATH" "JavaOptionsFile"
-
-if [ -z "$ret_ini_var" ]; then
-  JAVA_OPTIONS_FILE="$DOMINO_DATA_PATH/javaOptions.txt"
-  set_notes_ini_var "$DOMINO_INI_PATH" "JavaOptionsFile" "$JAVA_OPTIONS_FILE"
-else
-  JAVA_OPTIONS_FILE="$ret_ini_var"
-fi
-
-touch "$JAVA_OPTIONS_FILE"
-set_notes_ini_var "$JAVA_OPTIONS_FILE" "-Dvolt.serverURI" "$DOMINO_VOLT_URL"
-
 set_notes_ini_var $DOMINO_INI_PATH ServerTasks "Update,Replica,Router,AMgr,AdminP"
 set_notes_ini_var $DOMINO_INI_PATH SetupLeaveServertasks "1"
 add_list_ini $DOMINO_INI_PATH servertasks http
@@ -248,5 +253,6 @@ if [ -r "$INSTALL_ADDON_DATA_TAR" ]; then
   tar xzvf "$INSTALL_ADDON_DATA_TAR" --overwrite -C $DOMINO_DATA_PATH
 fi
 
+set_java_options_file
 
 

@@ -22,7 +22,7 @@ INSTALL_DIR=`dirname $0`
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
-export DOMDOCK_SCRIPT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 
 if [ -z "$LOTUS" ]; then
   if [ -x /opt/hcl/domino/bin/server ]; then
@@ -458,6 +458,7 @@ install_binary()
   cp -f "$SOURCE_BIN" "$TARGET_BIN"
   chmod 755 "$TARGET_BIN"
 
+
   case "$INSTALL_BIN_NAME" in
     *.so)
       ;;
@@ -523,18 +524,23 @@ DOMINO_GROUP=notes
 ROOT_USER=root
 ROOT_GROUP=root
 
+DOMINO_DATA_DIRECTORY=$DOMINO_DATA_PATH
 create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP 770
 
-OSGI_PLUGIN_DIR="$Notes_ExecDirectory/osgi/volt/eclipse/plugins"
-OSGI_LINKS_DIR="$Notes_ExecDirectory/osgi/rcp/eclipse/links"
-VOLT_DIR=volt
-VOLT_DATA_DIR=$DOMINO_DATA_PATH/$VOLT_DIR
+OSGI_FOLDER="$Notes_ExecDirectory/osgi"
+OSGI_VOLT_FOLDER=$OSGI_FOLDER"/volt"
+PLUGINS_FOLDER=$OSGI_VOLT_FOLDER"/eclipse/plugins"
+VOLT_DATA_DIR=$DOMINO_DATA_DIRECTORY"/volt"
+LINKS_FOLDER=$OSGI_FOLDER"/rcp/eclipse/links"
+LINK_PATH=$OSGI_FOLDER"/volt"
+LINK_FILE=$LINKS_FOLDER"/volt.link" 
 
 create_directory "$VOLT_DATA_DIR" $DOMINO_USER $DOMINO_GROUP 770
-create_directory "$OSGI_PLUGIN_DIR" $ROOT_USER $ROOT_GROUP 777
-create_directory "$OSGI_LINKS_DIR" $ROOT_USER $ROOT_GROUP 777
+create_directory "$OSGI_VOLT_FOLDER" $ROOT_USER $ROOT_GROUP 777
+create_directory "$LINKS_FOLDER" $ROOT_USER $ROOT_GROUP 777
+create_directory "$PLUGINS_FOLDER" $ROOT_USER $ROOT_GROUP 777
 
-echo "path=$Notes_ExecDirectory/osgi/volt" > "$OSGI_LINKS_DIR/volt.link"
+echo 'path='$LINK_PATH > $LINK_FILE
 
 pushd .
 
@@ -544,7 +550,7 @@ unzip -q *.zip
 
 echo "Copying files .."
 cp -f "templates/"* "$VOLT_DATA_DIR"
-cp -f "bundles/"* "$OSGI_PLUGIN_DIR"
+cp -f "bundles/"* "$PLUGINS_FOLDER"
 
 install_file "$INSTALL_DIR/install_addon_volt.sh" "$DOMDOCK_SCRIPT_DIR/install_addon_volt.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$INSTALL_DIR/config.json" "$DOMINO_DATA_PATH/config.json" $DOMINO_USER $DOMINO_GROUP 644
@@ -569,7 +575,7 @@ chown -R notes:notes $DOMINO_DATA_PATH
 set_version
 
 cd $DOMINO_DATA_PATH
-tar -czf $INSTALL_ADDON_DATA_TAR $VOLT_DIR/*.ntf config.json DominoUpdateConfig.jar ${PROD_NAME}_ver.txt
+tar -czf $INSTALL_ADDON_DATA_TAR volt config.json DominoUpdateConfig.jar ${PROD_NAME}_ver.txt
 
 remove_directory $DOMINO_DATA_PATH
 create_directory $DOMINO_DATA_PATH notes notes 770
