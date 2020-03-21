@@ -11,6 +11,17 @@ DOMINO_INI_PATH=$DOMINO_DATA_PATH/notes.ini
 INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${PROD_NAME}.taz
 LOG_FILE=$DOMDOCK_LOG_DIR/addon_{$PROD_NAME}_data_update.log
 
+
+pushd()
+{
+  command pushd "$@" > /dev/null
+}
+
+popd ()
+{
+  command popd "$@" > /dev/null
+}
+
 get_notes_ini_var ()
 {
   # $1 = filename
@@ -235,14 +246,6 @@ set_java_options_file ()
 # --- Main Install Logic ---
 
 
-if [ -z "$DOMINO_HOST_NAME" ]; then
-  DOMINO_HOST_NAME=`hostname`
-fi
-
-if [ -z "$DOMINO_VOLT_URL" ]; then
-  DOMINO_VOLT_URL="https://$DOMINO_HOST_NAME/volt-apps"
-fi
-
 set_notes_ini_var "$DOMINO_INI_PATH" "HTTPEnableMethods" "GET,POST,PUT,DELETE,HEAD"
 
 set_notes_ini_var $DOMINO_INI_PATH ServerTasks "Update,Replica,Router,AMgr,AdminP"
@@ -253,6 +256,23 @@ if [ -r "$INSTALL_ADDON_DATA_TAR" ]; then
   tar xzvf "$INSTALL_ADDON_DATA_TAR" --overwrite -C $DOMINO_DATA_PATH
 fi
 
-set_java_options_file
+# disabled --> set_java_options_file
 
+
+if [ -z "$DOMINO_HOST_NAME" ]; then
+  DOMINO_HOST_NAME=`hostname`
+fi
+
+if [ -z "$DOMINO_VOLT_URL" ]; then
+  DOMINO_VOLT_URL="https://$DOMINO_HOST_NAME/volt-apps"
+fi
+
+pushd
+cd /local/notesdata
+/opt/hcl/domino/bin/nshdocker -VoltUri "$DOMINO_VOLT_URL"
+popd
+
+echo
+echo "Volt configuration done"
+echo
 

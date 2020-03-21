@@ -561,6 +561,9 @@ install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/dom
 # Overwrite Domino Update Config File
 install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpdateConfig.jar" notes notes 644
 
+# Install helper binary
+install_binary "$INSTALL_DIR/nshdocker"
+
 popd
 remove_directory $PROD_NAME 
 
