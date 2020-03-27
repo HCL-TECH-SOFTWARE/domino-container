@@ -84,9 +84,40 @@ export DOMINO_GROUP
 # set more paranoid umask to ensure files can be only read by user
 umask 0077
 
+
+run_external_script ()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  SCRIPT2RUN=$DOMDOCK_SCRIPT_DIR/$1
+
+  if [ ! -x "$SCRIPT2RUN" ]; then
+    echo "Cannot execute script " [$SCRIPT2RUN]
+    return 0
+  fi
+
+  if [ ! -z "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
+    SCRIPT_OWNER=`stat -c %U $SCRIPT2RUN`
+    if [ ! "$SCRIPT_OWNER" = "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
+      echo "Wrong owner for script -- not executing" [$SCRIPT2RUN]
+      return 0
+    fi
+  fi
+
+  echo "--- [$1] ---" 
+  $SCRIPT2RUN
+  echo "--- [$1] ---" 
+
+  return 0
+}
+
 stop_server ()
 {
   echo "--- Stopping Domino Server ---"
+
+  run_external_script before_shutdown.sh
 
   if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
     $DOMINO_START_SCRIPT stop
@@ -95,6 +126,9 @@ stop_server ()
   fi
 
   echo "--- Domino Server Shutdown ---"
+
+  run_external_script after_shutdown.sh
+
   exit 0
 }
 
@@ -103,12 +137,17 @@ stop_server ()
 
 trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
 
+
+run_external_script before_data_copy.sh
+
 # Data Update Operations
 if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
   $DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
 else
   su - notes -c $DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
 fi
+
+run_external_script before_config_script.sh
 
 # Check if server is configured. Else start custom configuration script
 if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
@@ -122,6 +161,8 @@ if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
     fi
   fi
 fi 
+
+run_external_script after_config_script.sh
 
 # Check if server is configured. Else start remote configuation on port 1352
 if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
@@ -141,6 +182,8 @@ if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
   echo "--- Configuration ended ---"
   echo
 fi
+
+run_external_script before_server_start.sh
 
 # Finally start server
 
