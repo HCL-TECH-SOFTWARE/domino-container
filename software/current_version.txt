@@ -1,4 +1,4 @@
-domino|11.0.0
+domino|11.0.1
 domino-ce|10.0.1|FP2
 traveler|11.0.0
 appdevpack|1.0.1
