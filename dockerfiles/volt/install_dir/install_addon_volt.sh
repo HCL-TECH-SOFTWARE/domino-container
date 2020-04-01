@@ -12,16 +12,6 @@ INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${PROD_NAME}.taz
 LOG_FILE=$DOMDOCK_LOG_DIR/addon_{$PROD_NAME}_data_update.log
 
 
-pushd()
-{
-  command pushd "$@" > /dev/null
-}
-
-popd ()
-{
-  command popd "$@" > /dev/null
-}
-
 get_notes_ini_var ()
 {
   # $1 = filename
@@ -267,10 +257,8 @@ if [ -z "$DOMINO_VOLT_URL" ]; then
   DOMINO_VOLT_URL="https://$DOMINO_HOST_NAME/volt-apps"
 fi
 
-pushd
 cd /local/notesdata
 /opt/hcl/domino/bin/nshdocker -VoltUri "$DOMINO_VOLT_URL"
-popd
 
 echo
 echo "Volt configuration done"

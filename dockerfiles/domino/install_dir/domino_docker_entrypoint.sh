@@ -93,6 +93,10 @@ run_external_script ()
 
   SCRIPT2RUN=$DOMDOCK_SCRIPT_DIR/$1
 
+  if [ ! -e "$SCRIPT2RUN" ]; then
+    return 0
+  fi
+
   if [ ! -x "$SCRIPT2RUN" ]; then
     echo "Cannot execute script " [$SCRIPT2RUN]
     return 0
