@@ -1,5 +1,9 @@
 #!/bin/bash
 
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+############################################################################
+
 DOMINO_INSTDATA_BACKUP=$Notes_ExecDirectory/data1_bck
 UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_data_update.log

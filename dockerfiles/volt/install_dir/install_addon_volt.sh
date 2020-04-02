@@ -1,5 +1,9 @@
 #!/bin/bash
 
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+############################################################################
+
 PROD_NAME=volt
 
 DOMDOCK_DIR=/domino-docker

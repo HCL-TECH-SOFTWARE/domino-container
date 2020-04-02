@@ -1,5 +1,10 @@
 #!/bin/bash
 
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
+############################################################################
+
 if [ -z "$SOFTWARE_DIR" ]; then
   SOFTWARE_DIR=./software
 fi
