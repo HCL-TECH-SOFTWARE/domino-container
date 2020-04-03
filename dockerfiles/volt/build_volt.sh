@@ -1,19 +1,7 @@
 #!/bin/bash
+
 ############################################################################
-# (C) Copyright IBM Corporation 2015, 2019                                 #
-#                                                                          #
-# Licensed under the Apache License, Version 2.0 (the "License");          #
-# you may not use this file except in compliance with the License.         #
-# You may obtain a copy of the License at                                  #
-#                                                                          #
-#      http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                          #
-# Unless required by applicable law or agreed to in writing, software      #
-# distributed under the License is distributed on an "AS IS" BASIS,        #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
-# See the License for the specific language governing permissions and      #
-# limitations under the License.                                           #
-#                                                                          #
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
 # Docker Build Script
@@ -114,13 +102,15 @@ check_docker_environment()
   PODMAN_MINIMUM_VERSION="1.5.0"
 
   if [ -x /usr/bin/podman ]; then
-    # podman environment detected
-    DOCKER_CMD=podman
-    DOCKER_ENV_NAME=Podman
-    DOCKER_VERSION_STR=`podman version | head -1`
-    DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
-    check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
-    return 0
+    if [ -z "$USE_DOCKER" ]; then
+      # podman environment detected
+      DOCKER_CMD=podman
+      DOCKER_ENV_NAME=Podman
+      DOCKER_VERSION_STR=`podman version | head -1`
+      DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
+      check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
+      return 0
+    fi  
   fi
 
   if [ -z "$DOCKERD_NAME" ]; then

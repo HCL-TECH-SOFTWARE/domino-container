@@ -1,20 +1,8 @@
 #!/bin/bash
 
 ############################################################################
-# (C) Copyright IBM Corporation 2015, 2019                                 #
-#                                                                          #
-# Licensed under the Apache License, Version 2.0 (the "License");          #
-# you may not use this file except in compliance with the License.         #
-# You may obtain a copy of the License at                                  #
-#                                                                          #
-#      http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                          #
-# Unless required by applicable law or agreed to in writing, software      #
-# distributed under the License is distributed on an "AS IS" BASIS,        #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
-# See the License for the specific language governing permissions and      #
-# limitations under the License.                                           #
-#                                                                          #
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
 INSTALL_DIR=`dirname $0`
@@ -22,7 +10,7 @@ INSTALL_DIR=`dirname $0`
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
-export DOMDOCK_SCRIPT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 
 if [ -z "$LOTUS" ]; then
   if [ -x /opt/hcl/domino/bin/server ]; then
@@ -559,8 +547,8 @@ install_traveler ()
 
   header "Installing $PROD_NAME $INST_VER"
 
-  create_directory $DOMINO_DATA_PATH notes notes 770
-  create_directory $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT notes notes 770
+  create_directory $DOMINO_DATA_PATH root root 777
+  create_directory $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT root root 777 
 
   if [ ! -e "$DOMINO_DATA_PATH/notes.ini" ]; then
     log_ok "Extracting install notesdata for Traveler install"
@@ -603,7 +591,7 @@ install_traveler ()
 
   popd
   remove_directory traveler 
-  create_directory $DOMINO_DATA_PATH notes notes 770
+  create_directory $DOMINO_DATA_PATH root root 777 
 
   return 0
 }
@@ -726,7 +714,7 @@ case "$PROD_NAME" in
     cp -f $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
     cd /
     remove_directory $DOMINO_DATA_PATH
-    create_directory $DOMINO_DATA_PATH notes notes 770
+    create_directory $DOMINO_DATA_PATH root root 777
     ;;
 
   proton)

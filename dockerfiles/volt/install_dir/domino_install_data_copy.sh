@@ -1,5 +1,9 @@
 #!/bin/bash
 
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+############################################################################
+
 DOMINO_INSTDATA_BACKUP=$Notes_ExecDirectory/data1_bck
 UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_data_update.log
@@ -282,11 +286,11 @@ copy_data_directory ()
   fi 
 
 
-  create_directory $DOMINO_DATA_PATH notes notes 770
-  create_directory /local/translog notes notes 770
-  create_directory /local/daos notes notes 770
-  create_directory /local/nif notes notes 770
-  create_directory /local/ft notes notes 770
+  create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP 770
+  create_directory /local/translog $DOMINO_USER $DOMINO_GROUP 770
+  create_directory /local/daos $DOMINO_USER $DOMINO_GROUP 770
+  create_directory /local/nif $DOMINO_USER $DOMINO_GROUP 770
+  create_directory /local/ft $DOMINO_USER $DOMINO_GROUP 770
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
@@ -382,7 +386,7 @@ copy_files_for_addon traveler
 
 
 # Quick hack to get Volt data deployed
-$DOMDOCK_DIR/install_addon_volt.sh
+$DOMDOCK_SCRIPT_DIR/install_addon_volt.sh
 
 print_delim
 log

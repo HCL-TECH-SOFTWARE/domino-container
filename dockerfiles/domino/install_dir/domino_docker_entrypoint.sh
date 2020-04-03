@@ -1,24 +1,9 @@
 #!/bin/bash
 
-###########################################################################
-# Docker Entrypoint - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.3.0 17.07.2019                                                #
-#                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2019                           #
-# Feedback domino_unix@nashcom.de                                         #
-#                                                                         #
-# Licensed under the Apache License, Version 2.0 (the "License");         #
-# you may not use this file except in compliance with the License.        #
-# You may obtain a copy of the License at                                 #
-#                                                                         #
-#      http://www.apache.org/licenses/LICENSE-2.0                         #
-#                                                                         #
-# Unless required by applicable law or agreed to in writing, software     #
-# distributed under the License is distributed on an "AS IS" BASIS,       #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
-# See the License for the specific language governing permissions and     #
-# limitations under the License.                                          #
-###########################################################################
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
+############################################################################
 
 # This script is the main entry point for Docker container and used instead of rc_domino.
 # You can still interact with the start script invoking rc_domino which is Docker aware.
@@ -27,7 +12,7 @@
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
-export DOMDOCK_SCRIPT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 
 
 if [ -z "$LOTUS" ]; then
@@ -39,8 +24,6 @@ if [ -z "$LOTUS" ]; then
 fi
 
 # export required environment variables
-export DOMINO_USER=notes
-export LOGNAME=notes
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DOMINO_DATA_PATH=/local/notesdata
 
@@ -48,14 +31,82 @@ DOMINO_SERVER_ID=$DOMINO_DATA_PATH/server.id
 DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 
-# in docker environment the LOGNAME is not set
-if [ -z "$LOGNAME" ]; then
-  LOGNAME=`whoami`
+# always use whoami
+LOGNAME=`whoami 2>/dev/null`
+
+# check current UID - only reliable source
+CURRENT_UID=`id -u`
+
+if [ "$CURRENT_UID" = "0" ]; then
+  # if running as root set user to "notes"
+  DOMINO_USER="notes"
+else
+  
+  if [ ! "$LOGNAME" = "notes" ]; then
+
+    if [ -z "$LOGNAME" ]; then
+      # if the uid/user is not in /etc/passwd, update notes entry --> empty if uid cannot be mapped
+      $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
+      LOGNAME=notes
+    else
+      if [ ! -z "$DOCKER_UID_NOTES_MAP_FORCE" ]; then
+        # if the uid/user is not in /etc/passwd, update notes entry and remove numeric entry for UID if present
+        $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
+        LOGNAME=notes
+      fi
+    fi
+  fi
+
+  DOMINO_USER=$LOGNAME
 fi
+
+DOMINO_GROUP=`id -gn`
+
+export LOGNAME
+export DOMINO_USER
+export DOMINO_GROUP
+
+# set more paranoid umask to ensure files can be only read by user
+umask 0077
+
+
+run_external_script ()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  SCRIPT2RUN=$DOMDOCK_SCRIPT_DIR/$1
+
+  if [ ! -e "$SCRIPT2RUN" ]; then
+    return 0
+  fi
+
+  if [ ! -x "$SCRIPT2RUN" ]; then
+    echo "Cannot execute script " [$SCRIPT2RUN]
+    return 0
+  fi
+
+  if [ ! -z "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
+    SCRIPT_OWNER=`stat -c %U $SCRIPT2RUN`
+    if [ ! "$SCRIPT_OWNER" = "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
+      echo "Wrong owner for script -- not executing" [$SCRIPT2RUN]
+      return 0
+    fi
+  fi
+
+  echo "--- [$1] ---" 
+  $SCRIPT2RUN
+  echo "--- [$1] ---" 
+
+  return 0
+}
 
 stop_server ()
 {
   echo "--- Stopping Domino Server ---"
+
+  run_external_script before_shutdown.sh
 
   if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
     $DOMINO_START_SCRIPT stop
@@ -64,6 +115,9 @@ stop_server ()
   fi
 
   echo "--- Domino Server Shutdown ---"
+
+  run_external_script after_shutdown.sh
+
   exit 0
 }
 
@@ -72,12 +126,17 @@ stop_server ()
 
 trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
 
+
+run_external_script before_data_copy.sh
+
 # Data Update Operations
 if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
   $DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
 else
   su - notes -c $DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
 fi
+
+run_external_script before_config_script.sh
 
 # Check if server is configured. Else start custom configuration script
 if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
@@ -92,6 +151,8 @@ if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
   fi
 fi 
 
+run_external_script after_config_script.sh
+
 # Check if server is configured. Else start remote configuation on port 1352
 if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
 
@@ -104,12 +165,14 @@ if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
     cd $DOMINO_DATA_PATH
     $LOTUS/bin/server -listen 1352
   else
-    su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; $LOTUS/server -listen 1352"
+    su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; $LOTUS/bin/server -listen 1352"
   fi
 
   echo "--- Configuration ended ---"
   echo
 fi
+
+run_external_script before_server_start.sh
 
 # Finally start server
 

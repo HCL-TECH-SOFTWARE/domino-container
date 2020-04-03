@@ -83,10 +83,6 @@ if [ ${LARCH} = "linux" ]; then
   DOMINO_SERVICE_NAME=`basename $DOMINO_SERVICE_NAME`
 fi
 
-if [ -z "$LOGNAME" ]; then
-  export LOGNAME=`whoami`
-fi
-
 # Docker Operations
 
 # check if running inside a container
@@ -100,7 +96,20 @@ if [ -e "/run/.containerenv" ]; then
 fi
 
 if [ "$DOCKER_ENV" = "yes" ]; then
-  
+
+  # in Docker environments check LOGNAME first. If not present use whoami, which could also fail
+  # some environments use --user to map a name, which isn't listed in the container
+  # in that case use the UID
+
+  LOGNAME=`whoami 2>/dev/null`
+
+  if [ -z "$LOGNAME" ]; then
+    LOGNAME=`id -u`
+  fi
+
+  export LOGNAME
+  export DOMINO_USER=$LOGNAME
+
   if [ "$LOGNAME" = "$DOMINO_USER" ]; then
     $DOMINO_START_SCRIPT "$1" "$2" "$3" "$4" "$5" "$6"
   else
@@ -108,7 +117,14 @@ if [ "$DOCKER_ENV" = "yes" ]; then
   fi
 
   exit 0
-fi  
+
+else
+
+  # normal operations
+  if [ -z "$LOGNAME" ]; then
+    export LOGNAME=`whoami`
+  fi
+fi
 
 # systemd operations for start/stop
 if [ -e /etc/systemd/system ]; then

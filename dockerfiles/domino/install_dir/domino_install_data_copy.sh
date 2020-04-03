@@ -1,5 +1,10 @@
 #!/bin/bash
 
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
+############################################################################
+
 DOMINO_INSTDATA_BACKUP=$Notes_ExecDirectory/data1_bck
 UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_data_update.log
@@ -202,7 +207,7 @@ copy_files_for_major_version ()
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
-  tar xzvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./dfc ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 
+  tar xzvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./dfc ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 2>&1
 
   echo $DOMINO_VERSION > $InstalledFile
 
@@ -246,6 +251,29 @@ copy_files_for_version ()
   return 0
 }
 
+
+delete_directory ()
+{
+  TARGET_FILE=$1
+
+  if [ -z "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  mountpoint -q "$TARGET_FILE"
+  if [ "$?" = "0" ]; then
+    echo "skipping directory delete for [$TARGET_FILE] -> is a mount point!"
+  fi
+
+  rmdir "$TARGET_FILE"
+
+  return 0
+}
+
 create_directory ()
 {
   TARGET_FILE=$1
@@ -263,12 +291,16 @@ create_directory ()
 
   mkdir -p "$TARGET_FILE"
 
-  if [ ! -z "$OWNER" ]; then
-    chown $OWNER:$GROUP "$TARGET_FILE"
-  fi
-
   if [ ! -z "$PERMS" ]; then
     chmod "$PERMS" "$TARGET_FILE"
+  fi
+
+
+  # script always runs as user. only root can change owner!
+  return 0
+
+  if [ ! -z "$OWNER" ]; then
+    chown $OWNER:$GROUP "$TARGET_FILE"
   fi
 
   return 0
@@ -281,12 +313,33 @@ copy_data_directory ()
     return 0
   fi 
 
+  DIR_PERM=700
 
-  create_directory $DOMINO_DATA_PATH notes notes 770
-  create_directory /local/translog notes notes 770
-  create_directory /local/daos notes notes 770
-  create_directory /local/nif notes notes 770
-  create_directory /local/ft notes notes 770
+  if [ -e $DOMINO_DATA_PATH ]; then
+    echo "$DOMINO_DATA_PATH already exists"
+  else
+    echo "creating directories with user: [$DOMINO_USER] group: [$DOMINO_GROUP] perm: [$DIR_PERM]"
+  fi
+
+  echo "------------------"
+  ls -l /local
+  echo "------------------"
+
+  log "------------------"
+  ls -l /local >> $LOG_FILE
+  log "------------------"
+
+  delete_directory $DOMINO_DATA_PATH
+  delete_directory /local/translog
+  delete_directory /local/daos
+  delete_directory /local/nif
+  delete_directory /local/ft
+
+  create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
+  create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
+  create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
@@ -297,7 +350,7 @@ copy_data_directory ()
 
   header "Extracting install data directory from [$INSTALL_DATA_TAR]" 
   
-  tar xzvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE
+  tar xzvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
   log
 }
 
@@ -339,7 +392,7 @@ copy_files_for_addon ()
 
   header "Extracting add-on install data directory from [$INSTALL_DATA_TAR]"
 
-  tar xzvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE
+  tar xzvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE 2>&1
 
   if [ "$PROD_NAME" = "traveler" ]; then
 
