@@ -55,6 +55,7 @@ First create a new/empty persistent volume that will be used as the Domino Data 
 
 Define the external host name that will be used to access this container. 
 In the example below we are using 'volt.demo.com'
+Note: When using a non-existing DNS name, make sure you update your locahosts file to route 'volt.demo.com' to 127.0.0.1 on your machine.
 
 ```bash
 docker volume create dominodata_volt
