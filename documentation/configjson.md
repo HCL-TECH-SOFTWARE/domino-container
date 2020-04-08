@@ -1,5 +1,3 @@
-# Structure
-- [Structure](#structure)
 - [Introduction](#introduction)
 - [Header](#header)
 - [Elements](#elements)
@@ -18,10 +16,29 @@ The config.json file can be used to describe the Domino server configuration in 
 
 File Format : JSON
 
+For a brief introduction to the file format take a look at [this video](https://www.youtube.com/watch?v=1idSGncUi08)
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=1idSGncUi08
+" target="_blank"><img src="http://img.youtube.com/vi/1idSGncUi08/0.jpg" 
+alt="JSON crash course" width="240" height="180" border="10" /></a>
+
 # Header
-* title - string
-* owner - string
-* debug - boolean
+The header of the file is supposed to provide generic information about this configuration. It is used for documentation purpose only.
+
+Optional elements:
+* title - string, defining the name of this configuration. 
+* owner - string, listing the author of this configuration.
+* debug - boolean (true/false) for enabling debug output. Default = false
+
+Example:
+```json
+    {
+        "title": "My perfect server configuration",
+        "owner": "Thomas Hampel",
+        "debug": false
+    }
+```
+
 
 # Elements
 The following object structure is used at root level
