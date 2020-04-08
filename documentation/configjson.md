@@ -1,19 +1,31 @@
-# Config.json
+# Structure
+- [Structure](#structure)
+- [Introduction](#introduction)
+- [Header](#header)
+- [Elements](#elements)
+- [Notes.ini](#notesini)
+- [Database](#database)
+  - [Database ACL](#database-acl)
+  - [Database Agents](#database-agents)
+  - [Database properties](#database-properties)
+  - [Documents](#documents)
+    - [Document fields](#document-fields)
+- [Test Users](#test-users)
+- [Mustache](#mustache)
+
+# Introduction
 The config.json file can be used to describe the Domino server configuration in order to be applied automatically at server startup.
 
-# General information
 File Format : JSON
 
-# Structure
-
-## header
+# Header
 * title - string
 * owner - string
 * debug - boolean
 
-## Body Elements
-
-* notesini - name value pairs
+# Elements
+The following object structure is used at root level
+* notesini
 * databases
   * acl
   * agents
@@ -28,7 +40,22 @@ File Format : JSON
   * (tbd)recertify
 
 
-### Database
+# Notes.ini
+Object name "notesini"
+Contains Notes.ini variable name and value in form of JSON name/value pairs.
+
+Entry names will be translated to Notes.ini variable names and entry values translate to values.
+
+Example:
+```json
+    "notesini": {
+       "HTTPEnableMethods": "GET,POST,PUT,DELETE,HEAD",
+       "ServerTasks": "Update,Replica,Router,AMgr,AdminP,http",
+       "HTTPPublicURLs": "/iwaredir.nsf/*:.well-known*"
+    }
+```
+
+# Database
 Object name "databases" since there can be multiple databases on the system.
 Contains multiple database entries in form of a JSON array.
 
@@ -60,7 +87,7 @@ Example:
     ]
 ```
 
-### Database ACL
+## Database ACL
 Object name "acl" (singular) since there is only one ACL per database.
 Contains multiple ACL entries in form of a JSON array
 Mandatory elements:
@@ -99,7 +126,7 @@ Example:
     ]
 ```
 
-### Database Agents
+## Database Agents
 Object name : "agents" (multiple) 
 Contains one or multiple agent definitions in form of a JSON array
 
@@ -125,7 +152,7 @@ Example:
     ]
 ```
 
-### Database properties
+## Database properties
 Object name : "properties" (multiple) defining the advanced database properties for a single database.
 
 Database options according to https://help.hcltechsw.com/dom_designer/11.0.1/basic/H_SETOPTION_METHOD_DB.html
@@ -164,7 +191,7 @@ Example:
     ],
 ```
 
-### Documents
+## Documents
 Object name "documents" (multiple) as there most likely are be multiple documents in a single database.
 Contains definition for documents in this database in form of a JSON array
 
@@ -196,8 +223,22 @@ Example:
             }
        ]
 ```
+### Document fields
+Object name "fields" (multiple)
+Upstream object : document
+Contains definition for fields and its values in this document in form of a JSON array
 
-### testusers
+Mandatory elements:
+* name - string defining the name of the field to be processed
+* value - string 
+
+Optional elements:
+* append - boolean (true/false) indicating if the value shall be appended to an existing field. If set to false the current field value will be overwritten (if any)
+
+# Test Users
+Object name "testusers" (multiple)
+Allows the registration of users in the Domino Directory. All users will have the same first, lastname and password. A number is appended to the last name to create unique user names.
+
 This example will create 30 test users, all named  Testuser Adams followed by a number. 
 e.g. Testuser Adams1, Testuser Adams2, Testuser Adams3, and so on
 
@@ -212,7 +253,7 @@ Example:
      },
 ```
 
-## Mustache
+# Mustache
 Object names and values in the JSON file can be replaced by environment variables using the mustache notation. Any value in double curly brackets {{}} will be replaced by the corresponding OS environment variable name
 
 {{OSEnvironmentVariableName}}
