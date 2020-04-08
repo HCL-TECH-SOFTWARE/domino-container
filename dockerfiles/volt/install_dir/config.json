@@ -15,7 +15,7 @@
         "firstName": "Testuser",
         "userPassword": "voltuser"
      },
-    "database": [
+    "databases": [
         {
             "create": true,
             "filename": "domcfg.nsf",
