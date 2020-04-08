@@ -99,6 +99,104 @@ Example:
     ]
 ```
 
+### Database Agents
+Object name : "agents" (multiple) 
+Contains one or multiple agent definitions in form of a JSON array
+
+Mandatory elements:
+* name
+* action - string defining what to do. Can be one of the following values: 
+  * run
+  * runonserver
+  * sign
+  * enable
+  * (tbd) schedule
+
+Example:
+```json
+    "agents" : [
+        {
+            "name" : "name-of-agent",
+            "action" : "enable"
+        },{
+            "name" : "another-agent",
+            "action" : "schedule"
+        }
+    ]
+```
+
+### Database properties
+Object name : "properties" (multiple) defining the advanced database properties for a single database.
+
+Database options according to https://help.hcltechsw.com/dom_designer/11.0.1/basic/H_SETOPTION_METHOD_DB.html
+
+Property names are not case sensitive in this case.
+
+Mandatory elements:
+None
+
+Optional elements:
+* LZCOMPRESSION - boolean (true/false) uses LZ1 compression for attachments
+* MAINTAINLASTACCESSED - boolean (true/false) maintains LastAccessed property
+* MOREFIELDS - boolean (true/false) allows more fields in database
+* NOHEADLINEMONITORS - boolean (true/false) doesn't allow headline monitoring
+* NOOVERWRITE - boolean (true/false)) doesn't overwrite free space
+* NORESPONSEINFO - boolean (true/false) doesn't support specialized response hierarchy
+* NOTRANSACTIONLOGGING - boolean (true/false) disables transaction logging
+* NOUNREAD - boolean (true/false) doesn't maintain unread marks
+* OPTIMIZATION - boolean (true/false) enables document table bitmap optimization
+* REPLICATEUNREADMARKSTOANY - boolean (true/false) replicates unread marks to all servers
+and 
+* USEDAOS - boolean (true/false)
+* COMPRESSDESIGN - boolean (true/false)
+* RESPONSETHREADHISTORY - boolean (true/false)
+* REPLICATEUNREADMARKSNEVER - boolean (true/false)
+* OUTOFOFFICEENABLED - boolean (true/false)
+* NOSIMPLESEARCH - boolean (true/false)
+
+Example:
+```json
+    "properties" : [
+        {
+            "usedaos" : true,
+            "lzcompression" : true
+        }
+    ],
+```
+
+### Documents
+Object name "documents" (multiple) as there most likely are be multiple documents in a single database.
+Contains definition for documents in this database in form of a JSON array
+
+Mandatory elements:
+* fields - sub-level element described in another chapter
+
+Optional elements:
+* create - boolean (true/false) indicating if the document shall be created 
+* computewithform - boolean (true/false) indicating if the document will be using all fields defined in the form 
+* type - string, defining a known document type in the Domino directory. values can be one of the following
+  * server
+  * configuration
+  * group
+
+This example is updating the (current) server document to set the http homepage.
+
+Example:
+```json
+    "documents": [
+            {
+                "create": true,
+                "type": "server",
+                "fields": [
+                    {
+                        "name": "HTTP_HomeURL",
+                        "value": "/homepage"
+                    }
+                ]
+            }
+       ]
+```
+
 ### testusers
 This example will create 30 test users, all named  Testuser Adams followed by a number. 
 e.g. Testuser Adams1, Testuser Adams2, Testuser Adams3, and so on
