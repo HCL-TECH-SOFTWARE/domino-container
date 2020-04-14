@@ -250,7 +250,12 @@ Mandatory elements:
 * value - string 
 
 Optional elements:
-* append - boolean (true/false) indicating if the value shall be appended to an existing field. If set to false the current field value will be overwritten (if any)
+* append - boolean (true/false) indicating if the value shall be appended to an existing field. If set to false the current field value will be overwritten (if any). Defaults to false.
+* isnames - boolean (true/false), declares the field to be of type NAMES. Defaults to false
+* isreaders - boolean (true/false), declares the field to be of type READER/NAMES. Defaults to false 
+* isauthors - boolean (true/false), declares the field to be of type AUTHOR/NAMES. Defaults to false
+* isprotected - boolean (true/false), declares the field to protected so that only editors can modify the document. Default to false
+* issigned - boolean (true/false), declares the field to signed when saving the document. Defaults to false
 
 Example:
 ```json
