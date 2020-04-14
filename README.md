@@ -61,7 +61,7 @@ Note: When using a non-existing DNS name, make sure you update your locahosts fi
 docker volume create dominodata_volt
 ```
 Then run a new Domino server with the configuration details of your choice. 
-Important!
+!Important!
 * Volt requires the host name to be specified using the -h parameter.
 * Make sure to specify the base image name at the very end of this command
 
@@ -120,7 +120,9 @@ Special Thanks go to the following people for having provided valuable input to 
 The Dockerfiles and associated scripts are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). 
 
 License for the products that can be installed within the images is as follows:
-
+* HCL Domino Volt 1.0 under the HCL License Agreement (https://www.hcltechsw.com/wps/portal/resources/license-agreements)
+* HCL Notes Traveler 11.0 under the HCL License Agreement (https://www.hcltechsw.com/wps/portal/resources/license-agreements)
+* HCL Domino Enterprise Server 11.0 under the HCL License Agreement (https://www.hcltechsw.com/wps/portal/resources/license-agreements)
 * IBM Domino Enterprise Server 10.0 under the [International Program License Agreement](https://www-03.ibm.com/software/sla/sladb.nsf/displaylis/FB664D0899DE8E7C8525832100805159?OpenDocument)
 * IBM Domino Community Server under the [International License Agreement for Non-Warranted Programs](https://www-01.ibm.com/common/ssi/rep_ca/2/877/ENUSZP17-0552/ENUSZP17-0552.PDF)
  
@@ -128,5 +130,6 @@ With some modifications the following base images can be built:
 * IBM Domino Utility Server
 * IBM Domino Collaboration Express
 * IBM Domino Messaging Express
+* HCL Sametime 11.0
   
 Note that the IBM Domino is commercial software - the software licenses agreement does not permit further distribution of the docker image that was built using this script.

@@ -110,32 +110,32 @@
                         },
                         {
                             "append": true,
-                            "name": "ListMembers",
+                            "name": "Members",
                             "value": "CN=Testuser Adams1/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "ListMembers",
+                            "name": "Members",
                             "value": "CN=Testuser Adams2/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "ListMembers",
+                            "name": "Members",
                             "value": "CN=Testuser Adams3/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "ListMembers",
+                            "name": "Members",
                             "value": "CN=Testuser Adams4/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "ListMembers",
+                            "name": "Members",
                             "value": "CN=Testuser Adams5/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "ListMembers",
+                            "name": "Members",
                             "value": "CN=Testuser Adams6/O=AMP"
                         },
                         {

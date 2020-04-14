@@ -170,7 +170,7 @@ Example:
 ```
 
 ## Database properties
-Object name : "properties" (multiple) defining the advanced database properties for a single database.
+Object name : "properties" (multiple) defining the advanced database properties in form of JSON name/value pairs for a single database.
 
 Database options according to https://help.hcltechsw.com/dom_designer/11.0.1/basic/H_SETOPTION_METHOD_DB.html
 
@@ -251,6 +251,34 @@ Mandatory elements:
 
 Optional elements:
 * append - boolean (true/false) indicating if the value shall be appended to an existing field. If set to false the current field value will be overwritten (if any)
+
+Example:
+```json
+    "fields": [
+        {
+            "name": "GroupType",
+            "value": "0"
+        },
+        {
+            "name": "Form",
+            "value": "Group"
+        },
+        {
+            "name": "ListName",
+            "value": "Volt Authors"
+        },
+        {
+            "append": true,
+            "name": "Members",
+            "value": "CN=Testuser Adams1/O=AMP"
+        },
+        {
+            "append": true,
+            "name": "Members",
+            "value": "CN=Testuser Adams2/O=AMP"
+        }
+    ]
+```
 
 # Test Users
 Object name "testusers" (multiple)
