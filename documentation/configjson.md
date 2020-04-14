@@ -275,12 +275,14 @@ Example:
         {
             "append": true,
             "name": "Members",
-            "value": "CN=Testuser Adams1/O=AMP"
+            "value": "CN=Testuser Adams1/O=AMP",
+            "isnames": true,
         },
         {
             "append": true,
             "name": "Members",
-            "value": "CN=Testuser Adams2/O=AMP"
+            "value": "CN=Testuser Adams2/O=AMP",
+            "isnames": true,
         }
     ]
 ```
