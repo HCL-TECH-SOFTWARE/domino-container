@@ -15,7 +15,7 @@
         "firstName": "Testuser",
         "userPassword": "voltuser"
      },
-    "databases": [
+    "database": [
         {
             "create": true,
             "filename": "domcfg.nsf",
@@ -110,32 +110,32 @@
                         },
                         {
                             "append": true,
-                            "name": "Members",
+                            "name": "ListMembers",
                             "value": "CN=Testuser Adams1/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "Members",
+                            "name": "ListMembers",
                             "value": "CN=Testuser Adams2/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "Members",
+                            "name": "ListMembers",
                             "value": "CN=Testuser Adams3/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "Members",
+                            "name": "ListMembers",
                             "value": "CN=Testuser Adams4/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "Members",
+                            "name": "ListMembers",
                             "value": "CN=Testuser Adams5/O=AMP"
                         },
                         {
                             "append": true,
-                            "name": "Members",
+                            "name": "ListMembers",
                             "value": "CN=Testuser Adams6/O=AMP"
                         },
                         {
@@ -398,3 +398,4 @@
         }
     ]
  }
+

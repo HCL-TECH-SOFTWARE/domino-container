@@ -15,5 +15,5 @@ traveler|11.0.0|Traveler_11.0_Linux_ML.tar.gz|-|381bfae133eb7288f37c531a636a8ec0
 traveler|11.0.1|Traveler_11.0.1_Linux_ML.tar.gz|-|b3ef80877ad4892e2c8d78b12f4086118baf7c4377af4c459f4455e4898d80ff
 proton|1.0.1|DOMINO_APPDEV_PACK_1.0.1_MP_EN.tgz|CC0NGEN|fd04a8c61ee6b0887c5ccfb3be817f1fdd27f4da8c0392c086843ecd4d6c2e98
 iam|1.0.1|DOMINO_APPDEV_PACK_1.0.1_MP_EN.tgz|CC0NGEN|fd04a8c61ee6b0887c5ccfb3be817f1fdd27f4da8c0392c086843ecd4d6c2e98
-volt|0.2.0.7|hcl.domino.volt-0.2.0.7.zip|-|f6ed592fb7323cf74edd0e0c94d240b5479bed56a669c2ec2b37c34e8b60a216
+volt|1.0.0.5|hcl.domino.volt-1.0.0.5.zip|-|0ade3cdb0d5c5171faeb1d4a202584eb0f4245378e8145687cb51cc5839c9688
 
