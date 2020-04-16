@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Nash!Com Domino Docker Management Script                                #
-# Version 1.0.7 07.10.2019                                                #
+# Version 1.0.8 30.01.2020                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2019                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,30 +21,31 @@
 ###########################################################################
 
 SCRIPT_NAME=$0
-FULL_SCRIPT_NAME=`realpath $0`
+FULL_SCRIPT_NAME=$0
 SCRIPT_DIR_NAME=`dirname $SCRIPT_NAME`
 FULL_SCRIPT_DIR_NAME=`dirname $FULL_SCRIPT_NAME`
+CONFIG_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/config_`basename $SCRIPT_NAME | awk -F "docker_" '{print $2}'`
 PARAM1=$1
 PARAM2=$2
 PARAM3=$3
 
 # Default Configuration parameters overwritten by config file if available in same directory
 
-DOCKER_CONTAINER=nashcom-domino
-DOCKER_IMAGE_NAME=nashcom/domino
-DOCKER_IMAGE_VERSION=10.0.0
-DOCKER_IMAGE_RELEASE_DATE=2019-01-01
-DOCKER_FILE=dockerfile_domino
+DOCKER_CONTAINER=
+DOCKER_IMAGE_NAME=
+DOCKER_IMAGE_VERSION=
+DOCKER_IMAGE_RELEASE_DATE=
+DOCKER_FILE=
 
 DOMINO_SHUTDOWN_TIMEOUT=60
-DOCKER_HOSTNAME=nsh-domino
+DOCKER_HOSTNAME=
 # DOCKER_NETWORK_NAME=host
 # DOCKER_SPECIAL_OPTIONS="--ip 172.17.0.1"
 DOCKER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
-DOCKER_VOLUMES="-v notesdata:/local/notesdata"
+DOCKER_VOLUMES=
 
 # Environment file is used for first container start (run) to pass setup parameters
-DOCKER_ENV_FILE=env_domino
+DOCKER_ENV_FILE=
 
 # Update CentOS while building the image
 LinuxYumUpdate=yes
@@ -67,7 +68,7 @@ if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
   DOMINO_DOCKER_CFG_DIR=/local/cfg
 fi
 
-DOCKER_SCRIPT_VERSION=1.0.6
+DOCKER_SCRIPT_VERSION=1.0.8
 
 # Get configuration from config file
 # First check in global config directory before checking in current directory
@@ -180,13 +181,15 @@ check_docker_environment()
   PODMAN_MINIMUM_VERSION="1.0.5"
 
   if [ -x /usr/bin/podman ]; then
-    # podman environment detected
-    DOCKER_CMD=podman
-    DOCKER_ENV_NAME=Podman
-    DOCKER_VERSION_STR=`podman -v`
-    DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
-    check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
-    return 0
+    if [ -z "$USE_DOCKER" ]; then
+      # podman environment detected
+      DOCKER_CMD=podman
+      DOCKER_ENV_NAME=Podman
+      DOCKER_VERSION_STR=`podman version`
+      DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f2`
+      check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
+      return 0
+    fi
   fi
 
   if [ -z "$DOCKERD_NAME" ]; then
@@ -560,10 +563,15 @@ docker_logs ()
 
 docker_build ()
 {
-  if [ -z $DOCKER_FILE ]; then
+  if [ -z "$DOCKER_FILE" ]; then
     echo "No dockerfile specified in config file."
     echo "If you would like to build a custom image please provide a dockerfile name"
     echo "otherwise the default image is being used to 'run' a container"
+    return 0
+  fi
+
+  if [ -z "$DOCKER_IMAGE_NAMEVERSION" ]; then
+    echo "No target image defined."
     return 0
   fi
 
@@ -641,7 +649,11 @@ docker_run ()
 
   fi
 
-  $DOCKER_CMD run $DOCKER_IT $DOCKER_PORTS --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_SPECIAL_OPTIONS $DOCKER_IMAGE
+  if [ ! -z "$DOCKER_NOTES_UID" ]; then
+    DOCKER_NOTES_UID_OPTION="--user $DOCKER_NOTES_UID"
+  fi
+
+  $DOCKER_CMD run $DOCKER_IT $DOCKER_PORTS --hostname=$DOCKER_HOSTNAME --name $DOCKER_CONTAINER $DOCKER_NETWORK $DOCKER_ENV_FILE_OPTION --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE $DOCKER_VOLUMES $DOCKER_SPECIAL_OPTIONS $DOCKER_NOTES_UID_OPTION $DOCKER_IMAGE
 
   return 0
 }

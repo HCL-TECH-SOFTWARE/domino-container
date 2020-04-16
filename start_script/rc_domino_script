@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.3.0 01.01.2020                                                #
+# Version 3.3.1 10.01.2020                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=3.3.0
+DOMINO_SCRIPT_VERSION=3.3.1
 
 # VERBOSE_INFO="yes"
 
@@ -38,7 +38,18 @@ fi
 
 if [ -z "$LOGNAME" ]; then
   if [ "$DOCKER_ENV"="yes" ]; then
-    export LOGNAME=`whoami`
+
+    # in Docker environments check LOGNAME first. If not present use whoami, which could also fail 
+    # some environments use --user to map a name, which isn't listed in the container
+    # in that case use the UID
+
+    LOGNAME=`whoami 2>/dev/null`
+
+    if [ -z "$LOGNAME" ]; then
+      LOGNAME=`id -u`
+    fi
+
+    export LOGNAME
   fi
 fi
 
@@ -68,6 +79,14 @@ if [ -r "$DOMINO_CONFIG_FILE" ]; then
   
   if [ "$VERBOSE_INFO" = "yes" ]; then
     echo "Using Domino config File [$DOMINO_CONFIG_FILE]"
+  fi
+fi
+
+# Reading environment variable file (variables defined in config file overwrirte environment)
+if [ -r "$DOMINO_ENV_FILE" ]; then
+  . $DOMINO_ENV_FILE
+  if [ "$VERBOSE_INFO" = "yes" ]; then
+    echo "Using environment File [$DOMINO_ENV_FILE]"
   fi
 fi
 
@@ -313,7 +332,10 @@ fi
 
 # Set Domino PID File if not present
 if [ -z "$DOMINO_PID_FILE" ]; then
-  DOMINO_PID_FILE=$DOMINO_DATA_PATH/domino.pid
+
+  # -- Domino PID file per Partition which has to match the PIDFile setting in the "domino.service" --
+
+  DOMINO_PID_FILE=/tmp/domino.pid
 fi
 
 DOMINO_INI_PATH=$DOMINO_DATA_PATH/notes.ini
@@ -407,25 +429,22 @@ export DOMINO_DOMLOG_DB_BACKUP_DIR
 # -- Monitor Filter String --
 #DOMINO_MONITOR_FILTER_STRING="Opened session for|Closed session for"
 
-# -- Domino PID file per Partition which has to match the PIDFile setting in the "domino.service" --
-DOMINO_PID_FILE=/tmp/domino.pid
-
 # Special Parameters
 
-# TN 1249226 / SPR DMAT6DTTHH / D7.0.x In certain cases, running NSD manually can cause a Domino® server to crash on Unix 3systems.
+# TN 1249226 / SPR DMAT6DTTHH / D7.0.x In certain cases, running NSD manually can cause a Domino server to crash on Unix 3systems.
 # This crash can occur when a process such as the Agent Manager (AMGR) or Web Server (HTTP) is executing Java code. 
 # This parameter prevents the crash.
 AMQ_NO_SIGWAIT_SIGTRAP=1
 export AMQ_NO_SIGWAIT_SIGTRAP
 
-# RC routines for SuSE and dummy functions for other platforms
+# RC routines for older SuSE versions that need rc their routines for init.d and dummy functions for other platforms
 
-if [ "$LINUX_DISTRIBUTION" = "suse" ]; then
+if [ "$LINUX_DISTRIBUTION" = "suse" ] && [ -z "$DOMINO_SYSTEMD_NAME" ]; then
   # init suse rc
   . /etc/rc.status
 else
 
-  # Dummy functions for non-SuSE platforms
+  # Dummy functions for non-SuSE platforms and also for SLES with systemd
 
   rc_status ()
   {
@@ -714,14 +733,14 @@ clear_backup_logs ()
   if [ -z "$DOMINO_LOG_BACKUP_DIR" ]; then
     if [ -w "$DOMINO_DATA_PATH" ]; then
       DebugText "Removing old log backup files from : $DOMINO_DATA_PATH"
-      echo "Removing old log-files from data dir: [$DOMINO_DATA_PATH/$DOMINO_USER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
-      find "$DOMINO_DATA_PATH" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_USER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
+      echo "Removing old log-files from data dir: [$DOMINO_DATA_PATH/$DOMINO_SERVER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
+      find "$DOMINO_DATA_PATH" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_SERVER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
     fi
   else
     if [ -w "$DOMINO_LOG_BACKUP_DIR" ]; then
       DebugText "Removing files from : $DOMINO_LOG_BACKUP_DIR"
-      echo "Removing log-files from backup dir: [$DOMINO_LOG_BACKUP_DIR/$DOMINO_USER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
-      find "$DOMINO_LOG_BACKUP_DIR" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_USER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
+      echo "Removing log-files from backup dir: [$DOMINO_LOG_BACKUP_DIR/$DOMINO_SERVER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
+      find "$DOMINO_LOG_BACKUP_DIR" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_SERVER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
     fi
   fi
 }
@@ -1450,9 +1469,13 @@ run_monitor ()
     fi
 
     if [ "$var" = "exit" ]; then
-      echo "'exit' ignored. use 'EXIT' to shutdown the server. use 'close' or 'stop' to close live console"
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
     elif [ "$var" = "quit" ]; then
-      echo "'quit' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+    elif [ "$var" = "e" ]; then
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+    elif [ "$var" = "q" ]; then
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
     elif [ "$var" = "stop" ]; then
       stop_monitor
       return 0
@@ -2546,7 +2569,17 @@ case "$PARAM1" in
       fi
     fi
     
-    $DOMINO_BIN $JAVA_CONTROLLER_STRING < $DOMINO_INPUT_FILE >> $DOMINO_OUTPUT_LOG 2>&1 &
+    if [ "$DOMINO_DOCKER_STDOUT" = "yes" ]; then
+
+      echo "---- Docker Container Output ----"
+      cat $DOMINO_OUTPUT_LOG
+      rm "$DOMINO_OUTPUT_LOG"
+      $DOMINO_BIN $JAVA_CONTROLLER_STRING &
+
+    else
+      $DOMINO_BIN $JAVA_CONTROLLER_STRING < $DOMINO_INPUT_FILE >> $DOMINO_OUTPUT_LOG 2>&1 &
+    fi
+
     DOMINO_PID=$!
  
     # For servers using id-file passwords,

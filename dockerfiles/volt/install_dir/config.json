@@ -1,0 +1,401 @@
+{
+    "title": "HCL Domino Volt",
+    "owner": "Thomas Hampel",
+    "debug": true,
+    "notesini": {
+       "HTTPEnableMethods": "GET,POST,PUT,DELETE,HEAD",
+       "ServerTasks": "Update,Replica,Router,AMgr,AdminP,http",
+       "HTTPPublicURLs": "/iwaredir.nsf/*:.well-known*",
+       "SSL_DISABLE_TLS_10": "1"
+    },
+    "testusers": {
+        "certifierPassword": "passw0rd",
+        "count": 30,
+        "lastName": "Adams",
+        "firstName": "Testuser",
+        "userPassword": "voltuser"
+     },
+    "database": [
+        {
+            "create": true,
+            "filename": "domcfg.nsf",
+            "title": "Domino Web Server Configuration",
+            "template": "domcfg5.ntf",
+            "signwithadminp": true,
+            "acl": [
+                {
+                    "name": "-Default-",
+                    "level": "2",
+                    "type": "0"
+                }
+            ],
+            "documents": [
+                {
+                    "create": true,
+                    "fields": [
+                        {
+                            "name": "Form",
+                            "value": "LoginMap"
+                        },
+                        {
+                            "name": "LF_LoginForm",
+                            "value": "DWALoginForm"
+                        },
+                        {
+                            "name": "LF_LoginFormDB",
+                            "value": "iwaredir.nsf"
+                        },
+                        {
+                            "name": "LF_ServerType",
+                            "value": "0"
+                        },
+                        {
+                            "name": "LF_IP",
+                            "value": ""
+                        },
+                        {
+                            "name": "$PublicAccess ",
+                            "value": "1"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "create": true,
+            "filename": "volt/VoltBuilder.nsf",
+            "title": "Domino Volt Builder",
+            "template": "volt/VoltBuilder.ntf",
+            "signwithadminp": true,
+            "acl": [
+                {
+                    "name": "Volt Authors",
+                    "level": "4",
+                    "type": "0"
+                },
+                {
+                    "name": "-Default-",
+                    "level": "2",
+                    "type": "0"
+                }
+            ]
+        },
+        {
+            "create": false,
+            "filename": "names.nsf",
+            "documents": [
+                {
+                    "create": true,
+                    "type": "Group",
+                    "fields": [
+                        {
+                        "name": "GroupType",
+                        "value": "0"
+                        },
+                        {
+                            "name": "Form",
+                            "value": "Group"
+                        },
+                        {
+                            "name": "Type",
+                            "value": "Group"
+                        },
+                        {
+                            "name": "ListName",
+                            "value": "Volt Authors"
+                        },
+                        {
+                            "name": "ListMembers",
+                            "value": "LocalDomainAdmins"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams1/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams2/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams3/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams4/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams5/O=AMP"
+                        },
+                        {
+                            "append": true,
+                            "name": "ListMembers",
+                            "value": "CN=Testuser Adams6/O=AMP"
+                        },
+                        {
+                            "name": "ListCategory",
+                            "value": ""
+                        },
+                        {
+                            "name": "ListDescription",
+                            "value": "People who can create Volt Applications"
+                        },
+                        {
+                            "name": "LocalDomainAdmins",
+                            "value": ""
+                        }
+                ]
+                },
+                {
+                    "create": false,
+                    "type": "Server",
+                    "fields": [
+                        {
+                            "name": "HTTP_HomeURL",
+                            "value": "/volt-apps"
+                        },
+                        {
+                            "name": "CreateAccess",
+                            "value": "Volt Authors"
+                        },
+                        {
+                            "name": "HTTP_EnableSessionAuth",
+                            "value": "1"
+                        },
+                        {
+                            "name": "HTTP_TCPNP",
+                            "value": "1"
+                        },
+                        {
+                            "name": "HTTP_AllowAnonymous",
+                            "value": "0"
+                        },
+                        {
+                            "name": "HTTP_NormalMode",
+                            "value": "2"
+                        },
+                        {
+                            "name": "HTTP_SSLMode",
+                            "value": "1"
+                        },
+                        {
+                            "name": "HTTP_SSLNP",
+                            "value": "1"
+                        },
+                        {
+                            "name": "HTTP_SSLAnonymous",
+                            "value": "0"
+                        },
+                        {
+                            "name": "NSDEnbld",
+                            "value": "1"
+                        },
+                        {
+                            "name": "FREnbld",
+                            "value": "1"
+                        },
+                        {
+                            "name": "FltRcvryNot",
+                            "value": "LocalDomainAdmins"
+                        },
+
+                        {
+                            "name": "MajVer",
+                            "value": 11
+                        },
+
+                        {
+                            "name": "SSLCipherList",
+                            "value": "C030"
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "9F",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "C02F",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "9E",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "C028",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "6B",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "C027",
+                            "append": true
+                        },
+                        {
+                            "name": "SSLCipherList",
+                            "value": "67",
+                            "append": true
+                        }
+
+                    ]
+                }
+            ]
+        },
+        {
+            "create": true,
+            "filename": "iwaredir.nsf",
+            "title": "Redirect",
+            "template": "iwaredir.ntf",
+            "signwithadminp": true,
+            "acl": [
+                {
+                    "name": "Anonymous",
+                    "level": "0",
+                    "type": "0"
+                },
+                {
+                    "name": "-Default-",
+                    "level": "3",
+                    "type": "0"
+                }
+            ],
+            "documents": [
+                {
+                    "create": true,
+                    "fields": [
+                        {
+                            "name": "ServerNameSelect",
+                            "value": "1"
+                        },
+                        {
+                            "name": "WMRLookupPref",
+                            "value": "0"
+                        },
+                        {
+                            "name": "RedirectMessageWebView",
+                            "value": "Redirecting..."
+                        },
+                        {
+                            "name": "$LANGUAGE",
+                            "value": "en"
+                        },
+                        {
+                            "name": "$ServerSettingsTable",
+                            "value": "Select"
+                        },
+                        {
+                            "name": "EnableUltraliteRadioButton",
+                            "value": "0"
+                        },
+                        {
+                            "name": "Form",
+                            "value": "AutoLogin"
+                        },
+                        {
+                            "name": "MobileAgentKeywords",
+                            "value": "ipod,iphone,android,ipad"
+                        },
+                        {
+                            "name": "SSLPort",
+                            "value": "443"
+                        },
+                        {
+                            "name": "RedirectionTime",
+                            "value": 1
+                        },
+                        {
+                            "name": "RedirectionMessageText",
+                            "value": "Redirecting..."
+                        },
+                        {
+                            "name": "WMRGlobalProfileURL",
+                            "value": "/"
+                        },
+                        {
+                            "name": "ServerNameChange",
+                            "value": "0"
+                        },
+                        {
+                            "name": "ForceSSL",
+                            "value": "1"
+                        },
+                        {
+                            "name": "OmitProtocol",
+                            "value": "0"
+                        },
+                        {
+                            "name": "UseHomeMailServer",
+                            "value": "0"
+                        },
+                        {
+                            "name": "LoginOptions",
+                            "value": "0"
+                        },
+                        {
+                            "name": "EncryptPassword",
+                            "value": "0"
+                        },
+                        {
+                            "name": "WebMailRedirectEnableDebug",
+                            "value": "0"
+                        },
+                        {
+                            "name": "WebMailRedirectProfileEnable",
+                            "value": "0"
+                        },
+                        {
+                            "name": "WMRVersion",
+                            "value": "650"
+                        },
+                        {
+                            "name": "WMRAttachmentNames",
+                            "value": "BLANK"
+                        },
+                        {
+                            "name": "$dWMR",
+                            "value": "(Help-BLANK)"
+                        },
+                        {
+                            "name": "ServerName",
+                            "value": ""
+                        },
+                        {
+                            "name": "MailServerDomainName",
+                            "value": ""
+                        },
+                        {
+                            "name": "RevProxyServerName",
+                            "value": ""
+                        },
+                        {
+                            "name": "ForcePath",
+                            "value": ""
+                        },
+                        {
+                            "name": "dWMRBackgroundColour",
+                            "value": "#FFFFFE"
+                        },
+                        {
+                            "name": "dWMRNewLogoName",
+                            "value": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+ }
+

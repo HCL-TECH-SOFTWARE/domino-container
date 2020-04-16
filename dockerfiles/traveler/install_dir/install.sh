@@ -1,20 +1,8 @@
 #!/bin/bash
 
 ############################################################################
-# (C) Copyright IBM Corporation 2015, 2019                                 #
-#                                                                          #
-# Licensed under the Apache License, Version 2.0 (the "License");          #
-# you may not use this file except in compliance with the License.         #
-# You may obtain a copy of the License at                                  #
-#                                                                          #
-#      http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                          #
-# Unless required by applicable law or agreed to in writing, software      #
-# distributed under the License is distributed on an "AS IS" BASIS,        #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
-# See the License for the specific language governing permissions and      #
-# limitations under the License.                                           #
-#                                                                          #
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
 INSTALL_DIR=`dirname $0`
@@ -22,7 +10,7 @@ INSTALL_DIR=`dirname $0`
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
-export DOMDOCK_SCRIPT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 
 if [ -z "$LOTUS" ]; then
   if [ -x /opt/hcl/domino/bin/server ]; then
@@ -298,55 +286,6 @@ check_file_busy()
   fi
 }
 
-install_file()
-{
-  SOURCE_FILE=$1
-  TARGET_FILE=$2
-  OWNER=$3
-  GROUP=$4
-  PERMS=$5
-
-  if [ ! -r "$SOURCE_FILE" ]; then
-    echo "[$SOURCE_FILE] Can not read source file"
-    return 1
-  fi
-
-  if [ -e "$TARGET_FILE" ]; then
-
-    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
-    if [ $? -eq 0 ]; then
-      echo "[$TARGET_FILE] File did not change -- No update needed"
-      return 0
-    fi
-
-    if [ ! -w "$TARGET_FILE" ]; then
-      echo "[$TARGET_FILE] Can not update binary -- No write permissions"
-      return 1
-    fi
-
-    check_file_busy "$TARGET_FILE"
-
-    if [ $? -eq 1 ]; then
-      echo "[$TARGET_FILE] Error - Can not update file -- Binary in use"
-      return 1
-    fi
-  fi
-  
-  cp -f "$SOURCE_FILE" "$TARGET_FILE"
- 
-  if [ ! -z "$OWNER" ]; then
-    chown $OWNER:$GROUP "$TARGET_FILE"
-  fi
-
-  if [ ! -z "$PERMS" ]; then
-    chmod "$PERMS" "$TARGET_FILE"
-  fi
-
-  echo "[$TARGET_FILE] copied"
-
-  return 2
-}
-
 check_binary_busy()
 {
   if [ ! -e "$1" ]; then
@@ -355,22 +294,6 @@ check_binary_busy()
 
   TARGET_REAL_BIN=`readlink -f $1`
   FOUND_TARGETS=`lsof | awk '{print $9}' | grep "$TARGET_REAL_BIN"`
-
-  if [ -n "$FOUND_TARGETS" ]; then
-    return 1
-  else
-    return 0
-  fi
-}
-
-check_file_busy()
-{
-  if [ ! -e "$1" ]; then
-    return 0
-  fi
-
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -537,55 +460,6 @@ check_binary_busy()
   fi
 }
 
-install_file()
-{
-  SOURCE_FILE=$1
-  TARGET_FILE=$2
-  OWNER=$3
-  GROUP=$4
-  PERMS=$5
-
-  if [ ! -r "$SOURCE_FILE" ]; then
-    echo "[$SOURCE_FILE] Can not read source file"
-    return 1
-  fi
-
-  if [ -e "$TARGET_FILE" ]; then
-
-    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
-    if [ $? -eq 0 ]; then
-      echo "[$TARGET_FILE] File did not change -- No update needed"
-      return 0
-    fi
-
-    if [ ! -w "$TARGET_FILE" ]; then
-      echo "[$TARGET_FILE] Can not update binary -- No write permissions"
-      return 1
-    fi
-
-    check_binary_busy "$TARGET_FILE"
-
-    if [ $? -eq 1 ]; then
-      echo "[$TARGET_FILE] Error - Can not update file -- Binary in use"
-      return 1
-    fi
-  fi
-
-  cp -f "$SOURCE_FILE" "$TARGET_FILE"
-
-  if [ ! -z "$OWNER" ]; then
-    chown $OWNER:$GROUP "$TARGET_FILE"
-  fi
-
-  if [ ! -z "$PERMS" ]; then
-    chmod "$PERMS" "$TARGET_FILE"
-  fi
-
-  echo "[$TARGET_FILE] copied"
-
-  return 2
-}
-
 install_binary()
 {
   SOURCE_BIN="$1"
@@ -673,8 +547,8 @@ install_traveler ()
 
   header "Installing $PROD_NAME $INST_VER"
 
-  create_directory $DOMINO_DATA_PATH notes notes 770
-  create_directory $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT notes notes 770
+  create_directory $DOMINO_DATA_PATH root root 777
+  create_directory $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT root root 777 
 
   if [ ! -e "$DOMINO_DATA_PATH/notes.ini" ]; then
     log_ok "Extracting install notesdata for Traveler install"
@@ -717,7 +591,7 @@ install_traveler ()
 
   popd
   remove_directory traveler 
-  create_directory $DOMINO_DATA_PATH notes notes 770
+  create_directory $DOMINO_DATA_PATH root root 777 
 
   return 0
 }
@@ -840,7 +714,7 @@ case "$PROD_NAME" in
     cp -f $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
     cd /
     remove_directory $DOMINO_DATA_PATH
-    create_directory $DOMINO_DATA_PATH notes notes 770
+    create_directory $DOMINO_DATA_PATH root root 777
     ;;
 
   proton)

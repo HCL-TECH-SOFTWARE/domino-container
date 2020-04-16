@@ -22,7 +22,7 @@
 # Create the following specified certs (for AppDevPack)
 CREATE_CONFIGURED_CERTS="yes"
 
-DOMIMO_ORG="Acme"
+DOMINO_ORG="Acme"
 
 DOMINO_SERVER="domino"
 DOMINO_DNS="domino.acme.loc"

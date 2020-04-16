@@ -1,5 +1,10 @@
 #!/bin/bash
 
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
+############################################################################
+
 DOMINO_DATA_PATH=/local/notesdata
 DOMDOCK_LOG_DIR=/domino-docker
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_install_data_prep.log

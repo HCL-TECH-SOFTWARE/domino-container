@@ -1,20 +1,8 @@
 #!/bin/bash
 
 ############################################################################
-# (C) Copyright IBM Corporation 2015, 2019                                 #
-#                                                                          #
-# Licensed under the Apache License, Version 2.0 (the "License");          #
-# you may not use this file except in compliance with the License.         #
-# You may obtain a copy of the License at                                  #
-#                                                                          #
-#      http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                          #
-# Unless required by applicable law or agreed to in writing, software      #
-# distributed under the License is distributed on an "AS IS" BASIS,        #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
-# See the License for the specific language governing permissions and      #
-# limitations under the License.                                           #
-#                                                                          #
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
 INSTALL_DIR=`dirname $0`
@@ -22,7 +10,7 @@ INSTALL_DIR=`dirname $0`
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
-export DOMDOCK_SCRIPT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 
 # in docker environment the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
@@ -835,7 +823,7 @@ echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 
 # Install CentOS updates if requested
 if [ "$LinuxYumUpdate" = "yes" ]; then
-  header "Updating CentOS via yum"
+  header "Updating Linux via yum"
   yum update -y
 fi
 
@@ -868,20 +856,33 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Set security limits for pam modules (su needs it)
   echo >> /etc/security/limits.conf
   echo '# -- Begin Changes Domino --' >> /etc/security/limits.conf
-  echo 'notes soft nofile 65535' >> /etc/security/limits.conf
-  echo 'notes hard nofile 65535' >> /etc/security/limits.conf
+  echo '* soft nofile 65535' >> /etc/security/limits.conf
+  echo '* hard nofile 65535' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
  
-  create_directory $DOMDOCK_DIR notes notes 770
-  create_directory /local notes notes 770
-  create_directory $DOMINO_DATA_PATH notes notes 770
-  create_directory /local/translog notes notes 770
-  create_directory /local/daos notes notes 770
-  create_directory /local/nif notes notes 770
-  create_directory /local/ft notes notes 770
+  # Allow world full access to the main directories to ensure all mounts work.
+  # Those directories might get replaced with mount points or re-created on startup of the container when /local mount is used.
+  # Ensure only root can write into the script directory!
+
+  create_directory $DOMDOCK_DIR root root 777
+  create_directory $DOMDOCK_SCRIPT_DIR root root 755
+  create_directory /local root root 777 
+  create_directory $DOMINO_DATA_PATH root root 777
+  create_directory /local/translog root root 777
+  create_directory /local/daos root root 777
+  create_directory /local/nif root root 777
+  create_directory /local/ft root root 777
 
   docker_set_timezone
 
+fi
+
+# Temporary install perl for installers if not already installed
+
+if [ ! -e /usr/bin/perl ]; then
+  header "Installing perl"
+  yum -y install perl
+  UNINSTALL_PERL_AFTER_INSTALL=yes
 fi
 
 cd "$INSTALL_DIR"
@@ -900,6 +901,14 @@ case "$PROD_NAME" in
     ;;
 esac
 
+# removing perl if temporary installed
+
+if [ "$UNINSTALL_PERL_AFTER_INSTALL" = "yes" ]; then
+  # removing perl 
+  header "Uninstalling perl"
+  yum -y remove perl
+fi
+
 header "Installing Start Script"
 
 # Extracting start script files
@@ -913,17 +922,17 @@ export DOCKER_ENV=yes
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMINO_DATA_PATH/SetupProfile.pds" notes notes 644
-install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMINO_DATA_PATH/SetupProfileSecondServer.pds" notes notes 644
+install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMINO_DATA_PATH/SetupProfile.pds" root root 644
+install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMINO_DATA_PATH/SetupProfileSecondServer.pds" root root 644
 
 header "Final Steps & Configuration"
 
 # Copy pre-start configuration
-install_file "$INSTALL_DIR/docker_prestart.sh" "$DOMDOCK_SCRIPT_DIR/docker_prestart.sh" notes notes 770
+install_file "$INSTALL_DIR/docker_prestart.sh" "$DOMDOCK_SCRIPT_DIR/docker_prestart.sh" root root 755
 
 # Copy Docker specific start script configuration if provided
-install_file "$INSTALL_DIR/rc_domino_config" "$DOMINO_DATA_PATH/rc_domino_config" notes notes 644 
-install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/domino_docker_entrypoint.sh" notes notes 755
+install_file "$INSTALL_DIR/rc_domino_config" "$DOMINO_DATA_PATH/rc_domino_config" root root 644 
+install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/domino_docker_entrypoint.sh" root root 755
 
 # Install Data Directory Copy File 
 install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
@@ -934,10 +943,13 @@ install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthc
 # Install keyring create/update script
 
 install_file "$INSTALL_DIR/create_keyring.sh" "$DOMDOCK_SCRIPT_DIR/create_keyring.sh" root root 755
+install_file "$INSTALL_DIR/create_ca_kyr.sh" "$DOMINO_DATA_PATH/create_ca_kyr.sh" root root 755
+
+install_file "$INSTALL_DIR/nuid2pw" "$DOMDOCK_SCRIPT_DIR/nuid2pw" root root 4550
 
 # Copy tools required for automating Domino Server configuration
-install_file "$INSTALL_DIR/DatabaseSigner.jar" "$DOMINO_DATA_PATH/DatabaseSigner.jar" notes notes 644
-install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpdateConfig.jar" notes notes 644
+install_file "$INSTALL_DIR/DatabaseSigner.jar" "$DOMINO_DATA_PATH/DatabaseSigner.jar" root root 644
+install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpdateConfig.jar" root root 644
 
 # --- Cleanup Routines to reduce image size ---
 
@@ -969,6 +981,9 @@ install_res_links
 
 remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 
+# In some versions the Tika file is also in the data directory.
+remove_file $DOMINO_DATA_PATH/tika-server.jar
+
 # Ensure permissons are set correctly for data directory
 chown -R notes:notes $DOMINO_DATA_PATH
 
@@ -993,7 +1008,7 @@ if [ ! -z "$DominoMoveInstallData" ]; then
   tar -czf "$INSTALL_DATA_TAR" .
 
   rm -rf $DOMINO_DATA_PATH
-  create_directory $DOMINO_DATA_PATH notes notes 770
+  create_directory $DOMINO_DATA_PATH root root 777
 fi
 
 header "Successfully completed installation!"

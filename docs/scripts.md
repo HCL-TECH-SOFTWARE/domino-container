@@ -7,9 +7,10 @@ You can specify the image to build.
 
 Currently supported are the following images
 
-- domino - Domino 10.0.1 with current fix pack
+- domino - Domino 11.0.1 with current fix pack
 - domino-ce - Domino 10.0.1 Community edition with current fixpack
-- traveler - Traveler 10.0.1.x with current fixepack
+- traveler - Traveler 11.0.1.x with current fixepack
+- volt - HCL Domino Volt 0.2.0.7
  
 Inside this script you can also configure a download http target if you are hosting the downloaded software on a different machine
 You can also specify a download directoy on your Docker host which will be served by a temporary Docker image running a NGINX server to provide the software

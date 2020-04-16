@@ -40,7 +40,7 @@
 # -------------------------- #
 
 # Create the following specified certs (for AppDevPack)
-CREATE_CONFIGURED_CERTS="yes"
+CREATE_CONFIGURED_CERTS="no"
 
 DOMINO_ORG="Acme"
 

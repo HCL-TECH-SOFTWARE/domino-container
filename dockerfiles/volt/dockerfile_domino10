@@ -1,0 +1,41 @@
+
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+############################################################################
+
+FROM ibmcom/domino:10.0.1FP3
+
+# Headers
+LABEL DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de"
+
+# External arguments with a default value
+ARG LinuxYumUpdate=
+ARG DownloadFrom=
+ARG PROD_NAME=
+ARG PROD_VER=
+ARG PROD_FP=
+ARG PROD_HF=
+ARG LocalInstallDir=/tmp/install
+
+USER root
+
+# Copy Install Files to container
+COPY install_dir $LocalInstallDir
+
+# Prepare environment for Domino
+# Update, Install required packages and run separate install script
+
+RUN $LocalInstallDir/install.sh && \
+  yum clean all >/dev/null && \
+  rm -fr /var/cache/yum && \
+  rm -rf $LocalInstallDir 
+
+HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
+
+# Expose Ports NRPC HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
+EXPOSE 1352 80 110 143 389 443 636 993 995 63148 63149
+
+ENTRYPOINT ["/domino_docker_entrypoint.sh"]
+
+USER notes
+

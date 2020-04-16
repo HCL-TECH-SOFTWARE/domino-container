@@ -1,20 +1,8 @@
 #!/bin/bash
-#
+
 ############################################################################
-# (C) Copyright IBM Corporation 2015, 2019                                 #
-#                                                                          #
-# Licensed under the Apache License, Version 2.0 (the "License");          #
-# you may not use this file except in compliance with the License.         #
-# You may obtain a copy of the License at                                  #
-#                                                                          #
-#      http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                          #
-# Unless required by applicable law or agreed to in writing, software      #
-# distributed under the License is distributed on an "AS IS" BASIS,        #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
-# See the License for the specific language governing permissions and      #
-# limitations under the License.                                           #
-#                                                                          #
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
 # Configure server based on environment variables
@@ -239,6 +227,29 @@ download_file_link()
   esac
 }
 
+check_kyr_name()
+{
+  # check if kyr file has .kyr extension and generate matching .sth file
+  local fname
+  local ext
+
+  if [ -z "DominoKyrFile" ]; then
+    DominoSthFile=
+    return 0
+  fi
+
+  fname=`echo $DominoKyrFile | awk -F"." '{print $1}'`
+  ext=`echo $DominoKyrFile | awk -F"." '{print $2}'`
+
+  if [ -z "$ext" ]; then
+    DominoKyrFile=$DominoKyrFile.kyr
+  fi
+
+  DominoSthFile=$fname.sth
+
+  return 0
+}
+
 check_download_file_links()
 {
   # Donwload ID files if they start with http(s):
@@ -256,6 +267,20 @@ check_download_file_links()
 
   download_file_link SafeIDFile
   SafeIDFile=$RET_DOWNLOADED_FILE
+
+  # Download kyr file 
+  if [ ! -z "$DominoKyrFile" ]; then
+
+    check_kyr_name
+
+    download_file_link DominoKyrFile
+    DominoKyrFile=$RET_DOWNLOADED_FILE
+
+    download_file_link DominoSthFile
+    DominoSthFile=$RET_DOWNLOADED_FILE
+  fi
+
+  return 0
 }
 
 # --- Main Logic ---
@@ -365,6 +390,12 @@ if [ ! -z "$ConfigFile" ]; then
   fi
 fi
 
+if [ ! -e keyfile.kyr ]; then
+  header "Creating Domino Key Ring File from local CA"
+  ./create_ca_kyr.sh
+fi
+
+
 # .oO Neuralizer .oO
 # Cleaning up environment variabels & history to reduce exposure of sensitive data
 
@@ -394,6 +425,10 @@ unset ServerPassword
 unset SystemDatabasePath
 unset Notesini
 
-cat /dev/null > ~/.bash_history && history -c
+if [ -e ~/.bash_history ]; then
+  cat /dev/null > ~/.bash_history
+fi
+
+history -c
 
 exit 0

@@ -1,0 +1,6 @@
+
+// HCL Domino Volt - for Groovy templates 
+grant codeBase "file:/groovy/shell" { 
+permission java.security.AllPermission; 
+};
+

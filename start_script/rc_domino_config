@@ -1,6 +1,6 @@
 ###########################################################################
 # Configuration - Start/Stop Script for Domino on xLinux/zLinux/AIX       #
-# Version 3.3.0 01.01.2020                                                #
+# Version 3.3.1 10.01.2020                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -29,6 +29,10 @@ DOMINO_CONFIGURED="yes"
 # New default is to use what is specified in user profile.
 #DOMINO_LANG=en_US.UTF-8
 #DOMINO_LANG=de_DE.UTF-8
+
+
+# -- Optional Environment variable file (particular useful for systemd environments)  --
+#DOMINO_ENV_FILE=/etc/sysconfig/rc_domino_env
 
 # -- Remove loadmon.ncf on startup --
 DOMINO_RESET_LOADMON="yes"

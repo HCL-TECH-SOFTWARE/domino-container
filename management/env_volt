@@ -1,0 +1,11 @@
+# Domino Server Configuration
+
+AdminFirstName=John
+AdminLastName=Doe
+AdminPassword=domino4ever
+OrganizationPassword=domino4ever
+DominoDomainName=Acme
+OrganizationName=Acme
+ServerName=volt-acme-01
+ConfigFile=config.json
+LANG=en_US.UTF-8

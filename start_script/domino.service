@@ -2,7 +2,7 @@
 
 ###########################################################################
 # systemd Service - Start/Stop Script for Domino on xLinux/zLinux/AIX     #
-# Version 3.3.0 01.01.2020                                                #
+# Version 3.3.1 10.01.2020                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -23,8 +23,6 @@
 Description=IBM Domino Server (notes)
 After=syslog.target network.target
 
-# Version 3.3.0 17.07.2018
-
 [Service]
 User=notes
 PIDFile=/tmp/domino.pid
@@ -34,6 +32,7 @@ Type=forking
 LimitNOFILE=65535
 LimitNPROC=8000
 TasksMax=8000
+
 # to make sure startup compact operations can finish
 TimeoutSec=600
 TimeoutStopSec=300
@@ -42,6 +41,14 @@ RemainAfterExit=no
 
 #Environment=LANG=en_US.UTF-8
 #Environment=LANG=de_DE.UTF-8
+
+# !! Note for environment variables and security limits !!
+
+# Environment variables from a user profile are not set for systemd services, because no "su" is used to swich to the user.
+# You either have to define them in the service, define them in the Domino config file or define them via the new DOMINO_ENV_FILE option
+
+# The systemd service also defines security limits for the Domino server. You should still apply the same settins in /etc/security/limits.conf.
+# This ensures that Domino processes started from a shell have the same security limtis specified.
 
 [Install]
 WantedBy=multi-user.target
