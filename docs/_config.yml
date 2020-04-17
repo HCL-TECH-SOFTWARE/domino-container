@@ -1,0 +1,4 @@
+remote_theme: pmarsceill/just-the-docs
+title: Domino for Docker
+description: Dockerfiles for building an HCL Domino server image for Docker with latest fixes
+show_downloads: true
