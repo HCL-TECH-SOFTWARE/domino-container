@@ -34,7 +34,8 @@ This directory contains a sub-directory for each product that can be installed.
 
 The domino directory contains all files needed to install a Domino or Domino CE server
 
-build_domino.sh  / build_domino-ce.sh
+* build_domino.sh
+* build_domino-ce.sh
 
 Build file used to build the Domino / Domino CE server.
 This script invokes the actual docker build command
@@ -51,7 +52,7 @@ All install logic is covered in a separate install script.
 This directory contains files and scripts to build the Docker image.
 Those files are copied to /tmp/install_dir during install process and are invoked by the build process.
 
-install_domino.sh
+* install_domino.sh
 
 This file contains the install logic and performs the actual install of all components after downloading the software.
 
@@ -110,9 +111,9 @@ Nash!Com Domino start and management script which supports Docker and contains a
 
 Response file used for silent server installation
 
-SetupProfile.pds
-signWithAdminP.sh
-DatabaseSigner.jar
+* SetupProfile.pds
+* signWithAdminP.sh
+* DatabaseSigner.jar
 
 Used to configure the Domino Server (see separate documentation)
 
