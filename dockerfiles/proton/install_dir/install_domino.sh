@@ -239,30 +239,15 @@ download_and_check_hash ()
   return 0
 }
 
-check_binary_busy()
-{
-  if [ ! -e "$1" ]; then
-    return 0
-  fi
-
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof | awk '{print $9}' | grep "$TARGET_REAL_BIN"`
-
-  if [ -n "$FOUND_TARGETS" ]; then
-    return 1
-  else
-    return 0
-  fi
-}
-
 check_file_busy()
 {
   if [ ! -e "$1" ]; then
     return 0
   fi
 
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
+  local TARGET_REAL_BIN=`readlink -f $1`
+  local DIRNAME=`dirname $TARGET_REAL_BIN`
+  local FOUND_TARGETS=`lsof +D "$DIRNAME" 2>/dev/null | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -270,6 +255,7 @@ check_file_busy()
     return 0
   fi
 }
+
 
 install_file()
 {
@@ -413,22 +399,6 @@ extract_taz()
   fi
 }
 
-check_binary_busy()
-{
-  if [ ! -e "$1" ]; then
-    return 0
-  fi
-
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof | awk '{print $9}' | grep "$TARGET_REAL_BIN"`
-
-  if [ -n "$FOUND_TARGETS" ]; then
-    return 1
-  else
-    return 0
-  fi
-}
-
 install_file()
 {
   SOURCE_FILE=$1
@@ -455,7 +425,7 @@ install_file()
       return 1
     fi
 
-    check_binary_busy "$TARGET_FILE"
+    check_file_busy "$TARGET_FILE"
 
     if [ $? -eq 1 ]; then
       echo "[$TARGET_FILE] Error - Can not update file -- Binary in use"
@@ -518,7 +488,7 @@ install_binary()
       return 1
     fi
 
-    check_binary_busy "$TARGET_BIN"
+    check_file_busy "$TARGET_BIN"
 
     if [ $? -eq 1 ]; then
       echo "Error - Can not update binary '$TARGET_BIN' -- Binary in use"

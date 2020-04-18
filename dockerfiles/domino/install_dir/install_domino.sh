@@ -271,21 +271,6 @@ download_and_check_hash ()
   return 0
 }
 
-check_binary_busy()
-{
-  if [ ! -e "$1" ]; then
-    return 0
-  fi
-
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof | awk '{print $9}' | grep "$TARGET_REAL_BIN"`
-
-  if [ -n "$FOUND_TARGETS" ]; then
-    return 1
-  else
-    return 0
-  fi
-}
 
 check_file_busy()
 {
@@ -293,8 +278,9 @@ check_file_busy()
     return 0
   fi
 
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
+  local TARGET_REAL_BIN=`readlink -f $1`
+  local DIRNAME=`dirname $TARGET_REAL_BIN`
+  local FOUND_TARGETS=`lsof +D "$DIRNAME" 2>/dev/null | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -302,6 +288,7 @@ check_file_busy()
     return 0
   fi
 }
+
 
 install_file()
 {
