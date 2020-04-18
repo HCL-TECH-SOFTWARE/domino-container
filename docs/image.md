@@ -118,10 +118,10 @@ Open a web browser of your choice and navigate to
 https://volt.demo.com
 
 Login with the username / password you have defined earlier where username is <AdminFirstName> and <AdminLastName> are combined.
-Based on the variables used in the example above to initialize the container
+Based on the variables used in the example above to initialize the container, you would have to log in with:
 
-username = Thomas Hampel
-password = passw0rd
+* username = Thomas Hampel
+* password = passw0rd
 
 Note: When accessing the container for the first time it will take a few seconds after logging in to initialize the environment.
 
