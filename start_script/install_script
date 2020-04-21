@@ -109,9 +109,9 @@ check_file_busy()
     return 0
   fi
 
-  #TARGET_REAL_BIN=`readlink -f $1`
-  TARGET_REAL_BIN=$1
-  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
+  local TARGET_REAL_BIN=`readlink -f $1`
+  local DIRNAME=`dirname $TARGET_REAL_BIN`
+  local FOUND_TARGETS=`lsof +D "$DIRNAME" 2>/dev/null | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -119,6 +119,7 @@ check_file_busy()
     return 0
   fi
 }
+
 
 install_file()
 {
