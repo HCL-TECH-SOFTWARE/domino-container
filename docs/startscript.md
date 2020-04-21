@@ -12,10 +12,20 @@ You should setup all settings in the script configuration file.
 ## Usage
 
 ### Start Server
-to be done
+```
+domino start live
+```
 
 ### Stop Server
-to be done
+From within the container, use the following command to stop the Domino server. Only the Domino server will shut down but the container itself will continue to run.
+```
+domino stop
+```
+
+### Access the Domino server console
+```
+domino console
+```
 
 ### Get Server Logs
 to be done

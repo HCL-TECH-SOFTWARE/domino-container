@@ -23,7 +23,8 @@ The demo environment is based on [Docker Desktop](https://www.docker.com/product
 
 * [Linux](https://docs.docker.com/engine/install/ubuntu/)
 * [MacOS](https://hub.docker.com/editions/community/docker-ce-desktop-mac/)
-* [Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
+* [Windows without VMware](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
+* [Windows with VMware](https://github.com/pecigonzalo/docker-machine-vmwareworkstation) + Install [Docker Toolbox for Windows](https://docs.docker.com/toolbox/toolbox_install_windows/)
 
 ## Verify Docker is running
 Once the installation is complete, open a command prompt and enter the following command to see if docker was installed successfully on your computer:
@@ -130,14 +131,14 @@ In order to stop the Docker container use the following command:
 ```bash
 docker stop volt
 ```
-or use the user interface of Docker Desktop 
+or use the dashboard of Docker Desktop 
 
 ## Start
 To start the existing Docker container again use this command:
 ```bash
 docker start volt
 ```
-or use the user interface of Docker Desktop 
+or use the dashboard of Docker Desktop 
 
 # Reset
 
