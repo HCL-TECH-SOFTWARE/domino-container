@@ -328,26 +328,26 @@ ServerIDFile=server.id
 # Switch to executable directory for setup
 cd $Notes_ExecDirectory
 
-[ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName $AdminFirstName $dominosilentsetup
-[ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile $AdminIDFile $dominosilentsetup
-[ ! -z "$AdminLastName" ] && $dominoprofileedit -AdminLastName $AdminLastName $dominosilentsetup
-[ ! -z "$AdminMiddleName" ] && $dominoprofileedit -AdminMiddleName $AdminMiddleName $dominosilentsetup
-[ ! -z "$AdminPassword" ] && $dominoprofileedit -AdminPassword $AdminPassword $dominosilentsetup
-[ ! -z "$CountryCode" ] && $dominoprofileedit -CountryCode $CountryCode $dominosilentsetup
-[ ! -z "$DominoDomainName" ] && $dominoprofileedit -DominoDomainName $DominoDomainName $dominosilentsetup
-[ ! -z "$HostName" ] && $dominoprofileedit -HostName $HostName $dominosilentsetup
-[ ! -z "$OrgUnitIDFile" ] && $dominoprofileedit -OrgUnitIDFile $OrgUnitIDFile $dominosilentsetup
-[ ! -z "$OrgUnitName" ] && $dominoprofileedit -OrgUnitName $OrgUnitName $dominosilentsetup
-[ ! -z "$OrgUnitPassword" ] && $dominoprofileedit -OrgUnitPassword $OrgUnitPassword $dominosilentsetup
-[ ! -z "$OrganizationIDFile" ] && $dominoprofileedit -OrganizationIDFile $OrganizationIDFile $dominosilentsetup
-[ ! -z "$OrganizationName" ] && $dominoprofileedit -OrganizationName $OrganizationName $dominosilentsetup
-[ ! -z "$OrganizationPassword" ] && $dominoprofileedit -OrganizationPassword $OrganizationPassword $dominosilentsetup
-[ ! -z "$OtherDirectoryServerAddress" ] && $dominoprofileedit -OtherDirectoryServerAddress $OtherDirectoryServerAddress $dominosilentsetup
-[ ! -z "$OtherDirectoryServerName" ] && $dominoprofileedit -OtherDirectoryServerName $OtherDirectoryServerName $dominosilentsetup
-[ ! -z "$ServerIDFile" ] && $dominoprofileedit -ServerIDFile $ServerIDFile $dominosilentsetup
-[ ! -z "$ServerName" ] && $dominoprofileedit -ServerName $ServerName $dominosilentsetup
-[ ! -z "$SystemDatabasePath" ] && $dominoprofileedit -SystemDatabasePath $SystemDatabasePath $dominosilentsetup
-[ ! -z "$ServerPassword" ] && $dominoprofileedit -ServerPassword $ServerPassword $dominosilentsetup
+[ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName "$AdminFirstName" $dominosilentsetup
+[ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile "$AdminIDFile" $dominosilentsetup
+[ ! -z "$AdminLastName" ] && $dominoprofileedit -AdminLastName "$AdminLastName" $dominosilentsetup
+[ ! -z "$AdminMiddleName" ] && $dominoprofileedit -AdminMiddleName "$AdminMiddleName" $dominosilentsetup
+[ ! -z "$AdminPassword" ] && $dominoprofileedit -AdminPassword "$AdminPassword" $dominosilentsetup
+[ ! -z "$CountryCode" ] && $dominoprofileedit -CountryCode "$CountryCode" $dominosilentsetup
+[ ! -z "$DominoDomainName" ] && $dominoprofileedit -DominoDomainName "$DominoDomainName" $dominosilentsetup
+[ ! -z "$HostName" ] && $dominoprofileedit -HostName "$HostName" $dominosilentsetup
+[ ! -z "$OrgUnitIDFile" ] && $dominoprofileedit -OrgUnitIDFile "$OrgUnitIDFile" $dominosilentsetup
+[ ! -z "$OrgUnitName" ] && $dominoprofileedit -OrgUnitName "$OrgUnitName" $dominosilentsetup
+[ ! -z "$OrgUnitPassword" ] && $dominoprofileedit -OrgUnitPassword "$OrgUnitPassword" $dominosilentsetup
+[ ! -z "$OrganizationIDFile" ] && $dominoprofileedit -OrganizationIDFile "$OrganizationIDFile" $dominosilentsetup
+[ ! -z "$OrganizationName" ] && $dominoprofileedit -OrganizationName "$OrganizationName" $dominosilentsetup
+[ ! -z "$OrganizationPassword" ] && $dominoprofileedit -OrganizationPassword "$OrganizationPassword" $dominosilentsetup
+[ ! -z "$OtherDirectoryServerAddress" ] && $dominoprofileedit -OtherDirectoryServerAddress "$OtherDirectoryServerAddress" $dominosilentsetup
+[ ! -z "$OtherDirectoryServerName" ] && $dominoprofileedit -OtherDirectoryServerName "$OtherDirectoryServerName" $dominosilentsetup
+[ ! -z "$ServerIDFile" ] && $dominoprofileedit -ServerIDFile "$ServerIDFile" $dominosilentsetup
+[ ! -z "$ServerName" ] && $dominoprofileedit -ServerName "$ServerName" $dominosilentsetup
+[ ! -z "$SystemDatabasePath" ] && $dominoprofileedit -SystemDatabasePath "$SystemDatabasePath" $dominosilentsetup
+[ ! -z "$ServerPassword" ] && $dominoprofileedit -ServerPassword "$ServerPassword" $dominosilentsetup
 
 header "Silent Setup Settings"
 $dominoprofileedit -dump $dominosilentsetup >> $LOG_FILE
