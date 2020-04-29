@@ -50,6 +50,10 @@ DOCKER_ENV_FILE=
 # Update CentOS while building the image
 LinuxYumUpdate=yes
 
+# Special WGET options used for all downloads
+
+#SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
+
 # Configure software download location.
 # You can either use your own software repository remotely.
 # Or use a local software image hosted via NGINX temporary image.
@@ -581,7 +585,7 @@ docker_build ()
     nginx_start
   fi
 
-  $DOCKER_CMD build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" -t $DOCKER_IMAGE_NAMEVERSION $DOCKER_TAG_LATEST_CMD -f $DOCKER_FILE --build-arg DownloadFrom=$DOWNLOAD_FROM --build-arg LinuxYumUpdate=$LinuxYumUpdate .
+  $DOCKER_CMD build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" -t $DOCKER_IMAGE_NAMEVERSION $DOCKER_TAG_LATEST_CMD -f $DOCKER_FILE --build-arg "DownloadFrom=$DOWNLOAD_FROM" --build-arg LinuxYumUpdate=$LinuxYumUpdate --build-arg "SPECIAL_WGET_ARGUMENTS=$SPECIAL_WGET_ARGUMENTS" .
   echo
 
   if [ "$SOFTWARE_USE_NGINX" = "1" ]; then

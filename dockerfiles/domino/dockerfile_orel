@@ -21,7 +21,8 @@ ARG DominoMoveInstallData=
 ARG LocalInstallDir=/tmp/install
 ARG DominoUserID=
 ARG DOMINO_LANG=
-ARG DOCKER_TZ
+ARG DOCKER_TZ=
+ARG SPECIAL_WGET_ARGUMENTS=
 
 USER root
 

@@ -42,7 +42,7 @@ export LANG=C
 
 SCRIPT_NAME=$0
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-WGET_COMMAND="wget --connect-timeout=20 --tries=1"
+WGET_COMMAND="wget --connect-timeout=20 --tries=1 $SPECIAL_WGET_ARGUMENTS"
 
 
 DOM_STRING_OK="Dominoserver Installation successful"

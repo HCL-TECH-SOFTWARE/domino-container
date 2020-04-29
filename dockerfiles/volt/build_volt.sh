@@ -165,11 +165,6 @@ docker_build ()
   # Get build arguments
   DOCKER_IMAGE=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_VERSION
   
-  BUILD_ARG_PROD_NAME="--build-arg PROD_NAME=$PROD_NAME"
-  BUILD_ARG_PROD_VER="--build-arg PROD_VER=$PROD_VER"
-  BUILD_ARG_DOWNLOAD_FROM="--build-arg DownloadFrom=$DOWNLOAD_FROM"
-  BUILD_ARG_LINUX_YUM_UPDATE="--build-arg LinuxYumUpdate=$LinuxYumUpdate"
-
   # Switch to current directory and remember current directory
   pushd .
   CURRENT_DIR=`dirname $SCRIPT_NAME`
@@ -179,12 +174,16 @@ docker_build ()
 
   # Finally build the image
   $DOCKER_CMD build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
+    -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
+    -f $DOCKER_FILE \
     --label "$PROD_NAME.description"="$DOCKER_DESCRIPTION" \
     --label "$PROD_NAME.version"="$DOCKER_IMAGE_VERSION" \
-    --label "$PROD_NAME.buildtime"="$BUILDTIME" -t \
-    $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
-    -f $DOCKER_FILE \
-    $BUILD_ARG_LINUX_YUM_UPDATE $BUILD_ARG_DOWNLOAD_FROM $BUILD_ARG_PROD_NAME $BUILD_ARG_PROD_VER .
+    --label "$PROD_NAME.buildtime"="$BUILDTIME" \
+    --build-arg PROD_NAME=$PROD_NAME \
+    --build-arg PROD_VER=$PROD_VER \
+    --build-arg DownloadFrom=$DOWNLOAD_FROM \
+    --build-arg LinuxYumUpdate=$LinuxYumUpdate \
+    --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" .
 
   popd
   echo

@@ -35,7 +35,7 @@ export LANG=C
 INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-WGET_COMMAND="wget --connect-timeout=10 --tries=1"
+WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
 
 TRAVELER_STRING_OK="Installation completed successfully."
 TRAVELER_STRING_WARNINGS="Installation completed with warnings."

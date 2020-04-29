@@ -22,7 +22,7 @@ if [ -z "$ServerName" ]; then
 fi
 
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_server_setup.log
-WGET_COMMAND="wget --connect-timeout=20" 
+WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
 dominosilentsetup=$DOMINO_DATA_PATH/SetupProfile.pds
 dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
 
@@ -140,7 +140,7 @@ download_file ()
     return 0
   else
     log "$[HEADER]File [$DOWNLOAD_FILE] not downloaded correctly from [$DOWNLOAD_URL]"
-    exit 1
+    return 1
   fi
 }
 
@@ -220,6 +220,11 @@ download_file_link()
     http:*|https:*)
       RET_DOWNLOADED_FILE=`basename $S2`
       download_file "$S2" "$RET_DOWNLOADED_FILE" "$1"
+
+      if [ $? -eq 1 ]; then
+        RET_DOWNLOADED_FILE=
+      fi
+
       ;;
     *)
       RET_DOWNLOADED_FILE=$S2
@@ -238,14 +243,14 @@ check_kyr_name()
     return 0
   fi
 
-  fname=`echo $DominoKyrFile | awk -F"." '{print $1}'`
-  ext=`echo $DominoKyrFile | awk -F"." '{print $2}'`
+  fname=`echo $DominoKyrFile | awk -F"." '{print $NF}'`
+  ext=`echo $DominoKyrFile | awk -F"." '{print $NF}'`
 
   if [ -z "$ext" ]; then
-    DominoKyrFile=$DominoKyrFile.kyr
+    DominoKyrFile=
+    DominoSthFile=
+    return 0
   fi
-
-  DominoSthFile=$fname.sth
 
   return 0
 }
@@ -269,15 +274,30 @@ check_download_file_links()
   SafeIDFile=$RET_DOWNLOADED_FILE
 
   # Download kyr file 
-  if [ ! -z "$DominoKyrFile" ]; then
+  if [ -n "$DominoKyrFile" ]; then
 
     check_kyr_name
 
     download_file_link DominoKyrFile
     DominoKyrFile=$RET_DOWNLOADED_FILE
 
-    download_file_link DominoSthFile
-    DominoSthFile=$RET_DOWNLOADED_FILE
+    if [ -n DominoSthFile ]; then
+      download_file_link DominoSthFile
+      DominoSthFile=$RET_DOWNLOADED_FILE
+    fi
+
+    return 0
+  fi
+
+  if [ -n "$DominoPemFile" ]; then
+
+    # Create keyring.kyr from PEM
+    download_file_link DominoPemFile
+    DominoPemFile=$RET_DOWNLOADED_FILE
+    header "creating keyring from [$DominoPemFile]"
+
+    $DOMDOCK_SCRIPT_DIR/create_keyring.sh "$DominoPemFile"
+    rm -f "$DominoPemFile"
   fi
 
   return 0

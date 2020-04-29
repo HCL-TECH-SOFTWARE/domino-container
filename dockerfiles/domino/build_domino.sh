@@ -235,15 +235,6 @@ docker_build ()
   # Get build arguments
   DOCKER_IMAGE=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_VERSION
   
-  BUILD_ARG_PROD_NAME="--build-arg PROD_NAME=$PROD_NAME"
-  BUILD_ARG_PROD_VER="--build-arg PROD_VER=$PROD_VER"
-  BUILD_ARG_PROD_FP="--build-arg PROD_FP=$PROD_FP"
-  BUILD_ARG_PROD_HF="--build-arg PROD_HF=$PROD_HF"
-  BUILD_ARG_DOCKER_TZ="--build-arg DOCKER_TZ=$DOCKER_TZ"
-  BUILD_ARG_DOWNLOAD_FROM="--build-arg DownloadFrom=$DOWNLOAD_FROM"
-  BUILD_ARG_LINUX_YUM_UPDATE="--build-arg LinuxYumUpdate=$LinuxYumUpdate"
-  BUILD_ARG_MOVE_INSTALL_DATA="--build-arg DominoMoveInstallData=$DominoMoveInstallData"
-
   # Switch to current directory and remember current directory
   pushd .
   CURRENT_DIR=`dirname $SCRIPT_NAME`
@@ -253,13 +244,20 @@ docker_build ()
 
   # Finally build the image
   $DOCKER_CMD build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
-    --label "DominoDocker.description"="$DOCKER_DESCRIPTION" \
-    --label "DominoDocker.version"="$DOCKER_IMAGE_VERSION" \
-    --label "DominoDocker.buildtime"="$BUILDTIME" \
     -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
     -f $DOCKER_FILE \
-    $BUILD_ARG_LINUX_YUM_UPDATE $BUILD_ARG_DOWNLOAD_FROM $BUILD_ARG_PROD_NAME $BUILD_ARG_DOCKER_TZ \
-    $BUILD_ARG_PROD_VER $BUILD_ARG_PROD_FP $BUILD_ARG_PROD_HF $BUILD_ARG_MOVE_INSTALL_DATA .
+    --label DominoDocker.description="$DOCKER_DESCRIPTION" \
+    --label DominoDocker.version="$DOCKER_IMAGE_VERSION" \
+    --label DominoDocker.buildtime="$BUILDTIME" \
+    --build-arg PROD_NAME=$PROD_NAME \
+    --build-arg PROD_VER=$PROD_VER \
+    --build-arg PROD_FP=$PROD_FP \
+    --build-arg PROD_HF=$PROD_HF \
+    --build-arg DOCKER_TZ=$DOCKER_TZ \
+    --build-arg DownloadFrom=$DOWNLOAD_FROM \
+    --build-arg LinuxYumUpdate=$LinuxYumUpdate \
+    --build-arg DominoMoveInstallData=$DominoMoveInstallData \
+    --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" .
 
   popd
   echo
