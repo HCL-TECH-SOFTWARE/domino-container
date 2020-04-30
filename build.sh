@@ -32,6 +32,9 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
+# Special WGET arguments used for all WGET operations during build
+#SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
+
 # Default config directory. Can be overwritten by environment
 if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
   DOMINO_DOCKER_CFG_DIR=/local/cfg
@@ -436,6 +439,7 @@ export LinuxYumUpdate
 export DominoMoveInstallData
 export TAG_LATEST
 export DOCKER_FILE
+export SPECIAL_WGET_ARGUMENTS
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 

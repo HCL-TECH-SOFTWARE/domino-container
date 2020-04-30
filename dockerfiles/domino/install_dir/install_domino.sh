@@ -38,7 +38,7 @@ export DOMINO_DATA_PATH=/local/notesdata
 export PATH=$PATH:$DOMINO_DATA_PATH
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-WGET_COMMAND="wget --connect-timeout=10 --tries=1"
+WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
 
 # Helper Functions
 

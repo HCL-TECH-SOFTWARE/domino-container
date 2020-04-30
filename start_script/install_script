@@ -25,12 +25,23 @@ PARAM1=$1
 
 DOMINO_INSTALL_CONFIG_FILE=rc_domino_config
 DOMINO_INSTALL_CONFIG_FILEPATH=/etc/sysconfig/$DOMINO_INSTALL_CONFIG_FILE
-DOMINO_START_SCRIPT_DIR=/opt/nashcom/startscript
 DOMINO_DOCKER_SCRIPT=domino_docker_entrypoint.sh
+DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
 VERSION=330
 
-DOMINO_USER=notes
-DOMINO_GROUP=notes
+# if you really really need to, change this and all files will be patched
+
+if [ -z "$DOMINO_START_SCRIPT_DIR" ]; then
+  DOMINO_START_SCRIPT_DIR=/opt/nashcom/startscript
+fi
+
+if [ -z "$DOMINO_USER" ]; then
+  DOMINO_USER=notes
+fi
+
+if [ -z "$DOMINO_GROUP" ]; then
+  DOMINO_GROUP=notes
+fi
 
 ROOT_USER=root
 ROOT_GROUP=root
@@ -183,6 +194,20 @@ install_file_noupdate()
   install_file "$1" "$2" "$3" "$4" "$5" 
 }
 
+patch_install_dir()
+{
+  if [ ! -e "$1" ]; then
+    echo "FILE DOES NOT EXIST: [$1]"
+    return 0;
+  fi
+
+  if [ "$DONT_TOUCH_THIS_NASHCOM_PATH" = "$DOMINO_START_SCRIPT_DIR" ]; then
+    return 0;
+  fi
+
+  sed -i "s~${DONT_TOUCH_THIS_NASHCOM_PATH}~${DOMINO_START_SCRIPT_DIR}~g" "$1"
+}
+
 # rc script files install
 
 echo
@@ -236,7 +261,6 @@ else
   install_file_noupdate $START_SCRIPT_DIR/rc_domino_config $DOMINO_INSTALL_CONFIG_FILEPATH  "$DOMINO_USER" "$DOMINO_GROUP" 644
   install_file_noupdate $START_SCRIPT_DIR/systemdbs.ind $DOMINO_DATA_PATH/systemdbs.ind "$DOMINO_USER" "$DOMINO_GROUP" 644
 fi
-
 
 # if old start script location exists, replace it with link to new start script location 
 
@@ -292,6 +316,9 @@ else
     $INIT_PATH/$DOMINO_RC_NAME service add
   fi
 fi
+
+patch_install_dir "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
+patch_install_dir "$INIT_PATH/$DOMINO_RC_NAME"
 
 echo
 echo done

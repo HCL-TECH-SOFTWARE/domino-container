@@ -32,7 +32,7 @@ export LANG=C
 INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${PROD_NAME}.taz
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-WGET_COMMAND="wget --connect-timeout=10 --tries=1"
+WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
 
 pushd()
 {

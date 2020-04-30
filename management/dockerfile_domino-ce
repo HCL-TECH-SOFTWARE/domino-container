@@ -8,6 +8,7 @@ LABEL  description="IBM Domino Server 10 Community Edition" \
 ARG LinuxYumUpdate=
 ARG DownloadFrom=
 ARG DominoResponseFile=
+ARG SPECIAL_WGET_ARGUMENTS=
 
 USER root
 

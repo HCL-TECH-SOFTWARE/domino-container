@@ -8,3 +8,8 @@ DominoDomainName=Acme
 OrganizationName=Acme
 ServerName=domino-acme-01
 LANG=en_US.UTF-8
+
+#SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
+#DominoKyrFile=http://192.168.1.1/repo/volt-acme-com.kyr
+#DominoPemFile=http://192.168.1.1/repo/volt-acme-com_all.pem
+

@@ -9,6 +9,7 @@ LABEL description="IBM Domino Server 10 Acme Customized" \
 ARG DownloadFrom=
 ARG DominoResponseFile=
 ARG LinuxYumUpdate=
+ARG SPECIAL_WGET_ARGUMENTS=
 
 USER root
 

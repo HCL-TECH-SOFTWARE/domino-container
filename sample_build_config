@@ -13,3 +13,6 @@
 # Update CentOS while building the image
 LinuxYumUpdate=yes
 
+
+# Special wget arguments
+#SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
