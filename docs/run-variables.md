@@ -26,6 +26,9 @@
   - [ServerName](#servername)
   - [SystemDatabasePath](#systemdatabasepath)
   - [ServerPassword](#serverpassword)
+  - [DominoKyrFile](#dominokyrfile)
+  - [DominoPemFile](#dominopemfile)
+  - [SPECIAL_WGET_ARGUMENTS](#specialwgetarguments)
 
 ## Introduction
 This article describes the different variables that can be passed to the container when using Docker RUN
@@ -194,3 +197,31 @@ Default value : (empty)
  
 Used by : 
 * docker_prestart.sh
+
+### DominoKyrFile
+Optional paramter to define an existing Domino SSL Key Ring file in KYR format with path and file name to be imported when starting a new container. 
+
+Filename only: expects the file to be located inside of the Domino data directory
+URL with filename: will download the file from the URL specified and use it within the container.
+
+usage:
+* DominoKyrFile=http://10.11.12.13/software/server_all.pem 
+
+### DominoPemFile
+Optional paramter to define an existing Domino SSL Key Ring file in PEM format with path and file name to be imported when starting a new container. 
+The PEM file will be converted into *.kyr format.
+
+Filename only: expects the file to be located inside of the Domino data directory
+URL with filename: will download the file from the URL specified and use it within the container.
+Supports basic authentication
+
+usage:
+* DominoPemFile=http://192.168.96.170/software/server_all.pem 
+* DominoKyrFile=https://user:password@www.acme.com/software/cert.pem
+
+### SPECIAL_WGET_ARGUMENTS
+Optional parameter that will be passed on to wget. 
+Useful when any file needs to be downloaded from an URL which is not using a trusted SSL certificate.
+
+usage:
+* SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
