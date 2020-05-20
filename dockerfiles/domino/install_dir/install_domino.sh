@@ -905,6 +905,9 @@ tar -xf start_script.tar
 # explicitly set docker environment to ensure any Docker implementation works
 export DOCKER_ENV=yes
 
+# allow gdb to use sys ptrace --> needs to be granted explicitly on some container platforms
+setcap 'cap_sys_ptrace+ep' /usr/bin/gdb
+
 # Run start script installer
 $INSTALL_DIR/start_script/install_script
 

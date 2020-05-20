@@ -8,10 +8,10 @@
 # You may use and distribute the unmodified version of this script.
 # Use at your own risk. No implied or specific warranties are given.
 # You may change it for your own usage only
-# Version 3.3.1 10.01.2020
+# Version 3.4.0 10.01.2020
 ###########################################################################
 # chkconfig: 345 66 19
-# description: IBM Domino Server (notes)
+# description: HCL Domino Server (notes)
 
 ### BEGIN INIT INFO
 # Provides: rc_domino
@@ -19,10 +19,10 @@
 # Required-Stop:  $remote_fs $syslog 
 # Default-Start:  3 5
 # Default-Stop:   0 1 2 6
-# Short-Description: IBM Domino Server (notes)
-# Description:       IBM Domino Server (notes)
-#       Start/Stop Script V3.2.0 for xLinux/zLinux/AIX
-#       2005-2018 Copyright by Daniel Nashed (domino_unix@nashcom.de)
+# Short-Description: HCL Domino Server (notes)
+# Description:       HCL Domino Server (notes)
+#       Start/Stop Script V3.4.0 for xLinux/zLinux/AIX
+#       2005-2020 Copyright by Daniel Nashed (domino_unix@nashcom.de)
 ### END INIT INFO
 
 # Specify username for this Domino instance.
@@ -41,7 +41,7 @@ DOMINO_SYSTEMD_NAME=domino.service
 # . /etc/sysconfig/rc_domino_config_$DOMINO_USER
 # . /etc/sysconfig/rc_domino_config
 
-# Optional get the name from script name e.g. 'domino_notes1"
+# Optional get the name from script name e.g. 'domino_myuser1"
 # DOMINO_USER=`basename $0 | cut -f 2 -d _`
 
 # VERBOSE_INFO="yes"

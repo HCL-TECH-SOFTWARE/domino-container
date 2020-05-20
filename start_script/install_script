@@ -27,9 +27,11 @@ DOMINO_INSTALL_CONFIG_FILE=rc_domino_config
 DOMINO_INSTALL_CONFIG_FILEPATH=/etc/sysconfig/$DOMINO_INSTALL_CONFIG_FILE
 DOMINO_DOCKER_SCRIPT=domino_docker_entrypoint.sh
 DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
-VERSION=330
+DONT_TOUCH_THIS_STANDARD_USER=notes
 
 # if you really really need to, change this and all files will be patched
+
+echo "STARTSCRIPT DOMINO_USER: [$DOMINO_USER]"
 
 if [ -z "$DOMINO_START_SCRIPT_DIR" ]; then
   DOMINO_START_SCRIPT_DIR=/opt/nashcom/startscript
@@ -46,7 +48,9 @@ fi
 ROOT_USER=root
 ROOT_GROUP=root
 
-DOMINO_DATA_PATH=/local/notesdata
+if [ -z "$DOMINO_DATA_PATH" ]; then
+  DOMINO_DATA_PATH=/local/notesdata
+fi
 
 #DOMINO_DEBUG_MODE="yes"
 
@@ -61,12 +65,17 @@ if [ ! $EUID = "0" ]; then
   exit 1
 fi
 
-if [ -r "$START_SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE" ]; then
-  . $START_SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE
+echo "DOMINO_DATA_PATH1: [$DOMINO_DATA_PATH]"
+
+if [ -r "$DOMINO_INSTALL_CONFIG_FILEPATH" ]; then
+  . $DOMINO_INSTALL_CONFIG_FILEPATH
 else
   echo "Terminating installation - cannot read config file! [$START_SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE]"
   exit 1
 fi
+
+echo "DOMINO_INSTALL_CONFIG_FILEPATH: [$DOMINO_INSTALL_CONFIG_FILEPATH]"
+echo "DOMINO_DATA_PATH2: [$DOMINO_DATA_PATH]"
 
 INIT_PATH=/etc/init.d
 
@@ -208,6 +217,20 @@ patch_install_dir()
   sed -i "s~${DONT_TOUCH_THIS_NASHCOM_PATH}~${DOMINO_START_SCRIPT_DIR}~g" "$1"
 }
 
+patch_user_name()
+{
+  if [ ! -e "$1" ]; then
+    echo "FILE DOES NOT EXIST: [$1]"
+    return 0;
+  fi
+
+  if [ "$DONT_TOUCH_THIS_STANDARD_USER" = "$DOMINO_USER" ]; then
+    return 0;
+  fi
+
+  sed -i "s~${DONT_TOUCH_THIS_STANDARD_USER}~${DOMINO_USER}~g" "$1"
+}
+
 # rc script files install
 
 echo
@@ -237,7 +260,7 @@ install_file $START_SCRIPT_DIR/rc_domino $INIT_PATH/$DOMINO_RC_NAME $ROOT_USER $
 install_file $START_SCRIPT_DIR/rc_domino_script $DOMINO_START_SCRIPT_DIR/rc_domino_script $ROOT_USER $ROOT_GROUP 755
 install_file $START_SCRIPT_DIR/rc_domino_readme.txt $DOMINO_START_SCRIPT_DIR/rc_domino_readme.txt "$DOMINO_USER" "$DOMINO_GROUP" 644
 
-START_SCRIPT_CONFIG_VER=$DOMINO_START_SCRIPT_DIR/rc_domino_config_$VERSION.txt
+START_SCRIPT_CONFIG_VER=$DOMINO_START_SCRIPT_DIR/rc_domino_config_$DOMINO_START_SCRIPT_VERSION.txt
 START_SCRIPT_CONFIG_LATEST=$DOMINO_START_SCRIPT_DIR/rc_domino_config_latest.txt
 
 install_file $START_SCRIPT_DIR/rc_domino_config $START_SCRIPT_CONFIG_VER "$DOMINO_USER" "$DOMINO_GROUP" 644
@@ -319,6 +342,7 @@ fi
 
 patch_install_dir "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
 patch_install_dir "$INIT_PATH/$DOMINO_RC_NAME"
+patch_user_name "$INIT_PATH/$DOMINO_RC_NAME"
 
 echo
 echo done
