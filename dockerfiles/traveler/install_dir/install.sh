@@ -261,8 +261,7 @@ check_file_busy()
   fi
 
   local TARGET_REAL_BIN=`readlink -f $1`
-  local DIRNAME=`dirname $TARGET_REAL_BIN`
-  local FOUND_TARGETS=`lsof +D "$DIRNAME" 2>/dev/null | grep "$TARGET_REAL_BIN"`
+  local FOUND_TARGETS=`lsof "$TARGET_REAL_BIN" 2>/dev/null | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -270,7 +269,6 @@ check_file_busy()
     return 0
   fi
 }
-
 
 install_file()
 {

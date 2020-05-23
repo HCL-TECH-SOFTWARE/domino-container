@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ###########################################################################
 # Install Binary - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
@@ -20,18 +20,10 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-pushd()
-{
-  command pushd "$@" > /dev/null
-}
-
-popd ()
-{
-  command popd "$@" > /dev/null
-}
-
-export pushd popd
-
+SCRIPT_NAME=$0
+PARAM1=$1
+SCRIPT_REAL=`realpath $0`
+SCRIPT_DIR=`dirname $SCRIPT_REAL`
 
 check_file_busy()
 {
@@ -40,8 +32,7 @@ check_file_busy()
   fi
 
   local TARGET_REAL_BIN=`readlink -f $1`
-  local DIRNAME=`dirname $TARGET_REAL_BIN`
-  local FOUND_TARGETS=`lsof +D "$DIRNAME" 2>/dev/null | grep "$TARGET_REAL_BIN"`
+  local FOUND_TARGETS=`lsof "$TARGET_REAL_BIN" 2>/dev/null | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -49,6 +40,7 @@ check_file_busy()
     return 0
   fi
 }
+
 
 install_binary()
 {
@@ -110,10 +102,10 @@ install_binary()
       ;;
 
     *)
-      pushd .
+      CURRENT_DIR=`pwd`
       cd $LOTUS/bin
       ln -f -s tools/startup "$INSTALL_BIN_NAME"
-      popd
+      cd "$CURRENT_DIR"
       ;;
 
   esac

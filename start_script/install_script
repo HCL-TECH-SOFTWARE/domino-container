@@ -22,6 +22,8 @@
 
 SCRIPT_NAME=$0
 PARAM1=$1
+SCRIPT_REAL=`realpath $0`
+SCRIPT_DIR=`dirname $SCRIPT_REAL`
 
 DOMINO_INSTALL_CONFIG_FILE=rc_domino_config
 DOMINO_INSTALL_CONFIG_FILEPATH=/etc/sysconfig/$DOMINO_INSTALL_CONFIG_FILE
@@ -65,13 +67,19 @@ if [ ! $EUID = "0" ]; then
   exit 1
 fi
 
-echo "DOMINO_DATA_PATH1: [$DOMINO_DATA_PATH]"
-
+# first check standard location for existing config
 if [ -r "$DOMINO_INSTALL_CONFIG_FILEPATH" ]; then
   . $DOMINO_INSTALL_CONFIG_FILEPATH
 else
-  echo "Terminating installation - cannot read config file! [$START_SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE]"
-  exit 1
+  # use fresh config (might be still customized)
+  DOMINO_INSTALL_CONFIG_FILEPATH=$SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE
+    
+  if [ -r "$DOMINO_INSTALL_CONFIG_FILEPATH" ]; then
+    . $DOMINO_INSTALL_CONFIG_FILEPATH
+  else
+    echo "Terminating installation - cannot read config file! [$DOMINO_INSTALL_CONFIG_FILEPATH]"
+    exit 1
+  fi
 fi
 
 echo "DOMINO_INSTALL_CONFIG_FILEPATH: [$DOMINO_INSTALL_CONFIG_FILEPATH]"
@@ -109,14 +117,21 @@ elif [ `uname` = Linux ]; then
 fi
 
 
-DebugText ()
+header()
+{
+  echo
+  echo "$@"
+  echo
+}
+
+DebugText()
 {
   if [ "$DOMINO_DEBUG_MODE" = "yes" ]; then
 
     if [ -z "$DOMINO_DEBUG_FILE" ]; then
-      echo "Debug:" $1 $2 $3 $4 $5 $6 $7 $8 $9
+      echo "Debug: $@"
     else
-      echo "Debug:" $1 $2 $3 $4 $5 $6 $7 $8 $9 >> $DOMINO_DEBUG_FILE 
+      echo "Debug: $@" >> $DOMINO_DEBUG_FILE 
     fi
   fi 
 
@@ -130,8 +145,7 @@ check_file_busy()
   fi
 
   local TARGET_REAL_BIN=`readlink -f $1`
-  local DIRNAME=`dirname $TARGET_REAL_BIN`
-  local FOUND_TARGETS=`lsof +D "$DIRNAME" 2>/dev/null | grep "$TARGET_REAL_BIN"`
+  local FOUND_TARGETS=`lsof "$TARGET_REAL_BIN" 2>/dev/null | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -139,7 +153,6 @@ check_file_busy()
     return 0
   fi
 }
-
 
 install_file()
 {
@@ -233,9 +246,7 @@ patch_user_name()
 
 # rc script files install
 
-echo
-echo "Installing StartScript & Config"
-echo
+header "Installing StartScript & Config"
 
 if [ ! -e "$DOMINO_START_SCRIPT_DIR" ]; then
   mkdir -p "$DOMINO_START_SCRIPT_DIR"
@@ -344,9 +355,7 @@ patch_install_dir "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
 patch_install_dir "$INIT_PATH/$DOMINO_RC_NAME"
 patch_user_name "$INIT_PATH/$DOMINO_RC_NAME"
 
-echo
-echo done
-echo
+header Done
 
 exit 0
 
