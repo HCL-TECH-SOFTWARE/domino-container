@@ -71,11 +71,10 @@ fi
 if [ -r "$DOMINO_INSTALL_CONFIG_FILEPATH" ]; then
   . $DOMINO_INSTALL_CONFIG_FILEPATH
 else
+
   # use fresh config (might be still customized)
-  DOMINO_INSTALL_CONFIG_FILEPATH=$SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE
-    
-  if [ -r "$DOMINO_INSTALL_CONFIG_FILEPATH" ]; then
-    . $DOMINO_INSTALL_CONFIG_FILEPATH
+  if [ -r "$SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE" ]; then
+    . $SCRIPT_DIR/$DOMINO_INSTALL_CONFIG_FILE
   else
     echo "Terminating installation - cannot read config file! [$DOMINO_INSTALL_CONFIG_FILEPATH]"
     exit 1
