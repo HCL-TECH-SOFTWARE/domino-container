@@ -338,7 +338,7 @@ if [ "$DOCKER_ENV" = "yes" ]; then
 else
   if [ ${LARCH} = "linux" ]; then
     if [ -e /etc/systemd/system ]; then
-      install_file $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
+      install_file_noupdate $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
   
       if [ $? -eq 2 ]; then
         systemctl daemon-reload

@@ -393,7 +393,7 @@ create_key_cert()
 
       log "Signing CSR [$CSR_FILE] with local CA"
       if [ -z "$SANS_DNS" ]; then
-        openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
+        openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -reqexts SAN -extensions SAN -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
           -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = clientAuth") > /dev/null
       else
         openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
