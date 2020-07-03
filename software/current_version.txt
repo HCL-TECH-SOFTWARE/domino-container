@@ -1,6 +1,6 @@
 domino|11.0.1
 domino-ce|10.0.1|FP2
-traveler|11.0.1
+traveler|11.0.1FP1
 appdevpack|1.0.1
 proton|1.0.1
 iam|1.0.1

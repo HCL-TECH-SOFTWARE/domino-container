@@ -30,6 +30,7 @@ DOMINO_CONFIGURED="yes"
 #DOMINO_LANG=en_US.UTF-8
 #DOMINO_LANG=de_DE.UTF-8
 
+DOMINO_START_SCRIPT_VERSION=332
 
 # -- Optional Environment variable file (particular useful for systemd environments)  --
 #DOMINO_ENV_FILE=/etc/sysconfig/rc_domino_env

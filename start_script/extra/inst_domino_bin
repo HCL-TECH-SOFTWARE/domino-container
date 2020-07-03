@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ###########################################################################
 # Install Binary - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
@@ -20,26 +20,19 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-pushd()
-{
-  command pushd "$@" > /dev/null
-}
+SCRIPT_NAME=$0
+PARAM1=$1
+SCRIPT_REAL=`realpath $0`
+SCRIPT_DIR=`dirname $SCRIPT_REAL`
 
-popd ()
-{
-  command popd "$@" > /dev/null
-}
-
-export pushd popd
-
-check_binary_busy()
+check_file_busy()
 {
   if [ ! -e "$1" ]; then
     return 0
   fi
 
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
+  local TARGET_REAL_BIN=`readlink -f $1`
+  local FOUND_TARGETS=`lsof "$TARGET_REAL_BIN" 2>/dev/null | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -47,6 +40,7 @@ check_binary_busy()
     return 0
   fi
 }
+
 
 install_binary()
 {
@@ -88,7 +82,7 @@ install_binary()
       return 1
     fi
 
-    check_binary_busy "$TARGET_BIN"
+    check_file_busy "$TARGET_BIN"
 
     if [ $? -eq 1 ]; then
       echo "Error - Can not update binary '$TARGET_BIN' -- Binary in use"
@@ -108,10 +102,10 @@ install_binary()
       ;;
 
     *)
-      pushd .
+      CURRENT_DIR=`pwd`
       cd $LOTUS/bin
       ln -f -s tools/startup "$INSTALL_BIN_NAME"
-      popd
+      cd "$CURRENT_DIR"
       ;;
 
   esac

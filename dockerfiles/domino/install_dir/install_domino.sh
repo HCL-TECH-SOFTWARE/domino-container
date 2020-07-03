@@ -38,7 +38,7 @@ export DOMINO_DATA_PATH=/local/notesdata
 export PATH=$PATH:$DOMINO_DATA_PATH
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-WGET_COMMAND="wget --connect-timeout=10 --tries=1"
+WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
 
 # Helper Functions
 
@@ -271,30 +271,14 @@ download_and_check_hash ()
   return 0
 }
 
-check_binary_busy()
-{
-  if [ ! -e "$1" ]; then
-    return 0
-  fi
-
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof | awk '{print $9}' | grep "$TARGET_REAL_BIN"`
-
-  if [ -n "$FOUND_TARGETS" ]; then
-    return 1
-  else
-    return 0
-  fi
-}
-
 check_file_busy()
 {
   if [ ! -e "$1" ]; then
     return 0
   fi
 
-  TARGET_REAL_BIN=`readlink -f $1`
-  FOUND_TARGETS=`lsof 2>/dev/null| awk '{print $9}' | grep "$TARGET_REAL_BIN"`
+  local TARGET_REAL_BIN=`readlink -f $1`
+  local FOUND_TARGETS=`lsof "$TARGET_REAL_BIN" 2>/dev/null | grep "$TARGET_REAL_BIN"`
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -917,6 +901,9 @@ tar -xf start_script.tar
 
 # explicitly set docker environment to ensure any Docker implementation works
 export DOCKER_ENV=yes
+
+# allow gdb to use sys ptrace --> needs to be granted explicitly on some container platforms
+setcap 'cap_sys_ptrace+ep' /usr/bin/gdb
 
 # Run start script installer
 $INSTALL_DIR/start_script/install_script

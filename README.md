@@ -18,14 +18,14 @@ Other options available:
 * ```build volt``` - Volt on Domino
 * 
 ## How to use this image
-When a new container is created from the HCL Domino Docker image, it takes [environment variables](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](https://github.com/IBM/domino-docker/blob/master/documentation/run-variables.md)
+When a new container is created from the HCL Domino Docker image, it takes [environment variables](https://github.com/IBM/domino-docker/blob/master/docs/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](https://github.com/IBM/domino-docker/blob/master/docs/run-variables.md)
 
 * Domino Data directory needs to be a persistent volume.
 
 ### Management Script
 The folder [Management](https://github.com/IBM/domino-docker/tree/master/management) contains a script that simplifies the management of containers. The script is supposed to run on the docker host.
 
-For details see the documentation of the [Management Script](https://github.com/IBM/domino-docker/blob/master/documentation/management.md)
+For details see the documentation of the [Management Script](https://github.com/IBM/domino-docker/blob/master/docs/management.md)
 
 ### Manually creating a new container from an image
 First create a new/empty persistent volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
