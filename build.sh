@@ -72,6 +72,8 @@ if [ -z "$DOCKER_CMD" ]; then
   fi
 fi
 
+echo "[Running in $DOCKER_CMD configuration]"
+
 usage ()
 {
   echo
@@ -113,6 +115,7 @@ header ()
 dump_config ()
 {
   header "Build Configuration"
+  echo "Build Environment  : [$DOCKER_CMD]"
   echo "DOWNLOAD_FROM      : [$DOWNLOAD_FROM]"
   echo "SOFTWARE_DIR       : [$SOFTWARE_DIR]"
   echo "PROD_NAME          : [$PROD_NAME]"

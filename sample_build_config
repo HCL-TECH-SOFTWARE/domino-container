@@ -1,6 +1,7 @@
 
 # NOTICE: This is an example build config. 
 # It needs to be copied to /local/cfg/build_config to be used and overwrites the configuration inside build.sh
+# build.sh cpcfg copies the file automatically
 
 # (Default) NIGX is used hosting software from the local "software" directory.
 # (Optional) Configure software download location.
@@ -13,6 +14,9 @@
 # Update CentOS while building the image
 LinuxYumUpdate=yes
 
+# Explicitly specify build environment (if both are installed podman is default!)
+#DOCKER_CMD=docker
+#DOCKER_CMD=podman
 
 # Special wget arguments
 #SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
