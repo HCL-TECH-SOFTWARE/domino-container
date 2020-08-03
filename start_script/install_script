@@ -353,6 +353,7 @@ fi
 patch_install_dir "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
 patch_install_dir "$INIT_PATH/$DOMINO_RC_NAME"
 patch_user_name "$INIT_PATH/$DOMINO_RC_NAME"
+patch_user_name "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
 
 header Done
 
