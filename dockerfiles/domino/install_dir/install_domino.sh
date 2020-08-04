@@ -942,6 +942,7 @@ install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpda
 
 # Remove Fixpack/Hotfix backup files
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
+find $Notes_ExecDirectory -maxdepth 1 -type d -name "110**" -exec rm -rf {} \;
 
 # Remove not needed domino/html data to keep image smaller
 find $DOMINO_DATA_PATH/domino/html -name "*.dll" -exec rm -rf {} \;
