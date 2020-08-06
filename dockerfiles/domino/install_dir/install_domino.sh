@@ -478,8 +478,8 @@ get_domino_version ()
 set_domino_version ()
 {
   get_domino_version
-  echo $DOMINO_VERSION > $DOMDOCK_TXT_DIR/domino_$1.txt
-  echo $DOMINO_VERSION > $DOMINO_DATA_PATH/domino_$1.txt
+  echo $PROD_VER > $DOMDOCK_TXT_DIR/domino_$1.txt
+  echo $PROD_VER > $DOMINO_DATA_PATH/domino_$1.txt
 }
 
 check_installed_version ()
