@@ -273,6 +273,9 @@ check_download_file_links()
   download_file_link SafeIDFile
   SafeIDFile=$RET_DOWNLOADED_FILE
 
+  download_file_link DominoTrialKeyFile
+  DominoTrialKeyFile=$RET_DOWNLOADED_FILE
+
   # Download kyr file 
   if [ -n "$DominoKyrFile" ]; then
 
@@ -329,13 +332,37 @@ if [ ! -z "$CustomNotesdataZip" ]; then
   fi
 fi
 
+
+# Get Git Repo if configured into /local/git (temporary for setup)
+if [ ! -z "$GitSetupRepo" ]; then
+  if [ -e /usr/bin/git ]; then
+    /usr/bin/git clone "$GitSetupRepo" /local/git 
+    if [ -e /local/git/notesdata ]; then
+      cp -R /local/git/notesdata/* /local/notesdata 
+    fi
+  else
+    echo "skipping Git Repo -- No git installed!"
+  fi
+fi
+
+# Git setup script can be used to run commands to copy and modify files
+if [ ! -z "$GitSetupScript" ]; then
+  if [ -x "$GitSetupScript" ]; then
+    log "Executing [$GitSetupScript]"
+    log "---------------------------------------"
+    $GitSetupScript
+    log "---------------------------------------"
+  fi
+fi
+
+
 # Replace secret variables with file content or http download
 replace_secret_vars
 
 # Download ID files if http download specified
 check_download_file_links
 
-# Rensure server.id name is always default name and rename if needed
+# Ensure server.id name is always default name and rename if needed
 if [ -e "$ServerIDFile" ]; then
   if [ ! "$ServerIDFile" = "server.id" ]; then
     secure_move_file "$ServerIDFile" "server.id"
@@ -344,6 +371,13 @@ fi
 
 # Ensure it is set, even not specified
 ServerIDFile=server.id
+
+# Ensure trial key is named "trial_account.txt"
+if [ -e "$DominoTrialKeyFile" ]; then
+  if [ ! "$DominoTrialKeyFile" = "trial_account.txt" ]; then
+    secure_move_file "$DominoTrialKeyFile" "trial_account.txt"
+  fi
+fi
 
 # Switch to executable directory for setup
 cd $Notes_ExecDirectory
@@ -418,6 +452,11 @@ fi
 
 # .oO Neuralizer .oO
 # Cleaning up environment variabels & history to reduce exposure of sensitive data
+
+# Remove temporary git download
+if [ -e /local/git ]; then
+  rm -rf /local/git
+fi
 
 unset RET_DOWNLOADED_FILE
 unset isFirstServer

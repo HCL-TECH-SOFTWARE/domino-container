@@ -866,7 +866,16 @@ fi
 if [ ! -e /usr/bin/perl ]; then
   header "Installing perl"
   yum -y install perl
-  UNINSTALL_PERL_AFTER_INSTALL=yes
+  # disable uninstall because git requires it
+  # UNINSTALL_PERL_AFTER_INSTALL=yes
+fi
+
+# Yes we want git along like we want wget and curl ;-)
+# But than we need to keep Perl
+
+if [ ! -e /usr/bin/git ]; then
+  header "Installing git"
+  yum -y install git
 fi
 
 cd "$INSTALL_DIR"
