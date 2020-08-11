@@ -18,5 +18,8 @@ LinuxYumUpdate=yes
 #DOCKER_CMD=docker
 #DOCKER_CMD=podman
 
+
+#DOCKER_FILE=dockerfile_ubi
+
 # Special wget arguments
 #SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
