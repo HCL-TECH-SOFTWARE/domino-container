@@ -77,7 +77,7 @@ echo "[Running in $DOCKER_CMD configuration]"
 usage ()
 {
   echo
-  echo "Usage: `basename $SCRIPT_NAME` { domino | domino-ce | traveler } version fp hf"
+  echo "Usage: `basename $SCRIPT_NAME` { domino | traveler | volt } version fp hf"
   echo
   echo "-checkonly      checks without build"
   echo "-verifyonly     checks download file checksum without build"
@@ -241,7 +241,7 @@ for a in $@; do
 
   p=`echo "$a" | awk '{print tolower($0)}'`
   case "$p" in
-    domino|domino-ce|traveler|proton|iam|volt)
+    domino|traveler|volt)
       PROD_NAME=$p
       ;;
 
@@ -272,6 +272,10 @@ for a in $@; do
 
     dockerfile*)
       DOCKER_FILE=$a
+      ;;
+
+    domino-docker:*)
+      BASE_IMAGE=$a
       ;;
 
     cfg|config)
@@ -335,6 +339,34 @@ for a in $@; do
       ;;
   esac
 done
+
+# in case we are starting with a specific HCL Domino image, set the DOCKER_FILE accordingly if not explicitly specified
+# also bypass software download check
+# but check if the image is available
+
+echo "BASE_IMAGE: [$BASE_IMAGE]"
+if [ -n "$BASE_IMAGE" ]; then
+
+  if [ -z "$DOCKER_FILE" ]; then
+    DOCKER_FILE=dockerfile_hcl
+  fi
+
+  IMAGE_ID=`docker images $BASE_IMAGE -q`
+  if [ -z "$IMAGE_ID" ]; then
+    echo "Base image [$BASE_IMAGE] does not exist"
+    exit 1
+  fi
+
+  # Derive version from Docker image name
+  PROD_NAME=domino
+  PROD_VER=`echo $BASE_IMAGE | cut -d":" -f 2`
+    
+  # don't check software
+  CHECK_SOFTWARE=no
+  CHECK_HASH=no
+  DOWNLOAD_FROM=DUMMY
+
+fi
 
 TARGET_IMAGE=$PROD_NAME
 TARGET_DIR=`echo $TARGET_IMAGE | cut -f 1 -d"-"`
@@ -442,6 +474,7 @@ export LinuxYumUpdate
 export DominoMoveInstallData
 export TAG_LATEST
 export DOCKER_FILE
+export BASE_IMAGE 
 export SPECIAL_WGET_ARGUMENTS
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"

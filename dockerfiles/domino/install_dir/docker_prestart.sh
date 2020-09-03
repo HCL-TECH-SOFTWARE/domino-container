@@ -23,14 +23,14 @@ fi
 
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_server_setup.log
 WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
-dominosilentsetup=$DOMINO_DATA_PATH/SetupProfile.pds
+dominosilentsetup=$DOMDOCK_DIR/SetupProfile.pds
 dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
 
 # In case this is an additional server in an existing environment switch to different pds file
 # because variable isFirstServer can not be changed programmatically.
 
 if [ "$isFirstServer" = "false" ]; then
-  dominosilentsetup=$DOMINO_DATA_PATH/SetupProfileSecondServer.pds
+  dominosilentsetup=$DOMDOCK_DIR/SetupProfileSecondServer.pds
 fi
 
 log()
@@ -446,7 +446,7 @@ fi
 
 if [ ! -e keyfile.kyr ]; then
   header "Creating Domino Key Ring File from local CA"
-  ./create_ca_kyr.sh
+  $DOMDOCK_SCRIPT_DIR/create_ca_kyr.sh
 fi
 
 

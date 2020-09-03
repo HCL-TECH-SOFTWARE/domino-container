@@ -499,13 +499,18 @@ check_keys_and_certs ()
 
 # --- Main Logic --
 
-if [ -z "$DOMINO_HOST_NAME" ]; then
-  DOMINO_HOST_NAME=`hostname`
-fi
+if [ ! -x /usr/bin/openssl ]; then
+  echo "Info: No OpenSSL installed - skipping keyring creation"
+else
 
-check_create_dirs
-create_ca
-create_key_cert keyfile "/O=$DOMINO_ORG/CN=$DOMINO_HOST_NAME" "$DOMINO_HOST_NAME"
-create_pem_kyr keyfile
-cp $KYR_DIR/* $DOMINO_DATA_PATH
-rm -rf $CERTMGR_DIR
+  if [ -z "$DOMINO_HOST_NAME" ]; then
+    DOMINO_HOST_NAME=`hostname`
+  fi
+
+  check_create_dirs
+  create_ca
+  create_key_cert keyfile "/O=$DOMINO_ORG/CN=$DOMINO_HOST_NAME" "$DOMINO_HOST_NAME"
+  create_pem_kyr keyfile
+  cp $KYR_DIR/* $DOMINO_DATA_PATH
+  rm -rf $CERTMGR_DIR
+fi

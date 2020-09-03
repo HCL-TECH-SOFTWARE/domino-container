@@ -1,16 +1,15 @@
-
+  
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
-# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-FROM registry.access.redhat.com/ubi8/ubi
+ARG BASE_IMAGE=
+FROM $BASE_IMAGE
 
 # Headers
 LABEL DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de"
 
 # External arguments with a default value
-ARG BASE_IMAGE=
 ARG LinuxYumUpdate=
 ARG DownloadFrom=
 ARG PROD_NAME=
@@ -33,8 +32,7 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN yum install -y openssl perl bc which wget nano unzip rsync lsof gdb file net-tools hostname cpio procps-ng diffutils langpacks-en glibc-all-langpacks && \
-  $LocalInstallDir/install_domino.sh && \
+RUN  $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
   rm -rf $LocalInstallDir

@@ -1399,7 +1399,13 @@ run_monitor ()
     DebugText "DominoControllerCurrentLog = '$ret_ini_var'"
     echo  "DominoControllerCurrentLog = $DominoControllerCurrentLog"
     CONTROLLER_FILE=$ret_ini_var
-    TAIL_FILE=$DOMINO_DATA_PATH/$CONTROLLER_FILE
+
+    # newer versions use absolute path
+    case "$CONTROLLER_FILE" in
+      /*) TAIL_FILE=/$CONTROLLER_FILE ;;
+       *) TAIL_FILE=$DOMINO_DATA_PATH/$CONTROLLER_FILE ;;
+    esac
+
   else
     TAIL_FILE=$DOMINO_OUTPUT_LOG
   fi
