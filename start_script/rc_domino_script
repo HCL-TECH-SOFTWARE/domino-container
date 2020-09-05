@@ -306,7 +306,8 @@ if [ ${LARCH} = "sunspa" ]; then
 fi
 
 if [ ${LARCH} = "linux" ]; then
-  LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
+  # include ST directories
+  LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH:$Notes_ExecDirectory/STOpenSSL:$Notes_ExecDirectory/sticc
   export LD_LIBRARY_PATH
 fi
 

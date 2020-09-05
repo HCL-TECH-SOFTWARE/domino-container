@@ -1,0 +1,29 @@
+version: '3.6'
+
+services:
+
+  domino:
+    image: "hclcom/domino:latest"
+    container_name: domino-acme-02
+    hostname: domino-acme-02.acme.com
+    stop_grace_period: 60s
+
+    ports:
+      - 80:80
+      - 1352:1352
+
+    volumes:
+      - domino_acme-02:/local
+
+    environment:
+      isFirstServer: "false"
+      ServerName: domino-acme-02 
+      ServerIDFile: http://192.168.96.170/software/domino-acme-02.id
+      OtherDirectoryServerName: domino-acme-01 
+      OtherDirectoryServerAddress: domino.acme.com 
+
+volumes:
+
+  domino_acme-02
+    name: domino_acme_02_local
+    external: false
