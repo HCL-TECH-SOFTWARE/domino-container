@@ -136,4 +136,4 @@ License for the products that can be installed within the images is as follows:
 * IBM Domino Enterprise Server 10.0 under the [International Program License Agreement](https://www-03.ibm.com/software/sla/sladb.nsf/displaylis/FB664D0899DE8E7C8525832100805159?OpenDocument)
  
  
-Note that the HCL Domino and add-on products are commercial software - the software licenses agreement does not permit further distribution of the docker image that was built using this script.
+Note that HCL Domino and add-on products are commercial software - the software licenses agreement does not permit further distribution of the docker image that was built using this script.
