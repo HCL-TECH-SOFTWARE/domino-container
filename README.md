@@ -17,7 +17,7 @@ All HCL customers (and business partners with the [Partner Pack](https://www.hcl
 
 ## How to build the image(s)
 To build the latest available image 
-1. Download the required [software packages](https://github.com/IBM/domino-docker/blob/master/software/README.md) to the 'software' directory
+1. Download the required [software packages](software/README.md) to the 'software' directory
 2. From the root folder of this repository issue the following command 
 ```bash
 ./build domino
@@ -29,14 +29,14 @@ Other options available:
 * ```build volt``` - Volt on Domino
 * 
 ## How to use this image
-When a new container is created from the HCL Domino Docker image, it takes [environment variables](https://github.com/IBM/domino-docker/blob/master/docs/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](https://github.com/IBM/domino-docker/blob/master/docs/run-variables.md)
+When a new container is created from the HCL Domino Docker image, it takes [environment variables](docs/run-variables.md) into account for auto-configuring the Domino server. Details on how to use those variables can be found [here](docs/run-variables.md)
 
 Domino Data directory needs to be a persistent volume. On Docker it will be automatically created. You can also use an existing volume. All volume types your container infrastructure supports can be used.
 
 ### Management Script
-The folder [Management](https://github.com/IBM/domino-docker/tree/master/management) contains a script that simplifies the managing your containers. The Linux bash script is supposed to run on the Docker host.
+The folder [Management](master/management) contains a script that simplifies the managing your containers. The Linux bash script is supposed to run on the Docker host.
 
-For details see the documentation of the [Management Script](https://github.com/IBM/domino-docker/blob/master/docs/management.md)
+For details see the documentation of the [Management Script](management.md)
 
 ### Manually creating a new container from an image
 First create a new/empty persistent volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
@@ -112,10 +112,10 @@ Example:
 
 
 ## Issues
-For issues relating specifically to the Dockerfiles and scripts, please use the [GitHub issue tracker](https://github.com/IBM/domino-docker/issues)
+For issues relating specifically to the Dockerfiles and scripts, please use the [GitHub issue tracker](issues)
 
 ## Contributing
-We welcome contributions following [our guidelines](https://github.com/IBM/domino-docker/blob/master/CONTRIBUTING.md).
+We welcome contributions following [our guidelines](CONTRIBUTING.md).
 
 ## Community Support
 Special Thanks go to the following people for having provided valuable input to this project
