@@ -245,10 +245,6 @@ for a in $@; do
       PROD_NAME=$p
       ;;
 
-    latest)
-      PROD_VER=$p
-      ;;
-
     9*|10*|11*)
       PROD_VER=$p
       ;;
