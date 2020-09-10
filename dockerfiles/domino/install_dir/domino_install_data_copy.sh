@@ -207,7 +207,7 @@ copy_files_for_major_version ()
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
-  tar xzvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./dfc ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 2>&1
+  tar xvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./dfc ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 2>&1
 
   echo $DOMINO_VERSION > $InstalledFile
 
@@ -350,7 +350,7 @@ copy_data_directory ()
 
   header "Extracting install data directory from [$INSTALL_DATA_TAR]" 
   
-  tar xzvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
+  tar xvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
   log
 }
 
@@ -392,7 +392,7 @@ copy_files_for_addon ()
 
   header "Extracting add-on install data directory from [$INSTALL_DATA_TAR]"
 
-  tar xzvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE 2>&1
+  tar xvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE 2>&1
 
   if [ "$PROD_NAME" = "traveler" ]; then
 

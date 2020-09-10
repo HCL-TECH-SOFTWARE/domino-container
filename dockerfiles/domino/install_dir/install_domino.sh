@@ -287,6 +287,39 @@ check_file_busy()
   fi
 }
 
+nsh_cmp()
+{
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ -z "$2" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$2" ]; then
+    return 1
+  fi
+
+  if [ -x /usr/bin/cmp ]; then
+    cmp -s "$1" "$2"
+    return $?
+  fi
+
+  HASH1=`sha256sum "$1" | cut -d" " -f1`
+  HASH2=`sha256sum "$2" | cut -d" " -f1`
+
+  if [ "$HASH1" = "$HASH2" ]; then
+    return 0
+  fi
+
+  return 1
+}
+
 install_file()
 {
   SOURCE_FILE=$1
@@ -302,7 +335,7 @@ install_file()
 
   if [ -e "$TARGET_FILE" ]; then
 
-    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
+    nsh_cmp "$SOURCE_FILE" "$TARGET_FILE"
     if [ $? -eq 0 ]; then
       echo "[$TARGET_FILE] File did not change -- No update needed"
       return 0
@@ -478,8 +511,8 @@ get_domino_version ()
 set_domino_version ()
 {
   get_domino_version
-  echo $DOMINO_VERSION > $DOMDOCK_TXT_DIR/domino_$1.txt
-  echo $DOMINO_VERSION > $DOMINO_DATA_PATH/domino_$1.txt
+  echo $PROD_VER > $DOMDOCK_TXT_DIR/domino_$1.txt
+  echo $PROD_VER > $DOMINO_DATA_PATH/domino_$1.txt
 }
 
 check_installed_version ()
@@ -620,7 +653,7 @@ install_domino ()
 
       mv "$INSTALL_LOG" "$INST_DOM_LOG"
       check_file_str "$INST_DOM_LOG" "$DOM_V11_STRING_OK"
-   fi
+    fi
 
     if [ "$?" = "1" ]; then
       echo
@@ -844,29 +877,60 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   echo '* hard nofile 65535' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
  
-  # Allow world full access to the main directories to ensure all mounts work.
-  # Those directories might get replaced with mount points or re-created on startup of the container when /local mount is used.
-  # Ensure only root can write into the script directory!
-
-  create_directory $DOMDOCK_DIR root root 777
-  create_directory $DOMDOCK_SCRIPT_DIR root root 755
-  create_directory /local root root 777 
-  create_directory $DOMINO_DATA_PATH root root 777
-  create_directory /local/translog root root 777
-  create_directory /local/daos root root 777
-  create_directory /local/nif root root 777
-  create_directory /local/ft root root 777
-
-  docker_set_timezone
-
 fi
+
+# Allow world full access to the main directories to ensure all mounts work.
+# Those directories might get replaced with mount points or re-created on startup of the container when /local mount is used.
+# Ensure only root can write into the script directory!
+
+# if inheriting an existing installation, it's important to ensure /local has the right permissions
+
+chown -R notes:notes /local
+
+create_directory $DOMDOCK_DIR root root 777
+create_directory $DOMDOCK_SCRIPT_DIR root root 755
+create_directory /local root root 777 
+create_directory $DOMINO_DATA_PATH root root 777
+create_directory /local/translog root root 777
+create_directory /local/daos root root 777
+create_directory /local/nif root root 777
+create_directory /local/ft root root 777
+
+docker_set_timezone
+
+
+# check if HCL Domino image is already installed -> in that case just set version
+if [ -e "/tmp/notesdata.tbz2" ]; then
+  set_domino_version ver
+  FIRST_TIME_SETUP=
+  DominoMoveInstallData=
+  # set link to install data
+  ln -s /tmp/notesdata.tbz2 $DOMDOCK_DIR/install_data_domino.taz
+
+  NO_PERL_INSTALL=yes
+  NO_GIT_INSTALL=yes
+fi
+
 
 # Temporary install perl for installers if not already installed
 
-if [ ! -e /usr/bin/perl ]; then
-  header "Installing perl"
-  yum -y install perl
-  UNINSTALL_PERL_AFTER_INSTALL=yes
+  if [ -z "$NO_PERL_INSTALL" ]; then
+  if [ ! -e /usr/bin/perl ]; then
+    header "Installing perl"
+    yum -y install perl
+    # disable uninstall because git requires it
+    # UNINSTALL_PERL_AFTER_INSTALL=yes
+  fi
+fi
+
+# Yes we want git along like we want wget and curl ;-)
+# But than we need to keep Perl
+
+if [ -z "$NO_GIT_INSTALL" ]; then
+  if [ ! -e /usr/bin/git ]; then
+    header "Installing git"
+    yum -y install git
+  fi
 fi
 
 cd "$INSTALL_DIR"
@@ -903,14 +967,29 @@ tar -xf start_script.tar
 export DOCKER_ENV=yes
 
 # allow gdb to use sys ptrace --> needs to be granted explicitly on some container platforms
-setcap 'cap_sys_ptrace+ep' /usr/bin/gdb
+
+if [ -x /usr/bin/gdb ]; then
+  if [ ! -L /usr/bin/gdb ]; then
+    echo "symbolic link"
+    setcap 'cap_sys_ptrace+ep' /usr/bin/gdb
+    echo "Setting cap_sys_ptrace for /usr/bin/gdb"
+  fi
+fi
+
+# some platforms like UBI use a sym link for gdb
+if [ -x /usr/libexec/gdb ]; then
+  if [ ! -L /usr/libexec/gdb ]; then
+    setcap 'cap_sys_ptrace+ep' /usr/libexec/gdb
+    echo "Setting cap_sys_ptrace for /usr/libexec/gdb"
+  fi
+fi
 
 # Run start script installer
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMINO_DATA_PATH/SetupProfile.pds" root root 644
-install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMINO_DATA_PATH/SetupProfileSecondServer.pds" root root 644
+install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" notes notes 644
+install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" notes notes 644
 
 header "Final Steps & Configuration"
 
@@ -930,7 +1009,7 @@ install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthc
 # Install keyring create/update script
 
 install_file "$INSTALL_DIR/create_keyring.sh" "$DOMDOCK_SCRIPT_DIR/create_keyring.sh" root root 755
-install_file "$INSTALL_DIR/create_ca_kyr.sh" "$DOMINO_DATA_PATH/create_ca_kyr.sh" root root 755
+install_file "$INSTALL_DIR/create_ca_kyr.sh" "$DOMDOCK_SCRIPT_DIR/create_ca_kyr.sh" root root 755
 
 install_file "$INSTALL_DIR/nuid2pw" "$DOMDOCK_SCRIPT_DIR/nuid2pw" root root 4550
 
@@ -941,11 +1020,12 @@ install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpda
 # --- Cleanup Routines to reduce image size ---
 
 # Remove Fixpack/Hotfix backup files
-find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \;
+find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \; 2>/dev/null
+find $Notes_ExecDirectory -maxdepth 1 -type d -name "110**" -exec rm -rf {} \; 2>/dev/null
 
 # Remove not needed domino/html data to keep image smaller
-find $DOMINO_DATA_PATH/domino/html -name "*.dll" -exec rm -rf {} \;
-find $DOMINO_DATA_PATH/domino/html -name "*.msi" -exec rm -rf {} \;
+find $DOMINO_DATA_PATH/domino/html -name "*.dll" -exec rm -rf {} \; 2>/dev/null
+find $DOMINO_DATA_PATH/domino/html -name "*.msi" -exec rm -rf {} \; 2>/dev/null
 
 remove_directory "$DOMINO_DATA_PATH/domino/html/download/filesets"
 remove_directory "$DOMINO_DATA_PATH/domino/html/help"

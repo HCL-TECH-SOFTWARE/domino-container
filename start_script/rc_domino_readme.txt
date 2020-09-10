@@ -997,8 +997,8 @@ In combination with setting a different location for the DOMINO_LOG_BACKUP_DIR t
 be saved to a normal disk while at run-time the files are still written to a normal disk.
 
 
-USE_JAVA_CONTROLLER
--------------------
+DOMINO_USE_JAVA_CONTROLLER
+--------------------------
 
 (Optional)
 Use the Java Controller to manage the Domino server.
@@ -1827,6 +1827,17 @@ The include file used for "session" settings contains this entry already.
 --------------
 Change History
 --------------
+
+V3.4.0 01.09.2020
+
+Problems Solved
+---------------
+
+Fixed an issue with live console for server controller. The controller log file can have an absolue path.
+Routine now checks and prepends the data directory only if path is relative
+
+Minor changes for Docker
+
 
 V3.3.1 10.01.2020
 

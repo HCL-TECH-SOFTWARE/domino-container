@@ -153,6 +153,39 @@ check_file_busy()
   fi
 }
 
+nsh_cmp()
+{
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ -z "$2" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$2" ]; then
+    return 1
+  fi
+
+  if [ -x /usr/bin/cmp ]; then
+    cmp -s "$1" "$2"
+    return $?
+  fi
+
+  HASH1=`sha256sum "$1" | cut -d" " -f1`
+  HASH2=`sha256sum "$2" | cut -d" " -f1`
+
+  if [ "$HASH1" = "$HASH2" ]; then
+    return 0
+  fi
+
+  return 1
+}
+
 install_file()
 {
   SOURCE_FILE=$1
@@ -168,7 +201,7 @@ install_file()
 
   if [ -e "$TARGET_FILE" ]; then
 
-    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
+    nsh_cmp "$SOURCE_FILE" "$TARGET_FILE"
     if [ $? -eq 0 ]; then
       echo "[$TARGET_FILE] File did not change -- No update needed"
       return 0
@@ -335,7 +368,9 @@ if [ "$DOCKER_ENV" = "yes" ]; then
   else
     install_file_noupdate "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
   fi
+
 else
+
   if [ ${LARCH} = "linux" ]; then
     if [ -e /etc/systemd/system ]; then
       install_file_noupdate $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
@@ -345,12 +380,15 @@ else
       fi
     fi
 
+    patch_install_dir "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
+    patch_user_name "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
+
     # add domino service (systemd/init.d)
     $INIT_PATH/$DOMINO_RC_NAME service add
+
   fi
 fi
 
-patch_install_dir "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
 patch_install_dir "$INIT_PATH/$DOMINO_RC_NAME"
 patch_user_name "$INIT_PATH/$DOMINO_RC_NAME"
 

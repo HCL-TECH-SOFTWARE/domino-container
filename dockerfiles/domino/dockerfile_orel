@@ -10,6 +10,7 @@ FROM orel:latest
 LABEL DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de"
 
 # External arguments with a default value
+ARG BASE_IMAGE=
 ARG LinuxYumUpdate=
 ARG DownloadFrom=
 ARG PROD_NAME=

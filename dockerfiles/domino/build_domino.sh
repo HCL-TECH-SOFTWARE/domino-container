@@ -254,6 +254,7 @@ docker_build ()
     --build-arg PROD_FP=$PROD_FP \
     --build-arg PROD_HF=$PROD_HF \
     --build-arg DOCKER_TZ=$DOCKER_TZ \
+    --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
     --build-arg LinuxYumUpdate=$LinuxYumUpdate \
     --build-arg DominoMoveInstallData=$DominoMoveInstallData \
