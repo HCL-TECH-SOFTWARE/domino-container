@@ -360,6 +360,7 @@ if [ "$DOMINO_USE_JAVA_CONTROLLER" = "yes" ]; then
   JAVA_CONTROLLER_STRING="-jc -c"
 fi
 
+
 # Export all variables that might be useful for other scripts
 
 export LOTUS
@@ -487,9 +488,9 @@ DebugText ()
   if [ "$DOMINO_DEBUG_MODE" = "yes" ]; then
 
     if [ -z "$DOMINO_DEBUG_FILE" ]; then
-      echo "Debug:" $1 $2 $3 $4 $5 $6 $7 $8 $9
+      echo "Debug:" $@
     else
-      echo "Debug:" $1 $2 $3 $4 $5 $6 $7 $8 $9 >> $DOMINO_DEBUG_FILE 
+      echo "Debug:" $@ >> $DOMINO_DEBUG_FILE 
     fi
 
   fi 
@@ -665,10 +666,10 @@ show_log ()
   if [ -z "$1" ]; then
     CURRENT_SHOW_LOG_COMMAND=$SHOW_LOG_COMMAND
   else
-    CURRENT_SHOW_LOG_COMMAND="$1 $2 $3"
+    CURRENT_SHOW_LOG_COMMAND="$@"
   fi
 
-  $CURRENT_SHOW_LOG_COMMAND $DOMINO_OUTPUT_LOG  
+  $CURRENT_SHOW_LOG_COMMAND $REAL_OUTPUT_FILE
 }
 
 run_external_script ()
@@ -772,8 +773,6 @@ clear_logs ()
       find "$DOMINO_LOG_PATH" -type f -mtime +$DOMINO_LOG_CLEAR_DAYS -exec $REMOVE_COMMAND_CLEANUP {} \; 
     fi
   fi
-
-  DOMINO_IBM_TECHNICAL_SUPPORT_DIR=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
 
   if [ ! -z "$DOMINO_IBM_TECHNICAL_SUPPORT_DIR" ]; then
     if [ -w "$DOMINO_IBM_TECHNICAL_SUPPORT_DIR" ]; then
@@ -1392,27 +1391,8 @@ pre_status_operations()
 
 run_monitor ()
 {
-  CONTROLLER_FILE=""
-  if [ "$DOMINO_USE_JAVA_CONTROLLER" = "yes" ]; then
-    #echo "Warning: Monitor and live operations cannot be used in combination with server controller"
-
-    get_notes_ini_var "$DOMINO_INI_PATH" "DominoControllerCurrentLog"
-    DebugText "DominoControllerCurrentLog = '$ret_ini_var'"
-    echo  "DominoControllerCurrentLog = $DominoControllerCurrentLog"
-    CONTROLLER_FILE=$ret_ini_var
-
-    # newer versions use absolute path
-    case "$CONTROLLER_FILE" in
-      /*) TAIL_FILE=/$CONTROLLER_FILE ;;
-       *) TAIL_FILE=$DOMINO_DATA_PATH/$CONTROLLER_FILE ;;
-    esac
-
-  else
-    TAIL_FILE=$DOMINO_OUTPUT_LOG
-  fi
-
-  if [ ! -r "$TAIL_FILE" ]; then
-    errmsg_and_exit "Cannot read server-log ($TAIL_FILE) - exiting"
+  if [ ! -r "$REAL_OUTPUT_FILE" ]; then
+    errmsg_and_exit "Cannot read server-log ($REAL_OUTPUT_FILE) - exiting"
   fi
 
   if [ ! -w $DOMINO_INPUT_FILE ]; then
@@ -1441,9 +1421,9 @@ run_monitor ()
   DebugText "FILTER_STRING:" [$FILTER_STRING]
 
   if [ -z "$FILTER_STRING" ]; then
-    $TAIL_CMD -f $TAIL_FILE &
+    $TAIL_CMD -f $REAL_OUTPUT_FILE &
   else
-    $TAIL_CMD -f $TAIL_FILE | grep -v -E "$FILTER_STRING" &
+    $TAIL_CMD -f $REAL_OUTPUT_FILE | grep -v -E "$FILTER_STRING" &
   fi
 
   MONITOR_PID=$!
@@ -1512,7 +1492,7 @@ run_monitor ()
 
 check_for_crashed_server ()
 {
-  nsd_status=`$TAIL_CMD -n 5000 $DOMINO_OUTPUT_LOG |grep "NSD is in progress" | wc -l`
+  nsd_status=`$TAIL_CMD -n 5000 $REAL_OUTPUT_FILE |grep "NSD is in progress" | wc -l`
 
   if [ $nsd_status -eq 0 ]; then
     return 0
@@ -1961,7 +1941,7 @@ show_lastlog ()
   fi
 
   echo "--- Last Console Output ($LAST_LOG_LINES) ---"
-  $TAIL_CMD -n $LAST_LOG_LINES $DOMINO_OUTPUT_LOG
+  $TAIL_CMD -n $LAST_LOG_LINES $REAL_OUTPUT_FILE
 
   return 0
 }
@@ -2391,6 +2371,33 @@ if [ ! -w $DOMINO_INI_PATH ]; then
   errmsg_and_exit "Cannot write to Notes.ini ($DOMINO_INI_PATH) - exiting"
 fi
 
+# Needed in different places
+DOMINO_IBM_TECHNICAL_SUPPORT_DIR=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
+
+# Ensure we have the right log files for server controller and Docker direct output mode
+CONTROLLER_FILE=""
+if [ "$DOMINO_USE_JAVA_CONTROLLER" = "yes" ]; then
+
+  get_notes_ini_var "$DOMINO_INI_PATH" "DominoControllerCurrentLog"
+  DebugText "DominoControllerCurrentLog = '$ret_ini_var'"
+  echo  "DominoControllerCurrentLog = $DominoControllerCurrentLog"
+  CONTROLLER_FILE=$ret_ini_var
+
+  # newer versions use absolute path
+  case "$CONTROLLER_FILE" in
+    /*) REAL_OUTPUT_FILE=/$CONTROLLER_FILE ;;
+     *) REAL_OUTPUT_FILE=$DOMINO_DATA_PATH/$CONTROLLER_FILE ;;
+  esac
+
+else
+  REAL_OUTPUT_FILE=$DOMINO_OUTPUT_LOG
+fi
+
+# If normal log is not there, use console.log
+if [ ! -e "$DOMINO_OUTPUT_LOG" ]; then
+  REAL_OUTPUT_FILE=$DOMINO_IBM_TECHNICAL_SUPPORT_DIR/console.log
+  echo  "Using $REAL_OUTPUT_FILE"
+fi
 
 # --- Main script logic ---
 
@@ -2426,7 +2433,7 @@ LC_ALL=
 export LC_ALL
 
 dump_configuration
-DebugText "ALL PARAMETERS:" $1 $2 $3 $4 $5 $6
+DebugText "ALL PARAMETERS:" $@
 
 case "$PARAM1" in
 	  
@@ -2645,7 +2652,7 @@ case "$PARAM1" in
 
     if [ "$DOMINO_LIVE_SHUTDOWN" = "yes" ]; then
       echo "Starting Live Console for Shutdown ..."
-      $TAIL_CMD -f $DOMINO_OUTPUT_LOG &
+      $TAIL_CMD -f $REAL_OUTPUT_FILE &
       MONITOR_PID=$!
       trap "stop_monitor" 1 2 3 4 6 9 13 15 17 19 23
     fi
@@ -2685,7 +2692,7 @@ case "$PARAM1" in
 
     if [ "$DOMINO_LIVE_SHUTDOWN" = "yes" ]; then
       echo "Starting Live Console for Shutdown ..."
-      $TAIL_CMD -f $DOMINO_OUTPUT_LOG &
+      $TAIL_CMD -f $REAL_OUTPUT_FILE &
       MONITOR_PID=$!
       trap "stop_monitor" 1 2 3 4 6 9 13 15 17 19 23
     fi
@@ -2837,7 +2844,7 @@ case "$PARAM1" in
         sleep 5 
         echo 
         echo " --- Console Output for " $PARAM2 " ---"
-        $TAIL_CMD -n $PARAM3 $DOMINO_OUTPUT_LOG
+        $TAIL_CMD -n $PARAM3 $REAL_OUTPUT_FILE
         echo 
         echo "--- End of Console Output ---"
         echo 
