@@ -988,8 +988,8 @@ fi
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" notes notes 644
-install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" notes notes 644
+install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" notes notes 666
+install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" notes notes 666
 
 header "Final Steps & Configuration"
 
