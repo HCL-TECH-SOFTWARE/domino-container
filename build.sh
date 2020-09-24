@@ -257,7 +257,7 @@ WGET_COMMAND="wget --connect-timeout=20"
 
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
 SOFTWARE_PORT=7777
-SOFTWARE_CONTAINER=ibmsoftware
+SOFTWARE_CONTAINER=hclsoftware
 
 if [ -z "$1" ]; then
   usage
@@ -501,6 +501,8 @@ export TAG_LATEST
 export DOCKER_FILE
 export BASE_IMAGE 
 export SPECIAL_WGET_ARGUMENTS
+export USE_DOCKER
+export DOCKER_NETWORK
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 

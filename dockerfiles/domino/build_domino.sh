@@ -242,8 +242,15 @@ docker_build ()
 
   DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
 
+  if [ -z "$DOCKER_NETWORK" ]; then
+
+    if [ ! -z "$DOCKER_NETWORK_NAME" ]; then
+      DOCKER_NETWORK="--network=$DOCKER_NETWORK_NAME"
+    fi
+  fi
+
   # Finally build the image
-  $DOCKER_CMD build --no-cache --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
+  $DOCKER_CMD build --no-cache $DOCKER_NETWORK --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
     -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
     -f $DOCKER_FILE \
     --label DominoDocker.description="$DOCKER_DESCRIPTION" \
