@@ -23,4 +23,4 @@ LinuxYumUpdate=yes
 # Special wget arguments
 #SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
 
-DOCKER_NETWORK=HOST
+DOCKER_NETWORK_NAME=host
