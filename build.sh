@@ -50,12 +50,37 @@ if [ -e "$CONFIG_FILE" ]; then
 fi
 
 
-if [ -z "$DOCKER_CMD" ]; then
+check_docker_environment()
+{
+  DOCKER_MINIMUM_VERSION="18.09.0"
+  PODMAN_MINIMUM_VERSION="1.5.0"
 
   if [ -x /usr/bin/podman ]; then
-    DOCKER_CMD=podman
+    if [ -z "$USE_DOCKER" ]; then
+      # podman environment detected
+      DOCKER_CMD=podman
+      DOCKER_ENV_NAME=Podman
+      DOCKER_VERSION_STR=`podman version | head -1`
+      DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
+      check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
+      return 0
+    fi
+  fi
 
-  else
+  if [ -z "$DOCKERD_NAME" ]; then
+    DOCKERD_NAME=dockerd
+  fi
+
+  DOCKER_ENV_NAME=Docker
+
+  # check docker environment
+  DOCKER_VERSION_STR=`docker -v`
+  DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3|cut -d"," -f1`
+
+  check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$DOCKER_CMD"
+
+  if [ -z "$DOCKER_CMD" ]; then
+
     DOCKER_CMD=docker
 
     # Use sudo for docker command if not root on Linux
@@ -70,7 +95,9 @@ if [ -z "$DOCKER_CMD" ]; then
       fi
     fi
   fi
-fi
+
+  return 0
+}
 
 echo "[Running in $DOCKER_CMD configuration]"
 
@@ -90,8 +117,8 @@ usage ()
   echo
   echo "Examples:"
   echo
-  echo "  `basename $SCRIPT_NAME` domino 10.0.1 fp3"
-  echo "  `basename $SCRIPT_NAME` traveler 10.0.1.2"
+  echo "  `basename $SCRIPT_NAME` domino 11.0.1 fp1"
+  echo "  `basename $SCRIPT_NAME` traveler 11.0.1.1"
   echo
 
   return 0
@@ -155,7 +182,7 @@ nginx_start ()
     echo "Unable to locate software repository."
   else
     DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
-    echo "Hosting IBM Software repository on $DOWNLOAD_FROM"
+    echo "Hosting HCL Software repository on $DOWNLOAD_FROM"
   fi
   echo
 }
@@ -335,6 +362,8 @@ for a in $@; do
       ;;
   esac
 done
+
+check_docker_environment
 
 # in case we are starting with a specific HCL Domino image, set the DOCKER_FILE accordingly if not explicitly specified
 # also bypass software download check
