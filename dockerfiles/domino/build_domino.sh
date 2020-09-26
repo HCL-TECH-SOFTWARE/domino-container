@@ -265,6 +265,8 @@ docker_build ()
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
     --build-arg LinuxYumUpdate=$LinuxYumUpdate \
     --build-arg DominoMoveInstallData=$DominoMoveInstallData \
+    --build-arg GIT_INSTALL="$GIT_INSTALL" \
+    --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" .
 
   popd

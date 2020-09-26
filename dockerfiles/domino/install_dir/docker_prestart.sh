@@ -15,14 +15,17 @@ if [ -z "$LOTUS" ]; then
   fi
 fi
 
-# ServerName variable is the configuration trigger
-if [ -z "$ServerName" ]; then
-  echo "No Setup Environment Configuration. Skipping setup"
+# ServerName variable or Auto Config is the configuration trigger
+if [ -z "$ServerName" ] && [ -z "$SetupAutoConfigure" ]; then
+  echo "No Setup Environment Configuration -- Skipping setup"
   exit 0
 fi
 
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_server_setup.log
+CONSOLE_LOG=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
 WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
+CURL_CMD=curl --silent --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS
+
 dominosilentsetup=$DOMDOCK_DIR/SetupProfile.pds
 dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
 
@@ -33,15 +36,17 @@ if [ "$isFirstServer" = "false" ]; then
   dominosilentsetup=$DOMDOCK_DIR/SetupProfileSecondServer.pds
 fi
 
+
 log()
 {
-  echo "$1 $2 $3 $4 $5" >> $LOG_FILE
+  echo "$@" >> $LOG_FILE
 }
+
 
 log_space()
 {
   echo  >> $LOG_FILE
-  echo "$1 $2 $3 $4 $5" >> $LOG_FILE
+  echo "$@" >> $LOG_FILE
   echo  >> $LOG_FILE
 }
 
@@ -51,14 +56,16 @@ print_delim()
   echo "--------------------------------------------------------------------------------" >> $LOG_FILE
 }
 
+
 header()
 {
   echo >> $LOG_FILE
   print_delim
-  echo "$1" >> $LOG_FILE
+  echo "$@" >> $LOG_FILE
   print_delim
   echo >> $LOG_FILE
 }
+
 
 secure_move_file()
 {
@@ -107,6 +114,7 @@ secure_move_file()
 
 }
 
+
 download_file ()
 {
   local DOWNLOAD_URL=$1
@@ -114,7 +122,7 @@ download_file ()
   local HEADER=
 
   if [ ! -z "$3" ]; then
-    HEADER="$3: " 
+    HEADER="$3: "
   fi
 
   if [ -z "$DOWNLOAD_FILE" ]; then
@@ -122,18 +130,19 @@ download_file ()
     exit 1
   fi
 
-  WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_URL" 2>&1 | grep 'HTTP/1.1 200 OK'`
-  if [ -z "$WGET_RET_OK" ]; then
+  $CURL_CMD -o /dev/null --head "$DOWNLOAD_URL"
+  if [ ! "$?" = "0" ]; then
     log "Error: Download file does not exist [$DOWNLOAD_FILE]"
     exit 1
   fi
 
+  log "[download:$DOWNLOAD_FILE]"
   if [ -e "$DOWNLOAD_FILE" ]; then
     log "Replacing existing file [$DOWNLOAD_FILE]"
     rm -f "$DOWNLOAD_FILE"
   fi
 
-  $WGET_COMMAND "$DOWNLOAD_URL" 2>/dev/null
+  $CURL_CMD "$DOWNLOAD_URL" -o $DOWNLOAD_FILE
 
   if [ "$?" = "0" ]; then
     log "${HEADER}Successfully downloaded: [$DOWNLOAD_FILE]"
@@ -144,37 +153,55 @@ download_file ()
   fi
 }
 
+
+download_file_link()
+{
+  local S1=$1
+  local S2=${!1}
+
+  case "$S2" in
+
+    http:*|https:*)
+      export $1=`basename $S2`
+      download_file "$S2" "$1"
+
+      if [ $? -eq 1 ]; then
+        export $1=
+      fi
+      ;;
+
+    *)
+      export $1=$S2
+      ;;
+  esac
+}
+
+
 get_secret_via_http()
 {
-  WGET_RET_OK=`$WGET_COMMAND -S --spider "$2" 2>&1 | grep 'HTTP/1.1 200 OK'`
-  if [ -z "$WGET_RET_OK" ]; then
-    log "Fatal Error: Download file does not exist [$2] - Cannot read it into [$1]"
+  if $CURL -o /dev/null --head "$DOWNLOAD_URL"; then
+    log "Cannot download [$2]"
     exit 1
   fi
 
-  SECRET_RET=`$WGET_COMMAND -qO- $2 2>/dev/null`
+  export $1=`$CURL "$DOWNLOAD_URL"`
 }
 
 get_secret_via_file()
 {
   local SECRET_FILE=`echo $2|cut -d":" -f2`
   if [ ! -r "$SECRET_FILE" ]; then
-    log "Fatal Error: Cannot read file [$SECRET_FILE] into var [$1]"
+    log "File not found [$SECRET_FILE]"
     exit 1
-  fi 
-
-  SECRET_RET=`cat $SECRET_FILE`
-  rm -f "$SECRET_FILE" 2>/dev/null
-  if [ -e "$SECRET_FILE" ]; then
-    log "Warning: Cannot remove Secret File [$SECRET_FILE]"
   fi
+
+  export $1=`cat $SECRET_FILE`
 }
 
 get_secret_var ()
 {
   local S1=$1
   local S2=${!1}
-  SECRET_RET=
 
   if [ -z "$S1" ]; then return 0; fi
   if [ -z "$S2" ]; then return 0; fi
@@ -188,49 +215,40 @@ get_secret_var ()
       get_secret_via_file "$S1" "$S2"
       ;;
     *)
-      SECRET_RET=$S2
+      export $1=$S2
       ;;
-  esac  
+  esac
 }
 
 replace_secret_vars()
 {
   get_secret_var AdminPassword
-  AdminPassword=$SECRET_RET
-
   get_secret_var ServerPassword
-  ServerPassword=$SECRET_RET
-
   get_secret_var OrganizationPassword
-  OrganizationPassword=$SECRET_RET
-
   get_secret_var OrgUnitPassword
-  OrgUnitPassword=$SECRET_RET
-
-  unset SECRET_RET
 }
 
 download_file_link()
 {
   local S1=$1
   local S2=${!1}
-  RET_DOWNLOADED_FILE=
 
   case "$S2" in
     http:*|https:*)
-      RET_DOWNLOADED_FILE=`basename $S2`
-      download_file "$S2" "$RET_DOWNLOADED_FILE" "$1"
+      export $1=`basename $S2`
+      download_file "$S2" "$1"
 
       if [ $? -eq 1 ]; then
-        RET_DOWNLOADED_FILE=
+        export $1= 
       fi
 
       ;;
     *)
-      RET_DOWNLOADED_FILE=$S2
+      export $1=$S2
       ;;
   esac
 }
+
 
 check_kyr_name()
 {
@@ -255,26 +273,19 @@ check_kyr_name()
   return 0
 }
 
+
 check_download_file_links()
 {
   # Donwload ID files if they start with http(s):
+
   download_file_link OrganizationIDFile
-  OrganizationIDFile=$RET_DOWNLOADED_FILE
-
   download_file_link OrgUnitIDFile
-  OrganizationIDFile=$RET_DOWNLOADED_FILE
-
   download_file_link ServerIDFile
-  ServerIDFile=$RET_DOWNLOADED_FILE
-
   download_file_link AdminIDFile
-  AdminIDFile=$RET_DOWNLOADED_FILE
-
   download_file_link SafeIDFile
-  SafeIDFile=$RET_DOWNLOADED_FILE
-
   download_file_link DominoTrialKeyFile
-  DominoTrialKeyFile=$RET_DOWNLOADED_FILE
+
+  download_file_link SetupAutoConfigureParams
 
   # Download kyr file 
   if [ -n "$DominoKyrFile" ]; then
@@ -282,11 +293,9 @@ check_download_file_links()
     check_kyr_name
 
     download_file_link DominoKyrFile
-    DominoKyrFile=$RET_DOWNLOADED_FILE
 
     if [ -n DominoSthFile ]; then
       download_file_link DominoSthFile
-      DominoSthFile=$RET_DOWNLOADED_FILE
     fi
 
     return 0
@@ -296,7 +305,6 @@ check_download_file_links()
 
     # Create keyring.kyr from PEM
     download_file_link DominoPemFile
-    DominoPemFile=$RET_DOWNLOADED_FILE
     header "creating keyring from [$DominoPemFile]"
 
     $DOMDOCK_SCRIPT_DIR/create_keyring.sh "$DominoPemFile"
@@ -305,6 +313,54 @@ check_download_file_links()
 
   return 0
 }
+
+
+wait_for_string()
+{
+  local MAX_SECONDS=
+  local FOUND=
+  local COUNT=$4
+  local seconds=0
+
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ -z "$2" ]; then
+    return 0
+  fi
+
+  if [ -z "$3" ]; then
+    MAX_SECONDS=10
+  else
+    MAX_SECONDS=$3
+  fi
+
+  if [ -z "$4" ]; then
+    COUNT=1
+  fi
+
+  log
+  log "Waiting for [$2] in [$1] (max: $MAX_SECONDS sec)"
+
+  while [ "$seconds" -lt "$MAX_SECONDS" ]; do
+
+    FOUND=`grep -e "$2" "$1" 2>/dev/null | wc -l`
+
+    if [ "$FOUND" -ge "$COUNT" ]; then
+      return 0
+    fi
+
+    sleep 2
+    seconds=`expr $seconds + 2`
+    if [ `expr $seconds % 10` -eq 0 ]; then
+      echo " ... waiting $seconds seconds"
+    fi
+
+  done
+
+}
+
 
 # --- Main Logic ---
 
@@ -316,9 +372,9 @@ cd $DOMINO_DATA_PATH
 
 # If CustomNotesdataZip file downlaod URL defined, download from remote location and unzip 
 download_file_link CustomNotesdataZip
-CustomNotesdataZip=$RET_DOWNLOADED_FILE
 
 # Expand & delete ZIP
+
 if [ ! -z "$CustomNotesdataZip" ]; then
   if [ -r "$CustomNotesdataZip" ]; then
     log "Extracting custom notesdata file [$CustomNotesdataZip]"
@@ -334,6 +390,7 @@ fi
 
 
 # Get Git Repo if configured into /local/git (temporary for setup)
+
 if [ ! -z "$GitSetupRepo" ]; then
   if [ -e /usr/bin/git ]; then
     /usr/bin/git clone "$GitSetupRepo" /local/git 
@@ -341,11 +398,12 @@ if [ ! -z "$GitSetupRepo" ]; then
       cp -R /local/git/notesdata/* /local/notesdata 
     fi
   else
-    echo "skipping Git Repo -- No git installed!"
+    log "skipping Git Repo -- No git installed!"
   fi
 fi
 
 # Git setup script can be used to run commands to copy and modify files
+
 if [ ! -z "$GitSetupScript" ]; then
   if [ -x "$GitSetupScript" ]; then
     log "Executing [$GitSetupScript]"
@@ -379,43 +437,82 @@ if [ -e "$DominoTrialKeyFile" ]; then
   fi
 fi
 
-# Switch to executable directory for setup
-cd $Notes_ExecDirectory
+if [ ! -e keyfile.kyr ]; then
 
-[ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName "$AdminFirstName" $dominosilentsetup
-[ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile "$AdminIDFile" $dominosilentsetup
-[ ! -z "$AdminLastName" ] && $dominoprofileedit -AdminLastName "$AdminLastName" $dominosilentsetup
-[ ! -z "$AdminMiddleName" ] && $dominoprofileedit -AdminMiddleName "$AdminMiddleName" $dominosilentsetup
-[ ! -z "$AdminPassword" ] && $dominoprofileedit -AdminPassword "$AdminPassword" $dominosilentsetup
-[ ! -z "$CountryCode" ] && $dominoprofileedit -CountryCode "$CountryCode" $dominosilentsetup
-[ ! -z "$DominoDomainName" ] && $dominoprofileedit -DominoDomainName "$DominoDomainName" $dominosilentsetup
-[ ! -z "$HostName" ] && $dominoprofileedit -HostName "$HostName" $dominosilentsetup
-[ ! -z "$OrgUnitIDFile" ] && $dominoprofileedit -OrgUnitIDFile "$OrgUnitIDFile" $dominosilentsetup
-[ ! -z "$OrgUnitName" ] && $dominoprofileedit -OrgUnitName "$OrgUnitName" $dominosilentsetup
-[ ! -z "$OrgUnitPassword" ] && $dominoprofileedit -OrgUnitPassword "$OrgUnitPassword" $dominosilentsetup
-[ ! -z "$OrganizationIDFile" ] && $dominoprofileedit -OrganizationIDFile "$OrganizationIDFile" $dominosilentsetup
-[ ! -z "$OrganizationName" ] && $dominoprofileedit -OrganizationName "$OrganizationName" $dominosilentsetup
-[ ! -z "$OrganizationPassword" ] && $dominoprofileedit -OrganizationPassword "$OrganizationPassword" $dominosilentsetup
-[ ! -z "$OtherDirectoryServerAddress" ] && $dominoprofileedit -OtherDirectoryServerAddress "$OtherDirectoryServerAddress" $dominosilentsetup
-[ ! -z "$OtherDirectoryServerName" ] && $dominoprofileedit -OtherDirectoryServerName "$OtherDirectoryServerName" $dominosilentsetup
-[ ! -z "$ServerIDFile" ] && $dominoprofileedit -ServerIDFile "$ServerIDFile" $dominosilentsetup
-[ ! -z "$ServerName" ] && $dominoprofileedit -ServerName "$ServerName" $dominosilentsetup
-[ ! -z "$SystemDatabasePath" ] && $dominoprofileedit -SystemDatabasePath "$SystemDatabasePath" $dominosilentsetup
-[ ! -z "$ServerPassword" ] && $dominoprofileedit -ServerPassword "$ServerPassword" $dominosilentsetup
+  if [ -z "$SkipKyrCreate" ]; then
+    header "Creating Domino Key Ring File from local CA"
+    $DOMDOCK_SCRIPT_DIR/create_ca_kyr.sh
+  fi
+fi
 
-header "Silent Setup Settings"
-$dominoprofileedit -dump $dominosilentsetup >> $LOG_FILE
-log
+if [ -n "$SetupAutoConfigure" ]; then
 
-header "Starting Domino Server Silent Setup"
+  if [ -z "$HostName" ]; then
+    if [ -x /usr/bin/hostname ]; then
+      export HostName=`hostname`
+    else
+      export HostName=`cat /proc/sys/kernel/hostname`
+    fi
+  fi
 
-cd $DOMINO_DATA_PATH 
-$LOTUS/bin/server -silent $dominosilentsetup 
+  log  "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
+  echo "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
+
+  cd $DOMINO_DATA_PATH 
+  header "Starting Domino Server Auto Setup"
+  $LOTUS/bin/server -a $SetupAutoConfigureParams &
+
+  # Wait until server started before last configuration steps
+
+  wait_for_string $CONSOLE_LOG "Server started on physical node" 30 
+
+  # Remove json config file
+  if [ -n "$SetupAutoConfigureParams" ]; then
+    remove_file $SetupAutoConfigureParams
+  fi
+
+else
+
+  header "Starting Domino Server Silent Setup"
+
+  # Switch to executable directory for setup
+  cd $Notes_ExecDirectory
+
+  [ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName "$AdminFirstName" $dominosilentsetup
+  [ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile "$AdminIDFile" $dominosilentsetup
+  [ ! -z "$AdminLastName" ] && $dominoprofileedit -AdminLastName "$AdminLastName" $dominosilentsetup
+  [ ! -z "$AdminMiddleName" ] && $dominoprofileedit -AdminMiddleName "$AdminMiddleName" $dominosilentsetup
+  [ ! -z "$AdminPassword" ] && $dominoprofileedit -AdminPassword "$AdminPassword" $dominosilentsetup
+  [ ! -z "$CountryCode" ] && $dominoprofileedit -CountryCode "$CountryCode" $dominosilentsetup
+  [ ! -z "$DominoDomainName" ] && $dominoprofileedit -DominoDomainName "$DominoDomainName" $dominosilentsetup
+  [ ! -z "$HostName" ] && $dominoprofileedit -HostName "$HostName" $dominosilentsetup
+  [ ! -z "$OrgUnitIDFile" ] && $dominoprofileedit -OrgUnitIDFile "$OrgUnitIDFile" $dominosilentsetup
+  [ ! -z "$OrgUnitName" ] && $dominoprofileedit -OrgUnitName "$OrgUnitName" $dominosilentsetup
+  [ ! -z "$OrgUnitPassword" ] && $dominoprofileedit -OrgUnitPassword "$OrgUnitPassword" $dominosilentsetup
+  [ ! -z "$OrganizationIDFile" ] && $dominoprofileedit -OrganizationIDFile "$OrganizationIDFile" $dominosilentsetup
+  [ ! -z "$OrganizationName" ] && $dominoprofileedit -OrganizationName "$OrganizationName" $dominosilentsetup
+  [ ! -z "$OrganizationPassword" ] && $dominoprofileedit -OrganizationPassword "$OrganizationPassword" $dominosilentsetup
+  [ ! -z "$OtherDirectoryServerAddress" ] && $dominoprofileedit -OtherDirectoryServerAddress "$OtherDirectoryServerAddress" $dominosilentsetup
+  [ ! -z "$OtherDirectoryServerName" ] && $dominoprofileedit -OtherDirectoryServerName "$OtherDirectoryServerName" $dominosilentsetup
+  [ ! -z "$ServerIDFile" ] && $dominoprofileedit -ServerIDFile "$ServerIDFile" $dominosilentsetup
+  [ ! -z "$ServerName" ] && $dominoprofileedit -ServerName "$ServerName" $dominosilentsetup
+  [ ! -z "$SystemDatabasePath" ] && $dominoprofileedit -SystemDatabasePath "$SystemDatabasePath" $dominosilentsetup
+  [ ! -z "$ServerPassword" ] && $dominoprofileedit -ServerPassword "$ServerPassword" $dominosilentsetup
+
+  header "Silent Setup Settings"
+  $dominoprofileedit -dump $dominosilentsetup >> $LOG_FILE
+  log
+
+  cd $DOMINO_DATA_PATH 
+  $LOTUS/bin/server -silent $dominosilentsetup 
+fi
+
+header "Done"
 
 if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
-  log_space "Silent Server Setup unsuccessful -- check [$DOMINO_DATA_PATH/setuplog.txt] for details"
+  log_space "Server Setup unsuccessful -- check [$DOMINO_DATA_PATH/setuplog.txt] for details"
 else
-  log_space "Silent Server Setup done"
+  log_space "Server Setup done"
 fi
 
 # Add notes.ini variables if requested
@@ -430,7 +527,6 @@ fi
 # If config.json file downlaod URL defined, download from remote location and set variable to downloaded filename
 
 download_file_link ConfigFile
-ConfigFile=$RET_DOWNLOADED_FILE
 
 if [ ! -z "$ConfigFile" ]; then
   if [ -e "$ConfigFile" ]; then
@@ -444,12 +540,6 @@ if [ ! -z "$ConfigFile" ]; then
   fi
 fi
 
-if [ ! -e keyfile.kyr ]; then
-  header "Creating Domino Key Ring File from local CA"
-  $DOMDOCK_SCRIPT_DIR/create_ca_kyr.sh
-fi
-
-
 # .oO Neuralizer .oO
 # Cleaning up environment variabels & history to reduce exposure of sensitive data
 
@@ -458,7 +548,6 @@ if [ -e /local/git ]; then
   rm -rf /local/git
 fi
 
-unset RET_DOWNLOADED_FILE
 unset isFirstServer
 unset AdminFirstName
 unset AdminIDFile
@@ -483,6 +572,13 @@ unset ServerName
 unset ServerPassword
 unset SystemDatabasePath
 unset Notesini
+
+unset SetupAutoConfigure
+unset ServerType
+unset AdminUserIDPath
+unset CertifierPassword
+unset DomainName
+unset OrgName
 
 if [ -e ~/.bash_history ]; then
   cat /dev/null > ~/.bash_history

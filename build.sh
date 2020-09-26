@@ -49,6 +49,31 @@ if [ -e "$CONFIG_FILE" ]; then
   . $CONFIG_FILE
 fi
 
+check_version ()
+{
+  count=1
+
+  while true
+  do
+    VER=`echo $1|cut -d"." -f $count`
+    CHECK=`echo $2|cut -d"." -f $count`
+
+    if [ -z "$VER" ]; then return 0; fi
+    if [ -z "$CHECK" ]; then return 0; fi
+
+    if [ $VER -gt $CHECK ]; then return 0; fi
+    if [ $VER -lt $CHECK ]; then
+      echo "Warning: Unsupported $3 version $1 - Must be at least $2 !"
+      sleep 1
+      return 1
+    fi
+
+    count=`expr $count + 1`
+  done
+
+  return 0
+}
+
 
 check_docker_environment()
 {
