@@ -360,9 +360,9 @@ create_key_cert()
   else
 
     if [ -e "$CSR_FILE" ]; then
-      log "Certificate Sign Request (CSR) already exists [$CSR_FILE]"
+      log "Certificate Signing Request (CSR) already exists [$CSR_FILE]"
     else
-      log "Creating certificate Sign Request (CSR) [$CSR_FILE]"
+      log "Creating certificate Signing Request (CSR) [$CSR_FILE]"
 
       if [ -z "$SANS_DNS" ]; then 
         openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "$SUBJ" $CERT_SIGN_ALG > /dev/null
@@ -390,14 +390,31 @@ create_key_cert()
   if [ -e "$CSR_FILE" ]; then
 
     if [ "$USE_LOCAL_CA" = "yes" ]; then
+      # IF not SANS passed via script, try to read from CSR
+      if [ -z "$SANS_DNS" ]; then
+        DNS_NAMES_LINE=`openssl req -in $CSR_FILE -text -noout |grep -e "DNS:" | tr -d '[:space:]'`
+
+        SAVED_IFS=$IFS
+        IFS=","
+
+        for NAME in $DNS_NAMES_LINE; do
+          if [ -z "$SANS_DNS" ]; then
+            SANS_DNS="$NAME"
+          else
+            SANS_DNS="$SANS_DNS,$NAME"
+          fi
+        done
+
+        IFS=$SAVED_IFS
+      fi
 
       log "Signing CSR [$CSR_FILE] with local CA"
       if [ -z "$SANS_DNS" ]; then
-        openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -reqexts SAN -extensions SAN -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
-          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = clientAuth") > /dev/null
+        openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
+          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = clientAuth, serverAuth") > /dev/null
       else
         openssl x509 -passin pass:$CA_PASSWORD -req -days $CLIENT_VALID_DAYS -in $CSR_FILE -CA $CA_CRT_FILE -CAkey $CA_KEY_FILE \
-         -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = serverAuth \n subjectAltName=$SANS_DNS") > /dev/null
+          -out $CRT_FILE -CAcreateserial -CAserial $CA_DIR/ca.seq  -extfile <(printf "extendedKeyUsage = clientAuth, serverAuth \n subjectAltName=$SANS_DNS") > /dev/null
       fi
 
       if [ -e "$CSR_FILE" ]; then
@@ -479,11 +496,28 @@ check_cert()
     NOT_AFTER=`openssl x509 -enddate -noout -in $CRT_FILE | awk -F'notAfter=' '{print $2 }'`
     CA=`openssl x509 -issuer -noout -in $CRT_FILE | awk -F'issuer= ' '{print $2 }'`
 
+    DNS_NAMES=
+    DNS_NAMES_LINE=`openssl x509 -text -noout -in $CRT_FILE | grep -e "DNS:"`
+
+    SAVED_IFS=$IFS
+    IFS=","
+
+    for DNS in $DNS_NAMES_LINE; do
+      NAME=`echo $DNS | cut -d":" -f2`
+      if [ -z "$DNS_NAMES" ]; then
+        DNS_NAMES="$NAME"
+      else
+        DNS_NAMES="$DNS_NAMES, $NAME"
+      fi
+    done
+
+    IFS=$SAVED_IFS
+
     openssl x509 -text -noout -in $CRT_FILE > $TXT_DIR/$NAME.txt
   
   else
     SUBJECT=""
-    DNS_NAME=""
+    DNS_NAMES=""
     NOT_AFTER=""
     CA=""
     STATUS="NO Certificate"
@@ -516,8 +550,8 @@ check_cert()
   echo "--------------------------------------------"
   echo " KeyLen       :  $KEYLEN"
   echo " Subject      :  $SUBJECT"
-  if [ ! -z "$DNS_NAME" ]; then
-   echo " DNS NAME     :  $DNS_NAME"
+  if [ ! -z "$DNS_NAMES" ]; then
+   echo " DNS NAMES    :  $DNS_NAMES"
   fi
   if [ ! "$CA_SUBJECT" = "$CA" ]; then
     echo " Issuing CA   :  $CA"
