@@ -908,7 +908,6 @@ if [ -e "/tmp/notesdata.tbz2" ]; then
   ln -s /tmp/notesdata.tbz2 $DOMDOCK_DIR/install_data_domino.taz
 
   NO_PERL_INSTALL=yes
-  NO_GIT_INSTALL=yes
 fi
 
 
@@ -926,12 +925,21 @@ fi
 # Yes we want git along like we want wget and curl ;-)
 # But than we need to keep Perl
 
-if [ -z "$NO_GIT_INSTALL" ]; then
+if [ -n "$GIT_INSTALL" ]; then
   if [ ! -e /usr/bin/git ]; then
     header "Installing git"
     yum -y install git
   fi
 fi
+
+
+if [ -n "$OPENSSL_INSTALL" ]; then
+  if [ ! -e /usr/bin/openssl ]; then
+    header "Installing openssl"
+    yum -y install openssl 
+  fi
+fi
+
 
 cd "$INSTALL_DIR"
 
@@ -988,8 +996,8 @@ fi
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" notes notes 644
-install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" notes notes 644
+install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" notes notes 666
+install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" notes notes 666
 
 header "Final Steps & Configuration"
 

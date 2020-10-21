@@ -15,11 +15,12 @@
 LinuxYumUpdate=yes
 
 # Explicitly specify build environment (if both are installed podman is default!)
-#DOCKER_CMD=docker
-#DOCKER_CMD=podman
+#USE_DOCKER=yes
 
 
 #DOCKER_FILE=dockerfile_ubi
 
 # Special wget arguments
 #SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
+
+DOCKER_NETWORK_NAME=host

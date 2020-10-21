@@ -49,13 +49,63 @@ if [ -e "$CONFIG_FILE" ]; then
   . $CONFIG_FILE
 fi
 
+check_version ()
+{
+  count=1
 
-if [ -z "$DOCKER_CMD" ]; then
+  while true
+  do
+    VER=`echo $1|cut -d"." -f $count`
+    CHECK=`echo $2|cut -d"." -f $count`
+
+    if [ -z "$VER" ]; then return 0; fi
+    if [ -z "$CHECK" ]; then return 0; fi
+
+    if [ $VER -gt $CHECK ]; then return 0; fi
+    if [ $VER -lt $CHECK ]; then
+      echo "Warning: Unsupported $3 version $1 - Must be at least $2 !"
+      sleep 1
+      return 1
+    fi
+
+    count=`expr $count + 1`
+  done
+
+  return 0
+}
+
+
+check_docker_environment()
+{
+  DOCKER_MINIMUM_VERSION="18.09.0"
+  PODMAN_MINIMUM_VERSION="1.5.0"
 
   if [ -x /usr/bin/podman ]; then
-    DOCKER_CMD=podman
+    if [ -z "$USE_DOCKER" ]; then
+      # podman environment detected
+      DOCKER_CMD=podman
+      DOCKER_ENV_NAME=Podman
+      DOCKER_VERSION_STR=`podman version | head -1`
+      DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3`
+      check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$DOCKER_CMD"
+      return 0
+    fi
+  fi
 
-  else
+  if [ -z "$DOCKERD_NAME" ]; then
+    DOCKERD_NAME=dockerd
+  fi
+
+  DOCKER_ENV_NAME=Docker
+
+  # check docker environment
+  DOCKER_VERSION_STR=`docker -v`
+  DOCKER_VERSION=`echo $DOCKER_VERSION_STR | cut -d" " -f3|cut -d"," -f1`
+
+  check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$DOCKER_CMD"
+
+  if [ -z "$DOCKER_CMD" ]; then
+
     DOCKER_CMD=docker
 
     # Use sudo for docker command if not root on Linux
@@ -70,7 +120,9 @@ if [ -z "$DOCKER_CMD" ]; then
       fi
     fi
   fi
-fi
+
+  return 0
+}
 
 echo "[Running in $DOCKER_CMD configuration]"
 
@@ -90,8 +142,8 @@ usage ()
   echo
   echo "Examples:"
   echo
-  echo "  `basename $SCRIPT_NAME` domino 10.0.1 fp3"
-  echo "  `basename $SCRIPT_NAME` traveler 10.0.1.2"
+  echo "  `basename $SCRIPT_NAME` domino 11.0.1 fp1"
+  echo "  `basename $SCRIPT_NAME` traveler 11.0.1.1"
   echo
 
   return 0
@@ -155,7 +207,7 @@ nginx_start ()
     echo "Unable to locate software repository."
   else
     DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
-    echo "Hosting IBM Software repository on $DOWNLOAD_FROM"
+    echo "Hosting HCL Software repository on $DOWNLOAD_FROM"
   fi
   echo
 }
@@ -230,7 +282,7 @@ WGET_COMMAND="wget --connect-timeout=20"
 
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
 SOFTWARE_PORT=7777
-SOFTWARE_CONTAINER=ibmsoftware
+SOFTWARE_CONTAINER=hclsoftware
 
 if [ -z "$1" ]; then
   usage
@@ -335,6 +387,8 @@ for a in $@; do
       ;;
   esac
 done
+
+check_docker_environment
 
 # in case we are starting with a specific HCL Domino image, set the DOCKER_FILE accordingly if not explicitly specified
 # also bypass software download check
@@ -472,6 +526,8 @@ export TAG_LATEST
 export DOCKER_FILE
 export BASE_IMAGE 
 export SPECIAL_WGET_ARGUMENTS
+export USE_DOCKER
+export DOCKER_NETWORK_NAME
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 

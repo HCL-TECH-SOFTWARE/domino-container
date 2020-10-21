@@ -504,7 +504,11 @@ if [ ! -x /usr/bin/openssl ]; then
 else
 
   if [ -z "$DOMINO_HOST_NAME" ]; then
-    DOMINO_HOST_NAME=`hostname`
+    if [ -x /usr/bin/hostname ]; then
+      DOMINO_HOST_NAME=`hostname`
+    else
+      DOMINO_HOST_NAME=`cat /proc/sys/kernel/hostname`
+    fi
   fi
 
   check_create_dirs

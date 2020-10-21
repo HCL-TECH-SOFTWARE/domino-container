@@ -267,6 +267,7 @@ delete_directory ()
   mountpoint -q "$TARGET_FILE"
   if [ "$?" = "0" ]; then
     echo "skipping directory delete for [$TARGET_FILE] -> is a mount point!"
+    return 0
   fi
 
   rmdir "$TARGET_FILE"

@@ -54,6 +54,8 @@ LinuxYumUpdate=yes
 
 #SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
 
+#SPECIAL_CURL_ARGS="--insecure"
+
 # Configure software download location.
 # You can either use your own software repository remotely.
 # Or use a local software image hosted via NGINX temporary image.

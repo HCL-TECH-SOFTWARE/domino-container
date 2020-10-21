@@ -24,10 +24,6 @@ if [ ! -e "$SOFTWARE_FILE" ]; then
   SOFTWARE_FILE=$PWD/software/$SOFTWARE_FILE_NAME
 fi
 
-DOWNLOAD_LINK_IBM_PA_PARTNO="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_BY_PART_NO&FIELD_SEARCH_TYPE=3&searchVal="
-DOWNLOAD_LINK_IBM_PA_SEARCH="https://www.ibm.com/software/howtobuy/passportadvantage/paocustomer/sdma/SDMA?P0=DOWNLOAD_SEARCH_PART_NO_OR_DESCRIPTION"
-DOWNLOAD_LINK_IBM_CE="http://ibm.biz/NDCommunityFiles"
-
 DOWNLOAD_LINK_FLEXNET="https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search="
 DOWNLOAD_LINK_FLEXNET_OPTIONS="+&resultType=Files&sortBy=eff_date&listButton=Search"
 
@@ -140,13 +136,8 @@ check_software ()
       elif [ "$CURRENT_PARTNO" = "-" ]; then
         CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
       else
-        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_IBM_PA_PARTNO$CURRENT_PARTNO"
         CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
       fi
-      ;;
-
-    domino-ce)
-      CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_IBM_CE"
       ;;
 
     *)
