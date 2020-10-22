@@ -1,4 +1,4 @@
-ilent!/bin/bash
+#!/bin/bash
 
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
@@ -179,12 +179,12 @@ download_file_link()
 
 get_secret_via_http()
 {
-  if $CURL -o /dev/null --head "$DOWNLOAD_URL"; then
+  if $CURL_CMD -o /dev/null --head "$DOWNLOAD_URL"; then
     log "Cannot download [$2]"
     exit 1
   fi
 
-  export $1=`$CURL "$DOWNLOAD_URL"`
+  export $1=`$CURL_CMD "$DOWNLOAD_URL"`
 }
 
 get_secret_via_file()
