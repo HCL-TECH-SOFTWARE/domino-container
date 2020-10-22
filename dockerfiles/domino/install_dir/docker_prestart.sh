@@ -148,7 +148,7 @@ download_file ()
     log "${HEADER}Successfully downloaded: [$DOWNLOAD_FILE]"
     return 0
   else
-    log "$[HEADER]File [$DOWNLOAD_FILE] not downloaded correctly from [$DOWNLOAD_URL]"
+    log "${HEADER}File [$DOWNLOAD_FILE] not downloaded correctly from [$DOWNLOAD_URL]"
     return 1
   fi
 }
@@ -180,10 +180,13 @@ download_file_link()
 
 get_secret_via_http()
 {
-  if $CURL_CMD -o /dev/null --head "$DOWNLOAD_URL"; then
-    log "Cannot download [$2]"
-    exit 1
-  fi
+  local DOWNLOAD_URL=$2 
+
+  $CURL_CMD -o /dev/null --head "$DOWNLOAD_URL" 
+  if [ ! "$?" = "0" ]; then 
+    log "Error: Cannot download [$2]" 
+    exit 1 
+  fi 
 
   export $1=`$CURL_CMD "$DOWNLOAD_URL"`
 }
