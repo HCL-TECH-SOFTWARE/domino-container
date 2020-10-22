@@ -162,8 +162,9 @@ download_file_link()
   case "$S2" in
 
     http:*|https:*)
-      export $1=`basename $S2`
-      download_file "$S2" "$1"
+      local FILE_NAME=`basename $S2`
+      export $1=$FILE_NAME
+      download_file "$S2" "$FILE_NAME"
 
       if [ $? -eq 1 ]; then
         export $1=
