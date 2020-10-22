@@ -229,28 +229,6 @@ replace_secret_vars()
   get_secret_var OrgUnitPassword
 }
 
-download_file_link()
-{
-  local S1=$1
-  local S2=${!1}
-
-  case "$S2" in
-    http:*|https:*)
-      export $1=`basename $S2`
-      download_file "$S2" "$1"
-
-      if [ $? -eq 1 ]; then
-        export $1= 
-      fi
-
-      ;;
-    *)
-      export $1=$S2
-      ;;
-  esac
-}
-
-
 check_kyr_name()
 {
   # check if kyr file has .kyr extension and generate matching .sth file
