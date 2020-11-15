@@ -838,10 +838,13 @@ echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 
-# Install CentOS updates if requested
+# Install updates if requested
 if [ "$LinuxYumUpdate" = "yes" ]; then
   header "Updating Linux via yum"
   yum update -y
+
+  # If installing updates anyway, also install OpenSSL
+  OPENSSL_INSTALL=yes
 fi
 
 yum_glibc_lang_update
