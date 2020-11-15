@@ -154,7 +154,7 @@ download_file_ifpresent ()
   cd $TARGET_DIR
 
   if [ -e "$DOWNLOAD_FILE" ]; then
-  	echo
+    echo
     echo "Replacing existing file [$DOWNLOAD_FILE]"
     rm -f "$DOWNLOAD_FILE"
   fi
@@ -786,7 +786,7 @@ docker_set_timezone ()
   return 0
 }
 
-yum_glibc_lang_update()
+yum_glibc_lang_update_7()
 {
  # on CentOS/RHEL 7 the locale is not containing all langauges
  # removing override_install_langs from /etc/yum.conf and reinstalling glibc-common
@@ -809,7 +809,6 @@ yum_glibc_lang_update()
   echo Updating glibc locale ...
   echo
 
-
   if [ "$LinuxYumUpdate" = "yes" ]; then
     # packages have been already updated, just need reinstall
     yum reinstall -y glibc-common
@@ -822,7 +821,42 @@ yum_glibc_lang_update()
   return 0
 }
 
+yum_glibc_lang_update_allpacks()
+{
+  # install allpack to correct locale settings
+
+  local ALL_LANGPACKS=$(rpm -q glibc-all-langpacks)
+
+  echo
+
+  if [ -z "$ALL_LANGPACKS" ]; then
+    yum install -y glibc-all-langpacks
+  else
+    echo "glibc all packs - already installed"
+  fi
+
+  echo
+  return 0
+}
+
+yum_glibc_lang_update()
+{
+
+  case "$LINUX_VERSION" in
+    7*)
+      yum_glibc_lang_update_7
+      ;;
+    *)
+      yum_glibc_lang_update_allpacks
+      ;;
+  esac
+}
+
+
 # --- Main Install Logic ---
+
+LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
+LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 
 header "Environment Setup"
 
@@ -837,6 +871,7 @@ echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
+echo "OS-Version            = [$LINUX_PRETTY_NAME]"
 
 # Install updates if requested
 if [ "$LinuxYumUpdate" = "yes" ]; then
