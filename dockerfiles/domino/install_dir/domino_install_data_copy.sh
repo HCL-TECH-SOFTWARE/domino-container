@@ -36,6 +36,25 @@ header()
   echo >> $LOG_FILE
 }
 
+debug_show_data_dir()
+{
+  if [ -z "$DEBUG" ]; then
+    return 0
+  fi
+
+  echo
+  echo "----------------------------[$@] ------------------------------"
+  ls -l /local
+  echo "----------------------------[$@] ------------------------------"
+  echo
+
+  log
+  log "-----------------------------[$@]------------------------------"
+  ls -l /local >> $LOG_FILE
+  log "-----------------------------[$@]------------------------------"
+  log
+}
+
 get_notes_ini_var()
 {
   # $1 = filename
@@ -207,7 +226,14 @@ copy_files_for_major_version ()
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
+  debug_show_data_dir "before unzip"
+
   tar xvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./dfc ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 2>&1
+
+  debug_show_data_dir "after unzip"
+
+  # Ensure directory can be read by group -> needed for root login
+  chmod "$DIR_PERM" "$DOMINO_DATA_PATH"
 
   echo $DOMINO_VERSION > $InstalledFile
 
@@ -314,33 +340,23 @@ copy_data_directory ()
     return 0
   fi 
 
-  DIR_PERM=700
+  DIR_PERM=770
 
   if [ -e $DOMINO_DATA_PATH ]; then
     echo "$DOMINO_DATA_PATH already exists"
   else
     echo "creating directories with user: [$DOMINO_USER] group: [$DOMINO_GROUP] perm: [$DIR_PERM]"
   fi
-
-  echo "------------------"
-  ls -l /local
-  echo "------------------"
-
-  log "------------------"
-  ls -l /local >> $LOG_FILE
-  log "------------------"
-
-  delete_directory $DOMINO_DATA_PATH
-  delete_directory /local/translog
-  delete_directory /local/daos
-  delete_directory /local/nif
-  delete_directory /local/ft
+  
+  debug_show_data_dir "before create"
 
   create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
   create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
   create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
   create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM
   create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+
+  debug_show_data_dir "after create"
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
@@ -352,7 +368,7 @@ copy_data_directory ()
   header "Extracting install data directory from [$INSTALL_DATA_TAR]" 
   
   tar xvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
-  log
+  debug_show_data_dir "after extract"
 }
 
 copy_files_for_addon ()

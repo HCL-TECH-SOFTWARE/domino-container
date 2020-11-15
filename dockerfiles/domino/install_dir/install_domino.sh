@@ -40,6 +40,9 @@ export PATH=$PATH:$DOMINO_DATA_PATH
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
 WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
 
+# Directory permissions
+DIR_PERM=770
+
 # Helper Functions
 
 DOM_V10_STRING_OK="Dominoserver Installation successful"
@@ -825,14 +828,14 @@ yum_glibc_lang_update_allpacks()
 {
   # install allpack to correct locale settings
 
-  local ALL_LANGPACKS=$(rpm -q glibc-all-langpacks)
+  local ALL_LANGPACKS=$(rpm -q glibc-all-langpacks | grep "x86_64")
 
   echo
 
   if [ -z "$ALL_LANGPACKS" ]; then
     yum install -y glibc-all-langpacks
   else
-    echo "glibc all packs - already installed"
+    echo "Already installed: $ALL_LANGPACKS"
   fi
 
   echo
@@ -858,6 +861,9 @@ yum_glibc_lang_update()
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 
+export DOMINO_USER=notes
+export DOMINO_GROUP=`id -gn "$DOMINO_USER"`
+
 header "Environment Setup"
 
 echo "INSTALL_DIR           = [$INSTALL_DIR]"
@@ -870,8 +876,8 @@ echo "DominoResponseFile    = [$DominoResponseFile]"
 echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
+echo "Domino Linux Group    = [$DOMINO_GROUP]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
-echo "OS-Version            = [$LINUX_PRETTY_NAME]"
 
 # Install updates if requested
 if [ "$LinuxYumUpdate" = "yes" ]; then
@@ -880,6 +886,10 @@ if [ "$LinuxYumUpdate" = "yes" ]; then
 
   # If installing updates anyway, also install OpenSSL
   OPENSSL_INSTALL=yes
+fi
+
+if [ -n "$LINUX_PRETTY_NAME" ]; then
+  header "$LINUX_PRETTY_NAME"
 fi
 
 yum_glibc_lang_update
@@ -896,16 +906,16 @@ fi
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
-  # Add notes:notes user
+  # Add notes user
   if [ -z "$DominoUserID" ]; then
-    useradd notes -U -m
+    useradd $DOMINO_USER -U -m
   else
-    useradd notes -U -m -u $DominoUserID 
+    useradd $DOMINO_USER -U -m -u $DominoUserID 
   fi
 
   # Set User Local if configured
   if [ ! -z "$DOMINO_LANG" ]; then
-    echo "export LANG=$DOMINO_LANG" >> /home/notes/.bash_profile
+    echo "export LANG=$DOMINO_LANG" >> /home/$DOMINO_USER/.bash_profile
   fi
 
   # Set security limits for pam modules (su needs it)
@@ -923,16 +933,17 @@ fi
 
 # if inheriting an existing installation, it's important to ensure /local has the right permissions
 
-chown -R notes:notes /local
+chown -R $DOMINO_USER:$DOMINO_GROUP /local
+chmod $DIR_PERM $DOMINO_DATA_PATH
 
 create_directory $DOMDOCK_DIR root root 777
 create_directory $DOMDOCK_SCRIPT_DIR root root 755
-create_directory /local root root 777 
-create_directory $DOMINO_DATA_PATH root root 777
-create_directory /local/translog root root 777
-create_directory /local/daos root root 777
-create_directory /local/nif root root 777
-create_directory /local/ft root root 777
+create_directory /local $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
+create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
 docker_set_timezone
 
@@ -1034,8 +1045,8 @@ fi
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" notes notes 666
-install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" notes notes 666
+install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" $DOMINO_USER $DOMINO_GROUP 666
+install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" $DOMINO_USER $DOMINO_GROUP 666
 
 header "Final Steps & Configuration"
 
@@ -1098,14 +1109,14 @@ remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 remove_file $DOMINO_DATA_PATH/tika-server.jar
 
 # Ensure permissons are set correctly for data directory
-chown -R notes:notes $DOMINO_DATA_PATH
+chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Prepare data directory (compact NSFs and NTFs)
 
   header "Prepare $DOMINO_DATA_PATH via compact"
 
-  su - notes -c $INSTALL_DIR/domino_install_data_prep.sh
+  su - $DOMINO_USER -c $INSTALL_DIR/domino_install_data_prep.sh
 fi
 
 # If configured, move data directory to a compressed tar file
