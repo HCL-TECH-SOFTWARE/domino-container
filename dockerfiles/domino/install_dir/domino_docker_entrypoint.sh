@@ -2,18 +2,16 @@
 
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
-# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
 # This script is the main entry point for Docker container and used instead of rc_domino.
-# You can still interact with the start script invoking rc_domino which is Docker aware.
+# You can still interact with the start script invoking "domino" which is Docker aware.
 # This entry point is invoked by Docker to start the Domino server and also acts as a shutdown monitor.
 
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
-
 
 if [ -z "$LOTUS" ]; then
   if [ -x /opt/hcl/domino/bin/server ]; then
@@ -23,18 +21,20 @@ if [ -z "$LOTUS" ]; then
   fi
 fi
 
-# export required environment variables
+# Export required environment variables
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DOMINO_DATA_PATH=/local/notesdata
 
-DOMINO_SERVER_ID=$DOMINO_DATA_PATH/server.id
 DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 
-# always use whoami
+# This feature needs to be enabled per Docker container using an environment setting
+# DOMINO_STATISTICS_FILE=/local/notesdata/domino/html/domino_stats.txt
+
+# Always use whoami
 LOGNAME=`whoami 2>/dev/null`
 
-# check current UID - only reliable source
+# Check current UID - only reliable source
 CURRENT_UID=`id -u`
 
 if [ "$CURRENT_UID" = "0" ]; then
@@ -66,7 +66,7 @@ export LOGNAME
 export DOMINO_USER
 export DOMINO_GROUP
 
-# set more paranoid umask to ensure files can be only read by user
+# Set more paranoid umask to ensure files can be only read by user
 umask 0077
 
 
@@ -121,8 +121,45 @@ stop_server ()
   exit 0
 }
 
+check_process_request()
+{
+  local DOMINO_REQUEST=
+
+  # Get request and delete request file
+  if [ -e "$DOMINO_REQUEST_FILE" ]; then
+    DOMINO_REQUEST=`cat $DOMINO_REQUEST_FILE`
+    rm -f "$DOMINO_REQUEST_FILE"
+  else
+    DOMINO_REQUEST=
+  fi
+
+  if [ -z "$DOMINO_REQUEST" ]; then
+    return 0
+  fi
+
+  if [ "$DOMINO_REQUEST" = "0" ]; then
+    $DOMINO_START_SCRIPT stop  
+    echo "0" > "$DOMINO_STATUS_FILE" 
+    return 0
+  fi
+
+  if [ "$DOMINO_REQUEST" = "1" ]; then
+    $DOMINO_START_SCRIPT start
+    echo "1" > "$DOMINO_STATUS_FILE"
+    return 0
+  fi
+
+  if [ "$DOMINO_REQUEST" = "c" ]; then
+    $DOMINO_START_SCRIPT restartcompact 
+    echo "c" > "$DOMINO_STATUS_FILE"
+    return 0
+  fi
+
+  echo "Invalid request: [$DOMINO_REQUEST]"
+}
+
 # "docker stop" will send a SIGTERM to the shell. catch it and stop Domino gracefully.
-# Ensure to use e.g. "docker stop --time=90 .." to ensure server has sufficient time to terminate.
+# Use e.g. "docker stop --time=90 .." to ensure server has sufficient time to terminate.
 
 trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
 
@@ -189,8 +226,38 @@ fi
 # Wait for shutdown signal. This loop should never terminate, because it would 
 # shutdown the Docker container immediately and kill Domino.
 
+
 while true
 do
+
+  check_process_request
+
+  # Read from console if using Docker standard output option
+  if [ "$DOMINO_DOCKER_STDOUT" = "yes" ]; then
+
+    # read can causes i/o error we can't check. but in that case the output is empty (as long var is empty before)
+    read var 2> /dev/null
+
+    CHARS=`echo "$var" | wc -m`
+    if [ "$CHARS" -lt 4 ]; then
+      : # Invalid input
+    elif [ "$var" = "exit" ]; then
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+    elif [ "$var" = "quit" ]; then
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+    elif [ "$var" = "e" ]; then
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+    elif [ "$var" = "q" ]; then
+      echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
+    else
+      if [ ! -z "$var" ]; then
+        cd "$DOMINO_DATA_PATH"
+        $LOTUS/bin/server -c "$var"
+      fi
+    fi
+    var=
+  fi
+
   sleep 1
 done
 
