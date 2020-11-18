@@ -8,6 +8,7 @@ domino|10.0.1FP4|Domino_10.0.1FP4_Linux64.tar|-|09d120479caea42d6288267958860195
 domino|11.0.0|Domino_11.0_Linux_English.tar|-|c1e6daaa58793d254dbbfff2157b929d77094f52e31aa3965bb8cb8e5a01fe9e
 domino|11.0.1|Domino_1101_Linux_English.tar|-|3b159e5a6d4084504e451b0ef64ff8794200e07cf18d9b84ed0a23a758f8ce34
 domino|11.0.1FP1|Domino_1101FP1_Linux.tar|-|22225e9018285ed1c8675a3d84d9e46d66fc8a300316a2d686acf34c3cee92ad
+domino|11.0.1FP2|Domino_1101FP2_Linux.tar|-|9f358300e4e03b36a6e1d40a6e13c745bea7c7b1c46952806738ef48680ba083
 domino-ce|10.0.1|IBMDominoCommunityServerforNonProduction10.0.1Linux.tar|CNXK1EN|9287a194e1068b86b688536f8de6f3e6ffa7962d3da806b24a2e9e500ea5aa49
 domino-ce|10.0.1FP2|FP2_IBMDominoCommunityServerforNon-Production10.0.1_FixPack2_Linux.tar,FP2_IBMDominoCommunityServerforNon-Production10.0.1_FeaturePack2_Linux.tar|-|382bff99e007b165e734a30dedbd97064de992ae68d5d506f18e7390c20cc4d8
 traveler|10.0.1.1|Traveler_10.0.1FP1_Linux_ML.tar.gz,TRAVELER_V10.0.1_FP1_FOR_LINUX_ML.tar.gz|CNZ9LML|0849f295816d40799ee31a9fc29fb4131db5ce4fa869078450e7a571661aae2a
