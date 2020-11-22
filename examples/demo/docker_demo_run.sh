@@ -6,4 +6,4 @@ docker run -d -it \
     -v demo-notesdata:/local/notesdata \
     --name demo-docker-domino \
     --env-file env_domino \
-    ibmcom/domino:latest
+    hclcom/domino:latest
