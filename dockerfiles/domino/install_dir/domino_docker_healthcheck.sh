@@ -25,6 +25,7 @@
 # Health check defines
 DOMINO_PID=/tmp/domino.pid
 DOMINO_REQEST_FILE=/tmp/domino_request
+DOMINO_STATUS_FILE=/tmp/domino_status
 
 HEALTH_CHECK_PORT_FILE=/local/notesdata/health_port.cfg
 HEALTH_CHECK_FILE=/tmp/domino_check.txt
@@ -63,6 +64,12 @@ if [ ! -e "$DOMINO_PID" ]; then
   return_health 0
 fi
 
+if [ -e "$DOMINO_STATUS_FILE" ]; then
+  DOMINO_STATUS=$(cat "$DOMINO_STATUS_FILE")
+else
+  DOMINO_STATUS=
+fi
+
 if [ "$DOMINO_STATUS" = "0" ]; then
   return_ready 1
   return_health 0
@@ -76,7 +83,7 @@ fi
 # Domino shutdown requested? -> healthy but not ready
 
 if [ -e "$DOMINO_REQUEST_FILE" ]; then
-  DOMINO_REQUEST=`cat $DOMINO_REQUEST_FILE`
+  DOMINO_REQUEST=$(cat $DOMINO_REQUEST_FILE)
 else
   DOMINO_REQUEST=
 fi
@@ -95,7 +102,7 @@ if [ -n "$HEALTH_CHECK_FILE" ]; then
       $HEALTHY_STRING="OK"
     fi
 
-    FOUND=`grep -e "$HEALTHY_STRING" "$HEALTH_CHECK_FILE" | wc -l`
+    FOUND=$(grep -e "$HEALTHY_STRING" "$HEALTH_CHECK_FILE" | wc -l)
   else
     FOUND=
   fi
@@ -115,7 +122,7 @@ fi
 
 if [ -n "$HEALTH_CHECK_PORT_FILE" ]; then
   if [ -e "$HEALTH_CHECK_PORT_FILE" ]; then
-    HEALTH_CHECK_PORT=`cat $HEALTH_CHECK_PORT_FILE`
+    HEALTH_CHECK_PORT=$(cat $HEALTH_CHECK_PORT_FILE)
   else
     HEALTH_CHECK_PORT=
   fi
@@ -136,7 +143,7 @@ fi
 
 # 3. Fallback option: Check if server process is running
 
-DOMINO_RUNNING=`ps -ef | grep "$LOTUS/notes" | grep "server" | grep -v " -jc"`
+DOMINO_RUNNING=$(ps -ef | grep "$LOTUS/notes" | grep "server" | grep -v " -jc")
 
 if [ -z "$DOMINO_RUNNING" ]; then
   return_ready 1

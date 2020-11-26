@@ -12,6 +12,8 @@ export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
+export DOMINO_REQEST_FILE=/tmp/domino_request
+export DOMINO_STATUS_FILE=/tmp/domino_status
 
 if [ -z "$LOTUS" ]; then
   if [ -x /opt/hcl/domino/bin/server ]; then
@@ -32,10 +34,10 @@ DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 # DOMINO_STATISTICS_FILE=/local/notesdata/domino/html/domino_stats.txt
 
 # Always use whoami
-LOGNAME=`whoami 2>/dev/null`
+LOGNAME=$(whoami 2>/dev/null)
 
 # Check current UID - only reliable source
-CURRENT_UID=`id -u`
+CURRENT_UID=$(id -u)
 
 if [ "$CURRENT_UID" = "0" ]; then
   # if running as root set user to "notes"
@@ -60,7 +62,7 @@ else
   DOMINO_USER=$LOGNAME
 fi
 
-DOMINO_GROUP=`id -gn`
+DOMINO_GROUP=$(id -gn)
 
 export LOGNAME
 export DOMINO_USER
@@ -88,7 +90,7 @@ run_external_script ()
   fi
 
   if [ ! -z "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
-    SCRIPT_OWNER=`stat -c %U $SCRIPT2RUN`
+    SCRIPT_OWNER=$(stat -c %U $SCRIPT2RUN)
     if [ ! "$SCRIPT_OWNER" = "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
       echo "Wrong owner for script -- not executing" [$SCRIPT2RUN]
       return 0
@@ -127,7 +129,7 @@ check_process_request()
 
   # Get request and delete request file
   if [ -e "$DOMINO_REQUEST_FILE" ]; then
-    DOMINO_REQUEST=`cat $DOMINO_REQUEST_FILE`
+    DOMINO_REQUEST=$(cat $DOMINO_REQUEST_FILE)
     rm -f "$DOMINO_REQUEST_FILE"
   else
     DOMINO_REQUEST=
@@ -176,7 +178,7 @@ fi
 run_external_script before_config_script.sh
 
 # Check if server is configured. Else start custom configuration script
-if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
+if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
       if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
@@ -191,7 +193,7 @@ fi
 run_external_script after_config_script.sh
 
 # Check if server is configured. Else start remote configuation on port 1352
-if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
+if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
 
   echo "Configuration for automated setup not found."
   echo "Starting Domino Server in listen mode"
@@ -238,7 +240,7 @@ do
     # read can causes i/o error we can't check. but in that case the output is empty (as long var is empty before)
     read var 2> /dev/null
 
-    CHARS=`echo "$var" | wc -m`
+    CHARS=$(echo "$var" | wc -m)
     if [ "$CHARS" -lt 4 ]; then
       : # Invalid input
     elif [ "$var" = "exit" ]; then
