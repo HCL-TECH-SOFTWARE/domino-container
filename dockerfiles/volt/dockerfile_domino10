@@ -5,9 +5,6 @@
 
 FROM ibmcom/domino:10.0.1FP3
 
-# Headers
-LABEL DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de"
-
 # External arguments with a default value
 ARG LinuxYumUpdate=
 ARG DownloadFrom=

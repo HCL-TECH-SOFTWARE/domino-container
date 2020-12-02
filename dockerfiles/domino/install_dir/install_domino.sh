@@ -677,6 +677,11 @@ install_domino ()
 
     popd
     rm -rf domino_server
+
+    # Copy license files
+    mkdir /licenses
+    cp $Notes_ExecDirectory/license/*.txt /licenses
+
   fi
 
   if [ ! -z "$INST_FP" ]; then
@@ -858,6 +863,10 @@ yum_glibc_lang_update()
 
 # --- Main Install Logic ---
 
+
+export DOMINO_USER=notes
+export DOMINO_GROUP=notes
+
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 
@@ -922,10 +931,12 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   echo '* hard nofile 65535' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
  
-fi
+else
 
-# Check for existing user's group
-export DOMINO_GROUP=`id -gn "$DOMINO_USER"`
+  # Check for existing user's group and overwrite (for base images with different group - like root)
+  export DOMINO_GROUP=`id -gn "$DOMINO_USER"`
+
+fi
 
 
 # Allow world full access to the main directories to ensure all mounts work.

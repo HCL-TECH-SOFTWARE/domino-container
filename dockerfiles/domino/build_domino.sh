@@ -253,6 +253,19 @@ docker_build ()
   $DOCKER_CMD build --no-cache $DOCKER_NETWORK --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
     -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
     -f $DOCKER_FILE \
+    --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
+    --label name="HCL Domino Community Image" \
+    --label vendor="Domino Docker Community Project" \
+    --label description="$DOCKER_DESCRIPTION" \
+    --label summary="$DOCKER_DESCRIPTION" \
+    --label version="$DOCKER_IMAGE_VERSION" \
+    --label release="$BUILDTIME" \
+    --label architecture="x86_64" \
+    --label "io.k8s.description"="HCL Domino Community Image" \
+    --label "io.k8s.display-name"="HCL Domino Community Image" \
+    --label "io.openshift.expose-services"="" \
+    --label "io.openshift.tags"="base rhel8" \
+    --label DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
     --label DominoDocker.description="$DOCKER_DESCRIPTION" \
     --label DominoDocker.version="$DOCKER_IMAGE_VERSION" \
     --label DominoDocker.buildtime="$BUILDTIME" \

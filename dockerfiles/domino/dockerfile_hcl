@@ -6,9 +6,6 @@
 ARG BASE_IMAGE=
 FROM $BASE_IMAGE
 
-# Headers
-LABEL DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de"
-
 # External arguments with a default value
 ARG LinuxYumUpdate=
 ARG DownloadFrom=
