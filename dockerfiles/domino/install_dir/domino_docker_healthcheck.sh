@@ -13,7 +13,7 @@
 #  File checked: /tmp/domino_check.txt
 #
 # 2. Check if port is responding when configured
-#  Definded in: /local/notesdata/health_port.cfg
+#  Defined in: /local/notesdata/health_port.cfg
 # 
 # 3. Fallback if nothing else is configured
 #  Check if server process is running

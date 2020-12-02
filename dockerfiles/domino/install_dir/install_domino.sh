@@ -861,9 +861,6 @@ yum_glibc_lang_update()
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 
-export DOMINO_USER=notes
-export DOMINO_GROUP=`id -gn "$DOMINO_USER"`
-
 header "Environment Setup"
 
 echo "INSTALL_DIR           = [$INSTALL_DIR]"
@@ -927,14 +924,23 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
  
 fi
 
+# Check for existing user's group
+export DOMINO_GROUP=`id -gn "$DOMINO_USER"`
+
+
 # Allow world full access to the main directories to ensure all mounts work.
 # Those directories might get replaced with mount points or re-created on startup of the container when /local mount is used.
 # Ensure only root can write into the script directory!
 
 # if inheriting an existing installation, it's important to ensure /local has the right permissions
 
-chown -R $DOMINO_USER:$DOMINO_GROUP /local
-chmod $DIR_PERM $DOMINO_DATA_PATH
+if [ -e "/local" ]; then
+  chown -R $DOMINO_USER:$DOMINO_GROUP /local
+fi
+
+if [ -e "$DOMINO_DATA_PATH" ]; then
+  chmod $DIR_PERM $DOMINO_DATA_PATH
+fi
 
 create_directory $DOMDOCK_DIR root root 777
 create_directory $DOMDOCK_SCRIPT_DIR root root 755
