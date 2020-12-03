@@ -200,16 +200,28 @@ docker_build ()
   fi
 
   # Finally build the image
-  $DOCKER_CMD build --no-cache $DOCKER_NETWORK --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
+  $DOCKER_CMD build --no-cache $DOCKER_NETWORK \
     -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
     -f $DOCKER_FILE \
+    --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
+    --label name="HCL Traveler Community Image" \
+    --label vendor="Domino Docker Community Project" \
+    --label description="HCL Traveler Mobile Sync Server" \
+    --label summary="HCL Traveler Mobile Sync Server" \
+    --label version="$DOCKER_IMAGE_VERSION" \
+    --label "buildtime"="$BUILDTIME" \
+    --label release="$BUILDTIME" \
+    --label architecture="x86_64" \
+    --label "io.k8s.description"="HCL Traveler Community Image" \
+    --label "io.k8s.display-name"="HCL Traveler Community Image" \
+    --label io.openshift.expose-services="1352:nrpc 25:smtp 80:http 389:ldap 443:https 636:ldaps" \
     --label TravelerDocker.description="$DOCKER_DESCRIPTION" \
     --label TravelerDocker.version="$DOCKER_IMAGE_VERSION" \
     --label TravelerDocker.buildtime="$BUILDTIME" \
-    --build-arg PROD_NAME=$PROD_NAME \
-    --build-arg PROD_VER=$PROD_VER \
-    --build-arg DownloadFrom=$DOWNLOAD_FROM \
-    --build-arg LinuxYumUpdate=$LinuxYumUpdate \
+    --build-arg PROD_NAME="$PROD_NAME" \
+    --build-arg PROD_VER="$PROD_VER" \
+    --build-arg DownloadFrom="$DOWNLOAD_FROM" \
+    --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" .
 
   popd

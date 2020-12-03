@@ -180,16 +180,28 @@ docker_build ()
   fi
 
   # Finally build the image
-  $DOCKER_CMD build --no-cache $DOCKER_NETWORK --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
+  $DOCKER_CMD build --no-cache $DOCKER_NETWORK \
     -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
     -f $DOCKER_FILE \
-    --label "$PROD_NAME.description"="$DOCKER_DESCRIPTION" \
-    --label "$PROD_NAME.version"="$DOCKER_IMAGE_VERSION" \
-    --label "$PROD_NAME.buildtime"="$BUILDTIME" \
-    --build-arg PROD_NAME=$PROD_NAME \
-    --build-arg PROD_VER=$PROD_VER \
-    --build-arg DownloadFrom=$DOWNLOAD_FROM \
-    --build-arg LinuxYumUpdate=$LinuxYumUpdate \
+    --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
+    --label name="HCL Volt Community Image" \
+    --label vendor="Domino Docker Community Project" \
+    --label description="HCL Volt - Low Code platform" \
+    --label summary="HCL Volt - Low Code platform" \
+    --label version="$DOCKER_IMAGE_VERSION" \
+    --label "buildtime"="$BUILDTIME" \
+    --label release="$BUILDTIME" \
+    --label architecture="x86_64" \
+    --label "io.k8s.description"="HCL Volt Community Image" \
+    --label "io.k8s.display-name"="HCL Volt Community Image" \
+    --label io.openshift.expose-services="1352:nrpc 25:smtp 80:http 389:ldap 443:https 636:ldaps" \
+    --label VoltDocker.description="$DOCKER_DESCRIPTION" \
+    --label VoltDocker.version="$DOCKER_IMAGE_VERSION" \
+    --label VoltDocker.buildtime="$BUILDTIME" \
+    --build-arg PROD_NAME="$PROD_NAME" \
+    --build-arg PROD_VER="$PROD_VER" \
+    --build-arg DownloadFrom="$DOWNLOAD_FROM" \
+    --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" .
 
   popd
