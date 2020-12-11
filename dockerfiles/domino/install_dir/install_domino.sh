@@ -1172,7 +1172,7 @@ remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 remove_file $DOMINO_DATA_PATH/tika-server.jar
 
 # Ensure permissons are set correctly for data directory
-chown -R $DOMINO_USER $DOMINO_GROUP $DOMINO_DATA_PATH
+chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Prepare data directory (compact NSFs and NTFs)
