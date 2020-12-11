@@ -706,6 +706,11 @@ install_domino ()
 
     popd
     rm -rf domino_server
+
+    # Copy license files
+    mkdir /licenses
+    cp $Notes_ExecDirectory/license/*.txt /licenses
+
   fi
 
   if [ ! -z "$INST_FP" ]; then
@@ -818,16 +823,11 @@ docker_set_timezone ()
   return 0
 }
 
-yum_glibc_lang_update()
+yum_glibc_lang_update7()
 {
   # on CentOS/RHEL 7 the locale is not containing all langauges
   # removing override_install_langs from /etc/yum.conf and reinstalling glibc-common
   # reinstall does only work if package is up to date
-
-  # Not needed on SuSE platform with zypper
-  if [ -x /usr/bin/zypper ]; then
-    return 0
-  fi
 
   local STR="override_install_langs="
   local FILE="/etc/yum.conf"
@@ -860,7 +860,48 @@ yum_glibc_lang_update()
   return 0
 }
 
+
+yum_glibc_lang_update_allpacks()
+{
+  # install allpack to correct locale settings
+
+  local ALL_LANGPACKS=$(rpm -q glibc-all-langpacks | grep "x86_64")
+
+  echo
+
+  if [ -z "$ALL_LANGPACKS" ]; then
+    yum install -y glibc-all-langpacks
+  else
+    echo "Already installed: $ALL_LANGPACKS"
+  fi
+
+  echo
+  return 0
+}
+
+yum_glibc_lang_update()
+{
+  # Not needed on SuSE platform with zypper
+  if [ -x /usr/bin/zypper ]; then
+    return 0
+  fi
+
+  case "$LINUX_VERSION" in
+    7*)
+      yum_glibc_lang_update7
+      ;;
+    *)
+      yum_glibc_lang_update_allpacks
+      ;;
+  esac
+}
+
+
 # --- Main Install Logic ---
+
+
+export DOMINO_USER=notes
+export DOMINO_GROUP=notes
 
 header "Environment Setup"
 
@@ -895,6 +936,14 @@ if [ "$LinuxYumUpdate" = "yes" ]; then
   fi
 fi
 
+LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
+LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+
+# Show current OS version
+if [ -n "$LINUX_PRETTY_NAME" ]; then
+  header "$LINUX_PRETTY_NAME"
+fi
+
 yum_glibc_lang_update
 
 # This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
@@ -909,16 +958,16 @@ fi
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
-  # Add notes:notes user
+  # Add notes user
   if [ -z "$DominoUserID" ]; then
-    useradd notes -U -m
+    useradd $DOMINO_USER -U -m
   else
-    useradd notes -U -m -u $DominoUserID 
+    useradd $DOMINO_USER -U -m -u $DominoUserID 
   fi
 
   # Set User Local if configured
   if [ ! -z "$DOMINO_LANG" ]; then
-    echo "export LANG=$DOMINO_LANG" >> /home/notes/.bash_profile
+    echo "export LANG=$DOMINO_LANG" >> /home/$DOMINO_USER/.bash_profile
   fi
 
   # Set security limits for pam modules (su needs it)
@@ -928,6 +977,11 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   echo '* hard nofile 65535' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
  
+else
+
+  # Check for existing user's group and overwrite (for base images with different group - like root)
+  export DOMINO_GROUP=`id -gn "$DOMINO_USER"`
+
 fi
 
 # Allow world full access to the main directories to ensure all mounts work.
@@ -936,18 +990,23 @@ fi
 
 # if inheriting an existing installation, it's important to ensure /local has the right permissions
 
-if [ -e /local ]; then
-  chown -R notes:notes /local
+if [ -e "/local" ]; then
+  chown -R $DOMINO_USER:$DOMINO_GROUP /local
+fi
+
+if [ -e "$DOMINO_DATA_PATH" ]; then
+  chmod $DIR_PERM $DOMINO_DATA_PATH
 fi
 
 create_directory $DOMDOCK_DIR root root 777
 create_directory $DOMDOCK_SCRIPT_DIR root root 755
-create_directory /local root root 777 
-create_directory $DOMINO_DATA_PATH root root 777
-create_directory /local/translog root root 777
-create_directory /local/daos root root 777
-create_directory /local/nif root root 777
-create_directory /local/ft root root 777
+
+create_directory /local $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
+create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
 docker_set_timezone
 
@@ -1049,8 +1108,8 @@ fi
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" notes notes 666
-install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" notes notes 666
+install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" $DOMINO_USER $DOMINO_GROUP 666
+install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" $DOMINO_USER $DOMINO_GROUP 666
 
 header "Final Steps & Configuration"
 
@@ -1113,14 +1172,14 @@ remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 remove_file $DOMINO_DATA_PATH/tika-server.jar
 
 # Ensure permissons are set correctly for data directory
-chown -R notes:notes $DOMINO_DATA_PATH
+chown -R $DOMINO_USER $DOMINO_GROUP $DOMINO_DATA_PATH
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Prepare data directory (compact NSFs and NTFs)
 
   header "Prepare $DOMINO_DATA_PATH via compact"
 
-  su - notes -c $INSTALL_DIR/domino_install_data_prep.sh
+  su - $DOMINO_USER -c $INSTALL_DIR/domino_install_data_prep.sh
 fi
 
 # If configured, move data directory to a compressed tar file
