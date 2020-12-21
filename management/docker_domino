@@ -2,9 +2,9 @@
 
 ###########################################################################
 # Nash!Com Domino Docker Management Script                                #
-# Version 1.0.8 30.01.2020                                                #
+# Version 1.0.9 21.12.2020                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2019                                #
+# (C) Copyright Daniel Nashed/NashCom 2020                                #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -366,19 +366,24 @@ docker_inspect_container ()
   DOCKER_CONTAINER_NETWORKMODE="$($DOCKER_CMD inspect --format "{{ .HostConfig.NetworkMode }}" $DOCKER_CONTAINER 2>/dev/null)"
 
   if [ -z "$DOCKER_NETWORK_NAME" ]; then
-    DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+    DOCKER_CONTAINER_IPADDRESS="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
   else
-    DOCKER_CONTAINER_IPAddress="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.Networks.$DOCKER_NETWORK_NAME.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+    DOCKER_CONTAINER_IPADDRESS="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.Networks.$DOCKER_NETWORK_NAME.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
+  fi
+
+  if ["$DOCKER_CONTAINER_IPADDRESS" = "<no value>" ]; then
+    DOCKER_CONTAINER_IPADDRESS=
   fi
 
   DOCKER_CONTAINER_BUILDTIME="$($DOCKER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $DOCKER_CONTAINER 2>/dev/null)"
-  DOCKER_CONTAINER_VOLUMES="$($DOCKER_CMD inspect --format '{{range .Mounts}} {{ .Name }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
+  DOCKER_CONTAINER_VOLUMES="$($DOCKER_CMD inspect --format '{{range .Mounts}} {{ .Source }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
+  DOCKER_CONTAINER_MOUNTS="$($DOCKER_CMD inspect --format '{{range .Mounts}} {{ .Destination }} {{end}}' $DOCKER_CONTAINER | xargs 2>/dev/null)"
   DOCKER_CONTAINER_HEALTH="$($DOCKER_CMD inspect --format "{{ .State.Health.Status }}" $DOCKER_CONTAINER 2>/dev/null)"
 
   DOCKER_CONTAINER_DOMINODOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)"
   DOCKER_CONTAINER_TRAVELERDOCKER_VERSION="$($DOCKER_CMD inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $DOCKER_CONTAINER 2>/dev/null)" 
 
-  STARTDATE="$($DOCKER_CMD inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER 2>/dev/null)"
+  STARTDATE="$($DOCKER_CMD inspect --format "{{ .State.StartedAt }}" $DOCKER_CONTAINER | cut -f1 -d+ 2>/dev/null)"
   DOCKER_CONTAINER_STARTED_AT=`date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE"`
 
   return 0
@@ -488,8 +493,9 @@ docker_show_inspect ()
     echo
     echo " Hostname       :  $DOCKER_CONTAINER_HOSTNAME"
     echo " Volumes        :  $DOCKER_CONTAINER_VOLUMES"
+    echo " Mounts         :  $DOCKER_CONTAINER_MOUNTS"
     echo " NetworkMode    :  $DOCKER_CONTAINER_NETWORKMODE"
-    echo " IPAddress      :  $DOCKER_CONTAINER_IPAddress"
+    echo " IPAddress      :  $DOCKER_CONTAINER_ADDRESS"
     echo
     echo " Platform       :  $DOCKER_CONTAINER_PLATFORM"
     echo " Driver         :  $DOCKER_CONTAINER_DRIVER"

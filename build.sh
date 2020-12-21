@@ -204,11 +204,12 @@ nginx_start ()
   # Start local nginx container to host SW Repository
   SOFTWARE_REPO_IP="$($DOCKER_CMD inspect --format '{{ .NetworkSettings.IPAddress }}' $SOFTWARE_CONTAINER 2>/dev/null)"
   if [ -z "$SOFTWARE_REPO_IP" ]; then
-    echo "Unable to locate software repository."
-  else
-    DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
-    echo "Hosting HCL Software repository on $DOWNLOAD_FROM"
+    echo "No specific IP address using host address"
+    SOFTWARE_REPO_IP=$(hostname --all-ip-addresses | cut -f1 -d" "):$SOFTWARE_PORT
   fi
+    
+  DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
+  echo "Hosting HCL Software repository on $DOWNLOAD_FROM"
   echo
 }
 
