@@ -1,0 +1,19 @@
+
+CONTAINER_SYSTEMD_NAME=domino_container.service
+
+CONTAINER_NAME=domino-nashcom
+CONTAINER_IMAGE=nashcom/domino:latest
+
+CONTAINER_HOSTNAME=notes.nashcom.de
+DOMINO_SHUTDOWN_TIMEOUT=180
+
+CONTAINER_NETWORK_NAME=host
+
+CONTAINER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
+
+#CONTAINER_VOLUMES="-v notesdata_domino:/local/notesdata"
+CONTAINER_VOLUMES="-v /local/podman/local:/local"
+
+# Environment file is used for first container start (run) to pass setup parameters
+#CONTAINER_ENV_FILE=env_container_domino
+

@@ -27,6 +27,7 @@ SCRIPT_DIR=`dirname $SCRIPT_REAL`
 
 DOMINO_INSTALL_CONFIG_FILE=rc_domino_config
 DOMINO_INSTALL_CONFIG_FILEPATH=/etc/sysconfig/$DOMINO_INSTALL_CONFIG_FILE
+
 DOMINO_DOCKER_SCRIPT=domino_docker_entrypoint.sh
 DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
 DONT_TOUCH_THIS_STANDARD_USER=notes
@@ -306,7 +307,7 @@ install_file $START_SCRIPT_DIR/rc_domino_readme.txt $DOMINO_START_SCRIPT_DIR/rc_
 START_SCRIPT_CONFIG_VER=$DOMINO_START_SCRIPT_DIR/rc_domino_config_$DOMINO_START_SCRIPT_VERSION.txt
 START_SCRIPT_CONFIG_LATEST=$DOMINO_START_SCRIPT_DIR/rc_domino_config_latest.txt
 
-install_file $START_SCRIPT_DIR/rc_domino_config $START_SCRIPT_CONFIG_VER "$DOMINO_USER" "$DOMINO_GROUP" 644
+install_file $START_SCRIPT_DIR/sysconfig/rc_domino_config $START_SCRIPT_CONFIG_VER "$DOMINO_USER" "$DOMINO_GROUP" 644
 
 if [ -e "$START_SCRIPT_CONFIG_LATEST" ]; then
   rm -f "$START_SCRIPT_CONFIG_LATEST"
@@ -323,6 +324,7 @@ fi
 if [ "$PARAM1" = "upd" ]; then
   install_file $START_SCRIPT_DIR/rc_domino_config $DOMINO_INSTALL_CONFIG_FILEPATH "$DOMINO_USER" "$DOMINO_GROUP" 644
   install_file $START_SCRIPT_DIR/systemdbs.ind $DOMINO_DATA_PATH/systemdbs.ind "$DOMINO_USER" "$DOMINO_GROUP" 644
+
 else
   install_file_noupdate $START_SCRIPT_DIR/rc_domino_config $DOMINO_INSTALL_CONFIG_FILEPATH  "$DOMINO_USER" "$DOMINO_GROUP" 644
   install_file_noupdate $START_SCRIPT_DIR/systemdbs.ind $DOMINO_DATA_PATH/systemdbs.ind "$DOMINO_USER" "$DOMINO_GROUP" 644
@@ -373,8 +375,8 @@ else
 
   if [ ${LARCH} = "linux" ]; then
     if [ -e /etc/systemd/system ]; then
+
       install_file_noupdate $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
-  
       if [ $? -eq 2 ]; then
         systemctl daemon-reload
       fi

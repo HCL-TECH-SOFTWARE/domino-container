@@ -1,0 +1,1358 @@
+#!/bin/bash
+###########################################################################
+# Nash!Com Domino Container Management Script                             #
+# Version 1.0.0 26.12.2020                                                #
+#                                                                         #
+# (C) Copyright Daniel Nashed/NashCom 2020                                #
+# Feedback domino_unix@nashcom.de                                         #
+#                                                                         #
+# Licensed under the Apache License, Version 2.0 (the "License");         #
+# you may not use this file except in compliance with the License.        #
+# You may obtain a copy of the License at                                 #
+#                                                                         #
+#      http://www.apache.org/licenses/LICENSE-2.0                         #
+#                                                                         #
+# Unless required by applicable law or agreed to in writing, software     #
+# distributed under the License is distributed on an "AS IS" BASIS,       #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
+# See the License for the specific language governing permissions and     #
+# limitations under the License.                                          #
+###########################################################################
+
+SCRIPT_NAME=$0
+FULL_SCRIPT_NAME=$0
+SCRIPT_DIR_NAME=$(dirname $SCRIPT_NAME)
+FULL_SCRIPT_DIR_NAME=$(dirname $FULL_SCRIPT_NAME)
+NAME_PREFIX="container_"
+CONFIG_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/config_$(basename $SCRIPT_NAME | awk -F "$NAME_PREFIX" '{print $2}')
+PARAM1=$1
+PARAM2=$2
+PARAM3=$3
+
+# Default Configuration parameters overwritten by config file if available in same directory
+
+CONTAINER_NAME=
+IMAGE_NAME=
+CONTAINER_SYSTEMD_NAME=domino_container.service
+
+CONTAINER_HOSTNAME=
+# CONTAINER_NETWORK_NAME=host
+# CONTAINER_SPECIAL_OPTIONS="--ip 172.17.0.1"
+CONTAINER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
+
+# Environment file is used for first container start (run) to pass setup parameters
+CONTAINER_ENV_FILE=
+
+DOMINO_SHUTDOWN_TIMEOUT=60
+
+# Default config directory. Can be overwritten by environment 
+if [ -z "$DOMINO_CFG_DIR" ]; then
+  DOMINO_CFG_DIR=/etc/sysconfig
+fi
+
+CONTAINER_SCRIPT_VERSION=1.0.0
+
+# Get configuration from config file
+
+CFG_PREFIX=$(basename $SCRIPT_NAME | awk -F "$NAME_PREFIX" '{print $2}')
+
+if [ -z "$CFG_PREFIX" ]; then
+
+  CONFIG_FILE=$DOMINO_CFG_DIR/domino_container
+
+  if [ -e "$CONFIG_FILE" ]; then
+    echo "(Using config file $CONFIG_FILE)"
+  else
+    echo "Configuration not found at [$CONFIG_FILE]"
+    exit 1
+  fi
+
+else
+  CONFIG_FILE=$DOMINO_CFG_DIR/config_$CFG_PREFIX
+  if [ -e "$CONFIG_FILE" ]; then
+    echo "(Using config file $CONFIG_FILE)"
+  else
+    CONFIG_FILE=$SCRIPT_DIR_NAME/config_$CFG_PREFIX
+
+    if [ -e "$CONFIG_FILE" ]; then
+      echo "(Using config file $CONFIG_FILE)"  
+    else
+      CONFIG_FILE=
+    fi
+
+    if [ -z "$" ]; then
+      echo "No configuration found!"
+      exit 1
+    fi
+  fi
+fi
+
+# Source in the config file
+. $CONFIG_FILE
+
+CONTAINER_FULL_ENV_FILE=
+if [ -n "$CONTAINER_ENV_FILE" ]; then
+  if [ -r "$DOMINO_CFG_DIR/$CONTAINER_ENV_FILE" ]; then
+    CONTAINER_FULL_ENV_FILE="$DOMINO_CFG_DIR/$CONTAINER_ENV_FILE"
+  fi
+fi
+
+IMAGE_BUILD_VERSION=$IMAGE_VERSION
+
+# Special configuration
+
+CONTAINER_SCRIPT_USE_SUDO=yes
+BUILDTIME=$(date +"%d.%m.%Y %H:%M:%S")
+
+if [ -z "$EDIT_COMMAND" ]; then
+  EDIT_COMMAND="vi"
+fi
+
+# Get OS type
+LARCH=$(uname)
+
+
+if [ -z "$DOMINO_SYSTEMD_NAME.pid" ]; then
+  CONTAINER_PID=/tmp/domino_container.service.pid
+  CONTAINER_CID=/tmp/domino_container.service.cid
+else
+  CONTAINER_PID=/tmp/$DOMINO_SYSTEMD_NAME.pid
+  CONTAINER_CID=/tmp/$DOMINO_SYSTEMD_NAME.cid
+fi
+
+if [ "$CONTAINER_CMD" = "podman" ]; then
+  TAG_CONTAINER_ID=".ID"
+  PODMAN_OPTIONS=--cgroups=no-conmon --conmon-pidfile $CONTAINER_PID --cidfile $CONTAINER_CID
+
+  if [ -z "$CONTAINER_HEALTH_CHECK" ]; then
+    CONTAINER_HEALTH_CHECK="--health-cmd=/domino_docker_healthcheck.sh --health-interval=60s --health-retries=4 --health-start-period=120s"
+  fi
+else
+  TAG_CONTAINER_ID=".Id"
+fi
+
+SYSTEMCTL_CMD="sudo systemctl"
+SOFTWARE_PORT=7777
+SOFTWARE_CONTAINER=hclsoftware
+
+log_and_exit ()
+{
+  echo
+  echo "$@"
+  echo
+  exit 1
+}
+
+print_delim ()
+{
+  echo "------------------------------------------------------------------------------------------"
+}
+
+config_warnings ()
+{
+  CONTAINER_STORAGE_DIRVER=$($CONTAINER_CMD info 2>/dev/null |grep "Storage Driver: " | cut -d ":" -f2 | awk '{ sub(/^[ ]+/, ""); print }')
+
+  if [ "$CONTAINER_STORAGE_DIRVER" = "overlay" ]; then 
+    echo
+    echo "Warning: It's strongly recommended to use the 'Overlay2' driver!"
+  fi
+  
+  if [ ! -z "$CONTAINER_IMAGE_ID" ]; then
+    if [ ! "$CONTAINER_IMAGE_ID" = "$IMAGE_ID" ]; then
+      echo
+      echo "Info: New Image Version available!"
+    fi
+  fi
+  
+  if [ ! -x "/bin/jq" ]; then
+
+    echo
+    echo "Warning: For a better 'inspect' command experience install 'jq' from repository -- infos: https://stedolan.github.io/jq/"
+  fi
+
+  return 0
+}
+
+check_version ()
+{
+  count=1
+
+  while true
+  do
+    VER=$(echo $1|cut -d"." -f $count)
+    CHECK=$(echo $2|cut -d"." -f $count)
+
+    if [ -z "$VER" ]; then return 0; fi
+    if [ -z "$CHECK" ]; then return 0; fi
+
+    if [ $VER -gt $CHECK ]; then return 0; fi
+    if [ $VER -lt $CHECK ]; then
+      echo "Warning: Unsupported $3 version $1 - Must be at least $2 !"
+      sleep 1
+      return 1
+    fi
+
+    count=$(expr $count + 1)
+  done
+
+  return 0
+}
+
+check_container_environment()
+{
+  DOCKER_MINIMUM_VERSION="18.09.0"
+  PODMAN_MINIMUM_VERSION="1.0.5"
+
+  if [ -x /usr/bin/podman ]; then
+    if [ -z "$USE_DOCKER" ]; then
+      # podman environment detected
+      CONTAINER_CMD=podman
+      CONTAINER_ENV_NAME=Podman
+      CONTAINER_RUNTIME_VERSION_STR=$(podman version)
+      CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | cut -d" " -f2)
+      check_version "$CONTAINER_RUNTIME_VERSION" "$PODMAN_MINIMUM_VERSION" "$CONTAINER_CMD"
+      return 0
+    fi
+  fi
+
+  if [ -z "$CONTAINER_CMD" ]; then
+    CONTAINER_CMD=docker
+    # Docker doesn't uses systemd 
+    CONTAINER_SYSTEMD_NAME=
+  fi
+
+  CONTAINER_ENV_NAME=Docker
+
+  # check container environment
+  CONTAINER_RUNTIME_VERSION_STR=$(docker -v)
+  CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | cut -d" " -f3|cut -d"," -f1)
+
+  check_version "$CONTAINER_RUNTIME_VERSION" "$DOCKER_MINIMUM_VERSION" "$CONTAINER_CMD"
+
+  return 0
+}
+
+
+check_root_permissions ()
+{
+  # Use sudo for su for container command if not root
+
+  if [ "$EUID" = "0" ]; then
+    return 0 # yes we are root
+  fi
+
+  if [ "$CONTAINER_SCRIPT_USE_SUDO" = "yes" ]; then
+    CONTAINER_CMD="sudo $CONTAINER_CMD"
+    SYSTEMCTL_CMD="sudo systemctl"
+    return 0
+  fi
+
+  log_and_exit "$CONTAINER_ENV_NAME needs root permissions on Linux!"
+}
+
+
+print_runtime ()
+{
+  echo
+  
+  # the following line does not work on OSX 
+  # echo "Completed in" $(date -d@$SECONDS -u +%T)
+ 
+  hours=$((SECONDS / 3600))
+  seconds=$((SECONDS % 3600))
+  minutes=$((seconds / 60))
+  seconds=$((seconds % 60))
+  h=""; m=""; s=""
+  if [ ! $hours =  "1" ] ; then h="s"; fi
+  if [ ! $minutes =  "1" ] ; then m="s"; fi
+  if [ ! $seconds =  "1" ] ; then s="s"; fi
+
+  if [ ! $hours =  0 ] ; then echo "Completed in $hours hour$h, $minutes minute$m and $seconds second$s"
+  elif [ ! $minutes = 0 ] ; then echo "Completed in $minutes minute$m and $seconds second$s"
+  else echo "Completed in $seconds second$s"; fi
+}
+
+nginx_start ()
+{
+  # Create a nginx container hosting software download locally
+
+  # Check if we already have this container in status exited
+  STATUS="$($CONTAINER_CMD inspect --format "{{ .State.Status }}" $SOFTWARE_CONTAINER 2>/dev/null)"
+
+  if [ -z "$STATUS" ]; then
+    echo "Creating container: $SOFTWARE_CONTAINER"
+    $CONTAINER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
+  elif [ "$STATUS" = "exited" ]; then
+    echo "Starting existing container: $SOFTWARE_CONTAINER"
+    $CONTAINER_CMD start $SOFTWARE_CONTAINER
+  fi
+
+  echo "Starting container: $SOFTWARE_CONTAINER"
+  # Start local nginx container to host SW Repository
+  SOFTWARE_REPO_IP="$($CONTAINER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $SOFTWARE_CONTAINER 2>/dev/null)"
+  if [ -z "$SOFTWARE_REPO_IP" ]; then
+    echo "Unable to locate software repository."
+  else
+    DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
+    echo "Hosting Software repository on $DOWNLOAD_FROM"
+  fi
+  echo
+}
+
+nginx_stop ()
+{
+  # Stop and remove SW repository
+  $CONTAINER_CMD stop $SOFTWARE_CONTAINER
+  $CONTAINER_CMD container rm $SOFTWARE_CONTAINER
+  echo "Stopped & Removed Software Repository Container"
+  echo
+}
+
+container_show_status()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then
+   echo "Status: notexisting"
+  else
+    echo Status: "$CONTAINER_STATUS"
+  fi
+
+  return 0
+}
+
+container_status ()
+{
+  CONTAINER_STATUS="$($CONTAINER_CMD inspect --format "{{ .State.Status }}" $CONTAINER_NAME 2>/dev/null)"
+}
+
+inspect_image_native ()
+{
+  IMAGE_ID="$($CONTAINER_CMD inspect --format "{{.ID}}" $CONTAINER_IMAGE 2>/dev/null)"
+  IMAGE_SHORTID=$(echo $IMAGE_ID | cut -d":" -f2 | cut -c1-12)
+
+  if [ -z "$1" ]; then return 0; fi
+
+  IMAGE_VERSION="$($CONTAINER_CMD inspect --format "{{ .Config.Labels.version }}" $CONTAINER_IMAGE 2>/dev/null)"
+  IMAGE_BUILDTIME="$($CONTAINER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $CONTAINER_IMAGE 2>/dev/null)"
+  IMAGE_SIZE="$($CONTAINER_CMD inspect --format "{{.Size}}" $CONTAINER_IMAGE 2>/dev/null)"
+
+  if [ -z "$IMAGE_SIZE" ]; then
+    IMAGE_SIZE_MB=0
+  else
+    IMAGE_SIZE_MB=$(($IMAGE_SIZE / 1000 / 1000 ))
+  fi
+
+  IMAGE_DOMINO_VERSION="$($CONTAINER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $CONTAINER_IMAGE 2>/dev/null)"
+  IMAGE_TRAVELER_VERSION="$($CONTAINER_CMD inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $CONTAINER_IMAGE 2>/dev/null)"
+
+  return 0
+}
+
+inspect_image ()
+{
+  if [ ! -e /bin/jq ]; then
+    inspect_image_native "$@"
+    return 0
+  fi
+
+  local FULL_JSON=$($CONTAINER_CMD inspect $CONTAINER_IMAGE 2>/dev/null)
+
+  if [ -z "$FULL_JSON" ]; then
+    return 0
+  fi
+
+  if [ "$FULL_JSON" = "[]" ]; then
+    return 0
+  fi
+
+  local JSON=$(echo $FULL_JSON | jq .[0])
+
+  IMAGE_ID=$(echo "$JSON" | jq -r .Id)
+  IMAGE_SHORTID=$(echo $IMAGE_ID | cut -d":" -f2 | cut -c1-12)
+
+  if [ -z "$1" ]; then return 0; fi
+
+  IMAGE_VERSION="$(echo "$JSON" | jq -r .Config.Labels.version)"
+  IMAGE_BUILDTIME="$(echo "$JSON" | jq -r .Config.Labels.buildtime)"
+  IMAGE_SIZE="$(echo "$JSON" | jq -r .Size)"
+
+  if [ -z "$IMAGE_SIZE" ]; then
+    IMAGE_SIZE_MB=0
+  else
+    IMAGE_SIZE_MB=$(($IMAGE_SIZE / 1000 / 1000 ))
+  fi
+
+  IMAGE_DOMINO_VERSION="$(echo "$JSON" | jq -r '.Config.Labels."DominoDocker.version"')"
+  IMAGE_TRAVELER_VERSION="$(echo "$JSON" | jq -r '.Config.Labels."TravelerDocker.version"')"
+
+  return 0
+}
+
+inspect_container_native ()
+{
+  CONTAINER_KEY=
+  if [ -n "$CONTAINER_CID" ]; then 
+    if [ -e "$CONTAINER_CID" ]; then
+      CONTAINER_ID=$(cat "$CONTAINER_CID")
+      CONTAINER_KEY=$CONTAINER_ID
+    fi
+  fi
+  
+  if [ -z "$CONTAINER_KEY" ]; then
+     CONTAINER_KEY=CONTAINER_NAME
+  fi
+
+  CONTAINER_STATUS="$($CONTAINER_CMD inspect --format "{{ .State.Status }}" $CONTAINER_KEY 2>/dev/null)"
+  CONTAINER_VERSION="$($CONTAINER_CMD inspect --format "{{ .Config.Labels.version }}" $CONTAINER_KEY 2>/dev/null)"
+  if [ -z "$CONTAINER_STATUS" ]; then return 0; fi
+
+  CONTAINER_IMAGE_ID="$($CONTAINER_CMD inspect --format "{{ .Image }}" $CONTAINER_KEY 2>/dev/null)"
+
+  if [ -z "$CONTAINER_ID" ]; then
+    CONTAINER_ID="$($CONTAINER_CMD inspect --format "{{ $TAG_CONTAINER_ID }}" $CONTAINER_KEY 2>/dev/null)"
+  fi
+
+  CONTAINER_SHORTID=$(echo $CONTAINER_ID | cut -d":" -f2 | cut -c1-12)
+  CONTAINER_IMAGE_ID="$($CONTAINER_CMD inspect --format "{{ .Image }}" $CONTAINER_KEY 2>/dev/null)"
+  CONTAINER_IMAGE_SHORTID=$(echo $CONTAINER_IMAGE_ID | cut -d":" -f2 | cut -c1-12)
+
+  if [ -z "$1" ]; then return 0; fi
+
+  CONTAINER_NAME_DISPLAY="$($CONTAINER_CMD inspect --format "{{ .Name }}" $CONTAINER_KEY | cut -d/ -f2 2>/dev/null)"
+  CONTAINER_IMAGE="$($CONTAINER_CMD inspect --format "{{ .Config.Image }}" $CONTAINER_KEY 2>/dev/null)"
+
+  CONTAINER_HOSTNAME="$($CONTAINER_CMD inspect --format "{{ .Config.Hostname }}" $CONTAINER_KEY 2>/dev/null)"
+  CONTAINER_DRIVER="$($CONTAINER_CMD inspect --format "{{ .Driver }}" $CONTAINER_KEY 2>/dev/null)"
+  CONTAINER_PLATFORM="$($CONTAINER_CMD inspect --format "{{ .Platform }}" $CONTAINER_KEY 2>/dev/null)"
+
+
+  CONTAINER_NETWORKMODE="$($CONTAINER_CMD inspect --format "{{ .HostConfig.NetworkMode }}" $CONTAINER_KEY 2>/dev/null)"
+
+  if [ -z "$CONTAINER_NETWORK_NAME" ]; then
+    CONTAINER_IPADDRESS="$($CONTAINER_CMD inspect --format "{{ .NetworkSettings.IPAddress }}" $CONTAINER_KEY 2>/dev/null)"
+  else
+    CONTAINER_IPADDRESS="$($CONTAINER_CMD inspect --format "{{ .NetworkSettings.Networks.$CONTAINER_NETWORK_NAME.IPAddress }}" $CONTAINER_KEY 2>/dev/null)"
+  fi
+
+  if [ "$CONTAINER_IPADDRESS" = "<no value>" ]; then
+    CONTAINER_IPADDRESS=
+  fi
+
+  CONTAINER_BUILDTIME="$($CONTAINER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $CONTAINER_KEY 2>/dev/null)"
+  CONTAINER_VOLUMES="$($CONTAINER_CMD inspect --format '{{range .Mounts}} {{ .Source }} {{end}}' $CONTAINER_KEY | xargs 2>/dev/null)"
+  CONTAINER_MOUNTS="$($CONTAINER_CMD inspect --format '{{range .Mounts}} {{ .Destination }} {{end}}' $CONTAINER_KEY | xargs 2>/dev/null)"
+
+  if [ "$CONTAINER_CMD" = "docker" ]; then
+    CONTAINER_HEALTH="$($CONTAINER_CMD inspect --format "{{ .State.Health.Status }}" $CONTAINER_KEY 2>/dev/null)"
+  else
+    CONTAINER_HEALTH="$($CONTAINER_CMD inspect --format "{{ .State.Healthcheck.Status }}" $CONTAINER_KEY 2>/dev/null)"
+  fi
+
+  CONTAINER_DOMINO_VERSION="$($CONTAINER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $CONTAINER_KEY 2>/dev/null)"
+  CONTAINER_TRAVELER_VERSION="$($CONTAINER_CMD inspect --format "{{ index .Config.Labels \"TravelerDocker.version\" }}" $CONTAINER_KEY 2>/dev/null)" 
+
+  STARTDATE="$($CONTAINER_CMD inspect --format "{{ .State.StartedAt }}" $CONTAINER_KEY | cut -f1 -d+ 2>/dev/null)"
+  CONTAINER_STARTED_AT=$(date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE")
+
+  return 0
+}
+
+inspect_container ()
+{
+  if [ ! -e /bin/jq ]; then
+    inspect_container_native "$@"
+    return 0
+  fi
+
+  CONTAINER_KEY=
+  if [ -n "$CONTAINER_CID" ]; then
+    if [ -e "$CONTAINER_CID" ]; then
+      CONTAINER_ID=$(cat "$CONTAINER_CID")
+      CONTAINER_KEY=$CONTAINER_ID
+    fi
+  fi
+
+  if [ -z "$CONTAINER_KEY" ]; then
+     CONTAINER_KEY=$CONTAINER_NAME
+  fi
+
+  local FULL_JSON=$($CONTAINER_CMD inspect $CONTAINER_KEY 2>/dev/null)
+
+
+  if [ -z "$FULL_JSON" ]; then
+    return 0
+  fi
+
+  if [ "$FULL_JSON" = "[]" ]; then
+    return 0
+  fi
+
+  local JSON=$(echo $FULL_JSON | jq .[0])
+
+  CONTAINER_STATUS=$(echo "$JSON" | jq -r .State.Status)
+  CONTAINER_VERSION=$(echo "$JSON" | jq -r .Config.Labels.version)
+  if [ -z "$CONTAINER_STATUS" ]; then return 0; fi
+
+  if [ -z "$CONTAINER_ID" ]; then
+    CONTAINER_ID=$(echo "$JSON" | jq -r $TAG_CONTAINER_ID)
+  fi
+
+
+  CONTAINER_SHORTID=$(echo $CONTAINER_ID | cut -d":" -f2 | cut -c1-12)
+  CONTAINER_IMAGE_ID=$(echo "$JSON" | jq -r .Image)
+  CONTAINER_IMAGE_SHORTID=$(echo $CONTAINER_IMAGE_ID | cut -d":" -f2 | cut -c1-12)
+
+  if [ -z "$1" ]; then return 0; fi
+
+  CONTAINER_NAME_DISPLAY=$(echo "$JSON" | jq -r .Name)
+  CONTAINER_IMAGE=$(echo "$JSON" | jq -r .Config.Image)
+
+  CONTAINER_HOSTNAME=$(echo "$JSON" | jq -r .Config.Hostname)
+  CONTAINER_DRIVER=$(echo "$JSON" | jq -r .Driver)
+  CONTAINER_PLATFORM=$(echo "$JSON" | jq -r .Platform)
+
+  CONTAINER_NETWORKMODE=$(echo "$JSON" | jq -r .HostConfig.NetworkMode)
+
+  if [ -z "$CONTAINER_NETWORK_NAME" ]; then
+    CONTAINER_IPADDRESS=$(echo "$JSON" | jq -r .NetworkSettings.IPAddress)
+  else
+    CONTAINER_IPADDRESS=$(echo "$JSON" | jq -r .NetworkSettings.Networks.$CONTAINER_NETWORK_NAME.IPAddress)
+  fi
+
+  if [ "$CONTAINER_IPADDRESS" = "<no value>" ]; then
+    CONTAINER_IPADDRESS=
+  fi
+
+  CONTAINER_BUILDTIME=$(echo "$JSON" | jq -r .Config.Labels.buildtime)
+  CONTAINER_VOLUMES=$(echo "$JSON" | jq -r .Mounts[].Source | xargs)
+  CONTAINER_MOUNTS=$(echo "$JSON" | jq -r .Mounts[].Destination | xargs)
+
+  if [ "$CONTAINER_CMD" = "docker" ]; then
+    CONTAINER_HEALTH=$(echo "$JSON" | jq -r .State.Health.Status)
+  else
+    CONTAINER_HEALTH=$(echo "$JSON" | jq -r .State.Healthcheck.Status)
+  fi
+
+  CONTAINER_DOMINO_VERSION=$(echo "$JSON" | jq -r '.Config.Labels."DominoDocker.version"')
+  CONTAINER_TRAVELER_VERSION=$(echo "$JSON" | jq -r '.Config.Labels."TravelerDocker.version"')
+
+  STARTDATE=$(echo "$JSON" | jq -r .State.StartedAt | cut -f1 -d+ 2>/dev/null)
+  CONTAINER_STARTED_AT=$(date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE")
+
+  return 0
+}
+
+
+container_inspect_extras ()
+{
+  if [ -z "$1" ]; then return 0; fi
+
+  if [ "$CONTAINER_STATUS" = "running" ]; then 
+    # CONTAINER_OS_VERSION=$($CONTAINER_CMD exec -it $CONTAINER_NAME cat /etc/os-release)
+    # CONTAINER_OS_KERNEL=$($CONTAINER_CMD exec -it $CONTAINER_NAME uname -r)
+    CONTAINER_DOMINO_REV=$($CONTAINER_CMD exec -it $CONTAINER_NAME cat /opt/hcl/domino/.install.dat | awk -F '(=| =)' -v SEARCH_STR="rev" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' | cut -d'"' -f2)
+  fi
+}
+
+container_show_infos ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then
+    if [ -z "$IMAGE_ID" ]; then
+      echo "Container and image not found"
+      return 0
+    else
+      echo "Container not found"
+    fi
+    #return 0
+  fi
+
+  inspect_image
+  inspect_container
+  container_inspect_extras
+
+  print_delim
+  echo " Status        :  $CONTAINER_STATUS"
+
+  if [ "$IMAGE_VERSION" = "$CONTAINER_VERSION" ]; then
+    echo " Version       :  $IMAGE_VERSION"
+  else
+    echo " Version CNT   :  $CONTAINER_VERSION"
+    echo " Version IMG   :  $IMAGE_VERSION"
+  fi
+
+  echo " Container ID  :  $CONTAINER_SHORTID"
+  if [ "$IMAGE_ID" = "$CONTAINER_IMAGE_ID" ]; then
+    echo " Image-ID      :  $IMAGE_SHORTID"
+  else
+    echo " Image-ID CNT  :  $CONTAINER_IMAGE_SHORTID"
+    echo " Image-ID IMG  :  $IMAGE_SHORTID"
+  fi
+  
+  print_delim
+
+  return 0
+}
+
+
+container_show_inspect ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then 
+    if [ -z "$IMAGE_ID" ]; then 
+      echo "Container and image not found"
+      return 0
+    else
+      echo "Container not found"
+    fi
+    #return 0
+  fi
+
+  inspect_image "$1" 
+  inspect_container "$1" 
+  container_inspect_extras "$1"
+
+  echo 
+  print_delim
+  echo " Runtime        :  $CONTAINER_ENV_NAME $CONTAINER_RUNTIME_VERSION"
+  echo " Status         :  $CONTAINER_STATUS"
+  echo " Health         :  $CONTAINER_HEALTH"
+  echo " Started        :  $CONTAINER_STARTED_AT"
+  echo
+  echo " Name           :  $CONTAINER_NAME_DISPLAY"
+  echo " Image          :  $CONTAINER_IMAGE"
+
+  if [ "$IMAGE_VERSION" = "$CONTAINER_VERSION" ]; then 
+    echo " Version        :  $IMAGE_VERSION"
+  else
+    echo " Version CNT    :  $CONTAINER_VERSION"
+    echo " Version IMG    :  $IMAGE_VERSION"
+  fi
+
+  if [ "$CONTAINER_DOMINO_VERSION" = "$IMAGE_DOMINO_VERSION" ]; then 
+    echo " Domino Ver     :  $CONTAINER_DOMINO_VERSION"
+  else
+    echo " Domino Ver CNT :  $CONTAINER_DOMINO_VERSION"
+    echo " Domino Ver IMG :  $IMAGE_DOMINO_VERSION"
+  fi
+
+  if [ "$IMAGE_BUILDTIME" = "$CONTAINER_BUILDTIME" ]; then 
+    echo " BuildTime      :  $IMAGE_BUILDTIME"
+  else
+    echo " BuildTime CNT  :  $CONTAINER_BUILDTIME"
+    echo " BuildTime IMG  :  $IMAGE_BUILDTIME"
+  fi
+  
+  if [ ! -z "$CONTAINER_IMAGE_ID" ]; then
+
+    echo
+    echo " Hostname       :  $CONTAINER_HOSTNAME"
+    if [ -n "$IPAddress" ]; then
+      echo " IPAddress      :  $CONTAINER_ADDRESS"
+    fi
+    echo " Volumes        :  $CONTAINER_VOLUMES"
+    echo " Mounts         :  $CONTAINER_MOUNTS"
+    echo
+  fi
+
+  print_delim
+
+  echo " Container ID   :  $CONTAINER_SHORTID"
+  if [ "$IMAGE_ID" = "$CONTAINER_IMAGE_ID" ]; then 
+    echo " Image-ID       :  $IMAGE_SHORTID"
+  else
+    echo " Image-ID CNT   :  $CONTAINER_IMAGE_SHORTID"
+    echo " Image-ID IMG   :  $IMAGE_SHORTID"
+  fi
+
+  print_delim
+
+  echo
+
+  if [ ! -z "$CONTAINER_IMAGE_ID" ]; then
+
+    echo " Image Size     :  $IMAGE_SIZE_MB MB"
+    echo " NetworkMode    :  $CONTAINER_NETWORKMODE"
+    echo " Driver         :  $CONTAINER_DRIVER"
+
+    # echo " Container OS   :  $CONTAINER_OS_VERSION"
+    # echo " Kernel         :  $CONTAINER_OS_KERNEL"
+
+    CONTAINER_PORTS=$($CONTAINER_CMD port "$CONTAINER_NAME")
+    if [ ! -z "$CONTAINER_PORTS" ]; then
+      echo " Container Ports:"
+      echo "$CONTAINER_PORTS" | awk '{print "                  " $0}'
+      print_delim
+    fi
+  fi
+
+}
+
+container_logs ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+
+  echo "--- [BEGIN - $CONTAINER_NAME - BEGIN] ---"
+  echo
+  $CONTAINER_CMD logs $CONTAINER_NAME
+  echo
+  echo "--- [END - $CONTAINER_NAME - END] ---"
+
+  return 0
+}
+
+container_build ()
+{
+  if [ ! -e build.cfg ]; then
+    log_and_exit "No build config found in current directory"
+  fi
+
+  . build.cfg
+
+  if [ -z "$CONTAINER_FILE" ]; then
+
+    if [ -r "Containerfile" ]; then
+       CONTAINER_FILE=Containerfile
+
+    elif [ -r "dockerfile" ]; then
+       CONTAINER_FILE=dockerfile
+    fi 
+
+    if [ -z "$CONTAINER_FILE" ]; then
+      log_and_exit "No container file specified"
+    fi
+  fi
+
+  if [ ! -r "$CONTAINER_FILE" ]; then
+    log_and_exit "Cannot read container file [$CONTAINER_FILE]"
+  fi
+
+  if [ -z "$IMAGE_NAME" ]; then
+    log_and_exit "No target image defined."
+  fi
+
+  if [ -z "$BASE_IMAGE" ]; then
+    log_and_exit "No source image defined"
+  fi
+
+  IMAGE_NAMEVERSION=$IMAGE_NAME:$IMAGE_VERSION
+
+  echo
+  echo "Building Image : " $IMAGE_NAMEVERSION
+  echo
+  
+  if [ -n "$SOFTWARE_DIR" ]; then
+    SOFTWARE_USE_NGINX=1
+  fi
+
+  if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
+    nginx_start
+  fi
+
+  BUILDTIME=$(date +"%d.%m.%Y %H:%M:%S")
+
+  if [ -n "$IMAGE_LATEST_TAG" ]; then
+    CONTAINER_TAG_LATEST_CMD="-t $IMAGE_NAME:$IMAGE_LATEST_TAG"
+  fi
+
+  $CONTAINER_CMD build --no-cache \
+    --label "version"="$IMAGE_VERSION" \
+    --label "buildtime"="$BUILDTIME" \
+    --label "description"="$IMAGE_LABEL_DESCRIPTION" \
+    --label "vendor"="$IMAGE_LABEL_VENDOR" \
+    --label "maintainer"="$IMAGE_LABEL_MAINTAINER" \
+    -t $IMAGE_NAMEVERSION $CONTAINER_TAG_LATEST_CMD \
+    -f $CONTAINER_FILE \
+    --build-arg "DownloadFrom=$DOWNLOAD_FROM" \
+    --build-arg LINUX_UPDATE=$LINUX_UPDATE \
+    --build-arg "SPECIAL_CURL_ARGUMENTS=$SPECIAL_CURL_ARGUMENTS" \
+    --build-arg BASE_IMAGE=$BASE_IMAGE .
+  echo
+
+  if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
+    nginx_stop
+  fi
+
+  print_runtime
+  echo
+
+  return 0
+}
+
+
+container_run ()
+{
+  if [ ! -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] already exists [status: $CONTAINER_STATUS]"; return 1; fi
+
+  if [ -z "$IMAGE_ID" ]; then
+    if [ "$1" = "force" ]; then
+      echo [FORCE-MODE] Building image first ...
+      echo 
+      container_build
+      echo
+      echo [FORCE-MODE] Built image before run
+      echo 
+
+    else
+      echo "Image [$CONTAINER_IMAGE] does not exist - please build image first"
+      return 1
+    fi
+  fi
+
+  if [ "$PARAM1" = "runit" ]; then
+    CONTAINER_IT="yes"
+  elif [ "$PARAM2" = "live" ]; then
+    CONTAINER_IT="yes"
+  elif [ "$PARAM2" = "it" ]; then
+    CONTAINER_IT="yes"
+  else
+    CONTAINER_IT=""
+  fi
+
+  if [ ! -z "$CONTAINER_IT" ]; then
+    echo "--- Running Docker Container interactive [ Use Ctrl + p q to exit ] ---"
+    echo
+    CONTAINER_IT="-it"
+  else
+    CONTAINER_IT="-d -it"
+  fi
+
+
+  if [ -z "$CONTAINER_NETWORK" ]; then
+   
+    if [ ! -z "$CONTAINER_NETWORK_NAME" ]; then
+      CONTAINER_NETWORK="--network=$CONTAINER_NETWORK_NAME"       
+    fi
+  fi
+
+  if [ -n "$CONTAINER_FULL_ENV_FILE" ]; then
+    CONTAINER_ENV_FILE_OPTION="--env-file $CONTAINER_FULL_ENV_FILE"
+   
+    if [ ! -r "$CONTAINER_FULL_ENV_FILE" ]; then
+      log_and_error "Error - Cannot read environment file [$CONTAINER_FULL_ENV_FILE]"
+    fi
+  fi
+
+  if [ ! -z "$CONTAINER_NOTES_UID" ]; then
+    CONTAINER_NOTES_UID_OPTION="--user $CONTAINER_NOTES_UID"
+  fi
+
+  $CONTAINER_CMD run $CONTAINER_IT $CONTAINER_PORTS --hostname=$CONTAINER_HOSTNAME --name $CONTAINER_NAME $CONTAINER_NETWORK $CONTAINER_ENV_FILE_OPTION $CONTAINER_VOLUMES --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE --cap-add=NET_BIND_SERVICE $PODMAN_OPTIONS $CONTAINER_PORTS $CONTAINER_SPECIAL_OPTIONS $CONTAINER_NOTES_UID_OPTION $CONTAINER_HEALTH_CHECK $CONTAINER_IMAGE
+
+  return 0
+}
+
+container_start ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+  if [ "$CONTAINER_STATUS" = "running" ]; then echo "Container [$CONTAINER_NAME] already started"; return 1; fi
+
+  if [ "$PARAM2" = "live" ]; then
+    CONTAINER_IT="-ia"
+  elif [ "$PARAM2" = "it" ]; then
+    CONTAINER_IT="-ia"
+  else
+    CONTAINER_IT=""
+  fi
+
+  if [ ! -z "$CONTAINER_IT" ]; then
+    echo "--- Starting Docker Container interactive [ Use Ctrl + p q to exit ] ---"
+    echo
+  fi
+
+  $CONTAINER_CMD start $CONTAINER_IT $CONTAINER_NAME
+
+  return 0
+}
+
+container_stop ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+  if [ "$CONTAINER_STATUS" = "exited" ]; then echo "Container [$CONTAINER_NAME] already stopped"; return 1; fi
+
+  if [ "$PARAM2" = "live" ]; then
+    $CONTAINER_CMD attach $CONTAINER_NAME --no-stdin &
+  fi
+
+  $CONTAINER_CMD stop --time=$DOMINO_SHUTDOWN_TIMEOUT $CONTAINER_NAME
+}
+
+container_logs ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+
+  echo "--- [BEGIN - $CONTAINER_NAME - BEGIN] ---"
+  echo
+  $CONTAINER_CMD logs $CONTAINER_NAME
+  echo
+  echo "--- [END - $CONTAINER_NAME - END] ---"
+
+  return 0
+}
+
+
+container_remove ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+
+  if [ "$CONTAINER_STATUS" = "running" ]; then 
+   
+    if [ "$1" = "force" ]; then
+      echo [FORCE-MODE] Stopping running container first ...
+      container_stop 
+    else
+      echo "Container [$CONTAINER_NAME] is started -- cannot remove a running container";
+      return 1
+    fi
+  fi
+
+  $CONTAINER_CMD rm $CONTAINER_NAME
+  return 0
+}
+
+container_removeimage ()
+{
+  if [ -z "$IMAGE_ID" ]; then echo "Image [$CONTAINER_IMAGE] does not exist"; return 1; fi
+
+  if [ ! -z "$CONTAINER_STATUS" ]; then
+
+    if [ "$1" = "force" ]; then
+       echo [FORCE-MODE] Removing container first ...
+       container_remove $1
+    else
+      echo "Container [$CONTAINER_NAME] still exists - cannot remove image"
+      return 1
+    fi
+  fi
+
+  $CONTAINER_CMD rmi "$IMAGE_NAMEVERSION"
+
+  return 0
+}
+
+container_attach ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+  if [ ! "$CONTAINER_STATUS" = "running" ]; then echo "Container [$CONTAINER_NAME] not started"; return 1; fi
+
+  echo "--- Attaching to Docker Container [ Use Ctrl + p q to exit ] ---"
+  echo
+  $CONTAINER_CMD attach $CONTAINER_NAME
+
+  return 0
+}
+
+container_attach ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+  if [ ! "$CONTAINER_STATUS" = "running" ]; then echo "Container [$CONTAINER_NAME] not started"; return 1; fi
+
+  echo "--- Attaching to Docker Container [ Use Ctrl + p q to exit ] ---"
+  echo
+  $CONTAINER_CMD attach $CONTAINER_NAME
+
+  return 0
+}
+
+remove_file ()
+{
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 2
+  fi
+
+  rm -rf "$1"
+  return 0
+}
+
+
+systemd_start ()
+{
+  remove_file "$CONTAINER_PID"
+  remove_file "$CONTAINER_CID"
+
+  container_run
+}
+
+systemd_stop ()
+{
+  $CONTAINER_CMD stop --time=$DOMINO_SHUTDOWN_TIMEOUT --ignore --cidfile $CONTAINER_CID
+  $CONTAINER_CMD rm --ignore -f --cidfile $CONTAINER_CID
+  remove_file "$CONTAINER_CID"
+}
+
+
+systemd_cleanup ()
+{
+  $SYSTEMCTL_CMD daemon-reload 
+}
+
+domino_start ()
+{
+  if [ -z "$DOMINO_SYSTEMD_NAME" ]; then
+
+    if [ -z "$CONTAINER_STATUS" ]; then
+      container_run
+    else
+      container_start
+    fi
+  else
+    echo Starting systemd "$DOMINO_SYSTEMD_NAME"
+    $SYSTEMCTL_CMD start "$DOMINO_SYSTEMD_NAME"
+  fi
+}
+
+domino_stop ()
+{
+  if [ -z "$DOMINO_SYSTEMD_NAME" ]; then
+    container_stop
+  else
+    echo Stopping systemd "$DOMINO_SYSTEMD_NAME"
+    $SYSTEMCTL_CMD stop "$DOMINO_SYSTEMD_NAME"
+  fi
+}
+
+container_update ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+
+  if [ "$CONTAINER_IMAGE_ID" = "$IMAGE_ID" ]; then
+    echo "Image did not change -- No Update needed"
+    return 0
+  fi
+
+  echo "Updating Container [$CONTAINER_NAME] ..."
+
+  if [ "$CONTAINER_STATUS" = "running" ]; then
+    echo "Stopping & removing Container [$CONTAINER_NAME] before update ..."
+    domino_stop
+  fi
+
+  inspect_container
+
+  echo "Creating & starting new Container [$CONTAINER_NAME] ..."
+  domino_start
+  inspect_container
+
+  echo
+  if [ "$CONTAINER_IMAGE_ID" = "$IMAGE_ID" ]; then
+    echo "Successfully updated Container [$CONTAINER_NAME]"
+    return 0
+  else
+    echo "Failed to updated Container [$CONTAINER_NAME]"
+    return 1
+  fi
+}
+
+container_bash ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+  if [ ! "$CONTAINER_STATUS" = "running" ]; then echo "Container [$CONTAINER_NAME] not started"; return 1; fi
+
+  echo "--- Starting bash in $CONTAINER_ENV_NAME [ Use exit to return ] ---"
+  echo
+
+  if [ "$1" = "root" ]; then
+    $CONTAINER_CMD exec -it --user 0 $CONTAINER_NAME /bin/bash
+  else
+    $CONTAINER_CMD exec -it $CONTAINER_NAME /bin/bash
+  fi
+
+  return 0
+}
+
+show_version ()
+{
+  echo "Nash!Com Container Script Version $CONTAINER_SCRIPT_VERSION"
+  echo "(Running on $CONTAINER_ENV_NAME Version $CONTAINER_RUNTIME_VERSION)" 
+  return 0
+}
+
+usage ()
+{
+  show_version
+  echo
+  echo "Usage: $SCRIPT_NAME { start | stop | restart | status | statusd | inspect | console | logs | attach | domino | bash | remove | removeimage | update | config | build | env | port | version | help}"
+
+  return 0
+}
+
+help ()
+{
+  usage
+  echo
+  echo "start [live]    start an existing container (the 'live' option shows start script output)"
+  echo "stop  [live]    stops container (the 'live' option shows start script output)"
+  echo "restart         restarts or starts the server"
+  echo "status          shows container status (running, exited, notexisting)"
+  echo "statusd         shows the systemd status"
+  echo "info            shows status and basic information about container and image"
+  echo "inspect         shows detailed information about container and image"
+  echo "console         open Domino console inside container" 
+  echo "logs            shows container logs (output from entry point script/start script)"
+  echo "attach          attach to entry point script"
+  echo "domino          pass a command to start script (e.g. domino nsd)"
+  echo "bash [root]     invokes a bash in the running container. optionally run as root instead of notes user"
+  echo "remove|rm       removes the container (if not running)"
+  echo "removeimage|rmi removes the current container (you have to remove the container first)"
+  echo "config|cfg      edit configuration"
+  echo "update          updates the container if referenced image has changed (stops Domino, stops the container, runs a new image)"
+  echo "build           builds a current image -- even image tags might not have changed to ensure OS patches are installed"
+  echo "port            show used tcp/ip ports for container"
+  echo "enable|on       enable systemd service"
+  echo "disable|off     disable systemd service"
+  echo "systemdclean    reload systemd"
+  echo "env             edit environment file"
+  echo "version         shows script version information"
+  echo "help            you already figured out what help does ;-)"
+
+  return 0
+}
+
+container_domino_cmd ()
+{
+  if [ -z "$CONTAINER_ID" ]; then
+    echo "Container not running!"
+    return 0
+  fi 
+
+  if [ -z "$1" ]; then
+    echo "No command specified!"
+    return 0
+  fi
+  
+  $CONTAINER_CMD exec -it $CONTAINER_NAME "$1" "$2" "$3" "$4" "$5" "$6"
+
+  return 0
+}
+
+copy_config_file()
+{
+  if [ ! -e "$DOMINO_CFG_DIR" ]; then
+    echo "No config directory configued"
+    return 0
+  fi
+
+  NEW_CONFIG_FILE=$DOMINO_CFG_DIR/config_$(basename $SCRIPT_NAME | awk -F "$NAME_PREFIX" '{print $2}')
+  if [ -e "$NEW_CONFIG_FILE" ]; then
+    if [ "$1" = "force" ]; then
+      echo "Overwriting Config File [$NEW_CONFIG_FILE]"
+      rm -f "$NEW_CONFIG_FILE"
+    else
+      echo "Config File [$NEW_CONFIG_FILE] already exists!"
+      return 0
+    fi
+  fi
+
+  CONFIG_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/config_$(basename $SCRIPT_NAME | awk -F "$NAME_PREFIX" '{print $2}')
+
+  if [ -e "$CONFIG_TEMPLATE_FILE" ]; then
+    echo "New config file [$CONFIG_TEMPLATE_FILE] -> [$NEW_CONFIG_FILE]"
+
+    mkdir -p "$DOMINO_CFG_DIR"
+    cp "$CONFIG_TEMPLATE_FILE" "$NEW_CONFIG_FILE" 
+
+  else
+    echo "Configuration template [$CONFIG_TEMPLATE_FILE] not found - Using default config -> [$NEW_CONFIG_FILE]"
+    mkdir -p "$DOMINO_CFG_DIR"
+    CONFIG_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/config_domino
+    cp "$CONFIG_TEMPLATE_FILE" "$NEW_CONFIG_FILE" 
+  fi
+}
+
+copy_env_file()
+{
+  if [ ! -e "$DOMINO_CFG_DIR" ]; then
+    echo "No config directory configued"
+    return 0
+  fi
+
+  NEW_ENV_FILE=$DOMINO_CFG_DIR/$CONTAINER_ENV_FILE
+  if [ -e "$NEW_ENV_FILE" ]; then
+    if [ "$1" = "force" ]; then
+      echo "Overwriting Domino Environment File [$NEW_ENV_FILE]"
+      rm -f "$NEW_ENV_FILE"
+    else
+      echo "Domino Environment File [$NEW_ENV_FILE] already exists!"
+      return 0
+    fi
+  fi
+
+  ENV_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/$CONTAINER_ENV_FILE
+
+  if [ -e "$ENV_TEMPLATE_FILE" ]; then
+    echo "New config file $ENV_TEMPLATE_FILE -> [$NEW_ENV_FILE]"
+
+    mkdir -p "$DOMINO_CFG_DIR"
+    cp "$ENV_TEMPLATE_FILE" "$NEW_ENV_FILE"
+
+  else
+    echo "Configuration template [$ENV_TEMPLATE_FILE] not found - Using default config -> [$NEW_ENV_FILE]"
+    mkdir -p "$DOMINO_CFG_DIR"
+    ENV_TEMPLATE_FILE=$FULL_SCRIPT_DIR_NAME/env_domino
+    cp "$ENV_TEMPLATE_FILE" "$NEW_ENV_FILE"
+  fi
+}
+
+check_container_environment "$PARAM1"
+check_root_permissions
+
+inspect_image
+inspect_container
+config_warnings
+
+case "$PARAM1" in
+	
+  status)
+    container_show_status
+    ;;
+
+  statusd)
+    echo
+    if [ -n "$CONTAINER_SYSTEMD_NAME" ]; then
+      $SYSTEMCTL_CMD status "$CONTAINER_SYSTEMD_NAME"
+      echo
+    fi
+    ;;
+
+  inspect|fullinfo)
+    container_show_inspect full 
+    ;;
+
+  info)
+    if [ -z "$PARAM2" ]; then
+      container_show_infos
+    else
+      container_show_inspect full 
+    fi
+    ;;
+
+  build)
+    container_build
+    ;;
+
+  start)
+    domino_start
+    ;;
+
+  restart)
+    domino_stop
+    domino_start
+    ;;
+
+  startd)
+
+    systemd_start
+    ;;
+
+
+  systemdclean)
+    systemd_cleanup "$PARAM2"
+    ;;
+
+  logs|log)
+    container_logs
+    ;;
+
+  attach)
+    container_attach
+    ;;
+
+  stopd)
+    systemd_stop
+    ;;
+
+  stop)
+    domino_stop
+    ;;
+
+  bash|shell)
+    container_bash "$PARAM2"
+    ;;
+
+  cmd)
+    container_domino_cmd "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
+    ;;
+
+  remove|rm)
+    container_remove "$PARAM2"
+    ;;
+
+  removeimage|rmi)
+    container_removeimage "$PARAM2"
+    ;;
+
+  update)
+    container_update
+    ;;
+
+  domino)
+    container_domino_cmd domino "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
+    ;;
+
+  console)
+    container_domino_cmd domino console "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
+    ;;
+
+  port)
+    if [ -z "$CONTAINER_STATUS" ]; then echo "Container [$CONTAINER_NAME] does not exist"; exit 0; fi
+   $CONTAINER_CMD port "$CONTAINER_NAME"
+   ;;
+
+  config|cfg)
+    $CONTAINER_SUDO $EDIT_COMMAND "$CONFIG_FILE"
+    ;;
+
+  configd|cfgd)
+    $CONTAINER_SUDO $EDIT_COMMAND "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
+    ;;
+
+  enable|on)
+    echo "Enabling Service"
+    $SYSTEMCTL_CMD enable "$DOMINO_SYSTEMD_NAME"
+    ;;
+
+  disable|off)
+    echo "Disabling Service"
+    $SYSTEMCTL_CMD disable "$DOMINO_SYSTEMD_NAME"
+    ;;
+
+  env)
+    if [ -z "$CONTAINER_FULL_ENV_FILE" ]; then
+      echo "No environment file configured!"
+    else
+      echo "Using environment file $CONTAINER_FULL_ENV_FILE"
+      $EDIT_COMMAND "$CONTAINER_FULL_ENV_FILE"
+    fi
+    ;;
+
+  dockerfile|containerfile)
+    if [ -z $CONTAINER_FILE ]; then
+      echo "No containerfile configured"
+    else
+      $EDIT_COMMAND $CONTAINER_FILE
+    fi
+    ;;
+
+  version)
+    show_version
+    ;;
+
+  help)
+    help
+    ;;
+
+  *)
+    if [ -z "$PARAM1" ]; then
+      usage 
+    else
+      echo "Invalid command:" [$PARAM1]
+      usage 
+    fi
+    ;;
+
+esac
+
+echo
+exit 0
+
