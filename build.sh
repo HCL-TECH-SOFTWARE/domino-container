@@ -402,7 +402,7 @@ if [ -n "$BASE_IMAGE" ]; then
     DOCKER_FILE=dockerfile_hcl
   fi
 
-  IMAGE_ID=`docker images $BASE_IMAGE -q`
+  IMAGE_ID=`$DOCKER_CMD images $BASE_IMAGE -q`
   if [ -z "$IMAGE_ID" ]; then
     echo "Base image [$BASE_IMAGE] does not exist"
     exit 1
