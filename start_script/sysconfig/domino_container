@@ -7,10 +7,6 @@ CONTAINER_NAME=domino
 # Domino Docker Community/GitHub image 
 CONTAINER_IMAGE=hclcom/domino:latest
 
-# Custom image
-CONTAINER_IMAGE=nashcom.jfrog.io/nashcom/hclcom/domino:V12_CD_DEC
-CONTAINER_IMAGE=registry.csi-domino.com/hclcom/domino:11.0.1FP2
-
 # Standard HCL image / does not support auto config nor start script operations
 #CONTAINER_IMAGE=domino-docker:latest
 
