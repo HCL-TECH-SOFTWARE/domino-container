@@ -15,19 +15,19 @@ The default docker-compose.yml file can be just started via the "up" command.
 To run the server in background, add the -d option.
 
 ```bash
-docker compose up -d
+docker-compose up -d
 ```
 
 Other examples can be started specifying the yml file explicitly.
 
 ```bash
-docker compose -f volt.yml up -d
+docker-compose -f volt.yml up -d
 ```
 
 To stop a service you specify the corresponding "down" command.
 
 ```bash
-docker compose -f volt.yml down
+docker-compose -f volt.yml down
 ```
 
 
