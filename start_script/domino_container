@@ -1089,16 +1089,7 @@ domino_start ()
     if [ -z "$CONTAINER_STATUS" ]; then
       container_run
     else
-
-      # remove container if image changed
-      if [ "$CONTAINER_IMAGE" != "$CURRENT_CONTAINER_IMAGE" ]; then
-        container_remove force
-        inspect_container
-        container_run
-      else
-        echo "start"
-        container_start
-      fi
+      container_start
     fi
 
   else

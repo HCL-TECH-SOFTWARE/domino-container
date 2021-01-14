@@ -371,7 +371,7 @@ docker_inspect_container ()
     DOCKER_CONTAINER_IPADDRESS="$($DOCKER_CMD inspect --format "{{ .NetworkSettings.Networks.$DOCKER_NETWORK_NAME.IPAddress }}" $DOCKER_CONTAINER 2>/dev/null)"
   fi
 
-  if ["$DOCKER_CONTAINER_IPADDRESS" = "<no value>" ]; then
+  if [ "$DOCKER_CONTAINER_IPADDRESS" = "<no value>" ]; then
     DOCKER_CONTAINER_IPADDRESS=
   fi
 
