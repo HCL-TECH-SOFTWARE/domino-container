@@ -234,7 +234,7 @@ check_container_environment()
 
       check_version "$CONTAINER_RUNTIME_VERSION" "$DOCKER_MINIMUM_VERSION" "$CONTAINER_CMD"
 
-      TAG_CONTAINER_ID=".ID"
+      TAG_CONTAINER_ID=".Id"
       # For Docker we are done here
       return 0
     fi
