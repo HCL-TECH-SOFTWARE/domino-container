@@ -565,6 +565,9 @@ inspect_container_native ()
 
 inspect_container ()
 {
+  CONTAINER_STATUS=
+  CONTAINER_VERSION=
+
   if [ ! -e /bin/jq ]; then
     inspect_container_native "$@"
     return 0
@@ -989,6 +992,25 @@ container_logs ()
   return 0
 }
 
+container_remove ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then log_space "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+
+  if [ "$CONTAINER_STATUS" = "running" ]; then
+
+    if [ "$1" = "force" ]; then
+       echo [FORCE-MODE] Stopping running container first ...
+      domino_stop
+    else
+      echo "Container [$CONTAINER_NAME] is started -- cannot remove a running container";
+      return 1
+    fi
+  fi
+
+  $CONTAINER_CMD rm $CONTAINER_NAME
+  return 0
+}
+
 
 container_cleanup ()
 {
@@ -1109,25 +1131,6 @@ domino_stop ()
   fi
 }
 
-container_remove ()
-{
-  if [ -z "$CONTAINER_STATUS" ]; then log_space "Container [$CONTAINER_NAME] does not exist"; return 1; fi
-
-  if [ "$CONTAINER_STATUS" = "running" ]; then
-
-    if [ "$1" = "force" ]; then
-       [FORCE-MODE] Stopping running container first ...
-      domino_stop
-    else
-      echo "Container [$CONTAINER_NAME] is started -- cannot remove a running container";
-      return 1
-    fi
-  fi
-
-  $CONTAINER_CMD rm $CONTAINER_NAME
-  return 0
-}
-
 container_update ()
 {
   if [ -z "$CONTAINER_STATUS" ]; then log_space "Container [$CONTAINER_NAME] does not exist"; return 1; fi
@@ -1140,11 +1143,16 @@ container_update ()
   log_space "Updating Container [$CONTAINER_NAME] ..."
 
   if [ "$CONTAINER_STATUS" = "running" ]; then
-    echo "Stopping & removing Container [$CONTAINER_NAME] before update ..."
+    echo "Stopping Container ..."
     domino_stop
+    inspect_container
   fi
 
-  inspect_container
+  if [ -n "$CONTAINER_STATUS" ]; then
+    echo "Removing Container ..."
+    container_remove
+    inspect_container
+  fi
 
   log_space "Creating & starting new Container [$CONTAINER_NAME] ..."
   domino_start
@@ -1395,7 +1403,7 @@ case "$PARAM1" in
     container_build
     ;;
 
-  start)
+  start|run)
     domino_start
     ;;
 

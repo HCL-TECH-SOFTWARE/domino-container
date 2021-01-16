@@ -208,6 +208,7 @@ if [ ! -e /usr/bin/domino_container ]; then
 fi
 
 cp -r $START_SCRIPT_DIR/build_image $DOMINO_START_SCRIPT_DIR
+find $DOMINO_START_SCRIPT_DIR -name "*.sh" -exec chmod 755 {}  \;
 
 if [ "$PARAM1" = "upd" ]; then
   install_file $START_SCRIPT_DIR/sysconfig/domino_container "$CONTAINER_INSTALL_CONFIG_FILEPATH" "$ROOT_USER" "$ROOT_GROUP" 644
