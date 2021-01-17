@@ -3,9 +3,9 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.4.0 10.01.2020                                                #
+# Version 3.5.0 15.01.2021                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -21,9 +21,9 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=3.4.0
+DOMINO_SCRIPT_VERSION=3.5.0
 
-# VERBOSE_INFO="yes"
+VERBOSE_INFO="yes"
 
 
 # check if inside docker 
@@ -1582,6 +1582,11 @@ usage ()
   echo "Diag Commands   :  {resources (res) | info | stacks | nsd | nsdnomem | memdump | hang | kill | cleanup}"
   echo "Log Commands    :  {archivelog | clearlog | lastlog | log | systemlog}"
   echo "Config Commands :  {inivar | ini | listini | config (cfg) | systemdcfg}"
+
+  if [ -e "$DOMINO_DATA_PATH/trace" ]; then
+    echo "ST Commands     :  {resetstlogs}"
+  fi
+
   usage_extension_commands
   echo
 
@@ -1640,6 +1645,14 @@ help ()
   echo "config(cfg)      edit start script config file (default | server)"
   echo "systemdcfg       edit systemd config file"
   echo
+
+  if [ -e "$DOMINO_DATA_PATH/trace" ]; then
+    echo
+    echo "Sametime Commands"
+    echo
+    echo "resetstlogs      reset Sametime log/diag files"
+    echo
+  fi
 
   echo
 
@@ -2345,6 +2358,34 @@ check_server_start_abort_error()
 
   return 0
 }
+
+reset_sametime_logs()
+{
+  local ST_LOG_DIR=$DOMINO_DATA_PATH/trace
+
+  if [ -e "$ST_LOG_DIR" ]; then
+
+    find $ST_LOG_DIR -name "*.diag" -exec $REMOVE_COMMAND_TEMP '{}' \;
+    find $ST_LOG_DIR -name "*.lck" -exec $REMOVE_COMMAND_TEMP '{}' \;
+    find $ST_LOG_DIR -name "*.txt" -exec $REMOVE_COMMAND_TEMP '{}' \;
+    find $ST_LOG_DIR -name "*.log" -exec $REMOVE_COMMAND_TEMP '{}' \;
+
+    echo > $DOMINO_DATA_PATH/sametime.log
+
+    echo
+    echo "Sametime Diagnostic logs reset"
+    echo
+
+  else
+
+    echo
+    echo "No Sametime log directory found"
+    echo
+  fi
+
+  return 0
+}
+
 
 DebugText "==== Start Script Debug Begin ===="
 
@@ -3152,6 +3193,11 @@ case "$PARAM1" in
     edit_debug_file "$PARAM2"
     echo
     exit 0
+    ;;
+
+  resetstlogs)
+
+    reset_sametime_logs
     ;;
 
   help)
