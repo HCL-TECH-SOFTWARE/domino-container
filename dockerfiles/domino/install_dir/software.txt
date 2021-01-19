@@ -9,6 +9,7 @@ domino|11.0.0|Domino_11.0_Linux_English.tar|-|c1e6daaa58793d254dbbfff2157b929d77
 domino|11.0.1|Domino_1101_Linux_English.tar|-|3b159e5a6d4084504e451b0ef64ff8794200e07cf18d9b84ed0a23a758f8ce34
 domino|11.0.1FP1|Domino_1101FP1_Linux.tar|-|22225e9018285ed1c8675a3d84d9e46d66fc8a300316a2d686acf34c3cee92ad
 domino|11.0.1FP2|Domino_1101FP2_Linux.tar|-|9f358300e4e03b36a6e1d40a6e13c745bea7c7b1c46952806738ef48680ba083
+domino|12.0.0BETA1|Domino_12.0_Linux_Beta1_English.tar|-|92cb4dfca1b87deee3576f3970598a3375c5707d315109642af3901f62ff5dd6
 domino-ce|10.0.1|IBMDominoCommunityServerforNonProduction10.0.1Linux.tar|CNXK1EN|9287a194e1068b86b688536f8de6f3e6ffa7962d3da806b24a2e9e500ea5aa49
 domino-ce|10.0.1FP2|FP2_IBMDominoCommunityServerforNon-Production10.0.1_FixPack2_Linux.tar,FP2_IBMDominoCommunityServerforNon-Production10.0.1_FeaturePack2_Linux.tar|-|382bff99e007b165e734a30dedbd97064de992ae68d5d506f18e7390c20cc4d8
 traveler|10.0.1.1|Traveler_10.0.1FP1_Linux_ML.tar.gz,TRAVELER_V10.0.1_FP1_FOR_LINUX_ML.tar.gz|CNZ9LML|0849f295816d40799ee31a9fc29fb4131db5ce4fa869078450e7a571661aae2a
@@ -17,6 +18,7 @@ traveler|11.0.0|Traveler_11.0_Linux_ML.tar.gz|-|381bfae133eb7288f37c531a636a8ec0
 traveler|11.0.1|Traveler_11.0.1_Linux_ML.tar.gz|-|b3ef80877ad4892e2c8d78b12f4086118baf7c4377af4c459f4455e4898d80ff
 traveler|11.0.1FP1|Traveler_11.0.1FP1_Linux_ML.tar.gz|-|72b77c1aca83bdb5f3d5fd2af6e8c7201108b9d67ea3290bdafb6c215e452966
 traveler|11.0.2|Traveler_11.0.2_Linux_ML.tar.gz|-|dd99edd8185b442c54e89f2e5e386031ac26aa80ca7b295ef22d75fee06b768e
+traveler|12.0.0BETA1|Traveler_12.0_Linux_Beta1_ML.tar.gz|-|de3fef38232d3041a071cf212a2d5b0e10acbd8f3ddc27f4ccf70fed0b42ec0f
 proton|1.0.1|DOMINO_APPDEV_PACK_1.0.1_MP_EN.tgz|CC0NGEN|fd04a8c61ee6b0887c5ccfb3be817f1fdd27f4da8c0392c086843ecd4d6c2e98
 iam|1.0.1|DOMINO_APPDEV_PACK_1.0.1_MP_EN.tgz|CC0NGEN|fd04a8c61ee6b0887c5ccfb3be817f1fdd27f4da8c0392c086843ecd4d6c2e98
 volt|1.0.0.5|hcl.domino.volt-1.0.0.5.zip|-|0ade3cdb0d5c5171faeb1d4a202584eb0f4245378e8145687cb51cc5839c9688

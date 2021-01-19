@@ -298,11 +298,15 @@ for a in $@; do
       PROD_NAME=$p
       ;;
 
-    9*|10*|11*)
+    9*|10*|11*|12*)
       PROD_VER=$p
       ;;
 
     fp*)
+      PROD_FP=$p
+      ;;
+
+   beta*)
       PROD_FP=$p
       ;;
 
