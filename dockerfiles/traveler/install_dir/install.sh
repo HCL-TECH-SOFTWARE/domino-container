@@ -15,7 +15,11 @@ export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 if [ -z "$LOTUS" ]; then
   if [ -x /opt/hcl/domino/bin/server ]; then
     export LOTUS=/opt/hcl/domino
-    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_hcl.properties
+    if [ -n $(find /opt/hcl/domino/notes/ -maxdepth 1 -name "12*") ]; then
+      TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
+    else
+      TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_hcl.properties
+    fi
   else
     export LOTUS=/opt/ibm/domino
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_ibm.properties
