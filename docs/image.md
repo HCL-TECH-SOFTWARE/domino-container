@@ -97,6 +97,7 @@ docker run -it -e "ServerName=Volt" \
     -e "AdminFirstName=Thomas" \
     -e "AdminLastName=Hampel" \
     -e "AdminPassword=passw0rd" \
+    -e "OrganizationPassword=passw0rd" \
     -e "ConfigFile=config.json" \
     -h volt.demo.com \
     -p 80:80 \
@@ -105,7 +106,7 @@ docker run -it -e "ServerName=Volt" \
     -v domino_volt:/local/notesdata \
     --stop-timeout=60 \
     --name volt \
-    hclcom/volt:1.0.0.5
+    hclcom/volt:1.0.2.9
 ```
 When starting up the container, a new Domino server is configured based on the parameters defined. Also a (locally trusted) SSL certificate is created automaticlly for the host name specified.
 
@@ -156,5 +157,5 @@ You can now start all over with [creating a new empty volume](#create-a-volume) 
 ## Remove the Docker image
 To remove the Docker image that was previously imported, first [destroy any existing volt instance](#destroy-the-server-instance) and then use this command to remove the image:
 ```bash
-docker image rm hclcom/volt:1.0.0.5
+docker image rm hclcom/volt:1.0.2.9
 ```
