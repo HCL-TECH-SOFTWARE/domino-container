@@ -39,6 +39,8 @@ export PATH=$PATH:$DOMINO_DATA_PATH
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
 CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
+DIR_PERM=770
+
 # Helper Functions
 
 DOM_V10_STRING_OK="Dominoserver Installation successful"
@@ -174,7 +176,10 @@ download_file_ifpresent ()
   fi
 
   pushd .
-  cd $TARGET_DIR
+  if [ -n "$TARGET_DIR" ]; then
+    mkdir -p "$TARGET_DIR"
+    cd $TARGET_DIR
+  fi
 
   if [ -e "$DOWNLOAD_FILE" ]; then
   	echo
@@ -231,7 +236,7 @@ download_and_check_hash ()
 
   pushd .
 
-  if [ ! -z "$TARGET_DIR" ]; then
+  if [ -n "$TARGET_DIR" ]; then
     mkdir -p "$TARGET_DIR"
     cd "$TARGET_DIR"
   fi
@@ -248,22 +253,27 @@ download_and_check_hash ()
 
   if [ -z "$TAR_OPTIONS" ]; then
 
-    # download without extracting for none tar files, without hash checking
+    # download without extracting for none tar files
     
     echo
-    $CURL_CMD "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" -o "$(basename $DOWNLOAD_FILE)" 2>/dev/null
-    echo
+    local DOWNLOADED_FILE=$(basename $DOWNLOAD_FILE)
+    $CURL_CMD "$DOWNLOAD_FILE" -o "$DOWNLOADED_FILE"
 
-    if [ "$?" = "0" ]; then
-      log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
-      popd
-      return 0
-
-    else
-      log_error "File [$DOWNLOAD_FILE] not downloaded correctly [1]"
+    if [ ! -e "$DOWNLOADED_FILE" ]; then
+      log_error "File [$DOWNLOAD_FILE] not downloaded [1]"
       popd
       exit 1
     fi
+
+    HASH=$(sha256sum -b $DOWNLOADED_FILE | cut -f1 -d" ")
+    FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
+
+    if [ "$FOUND" = "1" ]; then
+      log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
+    else
+      log_error "File [$DOWNLOAD_FILE] not downloaded correctly [1]"
+    fi
+
   else
     if [ -e $SOFTWARE_FILE ]; then
       echo
@@ -708,7 +718,7 @@ install_domino ()
     rm -rf domino_server
 
     # Copy license files
-    mkdir /licenses
+    mkdir -p /licenses
     cp $Notes_ExecDirectory/license/*.txt /licenses
 
   fi
@@ -791,6 +801,55 @@ install_domino ()
   return 0
 }
 
+install_osgi_file()
+{
+  local SOURCE=$1
+  local TARGET="$PLUGINS_FOLDER/$(basename $1)"
+
+  install_file "$SOURCE" "$TARGET" root root 755
+}
+
+install_verse()
+{
+  local ADDON_NAME=verse
+  local ADDON_VER=$1
+
+  if [ -z "$ADDON_VER" ]; then
+    return 0
+  fi
+
+  header "$ADDON_NAME Installation"
+
+  get_download_name $ADDON_NAME $ADDON_VER
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+
+  header "Installing $ADDON_NAME $ADDON_VER"
+
+  OSGI_FOLDER="$Notes_ExecDirectory/osgi"
+  PLUGINS_FOLDER=$OSGI_FOLDER"/eclipse/plugins"
+
+  mkdir -p $PLUGINS_FOLDER
+  pushd .
+  cd $ADDON_NAME
+  echo "Unzipping files .."
+  unzip -q  *.zip
+  unzip -q HCL_Verse.zip 
+
+  echo "Copying files .."
+
+  for JAR in eclipse/plugins/*.jar; do
+    install_osgi_file "$JAR"
+  done
+
+  install_file "iwaredir.ntf" "$DOMINO_DATA_PATH/iwaredir.ntf" $DOMINO_USER $DOMINO_GROUP 644
+
+  echo
+  echo Installed $ADDON_NAME
+  echo
+
+  popd
+
+}
 
 docker_set_timezone ()
 {
@@ -916,6 +975,7 @@ echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
+echo "VERSE_VERSION         = [$VERSE_VERSION]"
 
 # Install CentOS updates if requested
 if [ "$LinuxYumUpdate" = "yes" ]; then
@@ -1068,6 +1128,9 @@ case "$PROD_NAME" in
     exit 1
     ;;
 esac
+
+# Install Verse if requested
+install_verse "$VERSE_VERSION"
 
 # removing perl if temporary installed
 

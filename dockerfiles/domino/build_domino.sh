@@ -284,7 +284,9 @@ docker_build ()
     --build-arg DominoMoveInstallData=$DominoMoveInstallData \
     --build-arg GIT_INSTALL="$GIT_INSTALL" \
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
-    --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" .
+    --build-arg VERSE_VERSION="$VERSE_VERSION" \
+    --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" \
+    --build-arg SPECIAL_CURL_ARGUMENTS="$SPECIAL_CURL_ARGUMENTS" .
 
   popd
   echo

@@ -180,6 +180,7 @@ dump_config ()
   echo "DOWNLOAD_URLS_SHOW : [$DOWNLOAD_URLS_SHOW]"
   echo "TAG_LATEST         : [$TAG_LATEST]"
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
+  echo "VERSE_VERSION      : [$VERSE_VERSION]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
   echo 
   return 0
@@ -296,6 +297,10 @@ for a in $@; do
   case "$p" in
     domino|traveler|volt)
       PROD_NAME=$p
+      ;;
+
+    verse=*)
+      VERSE_VERSION=`echo "$a" | cut -f2 -d=`
       ;;
 
     9*|10*|11*|12*)
@@ -419,8 +424,6 @@ if [ -n "$BASE_IMAGE" ]; then
   # don't check software
   CHECK_SOFTWARE=no
   CHECK_HASH=no
-  DOWNLOAD_FROM=DUMMY
-
 fi
 
 TARGET_IMAGE=$PROD_NAME
@@ -492,13 +495,13 @@ fi
 echo
 
 if [ -z "$TARGET_IMAGE" ]; then
-  echo "No Taget Image specified! - Terminating"
+  echo "No Target Image specified! - Terminating"
   echo
   exit 1
 fi
 
 if [ -z "$PROD_VER" ]; then
-  echo "No Taget version specified! - Terminating"
+  echo "No Target version specified! - Terminating"
   echo
   exit 1
 fi
@@ -522,6 +525,7 @@ export PROD_VER
 export PROD_FP
 export PROD_HF
 export PROD_EXT
+export VERSE_VERSION
 export CHECK_SOFTWARE
 export CHECK_HASH
 export DOWNLOAD_URLS_SHOW

@@ -24,4 +24,5 @@ iam|1.0.1|DOMINO_APPDEV_PACK_1.0.1_MP_EN.tgz|CC0NGEN|fd04a8c61ee6b0887c5ccfb3be8
 volt|1.0.0.5|hcl.domino.volt-1.0.0.5.zip|-|0ade3cdb0d5c5171faeb1d4a202584eb0f4245378e8145687cb51cc5839c9688
 volt|1.0.1.9|hcl.domino.volt-1.0.1.9.zip|-|e8978481109a7bc3a92848fb2043ec409843cd3c9c0a6146a98622e3f2c30755
 volt|1.0.2.9|hcl.domino.volt-1.0.2.9.zip|-|e65b922f93e7143472a02b1a8f2925424c3b08e416afa2504ee97b5d460b97a9
+verse|2.0.1|HCL_Verse_2.0.1.zip|-|ce358d16d338e9a81b3402bb081ea3a2b39e6915e0f4670107df7144f1004ea8
 

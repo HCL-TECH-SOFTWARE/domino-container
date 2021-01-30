@@ -135,6 +135,25 @@ DebugText()
   return 0
 }
 
+
+create_link()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi 
+
+  if [ -z "$2" ]; then
+    return 0
+  fi
+
+  if [ -e "$2" ]; then
+    echo "link already exists [$2]"
+    return 0
+  fi
+
+  ln -s "$SOURCE" "$TARGET"
+}
+
 check_file_busy()
 {
   if [ ! -e "$1" ]; then
@@ -310,7 +329,7 @@ if [ -e "$START_SCRIPT_CONFIG_LATEST" ]; then
   rm -f "$START_SCRIPT_CONFIG_LATEST"
 fi
 
-ln -s $START_SCRIPT_CONFIG_VER $START_SCRIPT_CONFIG_LATEST
+create_link $START_SCRIPT_CONFIG_VER $START_SCRIPT_CONFIG_LATEST
 
 # create /etc/sysconfig if not present
 if [ ! -e "/etc/sysconfig" ]; then
@@ -333,7 +352,7 @@ OLD_RC_DOMINO_SCRIPT_LOCATION=/opt/ibm/domino/rc_domino_script
 
 if [ -e "$OLD_RC_DOMINO_SCRIPT_LOCATION" ]; then
   rm -f "$OLD_RC_DOMINO_SCRIPT_LOCATION"
-  ln -s $DOMINO_START_SCRIPT_DIR/rc_domino_script $OLD_RC_DOMINO_SCRIPT_LOCATION
+  create_link $DOMINO_START_SCRIPT_DIR/rc_domino_script $OLD_RC_DOMINO_SCRIPT_LOCATION
   echo link for legacy start script location created [$OLD_RC_DOMINO_SCRIPT_LOCATION]
 fi
 
@@ -350,11 +369,11 @@ fi
 # set link to include script as 'domino' into path
 if [ "$DOCKER_ENV" = "yes" ]; then
   # for Docker we just link the main script
-  ln -s $DOMINO_START_SCRIPT_DIR/rc_domino_script /usr/bin/domino
+  create_link $DOMINO_START_SCRIPT_DIR/rc_domino_script /usr/bin/domino
 
 else
   if [ ! -e /usr/bin/domino ]; then
-    ln -s $INIT_PATH/$DOMINO_RC_NAME /usr/bin/domino
+    create_link $INIT_PATH/$DOMINO_RC_NAME /usr/bin/domino
   fi
 fi
 
