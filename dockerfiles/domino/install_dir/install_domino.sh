@@ -835,7 +835,7 @@ install_verse()
   header "Installing $ADDON_NAME $ADDON_VER"
 
   OSGI_FOLDER="$Notes_ExecDirectory/osgi"
-  PLUGINS_FOLDER=$OSGI_FOLDER"/eclipse/plugins"
+  PLUGINS_FOLDER=$OSGI_FOLDER"/shared/eclipse/plugins"
 
   mkdir -p $PLUGINS_FOLDER
   pushd .
@@ -1254,13 +1254,14 @@ chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
 # Now export the lib path just in case for Domino to run
 export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
 
-if [ "$FIRST_TIME_SETUP" = "1" ]; then
+# disabled because su doesn't work any more with CentOS 8 & Co
+#if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Prepare data directory (compact NSFs and NTFs)
 
-  header "Prepare $DOMINO_DATA_PATH via compact"
+  # header "Prepare $DOMINO_DATA_PATH via compact"
 
-  su - $DOMINO_USER -c $INSTALL_DIR/domino_install_data_prep.sh
-fi
+  # su - $DOMINO_USER -c $INSTALL_DIR/domino_install_data_prep.sh
+#fi
 
 # If configured, move data directory to a compressed tar file
 
