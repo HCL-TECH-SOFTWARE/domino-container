@@ -171,7 +171,7 @@ download_file_ifpresent ()
 
   CURL_RET=$($CURL_CMD "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" --silent --head 2>&1 | grep 'HTTP/1.1 200 OK')
   if [ -z "$CURL_RET" ]; then
-    echo "Download file does not exist [$DOWNLOAD_FILE]"
+    echo "Warning: Download file does not exist [$DOWNLOAD_FILE]"
     return 0
   fi
 
@@ -230,7 +230,7 @@ download_and_check_hash ()
   done
 
   if [ ! "$FOUND" = "TRUE" ]; then
-    log_error "File [$DOWNLOAD_SERVER/$DOWNLOAD_STR] does not exist"
+    log_error "File [$DOWNLOAD_FILE] does not exist"
     exit 1
   fi
 
@@ -259,7 +259,7 @@ download_and_check_hash ()
     local DOWNLOADED_FILE=$(basename $DOWNLOAD_FILE)
     $CURL_CMD "$DOWNLOAD_FILE" -o "$DOWNLOADED_FILE"
 
-    if [ ! -e "$DOWNLOADED_FILE" ]; then
+    if [ ! -e "$DOWNLOAD_FILE" ]; then
       log_error "File [$DOWNLOAD_FILE] not downloaded [1]"
       popd
       exit 1
