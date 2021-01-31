@@ -31,7 +31,11 @@ esac
 
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DYLD_LIBRARY_PATH=$Notes_ExecDirectory:$DYLD_LIBRARY_PATH
-export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
+
+# we can't set the lib path here. curl uses openssl and this conflicts once the server is installed
+# setting the pass after we are done before the compact etc just in case
+#export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
+
 export NUI_NOTESDIR=$LOTUS
 export DOMINO_DATA_PATH=/local/notesdata
 export PATH=$PATH:$DOMINO_DATA_PATH
@@ -169,8 +173,10 @@ download_file_ifpresent ()
     exit 1
   fi
 
-  CURL_RET=$($CURL_CMD "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" --silent --head 2>&1 | grep 'HTTP/1.1 200 OK')
-  if [ -z "$CURL_RET" ]; then
+  CURL_RET=$($CURL_CMD "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" --silent --head 2>&1)
+  STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+  if [ -z "$STATUS_RET" ]; then
+
     echo "Warning: Download file does not exist [$DOWNLOAD_FILE]"
     return 0
   fi
@@ -199,6 +205,7 @@ download_file_ifpresent ()
 
   else
     log_error "File [$DOWNLOAD_FILE] not downloaded correctly"
+    echo "CURL returned: [$CURL_RET]"
     popd
     exit 1
   fi
@@ -220,9 +227,10 @@ download_and_check_hash ()
   for CHECK_FILE in $(echo "$DOWNLOAD_STR" | tr "," "\n" ) ; do
 
     DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
-    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1 | grep 'HTTP/1.1 200 OK')
+    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
+    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
 
-    if [ ! -z "$CURL_RET" ]; then
+    if [ -n "$STATUS_RET" ]; then
       CURRENT_FILE="$CHECK_FILE"
       FOUND=TRUE
       break
@@ -231,6 +239,7 @@ download_and_check_hash ()
 
   if [ ! "$FOUND" = "TRUE" ]; then
     log_error "File [$DOWNLOAD_FILE] does not exist"
+    echo "CURL returned: [$CURL_RET]"
     exit 1
   fi
 
@@ -259,7 +268,7 @@ download_and_check_hash ()
     local DOWNLOADED_FILE=$(basename $DOWNLOAD_FILE)
     $CURL_CMD "$DOWNLOAD_FILE" -o "$DOWNLOADED_FILE"
 
-    if [ ! -e "$DOWNLOAD_FILE" ]; then
+    if [ ! -e "$DOWNLOADED_FILE" ]; then
       log_error "File [$DOWNLOAD_FILE] not downloaded [1]"
       popd
       exit 1
@@ -841,6 +850,10 @@ install_verse()
     install_osgi_file "$JAR"
   done
 
+  for JAR in *.jar; do
+    install_osgi_file "$JAR"
+  done
+
   install_file "iwaredir.ntf" "$DOMINO_DATA_PATH/iwaredir.ntf" $DOMINO_USER $DOMINO_GROUP 644
 
   echo
@@ -1236,6 +1249,10 @@ remove_file $DOMINO_DATA_PATH/tika-server.jar
 
 # Ensure permissons are set correctly for data directory
 chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
+
+
+# Now export the lib path just in case for Domino to run
+export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Prepare data directory (compact NSFs and NTFs)
