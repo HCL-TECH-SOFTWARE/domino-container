@@ -23,4 +23,7 @@ LinuxYumUpdate=yes
 # Special wget arguments
 #SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
 
+# Special CURL arguments
+#SPECIAL_CURL_ARGS="--insecure"
+
 DOCKER_NETWORK_NAME=host

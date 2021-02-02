@@ -223,7 +223,7 @@ docker_build ()
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" \
-    --build-arg SPECIAL_CURL_ARGUMENTS="$SPECIAL_CURL_ARGUMENTS" .
+    --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 
   popd
   echo

@@ -124,7 +124,6 @@ check_docker_environment()
   return 0
 }
 
-echo "[Running in $DOCKER_CMD configuration]"
 
 usage ()
 {
@@ -399,6 +398,8 @@ for a in $@; do
 done
 
 check_docker_environment
+
+echo "[Running in $DOCKER_CMD configuration]"
 
 # in case we are starting with a specific HCL Domino image, set the DOCKER_FILE accordingly if not explicitly specified
 # also bypass software download check
