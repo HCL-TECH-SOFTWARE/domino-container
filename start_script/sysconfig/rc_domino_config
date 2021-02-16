@@ -172,11 +172,11 @@ DOMINO_DOMLOG_DB_BACKUP=$DOMINO_DATA_PATH/last_domlog.nsf
 # -W nn  Only compact databases which haven't been compacted successfully in last nn days. Ordered by last compact time.
 
 #DOMINO_COMPACT_TASK="compact"
-#DOMINO_COMPACT_OPTIONS="-#4 -C systemdbs.ind"
-#DOMINO_START_COMPACT_OPTIONS="-#4 -W7 -C systemdbs.ind"
+#DOMINO_COMPACT_OPTIONS="-# 4 -C systemdbs.ind"
+#DOMINO_START_COMPACT_OPTIONS="-# 4 -W 07 -C systemdbs.ind"
 
 #DOMINO_LOG_COMPACT_OPTIONS="-C log.nsf"
-#DOMINO_LOG_START_COMPACT_OPTIONS="-C -W7 log.nsf"
+#DOMINO_LOG_START_COMPACT_OPTIONS="-C -W 07 log.nsf"
 
 # -- Fixup Options --
 #DOMINO_START_FIXUP_OPTIONS="-f -j systemdbs.ind" 
