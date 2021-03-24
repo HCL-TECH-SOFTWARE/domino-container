@@ -549,8 +549,8 @@ remove_tempfiles_default ()
 
   if [ ! -z "$DOMINO_VIEW_REBUILD_DIR" ]; then
     if [ -w "$DOMINO_VIEW_REBUILD_DIR" ]; then
-      echo "Removing tempfiles:" [$DOMINO_VIEW_REBUILD_DIR/*.DTF]
-      find $DOMINO_DATA -name "*.DTF" -exec $REMOVE_COMMAND_TEMP '{}' \;
+      echo "Removing view rebuild tempfiles:" [$DOMINO_VIEW_REBUILD_DIR/*.DTF]
+      find "$DOMINO_VIEW_REBUILD_DIR" -name "*.DTF" -exec $REMOVE_COMMAND_TEMP '{}' \;
    fi
   fi
 
