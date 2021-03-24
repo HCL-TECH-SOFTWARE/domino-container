@@ -1,11 +1,10 @@
 #!/bin/bash
-
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-INSTALL_DIR=`dirname $0`
+INSTALL_DIR=$(dirname $0)
 
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
@@ -14,7 +13,7 @@ export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 
 # in docker environment the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
-  export LOGNAME=`whoami`
+  export LOGNAME=$(whoami)
 fi
 
 
@@ -32,13 +31,19 @@ esac
 
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DYLD_LIBRARY_PATH=$Notes_ExecDirectory:$DYLD_LIBRARY_PATH
-export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
+
+# we can't set the lib path here. curl uses openssl and this conflicts once the server is installed
+# setting the pass after we are done before the compact etc just in case
+#export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
+
 export NUI_NOTESDIR=$LOTUS
 export DOMINO_DATA_PATH=/local/notesdata
 export PATH=$PATH:$DOMINO_DATA_PATH
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
+CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
+
+DIR_PERM=770
 
 # Helper Functions
 
@@ -96,6 +101,30 @@ header ()
   echo
 }
 
+install_package()
+{
+ if [ -x /usr/bin/zypper ]; then
+
+   zypper install -y "$@"
+
+ elif [ -x /usr/bin/yum ]; then
+
+   yum install -y "$@"
+
+ fi
+}
+
+remove_package()
+{
+ if [ -x /usr/bin/zypper ]; then
+   zypper rm -y "$@"
+
+ elif [ -x /usr/bin/yum ]; then
+   yum remove -y "$@"
+
+ fi
+}
+
 check_file_str ()
 {
   CURRENT_FILE="$1"
@@ -103,7 +132,7 @@ check_file_str ()
 
 
   if [ -e "$CURRENT_FILE" ]; then
-    CURRENT_RESULT=`grep "$CURRENT_STRING" "$CURRENT_FILE" ` 
+    CURRENT_RESULT=$(grep "$CURRENT_STRING" "$CURRENT_FILE")
 
     if [ -z "$CURRENT_RESULT" ]; then
       return 0
@@ -119,7 +148,7 @@ get_download_name ()
 {
   DOWNLOAD_NAME=""
   if [ -e "$SOFTWARE_FILE" ]; then
-    DOWNLOAD_NAME=`grep "$1|$2|" "$SOFTWARE_FILE" | cut -d"|" -f3`
+    DOWNLOAD_NAME=$(grep "$1|$2|" "$SOFTWARE_FILE" | cut -d"|" -f3)
   else 
     log_error "Download file [$SOFTWARE_FILE] not found!"
     exit 1
@@ -144,14 +173,19 @@ download_file_ifpresent ()
     exit 1
   fi
 
-  WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-  if [ -z "$WGET_RET_OK" ]; then
-    echo "Download file does not exist [$DOWNLOAD_FILE]"
+  CURL_RET=$($CURL_CMD "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" --silent --head 2>&1)
+  STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+  if [ -z "$STATUS_RET" ]; then
+
+    echo "Warning: Download file does not exist [$DOWNLOAD_FILE]"
     return 0
   fi
 
   pushd .
-  cd $TARGET_DIR
+  if [ -n "$TARGET_DIR" ]; then
+    mkdir -p "$TARGET_DIR"
+    cd $TARGET_DIR
+  fi
 
   if [ -e "$DOWNLOAD_FILE" ]; then
   	echo
@@ -159,7 +193,9 @@ download_file_ifpresent ()
     rm -f "$DOWNLOAD_FILE"
   fi
 
-  $WGET_COMMAND "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" 2>/dev/null
+  echo
+  $CURL_CMD "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" -o "$(basename $DOWNLOAD_FILE)" 2>/dev/null
+  echo
 
   if [ "$?" = "0" ]; then
     log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
@@ -169,6 +205,7 @@ download_file_ifpresent ()
 
   else
     log_error "File [$DOWNLOAD_FILE] not downloaded correctly"
+    echo "CURL returned: [$CURL_RET]"
     popd
     exit 1
   fi
@@ -187,12 +224,13 @@ download_and_check_hash ()
 
   # check if file exists before downloading
 
-  for CHECK_FILE in `echo "$DOWNLOAD_STR" | tr "," "\n"` ; do
+  for CHECK_FILE in $(echo "$DOWNLOAD_STR" | tr "," "\n" ) ; do
 
     DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
-    WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
+    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
+    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
 
-    if [ ! -z "$WGET_RET_OK" ]; then
+    if [ -n "$STATUS_RET" ]; then
       CURRENT_FILE="$CHECK_FILE"
       FOUND=TRUE
       break
@@ -200,13 +238,14 @@ download_and_check_hash ()
   done
 
   if [ ! "$FOUND" = "TRUE" ]; then
-    log_error "File [$DOWNLOAD_SERVER/$DOWNLOAD_STR] does not exist"
+    log_error "File [$DOWNLOAD_FILE] does not exist"
+    echo "CURL returned: [$CURL_RET]"
     exit 1
   fi
 
   pushd .
 
-  if [ ! -z "$TARGET_DIR" ]; then
+  if [ -n "$TARGET_DIR" ]; then
     mkdir -p "$TARGET_DIR"
     cd "$TARGET_DIR"
   fi
@@ -223,23 +262,33 @@ download_and_check_hash ()
 
   if [ -z "$TAR_OPTIONS" ]; then
 
-    # download without extracting for none tar files, without hash checking
-    $WGET_COMMAND "$DOWNLOAD_FILE" 2>/dev/null
+    # download without extracting for none tar files
+    
+    echo
+    local DOWNLOADED_FILE=$(basename $DOWNLOAD_FILE)
+    $CURL_CMD "$DOWNLOAD_FILE" -o "$DOWNLOADED_FILE"
 
-    if [ "$?" = "0" ]; then
-      log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
-      popd
-      return 0
-
-    else
-      log_error "File [$DOWNLOAD_FILE] not downloaded correctly [1]"
+    if [ ! -e "$DOWNLOADED_FILE" ]; then
+      log_error "File [$DOWNLOAD_FILE] not downloaded [1]"
       popd
       exit 1
     fi
+
+    HASH=$(sha256sum -b $DOWNLOADED_FILE | cut -f1 -d" ")
+    FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
+
+    if [ "$FOUND" = "1" ]; then
+      log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
+    else
+      log_error "File [$DOWNLOAD_FILE] not downloaded correctly [1]"
+    fi
+
   else
     if [ -e $SOFTWARE_FILE ]; then
-      HASH=`$WGET_COMMAND -qO- $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1`
-      FOUND=`grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l`
+      echo
+      HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+      echo
+      FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
 
       if [ "$FOUND" = "1" ]; then
         log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
@@ -252,7 +301,9 @@ download_and_check_hash ()
         exit 1
       fi
     else
-      $WGET_COMMAND -qO- $DOWNLOAD_FILE | tar $TAR_OPTIONS 2>/dev/null
+      echo
+      $CURL_CMD $DOWNLOAD_FILE | tar $TAR_OPTIONS 2>/dev/null
+      echo
 
       if [ "$?" = "0" ]; then
         log_ok "Successfully downloaded & extracted: [$DOWNLOAD_FILE] "
@@ -277,8 +328,8 @@ check_file_busy()
     return 0
   fi
 
-  local TARGET_REAL_BIN=`readlink -f $1`
-  local FOUND_TARGETS=`lsof "$TARGET_REAL_BIN" 2>/dev/null | grep "$TARGET_REAL_BIN"`
+  local TARGET_REAL_BIN=$(readlink -f $1)
+  local FOUND_TARGETS=$(lsof "$TARGET_REAL_BIN" 2>/dev/null | grep "$TARGET_REAL_BIN")
 
   if [ -n "$FOUND_TARGETS" ]; then
     return 1
@@ -310,8 +361,8 @@ nsh_cmp()
     return $?
   fi
 
-  HASH1=`sha256sum "$1" | cut -d" " -f1`
-  HASH2=`sha256sum "$2" | cut -d" " -f1`
+  HASH1=$(sha256sum "$1" | cut -d" " -f1)
+  HASH2=$(sha256sum "$2" | cut -d" " -f1)
 
   if [ "$HASH1" = "$HASH2" ]; then
     return 0
@@ -481,7 +532,7 @@ get_domino_version ()
 
   if [ -e $DOMINO_INSTALL_DAT ]; then
 
-    find_str=`tail "$DOMINO_INSTALL_DAT" | grep "rev = " | awk -F " = " '{print $2}' | tr -d '"'`
+    find_str=$(tail "$DOMINO_INSTALL_DAT" | grep "rev = " | awk -F " = " '{print $2}' | tr -d '"')
 
     if [ ! -z "$find_str" ]; then
       DOMINO_VERSION=$find_str
@@ -523,8 +574,8 @@ check_installed_version ()
     return 0
   fi
 
- CHECK_VERSION=`cat $VersionFile`
- INSTALL_VERSION=`echo $2 | tr -d '.'`
+ CHECK_VERSION=$(cat $VersionFile)
+ INSTALL_VERSION=$(echo $2 | tr -d '.')
  
  if [ "$CHECK_VERSION" = "$INSTALL_VERSION" ]; then
    echo "Domino $INSTALL_VERSION already installed" 
@@ -649,7 +700,7 @@ install_domino ()
 
       ./install -f "$INSTALL_DIR/$DominoResponseFile" -i silent
 
-      INSTALL_LOG=`find $LOTUS -name "HCL_Domino_Install_*.log"`
+      INSTALL_LOG=$(find $LOTUS -name "HCL_Domino_Install_*.log")
 
       mv "$INSTALL_LOG" "$INST_DOM_LOG"
       check_file_str "$INST_DOM_LOG" "$DOM_V11_STRING_OK"
@@ -674,6 +725,11 @@ install_domino ()
 
     popd
     rm -rf domino_server
+
+    # Copy license files
+    mkdir -p /licenses
+    cp $Notes_ExecDirectory/license/*.txt /licenses
+
   fi
 
   if [ ! -z "$INST_FP" ]; then
@@ -754,6 +810,59 @@ install_domino ()
   return 0
 }
 
+install_osgi_file()
+{
+  local SOURCE=$1
+  local TARGET="$PLUGINS_FOLDER/$(basename $1)"
+
+  install_file "$SOURCE" "$TARGET" root root 755
+}
+
+install_verse()
+{
+  local ADDON_NAME=verse
+  local ADDON_VER=$1
+
+  if [ -z "$ADDON_VER" ]; then
+    return 0
+  fi
+
+  header "$ADDON_NAME Installation"
+
+  get_download_name $ADDON_NAME $ADDON_VER
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+
+  header "Installing $ADDON_NAME $ADDON_VER"
+
+  OSGI_FOLDER="$Notes_ExecDirectory/osgi"
+  PLUGINS_FOLDER=$OSGI_FOLDER"/shared/eclipse/plugins"
+
+  mkdir -p $PLUGINS_FOLDER
+  pushd .
+  cd $ADDON_NAME
+  echo "Unzipping files .."
+  unzip -q  *.zip
+  unzip -q HCL_Verse.zip 
+
+  echo "Copying files .."
+
+  for JAR in eclipse/plugins/*.jar; do
+    install_osgi_file "$JAR"
+  done
+
+  for JAR in *.jar; do
+    install_osgi_file "$JAR"
+  done
+
+  install_file "iwaredir.ntf" "$DOMINO_DATA_PATH/iwaredir.ntf" $DOMINO_USER $DOMINO_GROUP 644
+
+  echo
+  echo Installed $ADDON_NAME
+  echo
+
+  popd
+
+}
 
 docker_set_timezone ()
 {
@@ -786,17 +895,16 @@ docker_set_timezone ()
   return 0
 }
 
-yum_glibc_lang_update()
+yum_glibc_lang_update7()
 {
- # on CentOS/RHEL 7 the locale is not containing all langauges
- # removing override_install_langs from /etc/yum.conf and reinstalling glibc-common
- # reinstall does only work if package is up to date
-
+  # on CentOS/RHEL 7 the locale is not containing all langauges
+  # removing override_install_langs from /etc/yum.conf and reinstalling glibc-common
+  # reinstall does only work if package is up to date
 
   local STR="override_install_langs="
   local FILE="/etc/yum.conf"
 
-  FOUND=`grep "$STR" "$FILE"`
+  FOUND=$(grep "$STR" "$FILE")
 
   if [ -z "$FOUND" ]; then
     return 0
@@ -815,6 +923,8 @@ yum_glibc_lang_update()
     yum reinstall -y glibc-common
   else  
     # update first before reinstall
+
+    # RedHat update
     yum update -y glibc-common
     yum reinstall -y glibc-common
   fi
@@ -822,7 +932,48 @@ yum_glibc_lang_update()
   return 0
 }
 
+
+yum_glibc_lang_update_allpacks()
+{
+  # install allpack to correct locale settings
+
+  local ALL_LANGPACKS=$(rpm -q glibc-all-langpacks | grep "x86_64")
+
+  echo
+
+  if [ -z "$ALL_LANGPACKS" ]; then
+    yum install -y glibc-all-langpacks
+  else
+    echo "Already installed: $ALL_LANGPACKS"
+  fi
+
+  echo
+  return 0
+}
+
+yum_glibc_lang_update()
+{
+  # Not needed on SuSE platform with zypper
+  if [ -x /usr/bin/zypper ]; then
+    return 0
+  fi
+
+  case "$LINUX_VERSION" in
+    7*)
+      yum_glibc_lang_update7
+      ;;
+    *)
+      yum_glibc_lang_update_allpacks
+      ;;
+  esac
+}
+
+
 # --- Main Install Logic ---
+
+
+export DOMINO_USER=notes
+export DOMINO_GROUP=notes
 
 header "Environment Setup"
 
@@ -837,11 +988,33 @@ echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
+echo "VERSE_VERSION         = [$VERSE_VERSION]"
 
 # Install CentOS updates if requested
 if [ "$LinuxYumUpdate" = "yes" ]; then
-  header "Updating Linux via yum"
-  yum update -y
+
+  if [ -x /usr/bin/zypper ]; then
+
+    header "Updating Linux via zypper"
+    # SuSE update
+    zypper refersh
+    zypper update
+
+  elif [ -x /usr/bin/yum ]; then
+
+    header "Updating Linux via yum"
+    # RedHat update
+    yum update -y glibc-common
+
+  fi
+fi
+
+LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
+LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+
+# Show current OS version
+if [ -n "$LINUX_PRETTY_NAME" ]; then
+  header "$LINUX_PRETTY_NAME"
 fi
 
 yum_glibc_lang_update
@@ -858,16 +1031,16 @@ fi
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
-  # Add notes:notes user
+  # Add notes user
   if [ -z "$DominoUserID" ]; then
-    useradd notes -U -m
+    useradd $DOMINO_USER -U -m
   else
-    useradd notes -U -m -u $DominoUserID 
+    useradd $DOMINO_USER -U -m -u $DominoUserID 
   fi
 
   # Set User Local if configured
   if [ ! -z "$DOMINO_LANG" ]; then
-    echo "export LANG=$DOMINO_LANG" >> /home/notes/.bash_profile
+    echo "export LANG=$DOMINO_LANG" >> /home/$DOMINO_USER/.bash_profile
   fi
 
   # Set security limits for pam modules (su needs it)
@@ -877,6 +1050,11 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   echo '* hard nofile 65535' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
  
+else
+
+  # Check for existing user's group and overwrite (for base images with different group - like root)
+  export DOMINO_GROUP=`id -gn "$DOMINO_USER"`
+
 fi
 
 # Allow world full access to the main directories to ensure all mounts work.
@@ -885,16 +1063,23 @@ fi
 
 # if inheriting an existing installation, it's important to ensure /local has the right permissions
 
-chown -R notes:notes /local
+if [ -e "/local" ]; then
+  chown -R $DOMINO_USER:$DOMINO_GROUP /local
+fi
+
+if [ -e "$DOMINO_DATA_PATH" ]; then
+  chmod $DIR_PERM $DOMINO_DATA_PATH
+fi
 
 create_directory $DOMDOCK_DIR root root 777
 create_directory $DOMDOCK_SCRIPT_DIR root root 755
-create_directory /local root root 777 
-create_directory $DOMINO_DATA_PATH root root 777
-create_directory /local/translog root root 777
-create_directory /local/daos root root 777
-create_directory /local/nif root root 777
-create_directory /local/ft root root 777
+
+create_directory /local $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
+create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
 docker_set_timezone
 
@@ -916,19 +1101,19 @@ fi
   if [ -z "$NO_PERL_INSTALL" ]; then
   if [ ! -e /usr/bin/perl ]; then
     header "Installing perl"
-    yum -y install perl
+    install_package perl
     # disable uninstall because git requires it
     # UNINSTALL_PERL_AFTER_INSTALL=yes
   fi
 fi
 
-# Yes we want git along like we want wget and curl ;-)
+# Yes we want git along like we want curl ;-)
 # But than we need to keep Perl
 
 if [ -n "$GIT_INSTALL" ]; then
   if [ ! -e /usr/bin/git ]; then
     header "Installing git"
-    yum -y install git
+    install_package install git
   fi
 fi
 
@@ -936,7 +1121,7 @@ fi
 if [ -n "$OPENSSL_INSTALL" ]; then
   if [ ! -e /usr/bin/openssl ]; then
     header "Installing openssl"
-    yum -y install openssl 
+    install_package openssl 
   fi
 fi
 
@@ -957,12 +1142,15 @@ case "$PROD_NAME" in
     ;;
 esac
 
+# Install Verse if requested
+install_verse "$VERSE_VERSION"
+
 # removing perl if temporary installed
 
 if [ "$UNINSTALL_PERL_AFTER_INSTALL" = "yes" ]; then
   # removing perl 
   header "Uninstalling perl"
-  yum -y remove perl
+  remove_package perl
 fi
 
 header "Installing Start Script"
@@ -996,8 +1184,8 @@ fi
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" notes notes 666
-install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" notes notes 666
+install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" $DOMINO_USER $DOMINO_GROUP 666
+install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" $DOMINO_USER $DOMINO_GROUP 666
 
 header "Final Steps & Configuration"
 
@@ -1060,15 +1248,20 @@ remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 remove_file $DOMINO_DATA_PATH/tika-server.jar
 
 # Ensure permissons are set correctly for data directory
-chown -R notes:notes $DOMINO_DATA_PATH
+chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
 
-if [ "$FIRST_TIME_SETUP" = "1" ]; then
+
+# Now export the lib path just in case for Domino to run
+export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
+
+# disabled because su doesn't work any more with CentOS 8 & Co
+#if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Prepare data directory (compact NSFs and NTFs)
 
-  header "Prepare $DOMINO_DATA_PATH via compact"
+  # header "Prepare $DOMINO_DATA_PATH via compact"
 
-  su - notes -c $INSTALL_DIR/domino_install_data_prep.sh
-fi
+  # su - $DOMINO_USER -c $INSTALL_DIR/domino_install_data_prep.sh
+#fi
 
 # If configured, move data directory to a compressed tar file
 
@@ -1089,3 +1282,4 @@ fi
 header "Successfully completed installation!"
 
 exit 0
+

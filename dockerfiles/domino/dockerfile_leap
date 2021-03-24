@@ -1,10 +1,9 @@
- 
+  
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
-# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-FROM centos:8
+FROM opensuse/leap
 
 # External arguments with a default value
 ARG BASE_IMAGE=
@@ -34,10 +33,10 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN yum install -y openssl perl bc which wget nano unzip rsync lsof gdb file net-tools hostname cpio procps-ng diffutils langpacks-en langpacks-de glibc-all-langpacks && \
+RUN zypper install -y curl perl bc which tar gzip unzip rsync lsof gdb file hostname glibc-locale libcap-progs  && \
   $LocalInstallDir/install_domino.sh && \
-  yum clean all >/dev/null && \
-  rm -fr /var/cache/yum && \
+  zypper clean --all >/dev/null && \
+  rm -fr /var/cache && \
   rm -rf $LocalInstallDir
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh

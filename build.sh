@@ -124,7 +124,6 @@ check_docker_environment()
   return 0
 }
 
-echo "[Running in $DOCKER_CMD configuration]"
 
 usage ()
 {
@@ -180,6 +179,7 @@ dump_config ()
   echo "DOWNLOAD_URLS_SHOW : [$DOWNLOAD_URLS_SHOW]"
   echo "TAG_LATEST         : [$TAG_LATEST]"
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
+  echo "VERSE_VERSION      : [$VERSE_VERSION]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
   echo 
   return 0
@@ -204,11 +204,12 @@ nginx_start ()
   # Start local nginx container to host SW Repository
   SOFTWARE_REPO_IP="$($DOCKER_CMD inspect --format '{{ .NetworkSettings.IPAddress }}' $SOFTWARE_CONTAINER 2>/dev/null)"
   if [ -z "$SOFTWARE_REPO_IP" ]; then
-    echo "Unable to locate software repository."
-  else
-    DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
-    echo "Hosting HCL Software repository on $DOWNLOAD_FROM"
+    echo "No specific IP address using host address"
+    SOFTWARE_REPO_IP=$(hostname --all-ip-addresses | cut -f1 -d" "):$SOFTWARE_PORT
   fi
+    
+  DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
+  echo "Hosting HCL Software repository on $DOWNLOAD_FROM"
   echo
 }
 
@@ -297,11 +298,19 @@ for a in $@; do
       PROD_NAME=$p
       ;;
 
-    9*|10*|11*)
+    verse=*)
+      VERSE_VERSION=`echo "$a" | cut -f2 -d=`
+      ;;
+
+    9*|10*|11*|12*)
       PROD_VER=$p
       ;;
 
     fp*)
+      PROD_FP=$p
+      ;;
+
+   beta*)
       PROD_FP=$p
       ;;
 
@@ -390,6 +399,8 @@ done
 
 check_docker_environment
 
+echo "[Running in $DOCKER_CMD configuration]"
+
 # in case we are starting with a specific HCL Domino image, set the DOCKER_FILE accordingly if not explicitly specified
 # also bypass software download check
 # but check if the image is available
@@ -401,7 +412,7 @@ if [ -n "$BASE_IMAGE" ]; then
     DOCKER_FILE=dockerfile_hcl
   fi
 
-  IMAGE_ID=`docker images $BASE_IMAGE -q`
+  IMAGE_ID=`$DOCKER_CMD images $BASE_IMAGE -q`
   if [ -z "$IMAGE_ID" ]; then
     echo "Base image [$BASE_IMAGE] does not exist"
     exit 1
@@ -414,8 +425,6 @@ if [ -n "$BASE_IMAGE" ]; then
   # don't check software
   CHECK_SOFTWARE=no
   CHECK_HASH=no
-  DOWNLOAD_FROM=DUMMY
-
 fi
 
 TARGET_IMAGE=$PROD_NAME
@@ -487,13 +496,13 @@ fi
 echo
 
 if [ -z "$TARGET_IMAGE" ]; then
-  echo "No Taget Image specified! - Terminating"
+  echo "No Target Image specified! - Terminating"
   echo
   exit 1
 fi
 
 if [ -z "$PROD_VER" ]; then
-  echo "No Taget version specified! - Terminating"
+  echo "No Target version specified! - Terminating"
   echo
   exit 1
 fi
@@ -517,6 +526,7 @@ export PROD_VER
 export PROD_FP
 export PROD_HF
 export PROD_EXT
+export VERSE_VERSION
 export CHECK_SOFTWARE
 export CHECK_HASH
 export DOWNLOAD_URLS_SHOW

@@ -6,9 +6,6 @@
 
 FROM ibmcom/domino:10.0.1FP3
 
-# Headers
-LABEL DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de"
-
 # External arguments with a default value
 ARG LinuxYumUpdate=
 ARG DownloadFrom=
@@ -18,6 +15,7 @@ ARG PROD_FP=
 ARG PROD_HF=
 ARG LocalInstallDir=/tmp/install
 ARG SPECIAL_WGET_ARGUMENTS=
+ARG SPECIAL_CURL_ARGS=
 
 USER root
 
@@ -34,8 +32,8 @@ RUN $LocalInstallDir/install.sh && \
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
 
-# Expose Ports NRPC HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
-EXPOSE 1352 80 110 143 389 443 636 993 995 63148 63149
+# Expose Ports NRPC SMTP HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
+EXPOSE 1352 25 80 110 143 389 443 636 993 995 63148 63149
 
 ENTRYPOINT ["/domino_docker_entrypoint.sh"]
 

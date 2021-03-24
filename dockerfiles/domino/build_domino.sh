@@ -250,9 +250,26 @@ docker_build ()
   fi
 
   # Finally build the image
-  $DOCKER_CMD build --no-cache $DOCKER_NETWORK --label "version"="$DOCKER_IMAGE_BUILD_VERSION" --label "buildtime"="$BUILDTIME" --label "release-date"="$DOCKER_IMAGE_RELEASE_DATE" \
+  $DOCKER_CMD build --no-cache $DOCKER_NETWORK \
     -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
     -f $DOCKER_FILE \
+    --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
+    --label name="HCL Domino Community Image" \
+    --label vendor="Domino Docker Community Project" \
+    --label description="$DOCKER_DESCRIPTION" \
+    --label summary="$DOCKER_DESCRIPTION" \
+    --label version="$DOCKER_IMAGE_VERSION" \
+    --label "buildtime"="$BUILDTIME" \
+    --label release="$BUILDTIME" \
+    --label architecture="x86_64" \
+    --label "io.k8s.description"="HCL Domino Community Image" \
+    --label "io.k8s.display-name"="HCL Domino Community Image" \
+    --label io.openshift.expose-services="1352:nrpc 80:http 110:pop3 143:imap 389:ldap 443:https 636:ldaps 993:imaps 995:pop3s" \
+    --label io.openshift.tags="domino" \
+    --label io.openshift.non-scalable=true \
+    --label io.openshift.min-memory=2Gi \
+    --label io.openshift.min-cpu=2 \
+    --label DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
     --label DominoDocker.description="$DOCKER_DESCRIPTION" \
     --label DominoDocker.version="$DOCKER_IMAGE_VERSION" \
     --label DominoDocker.buildtime="$BUILDTIME" \
@@ -267,7 +284,9 @@ docker_build ()
     --build-arg DominoMoveInstallData=$DominoMoveInstallData \
     --build-arg GIT_INSTALL="$GIT_INSTALL" \
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
-    --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" .
+    --build-arg VERSE_VERSION="$VERSE_VERSION" \
+    --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" \
+    --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 
   popd
   echo

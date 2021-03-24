@@ -1,0 +1,30 @@
+
+CONTAINER_NAME=domino
+
+# Standard HCL image
+#CONTAINER_IMAGE=domino-docker:latest
+
+# Domino Docker Community/GitHub image 
+CONTAINER_IMAGE=hclcom/domino:latest
+
+# Standard HCL image / does not support auto config nor start script operations
+#CONTAINER_IMAGE=domino-docker:latest
+
+# If not set, machine hostname is used by default
+#CONTAINER_HOSTNAME=centos.domino-lab.net
+
+DOMINO_SHUTDOWN_TIMEOUT=180
+
+# Using the host network is the best choice for a single Domino container running in a container
+CONTAINER_NETWORK_NAME=host
+#CONTAINER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
+
+CONTAINER_VOLUMES="-v notesdata_domino:/local/notesdata"
+
+#CONTAINER_VOLUMES="-v /local/podman/local:/local"
+
+# Environment file is used for first container start (run) to pass setup parameters
+CONTAINER_ENV_FILE=env_container_domino11
+
+# Domino V12 Early Access One Touch Configufation
+#CONTAINER_ENV_FILE=env_container_domino12

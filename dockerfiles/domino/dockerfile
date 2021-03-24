@@ -4,10 +4,7 @@
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-FROM centos:7
-
-# Headers
-LABEL DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de"
+FROM centos:latest
 
 # External arguments with a default value
 ARG BASE_IMAGE=
@@ -25,7 +22,9 @@ ARG DOMINO_LANG=
 ARG DOCKER_TZ=
 ARG GIT_INSTALL=
 ARG OPENSSL_INSTALL=
+ARG SPECIAL_CURL_ARGS=
 ARG SPECIAL_WGET_ARGUMENTS=
+ARG VERSE_VERSION=
 
 USER root
 
@@ -43,8 +42,8 @@ RUN yum install -y openssl bc which wget nano unzip rsync lsof gdb sysstat file 
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
 
-# Expose Ports NRPC HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
-EXPOSE 1352 80 110 143 389 443 636 993 995 63148 63149
+# Expose Ports NRPC SMTP HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
+EXPOSE 1352 25 80 110 143 389 443 636 993 995 63148 63149
 
 ENTRYPOINT ["/domino_docker_entrypoint.sh"]
 

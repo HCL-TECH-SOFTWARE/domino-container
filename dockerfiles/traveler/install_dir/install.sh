@@ -15,7 +15,11 @@ export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 if [ -z "$LOTUS" ]; then
   if [ -x /opt/hcl/domino/bin/server ]; then
     export LOTUS=/opt/hcl/domino
-    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_hcl.properties
+    if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "12*")" ]; then
+      TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
+    else
+      TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_hcl.properties
+    fi
   else
     export LOTUS=/opt/ibm/domino
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_ibm.properties
@@ -270,6 +274,40 @@ check_file_busy()
   fi
 }
 
+nsh_cmp()
+{
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ -z "$2" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$2" ]; then
+    return 1
+  fi
+
+  if [ -x /usr/bin/cmp ]; then
+    cmp -s "$1" "$2"
+    return $?
+  fi
+
+  HASH1=$(sha256sum "$1" | cut -d" " -f1)
+  HASH2=$(sha256sum "$2" | cut -d" " -f1)
+
+  if [ "$HASH1" = "$HASH2" ]; then
+    return 0
+  fi
+
+  return 1
+}
+
+
 install_file()
 {
   SOURCE_FILE=$1
@@ -285,7 +323,7 @@ install_file()
 
   if [ -e "$TARGET_FILE" ]; then
 
-    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
+    nsh_cmp -s "$SOURCE_FILE" "$TARGET_FILE"
     if [ $? -eq 0 ]; then
       echo "[$TARGET_FILE] File did not change -- No update needed"
       return 0

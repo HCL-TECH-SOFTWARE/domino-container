@@ -1,10 +1,10 @@
- 
+  
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-FROM centos:8
+FROM centos:7
 
 # External arguments with a default value
 ARG BASE_IMAGE=
@@ -34,7 +34,7 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN yum install -y openssl perl bc which wget nano unzip rsync lsof gdb file net-tools hostname cpio procps-ng diffutils langpacks-en langpacks-de glibc-all-langpacks && \
+RUN yum install -y openssl bc which wget nano unzip rsync lsof gdb sysstat file net-tools && \
   $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \

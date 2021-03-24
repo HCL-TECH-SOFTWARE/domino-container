@@ -244,6 +244,13 @@ check_software_status ()
     check_software_file "domino-ce"
     check_software_file "traveler"
     check_software_file "proton"
+
+
+    if [ -n "$VERSE_VERSION" ]; then
+      check_software_file "verse" "$VERSE_VERSION"
+    fi
+
+
   else
     echo
 
@@ -260,6 +267,11 @@ check_software_status ()
         check_software_file "$PROD_NAME" "$PROD_VER$PROD_FP$PROD_HF"
       fi
     fi
+
+    if [ -n "$VERSE_VERSION" ]; then
+      check_software_file "verse" "$VERSE_VERSION"
+    fi
+
     echo
   fi
 }

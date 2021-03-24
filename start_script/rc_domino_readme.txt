@@ -1,8 +1,8 @@
 ###########################################################################
 # README - Start/Stop Script for Domino on xLinux/zLinux/AIX              #
-# Version 3.3.1 10.01.2020                                                #
+# Version 3.5.0 15.01.2021                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2020                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -872,6 +872,12 @@ Specifying no or any other option will show the current settings.
 
 The status file used by default is domino_nextstartcompact in data directory.
 If this file is present the compact operations will run once and remove the file.
+
+resetstlogs
+-----------
+
+Reset Sametime Community server logs/diags as used in the ststart script
+
 
 ------------------------
 Configuration Parameters
@@ -1827,6 +1833,17 @@ The include file used for "session" settings contains this entry already.
 --------------
 Change History
 --------------
+
+V3.5.0 15.01.2021
+
+
+New Features
+------------
+
+- Sametime 11 Community Server support
+- New command "resetstlogs" to reset ST logs/diagnostics
+
+The Sametime Community server as some additional search path requirements, which are added to the search path
 
 V3.4.0 01.09.2020
 

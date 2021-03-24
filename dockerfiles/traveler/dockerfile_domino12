@@ -1,30 +1,20 @@
- 
+
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
-# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
 ############################################################################
 
-FROM centos:8
+FROM hclcom/domino:latest12
 
 # External arguments with a default value
-ARG BASE_IMAGE=
 ARG LinuxYumUpdate=
 ARG DownloadFrom=
 ARG PROD_NAME=
 ARG PROD_VER=
 ARG PROD_FP=
 ARG PROD_HF=
-ARG DominoResponseFile=
-ARG DominoMoveInstallData=
 ARG LocalInstallDir=/tmp/install
-ARG DominoUserID=
-ARG DOMINO_LANG=
-ARG DOCKER_TZ=
-ARG GIT_INSTALL=
-ARG OPENSSL_INSTALL=
-ARG SPECIAL_CURL_ARGS=
 ARG SPECIAL_WGET_ARGUMENTS=
-ARG VERSE_VERSION=
+ARG SPECIAL_CURL_ARGS=
 
 USER root
 
@@ -34,11 +24,10 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN yum install -y openssl perl bc which wget nano unzip rsync lsof gdb file net-tools hostname cpio procps-ng diffutils langpacks-en langpacks-de glibc-all-langpacks && \
-  $LocalInstallDir/install_domino.sh && \
+RUN $LocalInstallDir/install.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
-  rm -rf $LocalInstallDir
+  rm -rf $LocalInstallDir 
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
 

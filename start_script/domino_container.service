@@ -1,10 +1,10 @@
 [Unit]
 
 ###########################################################################
-# systemd Service - Start/Stop Script for Domino on xLinux/zLinux/AIX     #
-# Version 3.5.0 15.01.2021                                                #
+# systemd Service - Start/Stop Script for Domino on Podman                #
+# Version 1.0.0 26.12.2020                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
+# (C) Copyright Daniel Nashed/NashCom 2020                                #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -20,22 +20,22 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-Description=IBM Domino Server (notes)
+Description=Domino Server on Podman (notes)
 After=syslog.target network.target
 
 [Service]
-User=notes
-PIDFile=/tmp/domino.pid
-ExecStart=/opt/nashcom/startscript/rc_domino_script start
-ExecStop=/opt/nashcom/startscript/rc_domino_script stop
+User=root
+PIDFile=/tmp/domino_container.service.pid
+ExecStart=/opt/nashcom/startscript/domino_container startd
+ExecStop=/opt/nashcom/startscript/domino_container stopd
 Type=forking
 LimitNOFILE=65535
 LimitNPROC=8000
 TasksMax=8000
 
 # to make sure startup compact operations can finish
-TimeoutSec=600
-TimeoutStopSec=300
+TimeoutSec=300
+TimeoutStopSec=200
 KillMode=none
 RemainAfterExit=no
 
@@ -45,10 +45,9 @@ RemainAfterExit=no
 # !! Note for environment variables and security limits !!
 
 # Environment variables from a user profile are not set for systemd services, because no "su" is used to swich to the user.
-# You either have to define them in the service, define them in the Domino config file or define them via the new DOMINO_ENV_FILE option
 
-# The systemd service also defines security limits for the Domino server. You should still apply the same settins in /etc/security/limits.conf.
-# This ensures that Domino processes started from a shell have the same security limtis specified.
+# The systemd service also defines security limits. You should still apply the same settins in /etc/security/limits.conf.
 
 [Install]
 WantedBy=multi-user.target
+

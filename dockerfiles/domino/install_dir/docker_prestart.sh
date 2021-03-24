@@ -148,7 +148,7 @@ download_file ()
     log "${HEADER}Successfully downloaded: [$DOWNLOAD_FILE]"
     return 0
   else
-    log "$[HEADER]File [$DOWNLOAD_FILE] not downloaded correctly from [$DOWNLOAD_URL]"
+    log "${HEADER}File [$DOWNLOAD_FILE] not downloaded correctly from [$DOWNLOAD_URL]"
     return 1
   fi
 }
@@ -162,8 +162,9 @@ download_file_link()
   case "$S2" in
 
     http:*|https:*)
-      export $1=`basename $S2`
-      download_file "$S2" "$1"
+      local FILE_NAME=`basename $S2`
+      export $1=$FILE_NAME
+      download_file "$S2" "$FILE_NAME"
 
       if [ $? -eq 1 ]; then
         export $1=
@@ -179,10 +180,13 @@ download_file_link()
 
 get_secret_via_http()
 {
-  if $CURL_CMD -o /dev/null --head "$DOWNLOAD_URL"; then
-    log "Cannot download [$2]"
-    exit 1
-  fi
+  local DOWNLOAD_URL=$2 
+
+  $CURL_CMD -o /dev/null --head "$DOWNLOAD_URL" 
+  if [ ! "$?" = "0" ]; then 
+    log "Error: Cannot download [$2]" 
+    exit 1 
+  fi 
 
   export $1=`$CURL_CMD "$DOWNLOAD_URL"`
 }
@@ -227,28 +231,6 @@ replace_secret_vars()
   get_secret_var OrganizationPassword
   get_secret_var OrgUnitPassword
 }
-
-download_file_link()
-{
-  local S1=$1
-  local S2=${!1}
-
-  case "$S2" in
-    http:*|https:*)
-      export $1=`basename $S2`
-      download_file "$S2" "$1"
-
-      if [ $? -eq 1 ]; then
-        export $1= 
-      fi
-
-      ;;
-    *)
-      export $1=$S2
-      ;;
-  esac
-}
-
 
 check_kyr_name()
 {
