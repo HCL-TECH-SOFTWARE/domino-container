@@ -1,7 +1,7 @@
 #!/bin/bash
 # BorgBackup NSF Backup Script
 
-#LOGIFILE=/local/log/backup_db.log
+#LOGIFILE=/local/backup/log/backup_db.log
 
 if [ "$LOGFILE" = "" ]; then
   OUTFILE=/dev/null
@@ -33,7 +33,7 @@ BORG_ARCHIV=$4#$6#$7$(echo "$SOURCE" | tr "/" "#" | tr " " "_")
 
 BORG_RESTORE_MOUNT=/local/restore
 BORG_LOCATION="$BORG_REPOSITORY::$BORG_ARCHIV"
-BORG_BIN="/local/notesdata/scripts/borg"
+BORG_BIN="borg"
 
 logfile "borg create [$SOURCE] -> [$BORG_LOCATION]"
 
@@ -43,10 +43,8 @@ $BORG_BIN create $BORG_LOCATION "$SOURCE"
 BORG_RET=$?
 
 if [ "$BORG_RET" = "0" ]; then
-
-  echo "Return: PROCESSED ($1)"
+ echo "Return: PROCESSED ($1)"
   logfile "Return: PROCESSED ($1)"
-
 else
   echo "Return: ERROR ($1)"
   logfile "Return: ERROR ($1)"

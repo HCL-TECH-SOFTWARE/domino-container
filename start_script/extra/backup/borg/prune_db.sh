@@ -1,7 +1,7 @@
 #!/bin/bash
 # BorgBackup Prune Backup Script
 
-#LOGIFILE=/local/log/prune_backup.log
+#LOGIFILE=/local/backup/log/prune_backup.log
 
 if [ "$LOGFILE" = "" ]; then
   OUTFILE=/dev/null
@@ -31,7 +31,7 @@ BORG_REPOSITORY="$8"
 BORG_ARCHIV=$4#$6#$7$(echo "$SOURCE" | tr "/" "#" | tr " " "_")
 
 BORG_LOCATION="$BORG_REPOSITORY::$BORG_ARCHIV"
-BORG_BIN="/local/notesdata/scripts/borg"
+BORG_BIN="borg"
 
 logfile "borg delete [$BORG_LOCATION]"
 echo "borg delete [$BORG_LOCATION]"

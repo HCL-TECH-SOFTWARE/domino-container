@@ -1083,6 +1083,12 @@ create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/backup $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/restore $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
+
+if [ "$BORG_INSTALL" = "yes" ]; then
+  create_directory /local/borg $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+fi
+
+
 docker_set_timezone
 
 
@@ -1112,7 +1118,7 @@ fi
 # Yes we want git along like we want curl ;-)
 # But than we need to keep Perl
 
-if [ -n "$GIT_INSTALL" = "yes" ]; then
+if [ "$GIT_INSTALL" = "yes" ]; then
   if [ ! -e /usr/bin/git ]; then
     header "Installing git"
     install_package install git
@@ -1120,12 +1126,12 @@ if [ -n "$GIT_INSTALL" = "yes" ]; then
 fi
 
 
-if ["$BORG_INSTALL" = "yes" ]; then
+if [ "$BORG_INSTALL" = "yes" ]; then
 
     if [ -e /etc/centos-release ]; then
       header "Installing Borg Backup"
       install_package epel-release 
-      install_package borgbackup
+      install_package borgbackup openssh-clients
     fi
 fi
 
@@ -1200,7 +1206,7 @@ $INSTALL_DIR/start_script/install_script
 install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" $DOMINO_USER $DOMINO_GROUP 666
 install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" $DOMINO_USER $DOMINO_GROUP 666
 
-if ["$BORG_INSTALL" = "yes" ]; then
+if [ "$BORG_INSTALL" = "yes" ]; then
   # Install Borg Backup scripts
   $INSTALL_DIR/start_script/install_borg
 fi
