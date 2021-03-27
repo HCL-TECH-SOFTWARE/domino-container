@@ -1,6 +1,6 @@
 #!/bin/bash
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -1080,6 +1080,8 @@ create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/backup $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory /local/restore $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
 docker_set_timezone
 
@@ -1110,7 +1112,7 @@ fi
 # Yes we want git along like we want curl ;-)
 # But than we need to keep Perl
 
-if [ -n "$GIT_INSTALL" ]; then
+if [ -n "$GIT_INSTALL" = "yes" ]; then
   if [ ! -e /usr/bin/git ]; then
     header "Installing git"
     install_package install git
@@ -1118,12 +1120,23 @@ if [ -n "$GIT_INSTALL" ]; then
 fi
 
 
-if [ -n "$OPENSSL_INSTALL" ]; then
+if ["$BORG_INSTALL" = "yes" ]; then
+
+    if [ -e /etc/centos-release ]; then
+      header "Installing Borg Backup"
+      install_package epel-release 
+      install_package borgbackup
+    fi
+fi
+
+
+if [ "$OPENSSL_INSTALL" = "yes" ]; then
   if [ ! -e /usr/bin/openssl ]; then
     header "Installing openssl"
-    install_package openssl 
+    install_package openssl
   fi
 fi
+
 
 
 cd "$INSTALL_DIR"
@@ -1186,6 +1199,11 @@ $INSTALL_DIR/start_script/install_script
 # Install Setup Files and Docker Entrypoint
 install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" $DOMINO_USER $DOMINO_GROUP 666
 install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" $DOMINO_USER $DOMINO_GROUP 666
+
+if ["$BORG_INSTALL" = "yes" ]; then
+  # Install Borg Backup scripts
+  $INSTALL_DIR/start_script/install_borg
+fi
 
 header "Final Steps & Configuration"
 

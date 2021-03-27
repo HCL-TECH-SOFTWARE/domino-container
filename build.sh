@@ -139,6 +139,13 @@ usage ()
   echo "cfg|config      edits config file (either in current directory or if created in /local/cfg)"
   echo "cpcfg           copies the config file to config directory (default: /local/cfg/build_config)"
   echo
+  echo Add-On options
+  echo
+  echo -git             adds git client to image
+  echo -openssl         adds openssl to image
+  echo -borg            adds borg client and Domino Borg Backup integration to image
+  echo
+  echo
   echo "Examples:"
   echo
   echo "  `basename $SCRIPT_NAME` domino 11.0.1 fp1"
@@ -389,6 +396,18 @@ for a in $@; do
       LinuxYumUpdate=no
       ;;
 
+    -borg)
+      BORG_INSTALL=yes
+      ;;
+
+    -openssl)
+      OPENSSL_INSTALL=yes
+      ;;
+
+    -git)
+      GIT_INSTALL=YES
+      ;;
+
     *)
       echo "Invalid parameter [$a]"
       echo
@@ -536,8 +555,12 @@ export TAG_LATEST
 export DOCKER_FILE
 export BASE_IMAGE 
 export SPECIAL_WGET_ARGUMENTS
+export SPECIAL_CURL_ARGS
 export USE_DOCKER
 export DOCKER_NETWORK_NAME
+export GIT_INSTALL
+export OPENSSL_INSTALL
+export BORG_INSTALL
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 
