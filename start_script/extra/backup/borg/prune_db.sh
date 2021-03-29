@@ -1,5 +1,5 @@
 #!/bin/bash
-# BorgBackup Prune Backup Script
+# BorgBackup Prune Script
 
 #LOGIFILE=/local/backup/log/prune_backup.log
 
@@ -36,7 +36,7 @@ BORG_BIN="borg"
 logfile "borg delete [$BORG_LOCATION]"
 echo "borg delete [$BORG_LOCATION]"
 
-# Mount archiv
+# Delete from archive 
 $BORG_BIN delete "$BORG_LOCATION"
 
 BORG_RET=$?

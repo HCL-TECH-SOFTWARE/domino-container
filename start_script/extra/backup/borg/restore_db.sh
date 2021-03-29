@@ -1,5 +1,5 @@
 #!/bin/bash
-# BorgBackup NSF Backup Script
+# BorgBackup NSF Restore Script
 
 #LOGIFILE=/local/backup/log/restore_db.log
 
@@ -35,6 +35,7 @@ BORG_ARCHIV=$4#$6#$7$(echo "$SOURCE" | tr "/" "#" | tr " " "_")
 BORG_RESTORE_MOUNT=/local/restore
 BORG_LOCATION="$BORG_REPOSITORY::$BORG_ARCHIV"
 BORG_BIN="borg"
+BORG_MOUNTED=
 
 logfile "borg mount+copy [$BORG_LOCATION] -> [$TARGET]"
 echo "borg mount+copy [$BORG_LOCATION] -> [$TARGET]"
@@ -45,11 +46,15 @@ $BORG_BIN mount "$BORG_LOCATION" "$BORG_RESTORE_MOUNT"
 BORG_RET=$?
 if [ "$BORG_RET" = "0" ]; then
   echo "Mount: BORG OK"
+  BORG_MOUNTED=1
 else
   echo "Mount: BORG ERROR"
 fi
 
-if [ -e "$BORG_RESTORE_MOUNT$SOURCE" ]; then
+if [ -z "$BORG_MOUNTED" ]; then
+  echo "Cannot mount [$BORG_RESTORE_MOUNT]"
+
+elif [ -e "$BORG_RESTORE_MOUNT$SOURCE" ]; then
 
   # Create directory if not present
   DIRNAME=`dirname $TARGET`
@@ -59,26 +64,30 @@ if [ -e "$BORG_RESTORE_MOUNT$SOURCE" ]; then
   fi
 
   cp "$BORG_RESTORE_MOUNT$SOURCE" "$TARGET" >> $OUTFILE
-else
-  echo "Cannot restore [${BORG_RESTORE_MOUNT}${SOURCE}] does not exist"
-fi
 
-if [ -r "$TARGET" ]; then
-  echo "Database restored [$SOURCE] -> [$TARGET]"
+  if [ -r "$TARGET" ]; then
+    echo "Database restored [$SOURCE] -> [$TARGET]"
+  else
+    echo "Database NOT restored [$SOURCE] -> [$TARGET]"
+  fi
+
 else
-  echo "Database NOT restored [$SOURCE] -> [$TARGET]"
+  echo "Cannot restore - [${BORG_RESTORE_MOUNT}${SOURCE}] does not exist"
 fi
 
 # Unmout the archive
-$BORG_BIN umount "$BORG_RESTORE_MOUNT"
+if [ -n  "$BORG_MOUNTED" ]; then
+  $BORG_BIN umount "$BORG_RESTORE_MOUNT"
 
-BORG_RET=$?
-if [ "$BORG_RET" = "0" ]; then
-  echo "Unmount: BORG OK" >> $OUTFILE
-else
-  echo "Unmount: BORG ERROR" >> $OUTFILE
+  BORG_RET=$?
+  if [ "$BORG_RET" = "0" ]; then
+    echo "Unmount: BORG OK" >> $OUTFILE
+  else
+    echo "Unmount: BORG ERROR" >> $OUTFILE
+  fi
 fi
 
+# Finally check if the file has been copied
 if [ -e "$TARGET" ]; then
   echo "Return: PROCESSED ($1)"
   logfile "Return: PROCESSED ($1)"

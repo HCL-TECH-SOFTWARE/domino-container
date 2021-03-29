@@ -31,13 +31,12 @@ SOURCE="$1"
 BORG_REPOSITORY="$8"
 BORG_ARCHIV=$4#$6#$7$(echo "$SOURCE" | tr "/" "#" | tr " " "_")
 
-BORG_RESTORE_MOUNT=/local/restore
 BORG_LOCATION="$BORG_REPOSITORY::$BORG_ARCHIV"
 BORG_BIN="borg"
 
 logfile "borg create [$SOURCE] -> [$BORG_LOCATION]"
 
-# create the archive (copy database)
+# Create the archive (copy database)
 $BORG_BIN create $BORG_LOCATION "$SOURCE"
 
 BORG_RET=$?
