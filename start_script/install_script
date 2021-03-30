@@ -151,7 +151,7 @@ create_link()
     return 0
   fi
 
-  ln -s "$SOURCE" "$TARGET"
+  ln -s "$1" "$2"
 }
 
 check_file_busy()
