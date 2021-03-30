@@ -5,7 +5,6 @@ domino|10.0.1FP4|Domino_10.0.1FP4_Linux64.tar|-|09d120479caea42d6288267958860195
 domino|11.0.1|Domino_1101_Linux_English.tar|-|3b159e5a6d4084504e451b0ef64ff8794200e07cf18d9b84ed0a23a758f8ce34
 domino|11.0.1FP1|Domino_1101FP1_Linux.tar|-|22225e9018285ed1c8675a3d84d9e46d66fc8a300316a2d686acf34c3cee92ad
 domino|11.0.1FP2|Domino_1101FP2_Linux.tar|-|9f358300e4e03b36a6e1d40a6e13c745bea7c7b1c46952806738ef48680ba083
-domino|12.0.0BETA2|Domino_12.0_Linux_Beta2_English.tar|-|258df2bb1177cd9619d3ad73adc6a7147ca6b227d15b4bb422311ba93972c8de
 domino|12.0.0BETA3|Domino_12.0_Linux_Beta3_English.tar|-|887ade0799d99613d5972b9234a022edbe77b5dfcbd0ab910ed8aedf4f1ca865
 traveler|10.0.1.1|Traveler_10.0.1FP1_Linux_ML.tar.gz,TRAVELER_V10.0.1_FP1_FOR_LINUX_ML.tar.gz|CNZ9LML|0849f295816d40799ee31a9fc29fb4131db5ce4fa869078450e7a571661aae2a
 traveler|10.0.1.2|Traveler_10.0.1FP2_LINUX_ML.tar.gz|-|4669eb49ad354d7bc8f67bf02693d6d1eccdf69b3a0a0317657d14370c793109
@@ -13,7 +12,7 @@ traveler|11.0.0|Traveler_11.0_Linux_ML.tar.gz|-|381bfae133eb7288f37c531a636a8ec0
 traveler|11.0.1|Traveler_11.0.1_Linux_ML.tar.gz|-|b3ef80877ad4892e2c8d78b12f4086118baf7c4377af4c459f4455e4898d80ff
 traveler|11.0.1FP1|Traveler_11.0.1FP1_Linux_ML.tar.gz|-|72b77c1aca83bdb5f3d5fd2af6e8c7201108b9d67ea3290bdafb6c215e452966
 traveler|11.0.2|Traveler_11.0.2_Linux_ML.tar.gz|-|dd99edd8185b442c54e89f2e5e386031ac26aa80ca7b295ef22d75fee06b768e
-traveler|12.0.0BETA2|Traveler_12.0_Linux_Beta2_ML.tar.gz|-|a03da16f371e86761494e24bc0761242ec43f1849d6ec688179c3ac475fa2aef
+traveler|12.0.0BETA3|Traveler_12.0_Linux_Beta3_ML.tar.gz|-|b5f6af5c449dd63824ba0d960fd1a9ce145e7969a534489cdec83bf8d0a41580
 volt|1.0.1.9|hcl.domino.volt-1.0.1.9.zip|-|e8978481109a7bc3a92848fb2043ec409843cd3c9c0a6146a98622e3f2c30755
 volt|1.0.2.9|hcl.domino.volt-1.0.2.9.zip|-|e65b922f93e7143472a02b1a8f2925424c3b08e416afa2504ee97b5d460b97a9
 verse|2.0.1|HCL_Verse_2.0.1.zip|-|ce358d16d338e9a81b3402bb081ea3a2b39e6915e0f4670107df7144f1004ea8
