@@ -32,9 +32,6 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-# Special WGET arguments used for all WGET operations during build
-#SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
-
 # Default config directory. Can be overwritten by environment
 if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
   DOMINO_DOCKER_CFG_DIR=/local/cfg
@@ -250,15 +247,16 @@ get_current_version ()
 
     DOWNLOAD_FILE=$DOWNLOAD_FROM/$VERSION_FILE_NAME
 
-    WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-    if [ ! -z "$WGET_RET_OK" ]; then
+    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
+    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+    if [ -n "$STATUS_RET" ]; then
       DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
     fi
   fi
 
   if [ ! -z "$DOWNLOAD_VERSION_FILE" ]; then
     echo "Getting current software version from [$DOWNLOAD_VERSION_FILE]"
-    LINE=`$WGET_COMMAND -qO- $DOWNLOAD_VERSION_FILE | grep "^$1|"`
+    LINE=`$CURL_CMD --silent $DOWNLOAD_VERSION_FILE | grep "^$1|"`
   else
     if [ ! -r $VERSION_FILE ]; then
       echo "No current version file found! [$VERSION_FILE]"
@@ -286,11 +284,10 @@ copy_config_file()
   cp sample_build_config $CONFIG_FILE
 }
 
-WGET_COMMAND="wget --connect-timeout=20"
-
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
 SOFTWARE_PORT=7777
 SOFTWARE_CONTAINER=hclsoftware
+CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 if [ -z "$1" ]; then
   usage
@@ -554,7 +551,6 @@ export DominoMoveInstallData
 export TAG_LATEST
 export DOCKER_FILE
 export BASE_IMAGE 
-export SPECIAL_WGET_ARGUMENTS
 export SPECIAL_CURL_ARGS
 export USE_DOCKER
 export DOCKER_NETWORK_NAME
