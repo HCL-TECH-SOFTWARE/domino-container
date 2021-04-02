@@ -33,6 +33,9 @@ BORG_ARCHIV=$4#$6#$7$(echo "$SOURCE" | tr "/" "#" | tr " " "_")
 BORG_LOCATION="$BORG_REPOSITORY::$BORG_ARCHIV"
 BORG_BIN="borg"
 
+# Ensures no security prompt comes up for the existing Borg repo when updating the container
+export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes
+
 logfile "borg delete [$BORG_LOCATION]"
 echo "borg delete [$BORG_LOCATION]"
 

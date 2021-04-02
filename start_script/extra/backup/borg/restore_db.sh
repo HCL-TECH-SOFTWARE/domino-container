@@ -37,6 +37,9 @@ BORG_LOCATION="$BORG_REPOSITORY::$BORG_ARCHIV"
 BORG_BIN="borg"
 BORG_MOUNTED=
 
+# Ensures no security prompt comes up for the existing Borg repo when updating the container
+export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes
+
 logfile "borg mount+copy [$BORG_LOCATION] -> [$TARGET]"
 echo "borg mount+copy [$BORG_LOCATION] -> [$TARGET]"
 
