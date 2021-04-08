@@ -942,7 +942,7 @@ yum_glibc_lang_update_allpacks()
   echo
 
   if [ -z "$ALL_LANGPACKS" ]; then
-    yum install -y glibc-all-langpacks
+    yum install -y langpacks-en langpacks-de glibc-all-langpacks
   else
     echo "Already installed: $ALL_LANGPACKS"
   fi

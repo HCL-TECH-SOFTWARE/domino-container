@@ -58,7 +58,8 @@ The container script contains a configuration file in /etc/sysconfig which can b
 Those configuration variables define your container including network mode, volumes etc.
 There is a default configuration, you can modify for your needs.
 
-Tip: If vi isn't your favorite editor you can define your editor exporting an environment variable in your profile or shell ( Example for: ``export EDIT_COMMAND=mcedit`` ).
+Tip: If vi isn't your favorite editor you can define your editor exporting an environment variable in your profile or shell ( Example: ``export EDIT_COMMAND=mcedit`` ).
+
 
 ```
 domino_container cfg 
