@@ -27,3 +27,7 @@ LinuxYumUpdate=yes
 #SPECIAL_CURL_ARGS="--insecure"
 
 DOCKER_NETWORK_NAME=host
+
+# Image format should be docker instead of OCI
+BUILDAH_FORMAT=docker
+
