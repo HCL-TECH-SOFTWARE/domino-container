@@ -523,6 +523,11 @@ if [ -z "$PROD_VER" ]; then
   exit 1
 fi
 
+# Podman started to use OCI images by default. We still want Docker image format
+if [ -z "$BUILDAH_FORMAT" ]; then
+  BUILDAH_FORMAT=docker
+fi
+
 BUILD_SCRIPT=dockerfiles/$TARGET_DIR/build_$TARGET_IMAGE.sh
 
 if [ ! -e "$BUILD_SCRIPT" ]; then
@@ -557,6 +562,7 @@ export DOCKER_NETWORK_NAME
 export GIT_INSTALL
 export OPENSSL_INSTALL
 export BORG_INSTALL
+export BUILDAH_FORMAT
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 
