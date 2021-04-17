@@ -933,18 +933,18 @@ yum_glibc_lang_update7()
 }
 
 
-yum_glibc_lang_update_allpacks()
+yum_glibc_lang_update_centos()
 {
-  # install allpack to correct locale settings
+  # install correct locale settings
 
-  local ALL_LANGPACKS=$(rpm -q glibc-all-langpacks | grep "x86_64")
+  INSTALL_LOCALE=$(echo $DOMINO_LANG|cut -f1 -d"_")
 
-  echo
+  if [ -z "$INSTALL_LOCALE" ]; then
+    return 0
+  fi
 
-  if [ -z "$ALL_LANGPACKS" ]; then
-    yum install -y langpacks-en langpacks-de glibc-all-langpacks
-  else
-    echo "Already installed: $ALL_LANGPACKS"
+  if [ -n "$INSTALL_LOCALE" ]; then
+    yum install -y glibc-langpack-$INSTALL_LOCALE
   fi
 
   echo
@@ -953,21 +953,21 @@ yum_glibc_lang_update_allpacks()
 
 yum_glibc_lang_update()
 {
-  # Not needed on SuSE platform with zypper
-  if [ -x /usr/bin/zypper ]; then
+  # Only needed for centos like platforms -> check if yum is installed
+
+  if [ ! -x /usr/bin/yum ]; then
+    echo "not centos"
     return 0
   fi
 
-  case "$LINUX_VERSION" in
-    7*)
+  if [ "$LINUX_VERSION" = "7" ]; then
       yum_glibc_lang_update7
-      ;;
-    *)
-      yum_glibc_lang_update_allpacks
-      ;;
-  esac
-}
+  else
+      yum_glibc_lang_update_centos
+  fi
 
+  return 0
+}
 
 # --- Main Install Logic ---
 
@@ -1011,6 +1011,7 @@ fi
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
 
 # Show current OS version
 if [ -n "$LINUX_PRETTY_NAME" ]; then
