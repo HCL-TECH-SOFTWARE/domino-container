@@ -1062,10 +1062,12 @@ fi
 # Those directories might get replaced with mount points or re-created on startup of the container when /local mount is used.
 # Ensure only root can write into the script directory!
 
-# if inheriting an existing installation, it's important to ensure /local has the right permissions
+# if inheriting an existing installation, it's important to ensure /local has the right permissions root:root including all permissions
+# Without the full permissions mounts to sub directories don't work if specifying different users
 
 if [ -e "/local" ]; then
-  chown -R $DOMINO_USER:$DOMINO_GROUP /local
+  chown -R root:root /local
+  chmod /local
 fi
 
 if [ -e "$DOMINO_DATA_PATH" ]; then
@@ -1075,7 +1077,8 @@ fi
 create_directory $DOMDOCK_DIR root root 777
 create_directory $DOMDOCK_SCRIPT_DIR root root 755
 
-create_directory /local $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+# needs full permissions for mount points
+create_directory /local root root 777
 create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
 create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
