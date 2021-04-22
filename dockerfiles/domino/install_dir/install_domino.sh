@@ -1034,8 +1034,8 @@ if [ "$LinuxYumUpdate" = "yes" ]; then
   elif [ -x /usr/bin/yum ]; then
 
     header "Updating Linux via yum"
-    # RedHat update
-    yum update -y glibc-common
+    # RedHat/CentOS/.. update
+    yum update -y
 
   fi
 fi
