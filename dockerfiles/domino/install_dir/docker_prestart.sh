@@ -441,17 +441,14 @@ if [ -n "$SetupAutoConfigure" ]; then
   echo "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
 
   cd $DOMINO_DATA_PATH 
-  header "Starting Domino Server Auto Setup"
-  $LOTUS/bin/server -a $SetupAutoConfigureParams &
+  header "Server start will run Domino Server Auto Setup"
 
+  # The following logic isn't needed any more.
+  # If the variables are set, Domino V12 and higher One Touch Setup will kick in at server start
+
+  # $LOTUS/bin/server -a $SetupAutoConfigureParams &
   # Wait until server started before last configuration steps
-
-  wait_for_string $CONSOLE_LOG "Server started on physical node" 30 
-
-  # Remove json config file
-  if [ -n "$SetupAutoConfigureParams" ]; then
-    remove_file $SetupAutoConfigureParams
-  fi
+  # wait_for_string $CONSOLE_LOG "Server started on physical node" 30 
 
 else
 
@@ -555,7 +552,6 @@ unset ServerPassword
 unset SystemDatabasePath
 unset Notesini
 
-unset SetupAutoConfigure
 unset ServerType
 unset AdminUserIDPath
 unset CertifierPassword

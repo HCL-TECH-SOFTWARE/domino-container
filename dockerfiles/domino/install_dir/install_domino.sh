@@ -969,6 +969,37 @@ yum_glibc_lang_update()
   return 0
 }
 
+set_ini_var_if_not_set()
+{
+  local file=$1
+  local var=$2
+  local new=$3
+
+  # check if entry exists empty. if not present append new entry
+
+  local found=`grep -i "^$var=" $file`
+  if [ -z "$found" ]; then
+    echo $var=$new >> $file
+  fi
+
+  return 0
+}
+
+set_default_notes_ini_variables ()
+{
+
+  # Avoid Domino Directory Design Update Prompt
+  set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
+
+  # Allow server names with dots and undercores
+  set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION" "1"
+
+  # Allow server names with dots and undercores
+  set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
+
+}
+
+
 # --- Main Install Logic ---
 
 
@@ -1077,7 +1108,7 @@ fi
 create_directory $DOMDOCK_DIR root root 777
 create_directory $DOMDOCK_SCRIPT_DIR root root 755
 
-# needs full permissions for mount points
+# Needs full permissions for mount points
 create_directory /local root root 777
 create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
@@ -1148,7 +1179,6 @@ if [ "$OPENSSL_INSTALL" = "yes" ]; then
 fi
 
 
-
 cd "$INSTALL_DIR"
 
 # Download updated software.txt file if available
@@ -1168,7 +1198,7 @@ esac
 # Install Verse if requested
 install_verse "$VERSE_VERSION"
 
-# removing perl if temporary installed
+# Removing perl if temporary installed
 
 if [ "$UNINSTALL_PERL_AFTER_INSTALL" = "yes" ]; then
   # removing perl 
@@ -1240,6 +1270,9 @@ install_file "$INSTALL_DIR/nuid2pw" "$DOMDOCK_SCRIPT_DIR/nuid2pw" root root 4550
 # Copy tools required for automating Domino Server configuration
 install_file "$INSTALL_DIR/DatabaseSigner.jar" "$DOMINO_DATA_PATH/DatabaseSigner.jar" root root 644
 install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpdateConfig.jar" root root 644
+
+# Set notes.ini variables needed
+set_default_notes_ini_variables
 
 # --- Cleanup Routines to reduce image size ---
 
