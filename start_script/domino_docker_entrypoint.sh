@@ -68,8 +68,10 @@ if [ ! -e "$DOMINO_SERVER_ID" ]; then
   fi
 fi 
 
-# Check if server is configured. Else start remote configuation on port 1352
-if [ ! -e "$DOMINO_DATA_PATH/server.id" ]; then
+
+# Check if server is configured or Domino One Touch Setup is requested.
+# Else start remote configuation on port 1352
+if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ] && [ -z "$SetupAutoConfigure" ]; then
 
   echo "Configuration for automated setup not found."
   echo "Starting Domino Server in listen mode"
