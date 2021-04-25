@@ -31,11 +31,11 @@ services:
       - 443:443
 
     volumes:
-      - domino_notesdata:/local/notesdata
+      - domino_vol:/local/notesdata
 
 volumes:
 
   domino_vol:
-    name: domino_acme_01_local
+    name: domino_acme_01_notesdata
     external: false
 
