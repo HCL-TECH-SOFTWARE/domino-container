@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: domino12
+  labels:
+    app: hcl-domino
+
+spec:
+  imagePullSecrets:
+  - name: regcred
+
+  containers:
+
+  - env:
+    - name: LANG
+      value: "en_US.UTF-8"
+
+    - name: DOMINO_DOCKER_STDOUT
+      value: "yes"
+
+    - name: SetupAutoConfigure
+      value: "1"
+
+    - name: SetupAutoConfigureParams
+      value: "/etc/domino-cfg/auto_config.json"
+
+    name: domino12
+    image: registry.domino-lab.net:5000/hclcom/domino:latest12 
+
+    securityContext:
+      capabilities:
+        add: ["SYS_PTRACE"]
+      runAsNonRoot: true
+      runAsUser: 30042
+
+    volumeMounts:
+    - name: domino-data
+      mountPath: /local
+
+    - name: domino-cfg
+      mountPath: /etc/domino-cfg
+
+    ports:
+    - containerPort: 1352
+      protocol: TCP
+    - containerPort: 80
+      protocol: TCP
+    - containerPort: 443
+      protocol: TCP
+
+    livenessProbe:
+      exec:
+        command:
+        - /domino_docker_healthcheck.sh
+
+      initialDelaySeconds: 60
+      periodSeconds: 20
+
+    readinessProbe:
+      exec:
+        command:
+        - /domino_docker_healthcheck.sh
+        - ready
+
+      initialDelaySeconds: 60
+      periodSeconds: 20
+
+
+  volumes:
+  - name: domino-data
+    persistentVolumeClaim:
+      claimName: local-path-pvc
+
+  - name: domino-cfg
+    secret:
+      secretName: domino12-cfg
+
