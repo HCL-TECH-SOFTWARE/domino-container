@@ -5,17 +5,21 @@ services:
 
     image: hclcom/domino:latest 
     container_name: domino-acme-01
-    hostname: domino-acme-01.acme.com
+    hostname: domino-acme-v12.acme.com
     stop_grace_period: 60s
 
     environment:
-      AdminFirstName: John
-      AdminLastName: Doe
-      AdminPassword: domino4ever
-      OrganizationPassword: domino4ever
-      DominoDomainName: Acme
-      OrganizationName: Acme
-      ServerName: domino-acme-01
+      SetupAutoConfigure: 1
+      SERVERSETUP_SERVER_TYPE: first
+      SERVERSETUP_ADMIN_FIRSTNAME: John
+      SERVERSETUP_ADMIN_LASTNAME: Doe
+      SERVERSETUP_ADMIN_PASSWORD: domino4ever
+      SERVERSETUP_ADMIN_IDFILEPATH: admin.id
+      SERVERSETUP_ORG_CERTIFIERPASSWORD: domino4ever
+      SERVERSETUP_SERVER_DOMAINNAME: DominoDemo
+      SERVERSETUP_ORG_ORGNAME: Domino-Demo
+      SERVERSETUP_SERVER_NAME: domino-demo-v12
+      SERVERSETUP_NETWORK_HOSTNAME: domino-acme-v12.acme.com
       LANG: en_US.UTF-8
 
     cap_add:
@@ -27,7 +31,7 @@ services:
       - 443:443
 
     volumes:
-      - domino_vol:/local
+      - domino_notesdata:/local/notesdata
 
 volumes:
 
