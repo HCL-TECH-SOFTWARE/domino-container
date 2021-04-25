@@ -15,14 +15,9 @@ SCRIPT_NAME=$0
 TARGET_IMAGE=$1
 
 TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
-EDIT_COMMAND=vi
 
+# Standard configuration overwritten by build.cfg
 # (Default) NIGX is used hosting software from the local "software" directory.
-# (Optional) Configure software download location.
-# DOWNLOAD_FROM=http://192.168.1.1
-
-# With NGINX container you could chose your own local directory or if variable is empty use the default "software" subdirectory 
-# SOFTWARE_DIR=/local/software
 
 DominoMoveInstallData=yes
 
@@ -32,18 +27,37 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-# Default config directory. Can be overwritten by environment
-if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
-  DOMINO_DOCKER_CFG_DIR=/local/cfg
+# use vi if no other editor specified in config
+if [ -z "$EDIT_COMMAND" ]; then
+  EDIT_COMMAND="vi"
 fi
 
-# External configuration
-CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/build_config
+# Default config directory. Can be overwritten by environment
+
+if [ -z "$BUILD_CFG_FILE"]; then
+  BUILD_CFG_FILE=build.cfg
+fi
+
+if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
+
+  # Check for legacy config else use new location in user home 
+  if [ -r /local/cfg/build_config ]; then
+    DOMINO_DOCKER_CFG_DIR=/local/cfg
+    CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/build_config
+  else
+    DOMINO_DOCKER_CFG_DIR=~/DominoDocker
+    CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_CFG_FILE
+  fi
+fi
 
 # use a config file if present
-if [ -e "$CONFIG_FILE" ]; then
+if [ -r "$CONFIG_FILE" ]; then
   echo "(Using config file $CONFIG_FILE)"
   . $CONFIG_FILE
+else
+  if [ -r "$BUILD_CFG_FILE" ]; then
+    . build.cfg
+  fi
 fi
 
 check_version ()
@@ -133,19 +147,19 @@ usage ()
   echo "-(no)verify     checks downloaded file checksum (default: no)"
   echo "-(no)url        shows all download URLs, even if file is downloaded (default: no)"
   echo "-(no)linuxupd   updates container Linux  while building image (default: yes)"
-  echo "cfg|config      edits config file (either in current directory or if created in /local/cfg)"
-  echo "cpcfg           copies the config file to config directory (default: /local/cfg/build_config)"
+  echo "cfg|config      edits config file (either in current directory or if created in home dir)"
+  echo "cpcfg           copies standard config file to config directory (default: $CONFIG_FILE)"
   echo
   echo Add-On options
   echo
-  echo -git             adds git client to image
-  echo -openssl         adds openssl to image
-  echo -borg            adds borg client and Domino Borg Backup integration to image
+  echo "-git            adds git client to image"
+  echo "-openssl        adds openssl to image"
+  echo "-borg           adds borg client and Domino Borg Backup integration to image"
   echo
   echo
   echo "Examples:"
   echo
-  echo "  `basename $SCRIPT_NAME` domino 11.0.1 fp1"
+  echo "  `basename $SCRIPT_NAME` domino 11.0.1 fp3"
   echo "  `basename $SCRIPT_NAME` traveler 11.0.1.1"
   echo
 
@@ -281,7 +295,11 @@ copy_config_file()
   fi
 
   mkdir -p $DOMINO_DOCKER_CFG_DIR 
-  cp sample_build_config $CONFIG_FILE
+  if [ -e "$BUILD_CFG_FILE" ]; then
+    cp "$BUILD_CFG_FILE" "$CONFIG_FILE"
+  else
+    echo "Cannot copy config file"
+  fi
 }
 
 SCRIPT_DIR=`dirname $SCRIPT_NAME`

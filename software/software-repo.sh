@@ -59,7 +59,6 @@ repo_getIP ()
   IP="$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $SOFTWARE_CONTAINER 2>/dev/null)"
   if [ -z "$IP" ] ; then
     echo "Unable to locate software repository."
-    echo "Build process stopped."
   else
     echo "Hosting Software repository on" HTTP://$IP
   fi
