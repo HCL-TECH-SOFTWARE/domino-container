@@ -1,5 +1,3 @@
-
-
 {
   "serverSetup": {
     "server": {
@@ -54,10 +52,7 @@
       "NSF_BUFFER_POOL_SIZE_MB": "256",
       "FT_FLY_INDEX_OFF": "1",
       "UPDATE_FULLTEXT_THREAD": "1",
-      "FTG_USE_SYS_MEMORY": "1",
-      "DEBUG_CONWRITE": "Entry already in index",
-      "DEBUG_CONWRITE_NOBREAK": "1"
-
+      "FTG_USE_SYS_MEMORY": "1"
     },
 
     "security": {
@@ -66,7 +61,6 @@
         "addLocalDomainAdmins": true
       }
     }
-
   },
 
   "IDVault": {
