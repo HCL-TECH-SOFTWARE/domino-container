@@ -177,7 +177,7 @@ download_file_ifpresent ()
   STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
   if [ -z "$STATUS_RET" ]; then
 
-    echo "Warning: Download file does not exist [$DOWNLOAD_FILE]"
+    echo "Info: Download file does not exist [$DOWNLOAD_FILE]"
     return 0
   fi
 

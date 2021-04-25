@@ -97,6 +97,7 @@
               "ServerName": "CN=master.domino-lab.net/O=DominoLab"
             },
             "items": {
+              "HTTP_SSLKeyFile": "master.domino-lab.net",
               "TRANSLOG_AutoFixup": "",
               "TRANSLOG_MaxSize": 4096,
               "TRANSLOG_Path": "/local/translog",
@@ -122,7 +123,7 @@
               "HTTP_EnableSessionAuth": "1",
               "HTTP_TCPNP": "1",
               "HTTP_AllowAnonymous": "0",
-              "HTTP_NormalMode": "2",
+              "HTTP_NormalMode": "1",
               "HTTP_SSLMode": "1",
               "HTTP_SSLAnonymous": "0",
 
