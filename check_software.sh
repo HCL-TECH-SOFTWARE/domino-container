@@ -97,6 +97,8 @@ check_software ()
         DOWNLOAD_1ST_FILE=$CHECK_FILE
       fi
 
+      DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
+
       CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
       STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
 
@@ -117,7 +119,7 @@ check_software ()
           CURRENT_STATUS="OK"
         else
           DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
-          HASH=$($CURL_CMD --silent $DOWNLOAD_FILE | sha256sum -b | cut -d" " -f1)
+          HASH=$($CURL_CMD --silent $DOWNLOAD_FILE 2>/dev/null | sha256sum -b | cut -d" " -f1)
 
           if [ "$CURRENT_HASH" = "$HASH" ]; then
             CURRENT_STATUS="OK"
@@ -130,7 +132,7 @@ check_software ()
   fi
 
   case "$CURRENT_NAME" in
-    domino|traveler|proton|iam)
+    domino|traveler|volt)
 
       if [ -z "$CURRENT_PARTNO" ]; then
         CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
@@ -244,15 +246,12 @@ check_software_status ()
 
   if [ -z "$PROD_NAME" ]; then
     check_software_file "domino" 
-    check_software_file "domino-ce"
     check_software_file "traveler"
-    check_software_file "proton"
-
+    check_software_file "volt"
 
     if [ -n "$VERSE_VERSION" ]; then
       check_software_file "verse" "$VERSE_VERSION"
     fi
-
 
   else
     echo
