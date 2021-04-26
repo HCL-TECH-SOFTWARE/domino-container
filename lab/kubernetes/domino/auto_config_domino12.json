@@ -21,6 +21,10 @@
       "certifierPassword": "domino4ever8"
     },
 
+    "autoConfigPreferences": {
+      "startServerAfterConfiguration": "false"
+    },
+
     "admin": {
       "firstName": "Full",
       "lastName": "Admin",

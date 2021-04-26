@@ -18,6 +18,9 @@ spec:
     - name: DOMINO_DOCKER_STDOUT
       value: "yes"
 
+    - name: SetupAutoConfigureRestart
+      value: "true"
+
     - name: SetupAutoConfigure
       value: "1"
 
