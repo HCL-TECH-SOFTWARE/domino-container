@@ -190,19 +190,6 @@ if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
   fi
 fi 
 
-# If configured start OnTouchConfig with "startServerAfterConfiguration" and shutdown afterwards 
-
-if [ "$SetupAutoConfigureRestart" = "true" ]; then
-  if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
-    if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-      cd $DOMINO_DATA_PATH
-      $LOTUS/bin/server
-    else
-      su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; $LOTUS/bin/server"
-    fi
-  fi
-fi
-
 run_external_script after_config_script.sh
 
 # Check if server is configured or Domino One Touch Setup is requested.
