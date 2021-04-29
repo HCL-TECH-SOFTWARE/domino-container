@@ -1146,7 +1146,7 @@ fi
     header "Installing perl"
     install_package perl
     # disable uninstall because git requires it
-    # UNINSTALL_PERL_AFTER_INSTALL=yes
+    UNINSTALL_PERL_AFTER_INSTALL=yes
   fi
 fi
 
@@ -1157,6 +1157,7 @@ if [ "$GIT_INSTALL" = "yes" ]; then
   if [ ! -e /usr/bin/git ]; then
     header "Installing git"
     install_package install git
+    UNINSTALL_PERL_AFTER_INSTALL=no
   fi
 fi
 
