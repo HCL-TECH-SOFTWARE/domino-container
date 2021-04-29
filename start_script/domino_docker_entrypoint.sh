@@ -31,6 +31,11 @@ DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 LOTUS=/opt/ibm/domino
 DOMINO_DATA_PATH=/local/notesdata
 
+# Get Linux version and platform
+LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
+LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
+
 # in docker environment the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
   export LOGNAME=`whoami`
@@ -53,7 +58,12 @@ stop_server ()
 # "docker stop" will send a SIGTERM to the shell. catch it and stop Domino gracefully.
 # Ensure to use e.g. "docker stop --time=90 .." to ensure server has sufficient time to terminate.
 
-trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
+if [ "$LINUX_ID" = "photon" ]; then
+  # signal child died causes issues on PhotonOS
+  trap "stop_server" 1 2 3 4 6 9 13 15 19 23
+else
+  trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
+fi
 
 # Check if server is configured. Else start custom configuration script
 if [ ! -e "$DOMINO_SERVER_ID" ]; then

@@ -33,6 +33,11 @@ DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 # This feature needs to be enabled per Docker container using an environment setting
 # DOMINO_STATISTICS_FILE=/local/notesdata/domino/html/domino_stats.txt
 
+# Get Linux version and platform
+LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
+LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
+
 # Always use whoami
 LOGNAME=$(whoami 2>/dev/null)
 
@@ -163,8 +168,12 @@ check_process_request()
 # "docker stop" will send a SIGTERM to the shell. catch it and stop Domino gracefully.
 # Use e.g. "docker stop --time=90 .." to ensure server has sufficient time to terminate.
 
-trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
-
+if [ "$LINUX_ID" = "photon" ]; then
+  # signal child died causes issues on PhotonOS
+  trap "stop_server" 1 2 3 4 6 9 13 15 19 23
+else
+  trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
+fi
 
 run_external_script before_data_copy.sh
 
