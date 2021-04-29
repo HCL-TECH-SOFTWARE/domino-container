@@ -35,7 +35,7 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN yum install -y openssl bc which wget nano unzip rsync lsof gdb sysstat file net-tools && \
+RUN yum install -y openssl bc which nano unzip lsof gdb file net-tools && \
   $LocalInstallDir/install_domino.sh && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
