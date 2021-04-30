@@ -69,7 +69,6 @@ INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 
 install_domino ()
 {
-  return 0
   INST_VER=$PROD_VER
 
   check_installed_version ver $INST_VER
