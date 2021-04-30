@@ -419,7 +419,7 @@ yum_glibc_lang_update_centos()
 {
   # install correct locale settings
 
-  INSTALL_LOCALE=$(echo $DOMINO_LANG|cut -f1 -d"_")
+  local INSTALL_LOCALE=$(echo $DOMINO_LANG|cut -f1 -d"_")
 
   if [ -z "$INSTALL_LOCALE" ]; then
     return 0
@@ -435,6 +435,19 @@ yum_glibc_lang_update_centos()
 
 yum_glibc_lang_update()
 {
+  if [ "$LINUX_ID" = "photon" ]; then
+
+    if [ -n "$DOMINO_LANG" ]; then
+      echo "Installing locale [$DOMINO_LANG] on Photon OS"
+      yum install -y glibc-i18n
+      echo "$DOMINO_LANG UTF-8" > /etc/locale-gen.conf
+      locale-gen.sh
+      yum remove -y glibc-i18n
+    fi
+
+    return 0
+  fi 
+  
   # Only needed for centos like platforms -> check if yum is installed
 
   if [ ! -x /usr/bin/yum ]; then
