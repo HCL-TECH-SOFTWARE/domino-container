@@ -16,5 +16,6 @@ traveler|11.0.2|Traveler_11.0.2_Linux_ML.tar.gz|-|dd99edd8185b442c54e89f2e5e3860
 traveler|12.0.0BETA3|Traveler_12.0_Linux_Beta3_ML.tar.gz|-|b5f6af5c449dd63824ba0d960fd1a9ce145e7969a534489cdec83bf8d0a41580
 volt|1.0.1.9|hcl.domino.volt-1.0.1.9.zip|-|e8978481109a7bc3a92848fb2043ec409843cd3c9c0a6146a98622e3f2c30755
 volt|1.0.2.9|hcl.domino.volt-1.0.2.9.zip|-|e65b922f93e7143472a02b1a8f2925424c3b08e416afa2504ee97b5d460b97a9
+volt|1.0.3.18|hcl.domino.volt-1.0.3.18.zip|-|597eda820d34fa640f0ed1e049826d92082717e4dc5d105e1a32c8e6d7978799
 verse|2.0.1|HCL_Verse_2.0.1.zip|-|ce358d16d338e9a81b3402bb081ea3a2b39e6915e0f4670107df7144f1004ea8
 
