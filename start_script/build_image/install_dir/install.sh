@@ -42,6 +42,7 @@ export LANG=C
 
 SCRIPT_NAME=$0
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
+CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 pushd()
 {
