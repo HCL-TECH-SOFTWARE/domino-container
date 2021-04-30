@@ -523,8 +523,8 @@ if [ "$LinuxYumUpdate" = "yes" ]; then
 
     header "Updating Linux via zypper"
     # SuSE update
-    zypper refersh
-    zypper update
+    zypper refersh -y
+    zypper update -y
 
   elif [ -x /usr/bin/yum ]; then
 
