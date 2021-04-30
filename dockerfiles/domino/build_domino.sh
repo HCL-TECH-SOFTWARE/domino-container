@@ -286,7 +286,7 @@ docker_build ()
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
-    --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" \
+    --build-arg DOMINO_LANG="$DOMINO_LANG" \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 
   popd

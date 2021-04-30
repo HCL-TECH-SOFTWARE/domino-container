@@ -151,6 +151,10 @@ create_link()
     return 0
   fi
 
+  if [ ! -r "$1" ]; then
+    return 0
+  fi
+
   ln -s "$1" "$2"
 }
 
@@ -316,7 +320,10 @@ if [ ! -e "$DOMINO_DATA_PATH" ]; then
   exit 1
 fi
 
-install_file "$START_SCRIPT_DIR/rc_domino" "$INIT_PATH/$DOMINO_RC_NAME" $ROOT_USER $ROOT_GROUP 755
+if [ -e "$INIT_PATH" ]; then
+  install_file "$START_SCRIPT_DIR/rc_domino" "$INIT_PATH/$DOMINO_RC_NAME" $ROOT_USER $ROOT_GROUP 755
+fi
+
 install_file "$START_SCRIPT_DIR/rc_domino_script" "$DOMINO_START_SCRIPT_DIR/rc_domino_script" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/rc_domino_readme.txt" "$DOMINO_START_SCRIPT_DIR/rc_domino_readme.txt" "$DOMINO_USER" "$DOMINO_GROUP" 644
 
@@ -407,8 +414,10 @@ else
   fi
 fi
 
-patch_install_dir "$INIT_PATH/$DOMINO_RC_NAME"
-patch_user_name "$INIT_PATH/$DOMINO_RC_NAME"
+if [ -e "$INIT_PATH/$DOMINO_RC_NAME" ]; then
+  patch_install_dir "$INIT_PATH/$DOMINO_RC_NAME"
+  patch_user_name "$INIT_PATH/$DOMINO_RC_NAME"
+fi
 
 header Done
 

@@ -199,6 +199,7 @@ dump_config ()
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
+  echo "DOMINO_LANG        : [$DOMINO_LANG]"
   echo 
   return 0
 }
@@ -581,6 +582,7 @@ export GIT_INSTALL
 export OPENSSL_INSTALL
 export BORG_INSTALL
 export BUILDAH_FORMAT
+export DOMINO_LANG
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 

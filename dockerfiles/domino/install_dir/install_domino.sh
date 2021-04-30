@@ -513,6 +513,7 @@ echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
+echo "DOMINO_LANG           = [$DOMINO_LANG]"
 echo "VERSE_VERSION         = [$VERSE_VERSION]"
 
 # Install CentOS updates if requested
