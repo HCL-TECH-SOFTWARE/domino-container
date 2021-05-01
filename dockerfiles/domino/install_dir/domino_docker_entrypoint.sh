@@ -115,11 +115,7 @@ stop_server ()
 
   run_external_script before_shutdown.sh
 
-  if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-    $DOMINO_START_SCRIPT stop
-  else
-    su - notes -c "$DOMINO_START_SCRIPT stop"
-  fi
+  $DOMINO_START_SCRIPT stop
 
   echo "--- Domino Server Shutdown ---"
 
@@ -222,11 +218,7 @@ fi
 run_external_script before_data_copy.sh
 
 # Data Update Operations
-if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-  $DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
-else
-  su - notes -c $DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
-fi
+$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
 
 run_external_script before_config_script.sh
 
@@ -234,11 +226,7 @@ run_external_script before_config_script.sh
 if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-      if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-        $DOMINO_DOCKER_CFG_SCRIPT
-      else
-        su - $DOMINO_USER -c "$DOMINO_DOCKER_CFG_SCRIPT"
-      fi
+      . $DOMINO_DOCKER_CFG_SCRIPT
     fi
   fi
   DOMINO_IS_CONFIGURED=false
@@ -258,12 +246,8 @@ if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ] && [ -z "$SetupA
 
   echo "--- Configuring Domino Server ---"
 
-  if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-    cd $DOMINO_DATA_PATH
-    $LOTUS/bin/server -listen 1352
-  else
-    su - $DOMINO_USER -c "cd $DOMINO_DATA_PATH; $LOTUS/bin/server -listen 1352"
-  fi
+  cd $DOMINO_DATA_PATH
+  $LOTUS/bin/server -listen 1352
 
   echo "--- Configuration ended ---"
   echo
@@ -280,7 +264,7 @@ $DOMINO_START_SCRIPT start
 
 
 # Now check and wait if a post config restart is requested
-if [ -"$DOMINO_IS_CONFIGURED" = "false" ]; then
+if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
   if [ -n "$DominoConfigRestartWaitTime" ] || [ -n "$DominoConfigRestartWaitString" ]; then
 
     sleep 2
