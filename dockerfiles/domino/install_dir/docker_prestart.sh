@@ -297,53 +297,6 @@ check_download_file_links()
 }
 
 
-wait_for_string()
-{
-  local MAX_SECONDS=
-  local FOUND=
-  local COUNT=$4
-  local seconds=0
-
-  if [ -z "$1" ]; then
-    return 0
-  fi
-
-  if [ -z "$2" ]; then
-    return 0
-  fi
-
-  if [ -z "$3" ]; then
-    MAX_SECONDS=10
-  else
-    MAX_SECONDS=$3
-  fi
-
-  if [ -z "$4" ]; then
-    COUNT=1
-  fi
-
-  log
-  log "Waiting for [$2] in [$1] (max: $MAX_SECONDS sec)"
-
-  while [ "$seconds" -lt "$MAX_SECONDS" ]; do
-
-    FOUND=`grep -e "$2" "$1" 2>/dev/null | wc -l`
-
-    if [ "$FOUND" -ge "$COUNT" ]; then
-      return 0
-    fi
-
-    sleep 2
-    seconds=`expr $seconds + 2`
-    if [ `expr $seconds % 10` -eq 0 ]; then
-      echo " ... waiting $seconds seconds"
-    fi
-
-  done
-
-}
-
-
 # --- Main Logic ---
 
 NOW=`date`
@@ -442,13 +395,6 @@ if [ -n "$SetupAutoConfigure" ]; then
 
   cd $DOMINO_DATA_PATH 
   header "Server start will run Domino Server Auto Setup"
-
-  # The following logic isn't needed any more.
-  # If the variables are set, Domino V12 and higher One Touch Setup will kick in at server start
-
-  # $LOTUS/bin/server -a $SetupAutoConfigureParams &
-  # Wait until server started before last configuration steps
-  # wait_for_string $CONSOLE_LOG "Server started on physical node" 30 
 
 else
 

@@ -165,6 +165,50 @@ check_process_request()
   echo "Invalid request: [$DOMINO_REQUEST]"
 }
 
+wait_time_or_string()
+{
+  local MAX_SECONDS=30
+  local FILE=$2
+  local SEARCH_STR=$3
+  local COUNT=1
+  local seconds=0
+  local found=
+
+  if [ -n "$1" ]; then
+    MAX_SECONDS=$1
+  fi
+
+  if [ -n "$4" ]; then
+    COUNT=$4
+  fi
+
+  echo
+
+  if [ -z "$FILE" ] || [ -z "$SEARCH_STR" ]; then
+    echo "Waiting for $MAX_SECONDS seconds ..."
+    sleep $MAX_SECONDS
+    return 0
+  fi
+
+  echo "Waiting for [$SEARCH_STR] in [$FILE] (max: $MAX_SECONDS sec, count: $COUNT)"
+
+  while [ "$seconds" -lt "$MAX_SECONDS" ]; do
+
+    found=`grep -e "$SEARCH_STR" "$FILE" 2>/dev/null | wc -l`
+
+    if [ "$found" -ge "$COUNT" ]; then
+      return 0
+    fi
+
+    sleep 2
+    seconds=`expr $seconds + 2`
+    if [ `expr $seconds % 10` -eq 0 ]; then
+      echo " ... waiting $seconds seconds"
+    fi
+
+  done
+}
+
 # "docker stop" will send a SIGTERM to the shell. catch it and stop Domino gracefully.
 # Use e.g. "docker stop --time=90 .." to ensure server has sufficient time to terminate.
 
@@ -197,6 +241,9 @@ if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
       fi
     fi
   fi
+  DOMINO_IS_CONFIGURED=false
+else
+  DOMINO_IS_CONFIGURED=true
 fi 
 
 run_external_script after_config_script.sh
@@ -228,13 +275,23 @@ run_external_script before_server_start.sh
 
 echo "--- Starting Domino Server ---"
 
-echo "LOGNAME: [$LOGNAME]"
+# Inside the container we can always safely start as "notes" user
+$DOMINO_START_SCRIPT start
 
-if [ "$LOGNAME" = "$DOMINO_USER" ] ; then
-  $DOMINO_START_SCRIPT start
-else
-  su - $DOMINO_USER -c "$DOMINO_START_SCRIPT start"
+
+# Now check and wait if a post config restart is requested
+if [ -"$DOMINO_IS_CONFIGURED" = "false" ]; then
+  if [ -n "$DominoConfigRestartWaitTime" ] || [ -n "$DominoConfigRestartWaitString" ]; then
+
+    sleep 2
+    wait_time_or_string "$DominoConfigRestartWaitTime" $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/console.log "$DominoConfigRestartWaitString" 
+
+    # Invoke restart server command
+    echo "Restarting Domino server to finalize configuration"
+    $DOMINO_START_SCRIPT cmd "restart server"
+  fi
 fi
+
 
 # Wait for shutdown signal. This loop should never terminate, because it would 
 # shutdown the Docker container immediately and kill Domino.

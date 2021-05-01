@@ -24,6 +24,12 @@ spec:
     - name: SetupAutoConfigureParams
       value: "/etc/domino-cfg/auto_config.json"
 
+    - name: DominoConfigRestartWaitTime 
+      value: "30"
+
+    - name: DominoConfigRestartWaitString 
+      value: "Server started on physical node"
+
     name: domino12
     image: registry.domino-lab.net:5000/hclcom/domino:latest12 
 
