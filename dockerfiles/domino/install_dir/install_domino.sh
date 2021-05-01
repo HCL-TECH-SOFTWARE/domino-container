@@ -41,7 +41,7 @@ export DOMINO_DATA_PATH=/local/notesdata
 export PATH=$PATH:$DOMINO_DATA_PATH
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
+CURL_CMD="curl --fail --location --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 DIR_PERM=770
 

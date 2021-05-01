@@ -5,7 +5,7 @@
 ############################################################################
 
 if [ -z "$CURL_CMD" ]; then
-  CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
+  CURL_CMD="curl --fail --location --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 fi
 
 if [ -z "$DIR_PERM" ]; then

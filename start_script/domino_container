@@ -1211,7 +1211,7 @@ container_bash ()
   if [ "$1" = "root" ]; then
     $CONTAINER_CMD exec -it --user 0 $CONTAINER_NAME /bin/bash
   else
-    $CONTAINER_CMD exec -it $CONTAINER_NAME -w /local/notesdata /bin/bash
+    $CONTAINER_CMD exec -it -w /local/notesdata $CONTAINER_NAME /bin/bash
   fi
 
   return 0

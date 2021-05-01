@@ -24,7 +24,7 @@ fi
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_server_setup.log
 CONSOLE_LOG=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
 WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
-CURL_CMD="curl --silent --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
+CURL_CMD="curl --silent --location --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 dominosilentsetup=$DOMDOCK_DIR/SetupProfile.pds
 dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
