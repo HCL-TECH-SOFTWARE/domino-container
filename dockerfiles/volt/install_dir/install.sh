@@ -147,6 +147,11 @@ chown -R notes:notes $DOMINO_DATA_PATH
 # Set Installed Version
 set_version
 
+# Copy demopack.zip if present in install dir 
+if [ -e "$INSTALL_DIR/demopack.zip" ]; then
+  cp "$INSTALL_DIR/demopack.zip" "$DOMDOCK_DIR/demopack.zip"
+fi
+
 cd $DOMINO_DATA_PATH
 tar -czf $INSTALL_ADDON_DATA_TAR volt config.json DominoUpdateConfig.jar ${PROD_NAME}_ver.txt
 
