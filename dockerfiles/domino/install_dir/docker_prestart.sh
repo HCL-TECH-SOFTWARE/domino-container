@@ -22,7 +22,7 @@ if [ -z "$ServerName" ] && [ -z "$SetupAutoConfigure" ]; then
 fi
 
 # Write setup log into volume
-if [ ! -e "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT" ]; 
+if [ ! -e "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT" ]; then
   mkdir -p $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
 fi 
 
