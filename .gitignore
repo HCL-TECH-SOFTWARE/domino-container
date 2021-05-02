@@ -3,3 +3,4 @@ software/*.tgz
 software/*.gz
 software/*.zip
 !*.md
+/dockerfiles/volt/install_dir/demopack.zip
