@@ -21,8 +21,13 @@ if [ -z "$ServerName" ] && [ -z "$SetupAutoConfigure" ]; then
   exit 0
 fi
 
-LOG_FILE=$DOMDOCK_LOG_DIR/domino_server_setup.log
-CONSOLE_LOG=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
+# Write setup log into volume
+if [ ! -e "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT" ]; 
+  mkdir -p $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
+fi 
+
+LOG_FILE=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/domino_server_setup.log
+
 WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
 CURL_CMD="curl --silent --location --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
