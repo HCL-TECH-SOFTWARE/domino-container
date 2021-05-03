@@ -58,12 +58,15 @@ stop_server ()
 # "docker stop" will send a SIGTERM to the shell. catch it and stop Domino gracefully.
 # Ensure to use e.g. "docker stop --time=90 .." to ensure server has sufficient time to terminate.
 
-if [ "$LINUX_ID" = "photon" ]; then
-  # signal child died causes issues on PhotonOS
-  trap "stop_server" 1 2 3 4 6 9 13 15 19 23
-else
-  trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
-fi
+# signal child died causes issues in bash 5.x
+case "$BASH_VERSION" in
+  5*)
+    trap "stop_server" 1 2 3 4 6 9 13 15 19 23
+    ;;
+  *)
+    trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
+    ;;
+esac
 
 # Check if server is configured. Else start custom configuration script
 if [ ! -e "$DOMINO_SERVER_ID" ]; then

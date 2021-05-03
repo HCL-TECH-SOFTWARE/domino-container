@@ -439,10 +439,12 @@ fi
 
 header "Done"
 
-if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
-  log_space "Server Setup unsuccessful -- check [$DOMINO_DATA_PATH/setuplog.txt] for details"
-else
-  log_space "Server Setup done"
+if [ -n "$ServerName" ]; then
+  if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
+    log_space "Server Setup unsuccessful -- check [$DOMINO_DATA_PATH/setuplog.txt] for details"
+  else
+    log_space "Server Setup done"
+  fi
 fi
 
 # Add notes.ini variables if requested
