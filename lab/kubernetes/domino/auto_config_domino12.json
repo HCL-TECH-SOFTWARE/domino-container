@@ -68,7 +68,7 @@
   },
 
   "IDVault": {
-    "name": "DominoLab-ID-Vault",
+    "name": "O=dominolab_vault",
     "description": "Domino Lab Vault",
     "IDFile": "vault.id",
     "IDPassword": "domino4ever8",
