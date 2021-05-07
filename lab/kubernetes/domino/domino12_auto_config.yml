@@ -37,7 +37,6 @@ spec:
       capabilities:
         add: ["SYS_PTRACE"]
       runAsNonRoot: true
-      runAsUser: 30042
 
     volumeMounts:
     - name: domino-data
