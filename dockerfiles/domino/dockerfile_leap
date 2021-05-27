@@ -33,7 +33,7 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN zypper install -y curl perl bc which tar gzip unzip rsync lsof gdb file hostname glibc-locale libcap-progs  && \
+RUN zypper install -y curl perl bc which tar gzip unzip lsof gdb file hostname glibc-locale libcap-progs  vim && \
   $LocalInstallDir/install_domino.sh && \
   zypper clean --all >/dev/null && \
   rm -fr /var/cache && \

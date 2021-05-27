@@ -43,7 +43,7 @@ RUN echo "CentOS Linux release 7.6.1810 (Core)" > /etc/centos-release && \
   cp -f /bin/bash.orig /bin/bash && \
   apt-get update && \
   apt-get install -y apt-utils && \
-  apt-get  install -y bc unzip rsync lsof gdb cpio && \
+  apt-get  install -y bc unzip lsof gdb cpio && \
   $LocalInstallDir/install_domino.sh && \
   rm -rf $LocalInstallDir
 

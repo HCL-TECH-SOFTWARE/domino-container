@@ -1,9 +1,9 @@
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
 ############################################################################
 
-FROM hclcom/domino:LATEST11_UBI
+FROM hclcom/domino:latest_ubi
 
 # External arguments with a default value
 ARG LinuxYumUpdate=

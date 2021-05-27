@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -21,10 +21,15 @@ if [ -z "$ServerName" ] && [ -z "$SetupAutoConfigure" ]; then
   exit 0
 fi
 
-LOG_FILE=$DOMDOCK_LOG_DIR/domino_server_setup.log
-CONSOLE_LOG=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
+# Write setup log into volume
+if [ ! -e "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT" ]; then
+  mkdir -p $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
+fi 
+
+LOG_FILE=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/domino_server_setup.log
+
 WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
-CURL_CMD="curl --silent --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
+CURL_CMD="curl --silent --location --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 dominosilentsetup=$DOMDOCK_DIR/SetupProfile.pds
 dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
@@ -297,53 +302,6 @@ check_download_file_links()
 }
 
 
-wait_for_string()
-{
-  local MAX_SECONDS=
-  local FOUND=
-  local COUNT=$4
-  local seconds=0
-
-  if [ -z "$1" ]; then
-    return 0
-  fi
-
-  if [ -z "$2" ]; then
-    return 0
-  fi
-
-  if [ -z "$3" ]; then
-    MAX_SECONDS=10
-  else
-    MAX_SECONDS=$3
-  fi
-
-  if [ -z "$4" ]; then
-    COUNT=1
-  fi
-
-  log
-  log "Waiting for [$2] in [$1] (max: $MAX_SECONDS sec)"
-
-  while [ "$seconds" -lt "$MAX_SECONDS" ]; do
-
-    FOUND=`grep -e "$2" "$1" 2>/dev/null | wc -l`
-
-    if [ "$FOUND" -ge "$COUNT" ]; then
-      return 0
-    fi
-
-    sleep 2
-    seconds=`expr $seconds + 2`
-    if [ `expr $seconds % 10` -eq 0 ]; then
-      echo " ... waiting $seconds seconds"
-    fi
-
-  done
-
-}
-
-
 # --- Main Logic ---
 
 NOW=`date`
@@ -441,17 +399,7 @@ if [ -n "$SetupAutoConfigure" ]; then
   echo "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
 
   cd $DOMINO_DATA_PATH 
-  header "Starting Domino Server Auto Setup"
-  $LOTUS/bin/server -a $SetupAutoConfigureParams &
-
-  # Wait until server started before last configuration steps
-
-  wait_for_string $CONSOLE_LOG "Server started on physical node" 30 
-
-  # Remove json config file
-  if [ -n "$SetupAutoConfigureParams" ]; then
-    remove_file $SetupAutoConfigureParams
-  fi
+  header "Server start will run Domino Server Auto Setup"
 
 else
 
@@ -491,10 +439,12 @@ fi
 
 header "Done"
 
-if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
-  log_space "Server Setup unsuccessful -- check [$DOMINO_DATA_PATH/setuplog.txt] for details"
-else
-  log_space "Server Setup done"
+if [ -n "$ServerName" ]; then
+  if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
+    log_space "Server Setup unsuccessful -- check [$DOMINO_DATA_PATH/setuplog.txt] for details"
+  else
+    log_space "Server Setup done"
+  fi
 fi
 
 # Add notes.ini variables if requested
@@ -555,7 +505,6 @@ unset ServerPassword
 unset SystemDatabasePath
 unset Notesini
 
-unset SetupAutoConfigure
 unset ServerType
 unset AdminUserIDPath
 unset CertifierPassword
@@ -568,4 +517,6 @@ fi
 
 history -c
 
-exit 0
+echo
+echo "Finished prestart script"
+echo

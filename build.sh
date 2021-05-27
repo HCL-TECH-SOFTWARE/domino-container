@@ -15,14 +15,9 @@ SCRIPT_NAME=$0
 TARGET_IMAGE=$1
 
 TARGET_DIR=`echo $1 | cut -f 1 -d"-"`
-EDIT_COMMAND=vi
 
+# Standard configuration overwritten by build.cfg
 # (Default) NIGX is used hosting software from the local "software" directory.
-# (Optional) Configure software download location.
-# DOWNLOAD_FROM=http://192.168.1.1
-
-# With NGINX container you could chose your own local directory or if variable is empty use the default "software" subdirectory 
-# SOFTWARE_DIR=/local/software
 
 DominoMoveInstallData=yes
 
@@ -32,21 +27,37 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-# Special WGET arguments used for all WGET operations during build
-#SPECIAL_WGET_ARGUMENTS="--no-check-certificate"
-
-# Default config directory. Can be overwritten by environment
-if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
-  DOMINO_DOCKER_CFG_DIR=/local/cfg
+# use vi if no other editor specified in config
+if [ -z "$EDIT_COMMAND" ]; then
+  EDIT_COMMAND="vi"
 fi
 
-# External configuration
-CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/build_config
+# Default config directory. Can be overwritten by environment
+
+if [ -z "$BUILD_CFG_FILE"]; then
+  BUILD_CFG_FILE=build.cfg
+fi
+
+if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
+
+  # Check for legacy config else use new location in user home 
+  if [ -r /local/cfg/build_config ]; then
+    DOMINO_DOCKER_CFG_DIR=/local/cfg
+    CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/build_config
+  else
+    DOMINO_DOCKER_CFG_DIR=~/DominoDocker
+    CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_CFG_FILE
+  fi
+fi
 
 # use a config file if present
-if [ -e "$CONFIG_FILE" ]; then
+if [ -r "$CONFIG_FILE" ]; then
   echo "(Using config file $CONFIG_FILE)"
   . $CONFIG_FILE
+else
+  if [ -r "$BUILD_CFG_FILE" ]; then
+    . build.cfg
+  fi
 fi
 
 check_version ()
@@ -136,12 +147,19 @@ usage ()
   echo "-(no)verify     checks downloaded file checksum (default: no)"
   echo "-(no)url        shows all download URLs, even if file is downloaded (default: no)"
   echo "-(no)linuxupd   updates container Linux  while building image (default: yes)"
-  echo "cfg|config      edits config file (either in current directory or if created in /local/cfg)"
-  echo "cpcfg           copies the config file to config directory (default: /local/cfg/build_config)"
+  echo "cfg|config      edits config file (either in current directory or if created in home dir)"
+  echo "cpcfg           copies standard config file to config directory (default: $CONFIG_FILE)"
+  echo
+  echo Add-On options
+  echo
+  echo "-git            adds git client to image"
+  echo "-openssl        adds openssl to image"
+  echo "-borg           adds borg client and Domino Borg Backup integration to image"
+  echo
   echo
   echo "Examples:"
   echo
-  echo "  `basename $SCRIPT_NAME` domino 11.0.1 fp1"
+  echo "  `basename $SCRIPT_NAME` domino 11.0.1 fp3"
   echo "  `basename $SCRIPT_NAME` traveler 11.0.1.1"
   echo
 
@@ -181,6 +199,7 @@ dump_config ()
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
+  echo "DOMINO_LANG        : [$DOMINO_LANG]"
   echo 
   return 0
 }
@@ -243,15 +262,16 @@ get_current_version ()
 
     DOWNLOAD_FILE=$DOWNLOAD_FROM/$VERSION_FILE_NAME
 
-    WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-    if [ ! -z "$WGET_RET_OK" ]; then
+    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
+    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+    if [ -n "$STATUS_RET" ]; then
       DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
     fi
   fi
 
   if [ ! -z "$DOWNLOAD_VERSION_FILE" ]; then
     echo "Getting current software version from [$DOWNLOAD_VERSION_FILE]"
-    LINE=`$WGET_COMMAND -qO- $DOWNLOAD_VERSION_FILE | grep "^$1|"`
+    LINE=`$CURL_CMD --silent $DOWNLOAD_VERSION_FILE | grep "^$1|"`
   else
     if [ ! -r $VERSION_FILE ]; then
       echo "No current version file found! [$VERSION_FILE]"
@@ -276,14 +296,17 @@ copy_config_file()
   fi
 
   mkdir -p $DOMINO_DOCKER_CFG_DIR 
-  cp sample_build_config $CONFIG_FILE
+  if [ -e "$BUILD_CFG_FILE" ]; then
+    cp "$BUILD_CFG_FILE" "$CONFIG_FILE"
+  else
+    echo "Cannot copy config file"
+  fi
 }
-
-WGET_COMMAND="wget --connect-timeout=20"
 
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
 SOFTWARE_PORT=7777
 SOFTWARE_CONTAINER=hclsoftware
+CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 if [ -z "$1" ]; then
   usage
@@ -387,6 +410,18 @@ for a in $@; do
 
     -nolinuxupd)
       LinuxYumUpdate=no
+      ;;
+
+    -borg)
+      BORG_INSTALL=yes
+      ;;
+
+    -openssl)
+      OPENSSL_INSTALL=yes
+      ;;
+
+    -git)
+      GIT_INSTALL=YES
       ;;
 
     *)
@@ -507,6 +542,11 @@ if [ -z "$PROD_VER" ]; then
   exit 1
 fi
 
+# Podman started to use OCI images by default. We still want Docker image format
+if [ -z "$BUILDAH_FORMAT" ]; then
+  BUILDAH_FORMAT=docker
+fi
+
 BUILD_SCRIPT=dockerfiles/$TARGET_DIR/build_$TARGET_IMAGE.sh
 
 if [ ! -e "$BUILD_SCRIPT" ]; then
@@ -535,9 +575,14 @@ export DominoMoveInstallData
 export TAG_LATEST
 export DOCKER_FILE
 export BASE_IMAGE 
-export SPECIAL_WGET_ARGUMENTS
+export SPECIAL_CURL_ARGS
 export USE_DOCKER
 export DOCKER_NETWORK_NAME
+export GIT_INSTALL
+export OPENSSL_INSTALL
+export BORG_INSTALL
+export BUILDAH_FORMAT
+export DOMINO_LANG
 
 $BUILD_SCRIPT "$DOWNLOAD_FROM" "$PROD_VER" "$PROD_FP" "$PROD_HF"
 

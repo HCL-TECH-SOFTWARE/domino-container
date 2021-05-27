@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: domino-nrpc
+
+spec:
+  selector:
+    app: hcl-domino
+  ports:
+  - name: nrpc
+    protocol: TCP
+    port: 1352
+  externalIPs:
+  - 1.2.3.4 

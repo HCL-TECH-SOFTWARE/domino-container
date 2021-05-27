@@ -1,4 +1,4 @@
-#!/bin/bash
+
 
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
@@ -27,8 +27,7 @@ fi
 DOWNLOAD_LINK_FLEXNET="https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search="
 DOWNLOAD_LINK_FLEXNET_OPTIONS="+&resultType=Files&sortBy=eff_date&listButton=Search"
 
-
-WGET_COMMAND="wget --connect-timeout=20"
+CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 ERROR_COUNT=0
 
@@ -99,9 +98,11 @@ check_software ()
       fi
 
       DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
-      WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
 
-      if [ ! -z "$WGET_RET_OK" ]; then
+      CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
+      STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+
+      if [ -n "$STATUS_RET" ]; then
         CURRENT_FILE="$CHECK_FILE"
         FOUND=TRUE
         break
@@ -117,7 +118,9 @@ check_software ()
         if [ ! "$CHECK_HASH" = "yes" ]; then
           CURRENT_STATUS="OK"
         else
-          HASH=`$WGET_COMMAND -qO- $DOWNLOAD_FILE | sha256sum -b | cut -d" " -f1`
+          DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
+          HASH=$($CURL_CMD --silent $DOWNLOAD_FILE 2>/dev/null | sha256sum -b | cut -d" " -f1)
+
           if [ "$CURRENT_HASH" = "$HASH" ]; then
             CURRENT_STATUS="OK"
           else
@@ -129,7 +132,7 @@ check_software ()
   fi
 
   case "$CURRENT_NAME" in
-    domino|traveler|proton|iam)
+    domino|traveler|volt)
 
       if [ -z "$CURRENT_PARTNO" ]; then
         CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
@@ -194,7 +197,7 @@ check_software_file ()
     do
       check_software $LINE
       FOUND="TRUE"
-    done < <($WGET_COMMAND -qO- $DOWNLOAD_SOFTWARE_FILE | grep "$SEARCH_STR")
+    done < <($CURL_CMD --silent $DOWNLOAD_SOFTWARE_FILE | grep "$SEARCH_STR")
   fi
 
   if [ -z "$PROD_NAME" ]; then
@@ -222,8 +225,10 @@ check_software_status ()
 
     DOWNLOAD_FILE=$DOWNLOAD_FROM/$SOFTWARE_FILE_NAME
 
-    WGET_RET_OK=`$WGET_COMMAND -S --spider "$DOWNLOAD_FILE" 2>&1 | grep 'HTTP/1.1 200 OK'`
-    if [ ! -z "$WGET_RET_OK" ]; then
+    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
+    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+    if [ -n "$STATUS_RET" ]; then
+
       DOWNLOAD_SOFTWARE_FILE=$DOWNLOAD_FILE
       echo "Checking software via [$DOWNLOAD_SOFTWARE_FILE]"
     fi
@@ -241,15 +246,12 @@ check_software_status ()
 
   if [ -z "$PROD_NAME" ]; then
     check_software_file "domino" 
-    check_software_file "domino-ce"
     check_software_file "traveler"
-    check_software_file "proton"
-
+    check_software_file "volt"
 
     if [ -n "$VERSE_VERSION" ]; then
       check_software_file "verse" "$VERSE_VERSION"
     fi
-
 
   else
     echo

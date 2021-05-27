@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: domino-https
+
+spec:
+  type: ClusterIP
+  selector:
+    app: hcl-domino
+  ports:
+  - name: https
+    protocol: TCP
+    port: 443
+    targetPort: 443
+  externalIPs:
+  - 1.2.3.4 

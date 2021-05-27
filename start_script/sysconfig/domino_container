@@ -28,3 +28,14 @@ CONTAINER_ENV_FILE=env_container_domino11
 
 # Domino V12 Early Access One Touch Configufation
 #CONTAINER_ENV_FILE=env_container_domino12
+
+# Docker Restart policy
+#CONTAINER_RESTART_POLICY=unless-stopped
+#CONTAINER_RESTART_POLICY=on-failure:3
+
+# Domino V12 Borg Backup support (enables FUSE device)
+BORG_BACKUP=yes
+
+# Editor Command
+#EDIT_COMMAND=nano
+

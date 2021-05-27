@@ -1,7 +1,7 @@
 #!/bin/bash
 ###########################################################################
 # Nash!Com Domino Container Management Script                             #
-# Version 1.0.0 15.01.2021                                                #
+# Version 1.0.1 30.03.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2021                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -560,6 +560,12 @@ inspect_container_native ()
   STARTDATE="$($CONTAINER_CMD inspect --format "{{ .State.StartedAt }}" $CONTAINER_KEY | cut -f1 -d+ 2>/dev/null)"
   CONTAINER_STARTED_AT=$(date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE")
 
+  # Docker specific information
+  if [ "$CONTAINER_CMD" = "docker" ]; then
+    CONTAINER_RESTART_POLICY="$($CONTAINER_CMD inspect --format "{{ .HostConfig.RestartPolicy.Name }}" $CONTAINER_KEY 2>/dev/null)"
+    CONTAINER_RESTART_POLICY_MAX_RETRY="$($CONTAINER_CMD inspect --format "{{ .HostConfig.RestartPolicy.MaximumRetryCount }}" $CONTAINER_KEY 2>/dev/null)"
+  fi 
+
   return 0
 }
 
@@ -645,6 +651,13 @@ inspect_container ()
 
   STARTDATE=$(echo "$JSON" | jq -r .State.StartedAt | sed "s/null//" | cut -f1 -d+ 2>/dev/null)
   CONTAINER_STARTED_AT=$(date +"%d.%m.%Y %H:%M:%S" -d "$STARTDATE")
+
+  # Docker specific information
+  if [ "$CONTAINER_CMD" = "docker" ]; then
+    CONTAINER_RESTART_POLICY="$(echo "$JSON" | jq -r .HostConfig.RestartPolicy.Name | sed "s/null//")"
+    CONTAINER_RESTART_POLICY_MAX_RETRY="$(echo "$JSON" | jq -r .HostConfig.RestartPolicy.MaximumRetryCount | sed "s/null//")"
+  fi
+
 
   return 0
 }
@@ -793,6 +806,16 @@ container_show_inspect ()
       echo "$CONTAINER_PORTS" | awk '{print "                  " $0}'
       print_delim
     fi
+
+    if [ -n "$CONTAINER_RESTART_POLICY" ]; then
+      echo " Restart Policy :  $CONTAINER_RESTART_POLICY"
+
+      if [ -n "$CONTAINER_RESTART_POLICY_MAX_RETRY" ]; then
+        echo " Restart Retries:  $CONTAINER_RESTART_POLICY_MAX_RETRY"
+      fi
+
+    fi
+
   fi
 }
 
@@ -942,7 +965,18 @@ container_run ()
     CONTAINER_NOTES_UID_OPTION="--user $CONTAINER_NOTES_UID"
   fi
 
-  $CONTAINER_CMD run $CONTAINER_IT $CONTAINER_PORTS --hostname=$CONTAINER_HOSTNAME --name $CONTAINER_NAME $CONTAINER_NETWORK $CONTAINER_ENV_FILE_OPTION $CONTAINER_VOLUMES --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE --cap-add=NET_BIND_SERVICE $PODMAN_OPTIONS $CONTAINER_SPECIAL_OPTIONS $CONTAINER_NOTES_UID_OPTION $CONTAINER_HEALTH_CHECK $CONTAINER_IMAGE
+  if [ "$BORG_BACKUP" = "yes" ]; then
+     # Borg Backup restore requires the FUSE device to mount restores
+     FUSE_OPTIONS="--device /dev/fuse --cap-add SYS_ADMIN"
+  fi
+
+  if [ -n "$CONTAINER_RESTART_POLICY" ]; then
+    CONTAINER_RESTART_OPTIONS="--restart=$CONTAINER_RESTART_POLICY"
+  else
+    CONTAINER_RESTART_OPTIONS=
+  fi 
+
+  $CONTAINER_CMD run $CONTAINER_IT $CONTAINER_PORTS --hostname=$CONTAINER_HOSTNAME --name $CONTAINER_NAME $CONTAINER_NETWORK $CONTAINER_ENV_FILE_OPTION $CONTAINER_VOLUMES --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT $FUSE_OPTIONS --cap-add=SYS_PTRACE --cap-add=NET_BIND_SERVICE $PODMAN_OPTIONS $CONTAINER_SPECIAL_OPTIONS $CONTAINER_NOTES_UID_OPTION $CONTAINER_HEALTH_CHECK $CONTAINER_RESTART_OPTIONS $CONTAINER_IMAGE
 
   return 0
 }
@@ -1177,7 +1211,7 @@ container_bash ()
   if [ "$1" = "root" ]; then
     $CONTAINER_CMD exec -it --user 0 $CONTAINER_NAME /bin/bash
   else
-    $CONTAINER_CMD exec -it $CONTAINER_NAME /bin/bash
+    $CONTAINER_CMD exec -it -w /local/notesdata $CONTAINER_NAME /bin/bash
   fi
 
   return 0

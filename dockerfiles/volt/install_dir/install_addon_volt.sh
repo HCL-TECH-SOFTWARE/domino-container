@@ -13,7 +13,7 @@ DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 DOMINO_DATA_PATH=/local/notesdata
 DOMINO_INI_PATH=$DOMINO_DATA_PATH/notes.ini
 INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${PROD_NAME}.taz
-LOG_FILE=$DOMDOCK_LOG_DIR/addon_{$PROD_NAME}_data_update.log
+LOG_FILE=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/addon_{$PROD_NAME}_data_update.log
 
 
 get_notes_ini_var ()
