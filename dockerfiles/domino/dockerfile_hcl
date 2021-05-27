@@ -1,6 +1,6 @@
   
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
 ############################################################################
 
 ARG BASE_IMAGE=
@@ -34,6 +34,7 @@ COPY install_dir $LocalInstallDir
 # Update, Install required packages and run separate install script
 
 RUN  $LocalInstallDir/install_domino.sh && \
+  yum install -y glibc-langpack-en hostname && \
   yum clean all >/dev/null && \
   rm -fr /var/cache/yum && \
   rm -rf $LocalInstallDir

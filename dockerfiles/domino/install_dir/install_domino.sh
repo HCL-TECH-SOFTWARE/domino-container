@@ -680,16 +680,19 @@ cd "$INSTALL_DIR"
 # Download updated software.txt file if available
 download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 
-case "$PROD_NAME" in
-  domino|domino-ce)
-    install_domino
-    ;;
+if [ "$FIRST_TIME_SETUP" = "1" ]; then
+  case "$PROD_NAME" in
+    domino|domino-ce)
+      install_domino
+      ;;
 
-  *)
-    log_error "Unknown product [$PROD_NAME] - Terminating installation"
-    exit 1
-    ;;
-esac
+    *)
+      log_error "Unknown product [$PROD_NAME] - Terminating installation"
+      exit 1
+      ;;
+  esac
+fi
+
 
 # Install Verse if requested
 install_verse "$VERSE_VERSION"
