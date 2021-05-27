@@ -273,7 +273,7 @@ get_current_version ()
     echo "Getting current software version from [$DOWNLOAD_VERSION_FILE]"
     LINE=`$CURL_CMD --silent $DOWNLOAD_VERSION_FILE | grep "^$1|"`
   else
-    if [ ! -r $VERSION_FILE ]; then
+    if [ ! -r "$VERSION_FILE" ]; then
       echo "No current version file found! [$VERSION_FILE]"
     else
       echo "Getting current software version from [$VERSION_FILE]"
@@ -284,6 +284,40 @@ get_current_version ()
   PROD_VER=`echo $LINE|cut -d'|' -f2`
   PROD_FP=`echo $LINE|cut -d'|' -f3`
   PROD_HF=`echo $LINE|cut -d'|' -f4`
+
+  return 0
+}
+
+get_current_addon_version ()
+{
+  local S1=$2
+  local S2=${!2}
+
+  if [ -n "$DOWNLOAD_FROM" ]; then
+
+    DOWNLOAD_FILE=$DOWNLOAD_FROM/$VERSION_FILE_NAME
+    echo "getting current add-on version from: [$DOWNLOAD_FILE]"
+
+    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
+    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+    if [ -n "$STATUS_RET" ]; then
+      DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
+    fi
+  fi
+
+  if [ -n "$DOWNLOAD_VERSION_FILE" ]; then
+    echo "Getting current add-on version from [$DOWNLOAD_VERSION_FILE]"
+    LINE=`$CURL_CMD --silent $DOWNLOAD_VERSION_FILE | grep "^$1|"`
+  else
+    if [ ! -r "$VERSION_FILE" ]; then
+      echo "No current version file found! [$VERSION_FILE]"
+    else
+      echo "Getting current software version from [$VERSION_FILE]"
+      LINE=`grep "^$1|" $VERSION_FILE`
+    fi
+  fi
+
+  export $2=`echo $LINE|cut -d'|' -f2 -s`
 
   return 0
 }
@@ -308,6 +342,15 @@ SOFTWARE_PORT=7777
 SOFTWARE_CONTAINER=hclsoftware
 CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
+VERSION_FILE_NAME=current_version.txt
+VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
+
+# if version file isn't found check standard location (check might lead to the same directory if standard location already)
+if [ ! -e "$VERSION_FILE" ]; then
+  VERSION_FILE=$PWD/software/$VERSION_FILE_NAME
+fi
+
+
 if [ -z "$1" ]; then
   usage
   exit 0
@@ -321,8 +364,12 @@ for a in $@; do
       PROD_NAME=$p
       ;;
 
-    verse=*)
-      VERSE_VERSION=`echo "$a" | cut -f2 -d=`
+    verse*)
+      VERSE_VERSION=`echo "$a" | cut -f2 -d= -s`
+
+      if [ -z "$VERSE_VERSION" ]; then
+        get_current_addon_version verse VERSE_VERSION
+      fi
       ;;
 
     9*|10*|11*|12*)
@@ -472,14 +519,6 @@ fi
 
 if [ -z "$DOWNLOAD_FROM" ]; then
   SOFTWARE_USE_NGINX=1
-fi
-
-VERSION_FILE_NAME=current_version.txt
-VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
-
-# if version file isn't found check standard location (check might lead to the same directory if standard location already)
-if [ ! -e "$VERSION_FILE" ]; then
-  VERSION_FILE=$PWD/software/$VERSION_FILE_NAME  
 fi
 
 if [ -z "$DOWNLOAD_FROM" ]; then
