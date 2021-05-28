@@ -152,9 +152,10 @@ usage ()
   echo
   echo Add-On options
   echo
-  echo "-git            adds git client to image"
-  echo "-openssl        adds openssl to image"
+  echo "-git            adds Git client to Domino image"
+  echo "-openssl        adds OpenSSL to Domino image"
   echo "-borg           adds borg client and Domino Borg Backup integration to image"
+  echo "-verse          adds the latest verse version to a Domino image"
   echo
   echo
   echo "Examples:"
@@ -364,7 +365,7 @@ for a in $@; do
       PROD_NAME=$p
       ;;
 
-    verse*)
+    -verse*|verse*)
       VERSE_VERSION=`echo "$a" | cut -f2 -d= -s`
 
       if [ -z "$VERSE_VERSION" ]; then
