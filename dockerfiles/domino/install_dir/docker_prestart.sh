@@ -5,6 +5,11 @@
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
+if [ "$DOMDOCK_DEBUG_SHELL" = "yes" ]; then
+  echo "--- Enable shell debugging ---"
+  set -x
+fi
+
 # Configure server based on environment variables
 
 if [ -z "$LOTUS" ]; then
@@ -71,6 +76,14 @@ header()
   echo >> $LOG_FILE
 }
 
+log_debug()
+{
+  if [ "$DOMDOCK_DEBUG" = "yes" ]; then
+    echo "debug: $@"
+  fi
+
+  return 0
+}
 
 secure_move_file()
 {
@@ -479,43 +492,6 @@ fi
 if [ -e /local/git ]; then
   rm -rf /local/git
 fi
-
-unset isFirstServer
-unset AdminFirstName
-unset AdminIDFile
-unset AdminLastName
-unset AdminMiddleName
-unset AdminPassword
-unset CountryCode
-unset DominoDomainName
-unset HostName
-unset OrgUnitIDFile
-unset OrgUnitName
-unset OrgUnitPassword
-unset OrganizationIDFile
-unset OrganizationName
-unset OrganizationPassword
-unset OtherDirectoryServerAddress
-unset OtherDirectoryServerName
-unset ServerIDFile
-unset ConfigFile 
-unset SafeIDFile
-unset ServerName
-unset ServerPassword
-unset SystemDatabasePath
-unset Notesini
-
-unset ServerType
-unset AdminUserIDPath
-unset CertifierPassword
-unset DomainName
-unset OrgName
-
-if [ -e ~/.bash_history ]; then
-  cat /dev/null > ~/.bash_history
-fi
-
-history -c
 
 echo
 echo "Finished prestart script"

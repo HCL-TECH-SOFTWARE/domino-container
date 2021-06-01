@@ -1,12 +1,18 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
 ############################################################################
 
 # This script is the main entry point for Docker container and used instead of rc_domino.
 # You can still interact with the start script invoking "domino" which is Docker aware.
 # This entry point is invoked by Docker to start the Domino server and also acts as a shutdown monitor.
+
+
+if [ "$DOMDOCK_DEBUG_SHELL" = "yes" ]; then
+  echo "--- Enable shell debugging ---"
+  set -x
+fi
 
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
@@ -76,6 +82,14 @@ export DOMINO_GROUP
 # Set more paranoid umask to ensure files can be only read by user
 umask 0077
 
+log_debug()
+{
+  if [ "$DOMDOCK_DEBUG" = "yes" ]; then
+    echo "debug: $@"
+  fi
+
+  return 0
+}
 
 run_external_script ()
 {
@@ -205,6 +219,69 @@ wait_time_or_string()
   done
 }
 
+cleanup_setup()
+{
+  local CLEAN_ENV=
+  local X=
+
+  # One Touch setup
+
+  CLEAN_ENV=$(set|grep "^SERVERSETUP_" | cut -f1 -d"=" -s)
+
+  for X in $CLEAN_ENV; do
+    if [ -n "$X" ]; then
+      unset $X
+    fi
+  done
+
+  CLEAN_ENV=$(set|grep "^IDVAULT_" | cut -f1 -d"=" -s)
+
+  for X in $CLEAN_ENV; do
+    if [ -n "$X" ]; then
+      unset $X
+    fi
+  done
+
+  # Classic setup
+
+  unset isFirstServer
+  unset AdminFirstName
+  unset AdminIDFile
+  unset AdminLastName
+  unset AdminMiddleName
+  unset AdminPassword
+  unset CountryCode
+  unset DominoDomainName
+  unset HostName
+  unset OrgUnitIDFile
+  unset OrgUnitName
+  unset OrgUnitPassword
+  unset OrganizationIDFile
+  unset OrganizationName
+  unset OrganizationPassword
+  unset OtherDirectoryServerAddress
+  unset OtherDirectoryServerName
+  unset ServerIDFile
+  unset ConfigFile 
+  unset SafeIDFile
+  unset ServerName
+  unset ServerPassword
+  unset SystemDatabasePath
+  unset Notesini
+
+  unset ServerType
+  unset AdminUserIDPath
+  unset CertifierPassword
+  unset DomainName
+  unset OrgName
+
+  if [ -e ~/.bash_history ]; then
+    cat /dev/null > ~/.bash_history
+  fi
+
+  history -c
+}
+
 # "docker stop" will send a SIGTERM to the shell. catch it and stop Domino gracefully.
 # Use e.g. "docker stop --time=90 .." to ensure server has sufficient time to terminate.
 
@@ -229,7 +306,7 @@ run_external_script before_config_script.sh
 if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-      . $DOMINO_DOCKER_CFG_SCRIPT
+      $DOMINO_DOCKER_CFG_SCRIPT
     fi
   fi
   DOMINO_IS_CONFIGURED=false
@@ -242,7 +319,14 @@ run_external_script after_config_script.sh
 # Check if server is configured or Domino One Touch Setup is requested.
 # Else start remote configuation on port 1352
 
-if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ] && [ -z "$SetupAutoConfigure" ]; then
+if [ -n $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
+
+  echo "server already setup"
+  cleanup_setup
+
+elif [ -z "$SetupAutoConfigure" ];
+  echo "Running On Touche Setup"
+then
 
   echo "Configuration for automated setup not found."
   echo "Starting Domino Server in listen mode"
@@ -262,9 +346,10 @@ run_external_script before_server_start.sh
 
 echo "--- Starting Domino Server ---"
 
+# Cleanup all setup variables & co if still set
+
 # Inside the container we can always safely start as "notes" user
 $DOMINO_START_SCRIPT start
-
 
 # Now check and wait if a post config restart is requested
 if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
@@ -272,6 +357,9 @@ if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
 
     sleep 2
     wait_time_or_string "$DominoConfigRestartWaitTime" $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/console.log "$DominoConfigRestartWaitString" 
+
+    #cleanup environment at restart
+    cleanup_setup
 
     # Invoke restart server command
     echo "Restarting Domino server to finalize configuration"
@@ -318,5 +406,11 @@ do
   sleep 1
 done
 
-exit 0
+# For debug purposes we want to keep the container alive if requested
+if [ "$DOMDOCK_NOEXIT" = "yes" ]; then
+  while true
+    sleep 10
+  do
+fi
 
+exit 0
