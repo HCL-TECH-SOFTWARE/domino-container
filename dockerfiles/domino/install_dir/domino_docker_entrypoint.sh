@@ -319,9 +319,9 @@ run_external_script after_config_script.sh
 # Check if server is configured or Domino One Touch Setup is requested.
 # Else start remote configuation on port 1352
 
-if [ -n $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
-
-  echo "server already setup"
+CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
+if [ -n "$CHECK_SERVER_SETUP" ]; then
+  echo "Server already setup"
   cleanup_setup
 
 elif [ -z "$SetupAutoConfigure" ];
