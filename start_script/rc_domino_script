@@ -1399,7 +1399,12 @@ run_monitor ()
     errmsg_and_exit "Cannot read server-log ($REAL_OUTPUT_FILE) - exiting"
   fi
 
-  if [ ! -w $DOMINO_INPUT_FILE ]; then
+  # if input file does not exist, create it
+  if [ ! -e "$DOMINO_INPUT_FILE" ]; then
+    touch "$DOMINO_INPUT_FILE"
+  fi
+
+  if [ ! -w "$DOMINO_INPUT_FILE" ]; then
     errmsg_and_exit "Cannot write server-input-file ($DOMINO_INPUT_FILE) - exiting"
   fi
   

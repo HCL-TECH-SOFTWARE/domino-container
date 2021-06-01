@@ -469,6 +469,11 @@ set_ini_var_if_not_set()
   local var=$2
   local new=$3
 
+  if [ ! -e "$file" ]; then
+    echo "Notes.ini [$file] not found! when adding [$var] = [$new]"
+    return 0
+  fi
+
   # check if entry exists empty. if not present append new entry
 
   local found=`grep -i "^$var=" $file`
@@ -592,7 +597,7 @@ fi
 # Without the full permissions mounts to sub directories don't work if specifying different users
 
 if [ -e "/local" ]; then
-  chown -R root:root /local
+  chown root:root /local
   chmod 777 /local
 fi
 
