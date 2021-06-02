@@ -587,6 +587,8 @@ else
   # Check for existing user's group and overwrite (for base images with different group - like root)
   export DOMINO_GROUP=`id -gn "$DOMINO_USER"`
 
+  # Don't install perl for Domino installer
+  NO_PERL_INSTALL=yes
 fi
 
 # Allow world full access to the main directories to ensure all mounts work.
