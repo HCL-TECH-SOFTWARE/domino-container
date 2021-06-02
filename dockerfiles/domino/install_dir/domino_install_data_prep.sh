@@ -29,6 +29,7 @@ echo
 # Set inportant notes.ini defaults
 cd $DOMINO_DATA_PATH
 echo "create_r10_databases=1" >> notes.ini
+echo "create_r12_databases=1" >> notes.ini
 echo "create_r85_log=1" >> notes.ini
 echo "DOMINONOWEBADMIN=1" >> notes.ini
 

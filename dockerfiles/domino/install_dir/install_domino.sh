@@ -493,7 +493,7 @@ set_default_notes_ini_variables ()
   # Allow server names with dots and undercores
   set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION" "1"
 
-  # Allow server names with dots and undercores
+  # Use current ODS
   set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
 
 }

@@ -9,6 +9,8 @@ DOMINO_INSTDATA_BACKUP=$Notes_ExecDirectory/data1_bck
 UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_data_update.log
 
+DIR_PERM=770
+
 log()
 {
   echo "$1 $2 $3 $4 $5" >> $LOG_FILE
@@ -220,6 +222,14 @@ copy_files_for_major_version ()
   # Avoid Domino Directory Design Update Prompt
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
 
+
+  # Allow server names with dots and undercores
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION" "1"
+
+  # Ensure current ODS is used for R12 -> does not harm on earlier releases 
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
+
+
   header "Copying new data files for Version $DOMINO_VERSION"
 
   # Extracting new data files 
@@ -340,10 +350,9 @@ copy_data_directory ()
     return 0
   fi 
 
-  DIR_PERM=770
 
-  if [ -e $DOMINO_DATA_PATH ]; then
-    echo "$DOMINO_DATA_PATH already exists"
+  if [ -e "$DOMINO_DATA_PATH" ]; then
+    echo "[$DOMINO_DATA_PATH] already exists"
   else
     echo "creating directories with user: [$DOMINO_USER] group: [$DOMINO_GROUP] perm: [$DIR_PERM]"
   fi
@@ -369,6 +378,12 @@ copy_data_directory ()
   
   tar xvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
   debug_show_data_dir "after extract"
+
+  # Important for install data dirs from other images -> ensure the data version is set
+
+  if [ ! -e "$DOMINO_DATA_PATH/domino_ver.txt" ]; then
+    cat $DOMDOCK_TXT_DIR/domino_ver.txt > $DOMINO_DATA_PATH/domino_ver.txt
+  fi
 }
 
 copy_files_for_addon ()
