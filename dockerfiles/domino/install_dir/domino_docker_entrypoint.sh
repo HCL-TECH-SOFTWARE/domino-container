@@ -219,7 +219,7 @@ wait_time_or_string()
   done
 }
 
-cleanup_setup()
+cleanup_setup_env()
 {
   local CLEAN_ENV=
   local X=
@@ -303,7 +303,8 @@ $DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
 run_external_script before_config_script.sh
 
 # Check if server is configured. Else start custom configuration script
-if [ -z $(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini) ]; then
+CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
+if [ -n "$CHECK_SERVER_SETUP" ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
       $DOMINO_DOCKER_CFG_SCRIPT
@@ -322,11 +323,12 @@ run_external_script after_config_script.sh
 CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
 if [ -n "$CHECK_SERVER_SETUP" ]; then
   echo "Server already setup"
-  cleanup_setup
+  cleanup_setup_env
 
-elif [ -z "$SetupAutoConfigure" ];
+elif [ -n "$SetupAutoConfigure" ]; then
   echo "Running On Touche Setup"
-then
+
+else
 
   echo "Configuration for automated setup not found."
   echo "Starting Domino Server in listen mode"
@@ -359,7 +361,7 @@ if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
     wait_time_or_string "$DominoConfigRestartWaitTime" $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/console.log "$DominoConfigRestartWaitString" 
 
     #cleanup environment at restart
-    cleanup_setup
+    cleanup_setup_env
 
     # Invoke restart server command
     echo "Restarting Domino server to finalize configuration"
