@@ -373,6 +373,10 @@ for a in $@; do
       fi
       ;;
 
+    -from=*)
+      BASE_IMAGE=`echo "$a" | cut -f2 -d= -s`
+      ;;
+
     9*|10*|11*|12*)
       PROD_VER=$p
       ;;
@@ -403,7 +407,9 @@ for a in $@; do
       ;;
 
     domino-docker:*)
+      # to build on top of HCL image
       BASE_IMAGE=$a
+      DOCKER_FILE=dockerfile_hcl
       ;;
 
     cfg|config)
@@ -484,15 +490,15 @@ check_docker_environment
 
 echo "[Running in $DOCKER_CMD configuration]"
 
-# in case we are starting with a specific HCL Domino image, set the DOCKER_FILE accordingly if not explicitly specified
+# in case we are starting with a specific image (for example HCL Domino image), set the DOCKER_FILE accordingly if not explicitly specified
 # also bypass software download check
 # but check if the image is available
 
-echo "BASE_IMAGE: [$BASE_IMAGE]"
 if [ -n "$BASE_IMAGE" ]; then
+  echo "Building based on existing image : [$BASE_IMAGE]"
 
   if [ -z "$DOCKER_FILE" ]; then
-    DOCKER_FILE=dockerfile_hcl
+    DOCKER_FILE=dockerfile_from
   fi
 
   IMAGE_ID=`$DOCKER_CMD images $BASE_IMAGE -q`
@@ -503,7 +509,7 @@ if [ -n "$BASE_IMAGE" ]; then
 
   # Derive version from Docker image name
   PROD_NAME=domino
-  PROD_VER=`echo $BASE_IMAGE | cut -d":" -f 2`
+  PROD_VER=`echo $BASE_IMAGE | cut -d":" -f 2 -s`
     
   # don't check software
   CHECK_SOFTWARE=no
