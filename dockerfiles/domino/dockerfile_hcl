@@ -26,6 +26,7 @@ ARG SPECIAL_WGET_ARGUMENTS=
 ARG VERSE_VERSION=
 
 USER root
+WORKDIR /
 
 # Copy Install Files to container
 COPY install_dir $LocalInstallDir

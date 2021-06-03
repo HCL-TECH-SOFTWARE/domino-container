@@ -604,7 +604,7 @@ if [ -e "/local" ]; then
 fi
 
 if [ -e "$DOMINO_DATA_PATH" ]; then
-  chmod $DIR_PERM $DOMINO_DATA_PATH
+  chmod $DIR_PERM "$DOMINO_DATA_PATH"
 fi
 
 create_directory $DOMDOCK_DIR root root 777
@@ -612,7 +612,7 @@ create_directory $DOMDOCK_SCRIPT_DIR root root 755
 
 # Needs full permissions for mount points
 create_directory /local root root 777
-create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
 create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM

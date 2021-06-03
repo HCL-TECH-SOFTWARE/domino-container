@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -222,11 +222,10 @@ copy_files_for_major_version ()
   # Avoid Domino Directory Design Update Prompt
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
 
-
   # Allow server names with dots and undercores
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION" "1"
 
-  # Ensure current ODS is used for R12 -> does not harm on earlier releases 
+  # Ensure current ODS is used for V12 -> does not harm on earlier releases
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
 
 
@@ -353,6 +352,7 @@ copy_data_directory ()
 
   if [ -e "$DOMINO_DATA_PATH" ]; then
     echo "[$DOMINO_DATA_PATH] already exists"
+
   else
     echo "creating directories with user: [$DOMINO_USER] group: [$DOMINO_GROUP] perm: [$DIR_PERM]"
   fi
@@ -378,6 +378,24 @@ copy_data_directory ()
   
   tar xvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
   debug_show_data_dir "after extract"
+
+  # Just needed for first setup if not using our notes.ini
+
+  # Set NotesProgram notes.ini (required for Traveler, but should always point to the binary directoy)
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "NotesProgram" "$Notes_ExecDirectory"
+
+  # Avoid Domino Directory Design Update Prompt
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
+
+  # Allow server names with dots and undercores
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION" "1"
+
+  # Ensure current ODS is used for V12 -> does not harm on earlier releases
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
+
+  # Ensure directory can be read by group -> OpenShift has some issues with copying permissions
+  echo "running chmod [$DIR_PERM] [$DOMINO_DATA_PATH] ">> $LOG_FILE
+  chmod "$DIR_PERM" "$DOMINO_DATA_PATH" >> $LOG_FILE
 
   # Important for install data dirs from other images -> ensure the data version is set
 
