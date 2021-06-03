@@ -1045,6 +1045,13 @@ container_remove ()
   return 0
 }
 
+container_restart_policy ()
+{
+  if [ -z "$CONTAINER_STATUS" ]; then log_space "Container [$CONTAINER_NAME] does not exist"; return 1; fi
+
+  $CONTAINER_CMD update --restart "$1" $CONTAINER_NAME
+  return 0
+}
 
 container_cleanup ()
 {
@@ -1231,9 +1238,10 @@ usage ()
   show_version
   echo "Usage: $(basename $SCRIPT_NAME)"
   echo
-  echo "       start | stop | restart | status | statusd | inspect | console | config | env"
-  echo "       domino | bash | update | attach | remove | removeimage | cleanup | port"
-  echo "       install | load | build | version | help"
+  echo "       start  | stop | restart | status | statusd | inspect | console | config | env"
+  echo "       domino | bash | update  | attach | remove  | cleanup | rmi     | port"
+  echo "       build  | load | pull    | restartpolicy    | install | version | help"
+  echo "       help   | version"
 
   return 0
 }
@@ -1258,12 +1266,14 @@ help ()
   echo "removeimage|rmi removes the current container (you have to remove the container first)"
   echo "config|cfg      edit configuration"
   echo "update          updates the container if referenced image has changed (stops Domino, stops the container, runs a new image)"
+  echo "pull            pull current image (e.g for update)"
   echo "install         install Podman"
   echo "load            load HCL Domino Docker image"
   echo "build           builds a current image -- even image tags might not have changed to ensure OS patches are installed"
   echo "port            show used tcp/ip ports for container"
-  echo "enable|on       enable systemd service"
-  echo "disable|off     disable systemd service"
+  echo "restartpolicy   update restart policy for existing container (e.g. : no | on-failure | always | unless-stopped)"
+  echo "enable|on       enable systemd service for Podman"
+  echo "disable|off     disable systemd service for Podman"
   echo "clean           cleanup container and systemd if configured"
   echo "env             edit environment file"
   echo "version         shows script version information"
@@ -1553,6 +1563,10 @@ case "$PARAM1" in
 
   pull)
     pull_image "$PARAM2"
+    ;;
+
+  restartpolicy)
+    container_restart_policy "$PARAM2"
     ;;
 
   ver|version)
