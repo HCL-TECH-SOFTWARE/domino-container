@@ -129,11 +129,8 @@ echo "Product               = [$PROD_NAME]"
 echo "Version               = [$PROD_VER]"
 echo "DominoUserID          = [$DominoUserID]"
 
-# Install CentOS updates if requested
-if [ "$LinuxYumUpdate" = "yes" ]; then
-  header "Updating CentOS via yum"
-  yum update -y
-fi
+# Check for Linux updates if requested
+check_linux_update
 
 cd "$INSTALL_DIR"
 
@@ -186,7 +183,8 @@ case "$PROD_NAME" in
 
 esac
 
-# Set Installed Version
+# Cleanup repository cache to save space
+clean_linux_repo_cache
 
 header "Successfully completed installation!"
 

@@ -56,11 +56,8 @@ echo "Product               = [$PROD_NAME]"
 echo "Version               = [$PROD_VER]"
 echo "DominoUserID          = [$DominoUserID]"
 
-# Install CentOS updates if requested
-if [ "$LinuxYumUpdate" = "yes" ]; then
-  header "Updating CentOS via yum"
-  yum update -y
-fi
+# Check for Linux updates if requested
+check_linux_update
 
 cd "$INSTALL_DIR"
 
@@ -157,6 +154,9 @@ tar -czf $INSTALL_ADDON_DATA_TAR volt config.json DominoUpdateConfig.jar ${PROD_
 
 remove_directory $DOMINO_DATA_PATH
 create_directory $DOMINO_DATA_PATH notes notes 770
+
+# Cleanup repository cache to save space
+clean_linux_repo_cache
 
 header "Successfully completed installation!"
 

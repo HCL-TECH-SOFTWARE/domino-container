@@ -631,3 +631,47 @@ set_ini_var_if_not_set()
   return 0
 }
 
+check_linux_update()
+{
+  # Install Linux updates if requested
+  if [ "$LinuxYumUpdate" = "yes" ]; then
+
+    if [ -x /usr/bin/zypper ]; then
+
+      header "Updating Linux via zypper"
+      zypper refersh -y
+      zypper update -y
+
+    elif [ -x /usr/bin/yum ]; then
+
+      header "Updating Linux via yum"
+      yum update -y
+
+    fi
+  fi
+}
+
+clean_linux_repo_cache()
+{
+    if [ -x /usr/bin/zypper ]; then
+
+      header "Cleaning zypper cache"
+      zypper clean --all >/dev/null
+      rm -fr /var/cache
+
+    elif [ -x /usr/bin/yum ]; then
+
+      header "Cleaning yum cache"
+      yum clean all >/dev/null
+      rm -fr /var/cache/yum
+
+    fi
+}
+
+install_custom_packages()
+{
+  if [ -n "$LinuxAddOnPackages" ]; then
+    install_package "$LinuxAddOnPackages"
+  fi
+}
+
