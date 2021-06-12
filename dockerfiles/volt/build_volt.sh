@@ -179,6 +179,10 @@ docker_build ()
     fi
   fi
 
+  if [ -z "$BASE_IMAGE" ]; then
+    BASE_IMAGE=hclcom/domino:latest
+  fi
+
   # Finally build the image
   $DOCKER_CMD build --no-cache $DOCKER_NETWORK \
     -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
@@ -202,7 +206,7 @@ docker_build ()
     --build-arg PROD_VER="$PROD_VER" \
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
-    --build-arg SPECIAL_WGET_ARGUMENTS="$SPECIAL_WGET_ARGUMENTS" \
+    --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 
   popd
