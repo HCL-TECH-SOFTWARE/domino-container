@@ -521,24 +521,8 @@ echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 echo "DOMINO_LANG           = [$DOMINO_LANG]"
 echo "VERSE_VERSION         = [$VERSE_VERSION]"
 
-# Install CentOS updates if requested
-if [ "$LinuxYumUpdate" = "yes" ]; then
-
-  if [ -x /usr/bin/zypper ]; then
-
-    header "Updating Linux via zypper"
-    # SuSE update
-    zypper refersh -y
-    zypper update -y
-
-  elif [ -x /usr/bin/yum ]; then
-
-    header "Updating Linux via yum"
-    # RedHat/CentOS/.. update
-    yum update -y
-
-  fi
-fi
+# Check for Linux updates if requested first
+check_linux_update
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
@@ -845,6 +829,9 @@ if [ ! -z "$DominoMoveInstallData" ]; then
   rm -rf $DOMINO_DATA_PATH
   create_directory $DOMINO_DATA_PATH root root 777
 fi
+
+# Cleanup repository cache to save space
+clean_linux_repo_cache
 
 header "Successfully completed installation!"
 

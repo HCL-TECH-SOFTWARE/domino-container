@@ -36,8 +36,6 @@ COPY install_dir $LocalInstallDir
 
 RUN yum install -y openssl bc which nano unzip lsof gdb file net-tools cpio procps-ng diffutils shadow unzip tar gzip gawk rpm coreutils-selinux util-linux vim tzdata && \
   $LocalInstallDir/install_domino.sh && \
-  yum clean all >/dev/null && \
-  rm -fr /var/cache/yum && \
   rm -rf $LocalInstallDir
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh

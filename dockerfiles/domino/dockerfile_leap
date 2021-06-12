@@ -35,8 +35,6 @@ COPY install_dir $LocalInstallDir
 
 RUN zypper install -y curl perl bc which tar gzip unzip lsof gdb file hostname glibc-locale libcap-progs  vim && \
   $LocalInstallDir/install_domino.sh && \
-  zypper clean --all >/dev/null && \
-  rm -fr /var/cache && \
   rm -rf $LocalInstallDir
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /domino_docker_healthcheck.sh
