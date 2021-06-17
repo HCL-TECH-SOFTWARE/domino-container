@@ -304,7 +304,7 @@ run_external_script before_config_script.sh
 
 # Check if server is configured. Else start custom configuration script
 CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
-if [ -n "$CHECK_SERVER_SETUP" ]; then
+if [ -z "$CHECK_SERVER_SETUP" ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
       $DOMINO_DOCKER_CFG_SCRIPT
