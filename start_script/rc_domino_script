@@ -492,9 +492,9 @@ DebugText ()
   if [ "$DOMINO_DEBUG_MODE" = "yes" ]; then
 
     if [ -z "$DOMINO_DEBUG_FILE" ]; then
-      echo "Debug:" $@
+      echo "$(date '+%F %T') Debug:" $@
     else
-      echo "Debug:" $@ >> $DOMINO_DEBUG_FILE 
+      echo "$(date '+%F %T') Debug:" $@ >> $DOMINO_DEBUG_FILE
     fi
 
   fi 

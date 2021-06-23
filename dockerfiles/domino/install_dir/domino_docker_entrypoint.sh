@@ -85,7 +85,7 @@ umask 0077
 log_debug()
 {
   if [ "$DOMDOCK_DEBUG" = "yes" ]; then
-    echo "debug: $@"
+    echo "$(date '+%F %T') debug: $@"
   fi
 
   return 0
