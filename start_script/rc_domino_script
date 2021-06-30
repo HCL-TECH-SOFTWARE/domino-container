@@ -255,7 +255,7 @@ if [ -z "$LOTUS" ]; then
   elif [ -x /opt/ibm/domino/bin/server ]; then
     LOTUS=/opt/ibm/domino
   else
-    LOTUS=/opt/ibm/domino
+    LOTUS=/opt/hcl/domino
   fi
 fi
 

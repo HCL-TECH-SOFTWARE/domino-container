@@ -33,7 +33,7 @@ It ensures that the environment is always setup correct and supports multiple pa
 
 This script is designed to run with a dedicated user for each partition.
 Out of the box the script is configured to use the "notes" user/group and the standard 
-directories for binaries (/opt/ibm/domino) and the data directory (/local/notesdata).
+directories for binaries (/opt/hcl/domino) and the data directory (/local/notesdata).
 You should setup all settings in the script configuration file.
 
 Note: For newer versions using systemd (CentOS 7 RHEL 7/ SLES 12) root permissions are 
@@ -52,7 +52,7 @@ The default configuration is
 
 User : notes
 Group: notes
-Binary Directory: /opt/ibm/domino
+Binary Directory: /opt/hcl/domino
 Data Directory  : /local/notesdata
 
 The standard configuration is highly recommended. This will make your life easier for installing the server.
@@ -163,7 +163,7 @@ Environment=LANG=de_DE.UTF-8
 
 - LOTUS 
   Domino binary directory 
-  default: /opt/ibm/domino
+  default: /opt/hcl/domino
 
 - DOMINO_DATA_PATH
   Domino data directory
@@ -796,7 +796,7 @@ In contrast to the NSD -kill option this routine removes ALL resources.
 This includes all message queues, shared memory, semaphores allocated by
 the UNIX user used by the Domino server instance.
 And also removes all processes started from the server binary directory
-(e.g. /opt/ibm/domino).
+(e.g. /opt/hcl/domino).
 NSD currently does only remove registered resources in the following files:
 pid.nbf, mq.nbf, sem.nbf, shm.nbf
 
@@ -899,9 +899,9 @@ LOTUS
 -----
 
 (Required)
-Domino installation directory (usual /opt/ibm/domino in D7)
+Domino installation directory (usual /opt/hcl/domino)
 This is the main variable which needs to be set for binaries 
-Default: /opt/ibm/domino 
+Default: /opt/hcl/domino 
 
 
 DOMINO_DATA_PATH
@@ -1732,10 +1732,10 @@ If this locale is different than the locale you installed the server with, the D
 not find the res files in those cases.
 
 The right location for the res files would be for example on Linux:
- /opt/ibm/domino/notes/latest/linux/res/C/strings.res
+ /opt/hcl/domino/notes/latest/linux/res/C/strings.res
 
 But in some cases it looks like this
- /opt/ibm/domino/notes/latest/linux/res/de_DE/strings.res
+ /opt/hcl/domino/notes/latest/linux/res/de_DE/strings.res
 
 The solution for this issue is to move the de_DE directory to C (e.g. mv de_DE C) and your server
 will find the res files independent of the locale configured on the server.
@@ -1743,7 +1743,7 @@ will find the res files independent of the locale configured on the server.
 You could create a sym link for your locale. This will ensure it works also with
 all add-on applications and in upgrade scenarios.
 
-cd /opt/ibm/domino/notes/latest/linux/res
+cd /opt/hcl/domino/notes/latest/linux/res
 ln -s de_DE.UTF-8 C
 ln -s en_US.UTF-8 C
 
