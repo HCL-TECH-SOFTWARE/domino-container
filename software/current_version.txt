@@ -1,10 +1,4 @@
-<<<<<<< Updated upstream
 domino|12.0.0
 traveler|12.0.0
-volt|1.0.3.18
-verse|2.1.0
-=======
-domino|11.0.1|FP3
-traveler|11.0.2
 volt|1.0.3.21
->>>>>>> Stashed changes
+verse|2.1.0
