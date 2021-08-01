@@ -54,5 +54,5 @@ EXPOSE 1352 25 80 110 143 389 443 636 993 995 63148 63149
 
 ENTRYPOINT ["/domino_docker_entrypoint.sh"]
 
-USER notes
+USER 1000
 
