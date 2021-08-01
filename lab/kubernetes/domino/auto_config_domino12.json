@@ -103,7 +103,7 @@
             "items": {
               "HTTP_SSLKeyFile": "master.domino-lab.net",
               "TRANSLOG_AutoFixup": "",
-              "TRANSLOG_MaxSize": 4096,
+              "TRANSLOG_MaxSize": 1024,
               "TRANSLOG_Path": "/local/translog",
               "TRANSLOG_Performance": "2",
               "TRANSLOG_Status": "1",

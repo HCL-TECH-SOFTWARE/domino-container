@@ -97,10 +97,6 @@ spec:
     - name: domino-data
       mountPath: /local
 
-  - name: domino-cfg
-    configMap:
-      name: domino12-cfg
-
   volumes:
   - name: domino-data
     persistentVolumeClaim:
