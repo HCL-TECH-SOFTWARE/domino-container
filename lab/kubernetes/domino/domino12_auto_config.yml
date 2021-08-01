@@ -1,13 +1,22 @@
 apiVersion: v1
 kind: Pod
+
 metadata:
   name: domino12
+  namespace: default
+
   labels:
     app: hcl-domino
 
 spec:
   imagePullSecrets:
   - name: regcred
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: "OnRootMismatch"
 
   containers:
 
@@ -31,12 +40,13 @@ spec:
       value: "Server started on physical node"
 
     name: domino12
-    image: registry.domino-lab.net:5000/hclcom/domino:latest12 
+    image: registry.domino-lab.net:5000/hclcom/domino:latest
 
     securityContext:
       capabilities:
         add: ["SYS_PTRACE"]
       runAsNonRoot: true
+      runAsUser: 1000
 
     volumeMounts:
     - name: domino-data
@@ -70,6 +80,26 @@ spec:
       initialDelaySeconds: 60
       periodSeconds: 20
 
+
+  # this init container is a work-around to change file-system permissions for some local stoarge providers
+  initContainers:
+  - name: domino-startup
+    image: busybox:latest
+
+    command: [ 'sh', '-c', 'chmod 777 /local' ]
+
+    securityContext:
+      privileged: true
+      runAsNonRoot: false
+      runAsUser: 0
+
+    volumeMounts:
+    - name: domino-data
+      mountPath: /local
+
+  - name: domino-cfg
+    configMap:
+      name: domino12-cfg
 
   volumes:
   - name: domino-data

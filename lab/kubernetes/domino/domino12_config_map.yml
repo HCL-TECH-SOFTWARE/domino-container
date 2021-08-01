@@ -1,8 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
+
 metadata:
   name: domino12-cfg
   namespace: default
+
 data:
   auto_config.json: |
     {

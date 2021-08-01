@@ -31,7 +31,7 @@ spec:
       value: "yes"
 
     name: domino11
-    image: registry.domino-lab.net:5000/hclcom/domino:latest 
+    image: registry.domino-lab.net:5000/hclcom/domino:latest11
     securityContext:
       capabilities:
         add: ["SYS_PTRACE"]
