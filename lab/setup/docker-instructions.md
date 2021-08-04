@@ -69,9 +69,10 @@ docker run --rm -it centos:latest bash
 
 ## Create a normal user and group ( notes:notes )
 
-Creates the user with ID 1000 (first free user)
+Creates the user with ID 1000 (first free user)  
+Already prepared for you in the lab environment  
 
-WARNING: Don't specify a password to ensure nobody can try to login.  
+`WARNING: Don't specify a password to ensure nobody can try to login.`
 We are going to login via sudo or use an authorized_key configuration if needed.
 
 
@@ -79,6 +80,12 @@ We are going to login via sudo or use an authorized_key configuration if needed.
 adduser notes -U
 
 ```
+
+# HCL Domino Docker Image
+
+The Domino Docker image is a ready to use standard image available on Flexnet for download.  
+Your lab environment already has it downloaded to `/local/software`.
+
 
 ## Upload the Domino image to docker host
 
@@ -91,17 +98,70 @@ For your convenience the HCL Domino Docker image is already uploaded to `/local/
 docker load --input /local/software/Domino_12.0_DockerImage.tgz
 ```
 
-
-Reference: https://help.hcltechsw.com/domino/earlyaccess/inst_dock_load_tar_archive.html
+Reference: https://help.hcltechsw.com/domino/12.0.0/admin/inst_dock_load_tar_archive.html
 
 
 Congrats!  
 This completes your Docker environment preparation.
 
 
-# Docker-Compose Examples
+## Run the Docker image
 
-The following files are Docker compose examples to run containers with different settings from the YML files provided.
+### Run Domino Docker in setup mode
+
+```
+docker run -it -p 8585:8585 --hostname marvel.domino-lab.net --name domino12_setup --cap-add=SYS_PTRACE --rm -v notesdata:/local/notesdata domino-docker:V1200_05142021prod --setup
+```
+
+Now open another window and check for a new volume automatically created for your server
+
+```
+docker volume ls
+```
+
+Also check the running container
+
+```
+docker ps 
+```
+
+You can also jump into the container from another window
+
+
+```
+docker exec -it domino12_setup bash 
+```
+
+Run commands inside the container
+
+```
+ps -ef
+
+netstat -ant
+
+exit
+```
+
+
+### Start the configured server
+
+
+Now that the server is configured it can be started in background
+
+
+```
+docker run -d -p 80:80 -p 443:443 -p 1352:1352 --hostname marvel.domino-lab.net --name domino12 --cap-add=SYS_PTRACE -v notesdata:/local/notesdata domino-docker:V1200_05142021prod
+```
+
+But do we really want to to specify all the parameters manually on command line?  
+There is a more convenient way to bring up Docker containers.
+
+
+# Docker-Compose
+
+`docker-compose` is a very convenient way to configure and manage multiple containers and bring them up as one service.  
+You need to download it separately from the Docker website. The following command automates the process for you.
+
 
 ## Install Docker-Compose
 
@@ -127,10 +187,13 @@ cd /local/github/domino-docker/examples/docker-compose
 Take look into the example
 
 ```
+cat docker-compose.yml
+
 vi docker-compose.yml
+
 ```
 
-Tip: instead of vi we have nano and mcedit installed
+Tip: instead of `vi` we have `nano` and `mcedit` installed
 
 ```
 yum install -y mc nano
@@ -139,19 +202,27 @@ mcedit docker-compose.yml
 
 ```
 
-Tag the image.  
-And start the container.
+This example contains a server with a first Domino V12 One Touch configuration.
+
+
+## Tag the image and start the container  
+
 
 ```
-
 docker tag domino-docker:V1200_05142021prod hclcom/domino:latest
 
-
 docker-compose up
+```
 
+Tip: You can also start the container in back-ground detached with `-d`
+
+
+```
 docker-compose up -d
 
 ```
+
+
 
 # Domino Community Image
 
@@ -169,22 +240,33 @@ Copy configuration and edit it.
 ./build.sh cfg
 ```
 
-Configure the remote download location
 
+Configure the software location. The standard location would be inside the Git repository directory. But the software is downloaded to `local/software`
 
 ```
-DOWNLOAD_FROM=http://registry.domino-lab.net:7777
+SOFTWARE_DIR=/local/software
 ```
 
 
 ## Built the image
 
-The build process will use the remote download repository to get the Domino web kit install package(s).  
-The install script loads the tar files directly from the remote location.  
-Information about the software to download is located in the software.txt file, which is maintained by the product. This includes download filenames and also SHA1 hashes to verify the downloaded software for consistence and security reasons.
+The install script starts a temporary NGINX container and downloads the software directly into the build-container.    
+Information about the software to download is located in the software.txt file, which is maintained by the product. This includes download filenames and also SHA256 hashes to verify the downloaded software for consistence and security reasons.
+
 
 ```
-./build.sh domino 12.0.0
+./build.sh domino
 ```
 
+
+## Stop and disable Docker systemd service
+
+
+```
+systemctl stop docker
+
+
+systemctl disable docker
+
+```
 
