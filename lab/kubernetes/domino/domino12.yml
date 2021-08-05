@@ -13,10 +13,10 @@ spec:
   - name: regcred
 
   securityContext:
-    capabilities:
-      add: ["SYS_PTRACE"]
     runAsNonRoot: true
     runAsUser: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: "OnRootMismatch"
 
   containers:
 
