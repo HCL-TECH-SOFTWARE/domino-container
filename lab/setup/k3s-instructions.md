@@ -349,7 +349,7 @@ kubectl delete pod/domino12
 kubectl delete pvc/local-path-pvc
 ```
 
-# Domino V12 One Touch Configuration
+## Domino V12 One Touch Configuration
 
 Recreate the PVC first as in the first example
 
@@ -361,22 +361,48 @@ Recreate the PVC first as in the first example
 * Best practices & Tuning
 
 
-### Create a secret containing the One Touch JSON configuration
+
+### Create config map containing the One Toch JSON configuration
+
+Usually configuration files are passed as a config map.  
+In contrast to a secret described below for reference this is a text based format passed as text with the YAML configuration.  
+You also find an example how to create a secret holding the same information for reference below.  
+The secret is not used for our setup and only added for reference.
+
+
+Take a look at the config map.
+
+```
+cat domino12_config_map.yml
+```
+
+Apply config map before creating our pod.
+
+
+```
+kubectl apply -f domino12_config_map.yml
+```
+
+
+### Reference example: Create a secret containing the One Touch JSON configuration
 
 Passing JSON with a new created secret.
 
-Take a look at the JSON file first before creating a secret to pass as configuration.
+Take a look at the JSON file first before creating a secret to contain the example JSON file.
 
-```
-cat auto_config_domino12.json
-```
+
+The following command creates a new secret containing `auto_config.json` created from `auto_config_domino12.json`
 
 
 ```
 kubectl create secret generic domino12-cfg --from-file=auto_config.json=./auto_config_domino12.json
 ```
 
-### Finally create new pod 
+The secret is only shown for reference anot not used.  
+In our example we are using the config map we created instead.
+
+
+### Create new pod using the config map
 
 ```
 kubectl apply -f domino12_auto_config.yml
@@ -412,7 +438,149 @@ kubectl apply -f service_https.yml
 kubectl apply -f service_nrpc.yml
 ```
 
+
+## Advanced Example: Leveraging Kubernetes API to access your k3s cluster
+
+
+The following example helps to understand how you can use the Kubernetes API end-point to access your cluster and perform the same operations we used during the workshop.  
+Actually what have been doing all time was to pass YAML formated API requests to k3s using the full admin authorization to our cluster via `kubectl`.  
+Now lets use curl to talk directly to the API with the same type of operations we performed earlier. 
+We are using JSON formatted requests and get JSON formated results. The operations remain the same and you can use kubectl with the output option `-o json` to return JSON formatted objects.
+
+Example: 
+
+```
+kubectl get pvc/local-path-pvc -o json 
+```
+
+
+### Create service account and define access
+
+Accessing the API requires authorization. The following YAML is defining a role and binds it to a service account. 
+
+
+Create a service account used for access
+
+```
+kubectl create serviceaccount domino-admin
+```
+
+
+### Apply YAML to create a new role
+
+
+The API uses `verbs` and the allowed `resouces` to act on.
+The following allows full operations for `pods` and `PVCs` in the `default` namepace.
+
+
+```
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+
+metadata:
+  name: domino-admin-role
+  namespace: default 
+
+rules:
+
+- apiGroups: [""]
+  resources: ["pods", "persistentvolumeclaims" ]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+```
+
+Finally apply YAML to bind the service account to our role
+
+
+```
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+
+metadata:
+  name: domino-admin-role-binding
+  namespace: default
+
+subjects:
+- kind: ServiceAccount
+  name: domino-admin
+  namespace: default
+
+roleRef:
+  kind: Role
+  name: domino-admin-role
+  apiGroup: rbac.authorization.k8s.io
+
+```
+
+
+The following script performance the following operations using `kubectl` first
+
+- Finds the server address
+- Gets the service account name
+- Reads the access token from the service account
+
+In the next step `curl` is used to use the API token we authorized to access resources in the cluster over the REST API end-points for the operatons specified. 
+
+- Access test to k3s via API
+- Get details about our domino pod
+- Get details about all PVCs 
+- Finally in the next step below create a PVC using the API end-point 
+
+
+```
+NAMESPACE=default
+SERVICE_ACCOUNT=domino-admin
+
+APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+SECRET_NAME=$(kubectl get serviceaccount $SERVICE_ACCOUNT -n $NAMESPACE -o jsonpath='{.secrets[0].name}')
+TOKEN=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.token}' | base64 --decode)
+
+echo
+echo "------------------------------------------------------------------------------------------"
+curl -k -s $APISERVER/api --header "Authorization: Bearer $TOKEN"
+echo
+echo "------------------------------------------------------------------------------------------"
+echo
+
+
+curl -k -s --header "Authorization: Bearer ${TOKEN}" -X GET ${APISERVER}/api/v1/namespaces/$NAMESPACE/pods/domino12 > api_domino12.txt
+
+curl -k -s --header "Authorization: Bearer ${TOKEN}" -X GET ${APISERVER}/api/v1/namespaces/$NAMESPACE/persistentvolumeclaims > api_pvc.txt
+
+curl -k -s -H "Authorization: Bearer ${TOKEN}" -H 'Accept: application/json' -H 'Content-Type: application/json' -X POST ${APISERVER}/api/v1/namespaces/$NAMESPACE/persistentvolumeclaims -d @pvc.json > api_pvc_create.txt
+
+```
+
+Now create a file `pvc.json` and run the same script again to create the PVC via API
+
+
+```
+{
+  "apiVersion": "v1",
+  "kind": "PersistentVolumeClaim",
+  "metadata": {
+    "name": "local-path-pvc-api-created",
+    "namespace": "default"
+  },
+  "spec": {
+    "accessModes": [
+      "ReadWriteOnce"
+    ],
+    "resources": {
+      "requests": {
+        "storage": "4Gi"
+      }
+    }
+  }
+}
+```
+
+
 ## Uninstall k3s
+
+k3s also comes with a single uninstall command if needed.  
+The following command completely uninstalles your k3s environment. 
+
 
 ```
 /usr/local/bin/k3s-uninstall.sh
