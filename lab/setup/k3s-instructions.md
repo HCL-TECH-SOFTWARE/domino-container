@@ -297,7 +297,7 @@ cat domino12.yml
 
 ### Create storage for a new pod
 
-Similar to `volumes` on Docker, we need `Persistent Storage` on Kubernetes.
+Similar to **volumes** on Docker, we need **Persistent Storage** on Kubernetes.
 
 Each Kubernetes environment comes with one or more storage drivers.  
 In our case this is just the simple `local-path`
@@ -309,7 +309,7 @@ In our case this is just the simple `local-path`
 ```
 
 From the storage class we have to claim storage.  
-This resource is called `PVC` -- `P`ersistent`V`olume`C`laim
+This resource is called **PVC** -- **P**ersistent**V**olume**C**laim
 
 Lets have a look and apply  
 
@@ -469,8 +469,8 @@ kubectl create serviceaccount domino-admin
 ### Apply YAML to create a new role
 
 
-The API uses `verbs` and the allowed `resouces` to act on.
-The following allows full operations for `pods` and `PVCs` in the `default` namepace.
+The API uses **verbs** and the allowed **resources** to act on.
+The following allows full operations for **pods** and **PVCs** in the **default** namepace.
 
 
 ```
@@ -519,7 +519,7 @@ The following script performance the following operations using `kubectl` first
 - Gets the service account name
 - Reads the access token from the service account
 
-In the next step `curl` is used to use the API token we authorized to access resources in the cluster over the REST API end-points for the operatons specified. 
+In the next step **curl** is used to use the API token we authorized to access resources in the cluster over the REST API end-points for the operatons specified. 
 
 - Access test to k3s via API
 - Get details about our domino pod
