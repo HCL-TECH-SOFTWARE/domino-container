@@ -27,7 +27,7 @@ CONTAINER_VOLUMES="-v notesdata_domino:/local/notesdata"
 CONTAINER_ENV_FILE=env_container_domino12
 
 # Domino V11 configuration with community image setup
-CONTAINER_ENV_FILE=env_container_domino11
+#CONTAINER_ENV_FILE=env_container_domino11
 
 # Docker Restart policy
 CONTAINER_RESTART_POLICY=unless-stopped
