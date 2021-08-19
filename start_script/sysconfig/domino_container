@@ -11,7 +11,7 @@ CONTAINER_IMAGE=hclcom/domino:latest
 #CONTAINER_IMAGE=domino-docker:latest
 
 # If not set, machine hostname is used by default
-#CONTAINER_HOSTNAME=centos.domino-lab.net
+#CONTAINER_HOSTNAME=domino.acme.loc
 
 DOMINO_SHUTDOWN_TIMEOUT=180
 
@@ -21,20 +21,20 @@ CONTAINER_NETWORK_NAME=host
 
 CONTAINER_VOLUMES="-v notesdata_domino:/local/notesdata"
 
-#CONTAINER_VOLUMES="-v /local/podman/local:/local"
-
 # Environment file is used for first container start (run) to pass setup parameters
+
+# Domino V12 One Touch Configufation
+CONTAINER_ENV_FILE=env_container_domino12
+
+# Domino V11 configuration with community image setup
 CONTAINER_ENV_FILE=env_container_domino11
 
-# Domino V12 Early Access One Touch Configufation
-#CONTAINER_ENV_FILE=env_container_domino12
-
 # Docker Restart policy
-#CONTAINER_RESTART_POLICY=unless-stopped
-#CONTAINER_RESTART_POLICY=on-failure:3
+CONTAINER_RESTART_POLICY=unless-stopped
+CONTAINER_RESTART_POLICY=on-failure:3
 
 # Domino V12 Borg Backup support (enables FUSE device)
-BORG_BACKUP=yes
+#BORG_BACKUP=yes
 
 # Editor Command
 #EDIT_COMMAND=nano

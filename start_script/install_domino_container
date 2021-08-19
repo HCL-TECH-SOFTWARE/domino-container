@@ -220,7 +220,9 @@ else
   install_file_noupdate $START_SCRIPT_DIR/sysconfig/env_container_domino12 "/etc/sysconfig/env_container_domino12" "$ROOT_USER" "$ROOT_GROUP" 644
 fi
 
-install_file_noupdate $START_SCRIPT_DIR/domino_container.service /etc/systemd/system/$CONTAINER_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
+if [ -x /usr/bin/podman ]; then
+  install_file_noupdate $START_SCRIPT_DIR/domino_container.service /etc/systemd/system/$CONTAINER_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
+fi
 
 if [ $? -eq 2 ]; then
   systemctl daemon-reload

@@ -1,7 +1,7 @@
 #!/bin/bash
 ###########################################################################
 # Nash!Com Domino Container Management Script                             #
-# Version 1.0.1 30.03.2021                                                #
+# Version 1.0.2 18.08.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2021                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -55,7 +55,7 @@ if [ -z "$DOMINO_CFG_DIR" ]; then
   DOMINO_CFG_DIR=/etc/sysconfig
 fi
 
-CONTAINER_SCRIPT_VERSION=1.0.0
+CONTAINER_SCRIPT_VERSION=1.0.2
 
 # Get configuration from config file
 
@@ -96,7 +96,13 @@ else
 fi
 
 # Source in the config file
-. $CONFIG_FILE
+
+if [ -e "$CONFIG_FILE" ]; then
+   . $CONFIG_FILE
+else
+  echo "No configuration found"
+  exit 1
+fi
 
 CONTAINER_FULL_ENV_FILE=
 if [ -n "$CONTAINER_ENV_FILE" ]; then
