@@ -408,20 +408,14 @@ install_domino()
   # Either extract existing files or download, check hash and unpack Domino web-kit
 
   if [ -e $SOFTWARE_DIR/$DOWNLOAD_NAME ]; then
-  
-    echo "Extracting existing web kit [$DOWNLOAD_NAME]"
-    cd $SOFTWARE_DIR
-    tar -xf $DOWNLOAD_NAME 
 
+   echo "Extracting existing web kit [$DOWNLOAD_NAME]"
+   cd $SOFTWARE_DIR
+   tar -xf $DOWNLOAD_NAME
+
+  elif [ -n "$DOWNLOAD_FROM" ]; then
+      download_and_check_hash "$DOWNLOAD_FROM" "$DOWNLOAD_NAME"
   else
-
-    if [ -n "$DOWNLOAD_FROM" ]; then
-      download_and_check_hash "$DOWNLOAD_FROM" "$DOWNLOAD_NAME" domino_server
-    fi
-
-  fi
-
-  if [ ! -e $SOFTWARE_DIR/$DOWNLOAD_NAME ]; then
 
     DOWNLOAD_LINK_FLEXNET="https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search="
     DOWNLOAD_LINK_FLEXNET_OPTIONS="+&resultType=Files&sortBy=eff_date&listButton=Search"
