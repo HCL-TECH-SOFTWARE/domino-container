@@ -268,14 +268,12 @@ get_current_version ()
   return 0
 }
 
-
-
 set_security_limits()
 {
   header "Set security limits"
 
-  local REQ_NOFILES_SOFT=65535
-  local REQ_NOFILES_HARD=65535
+  local REQ_NOFILES_SOFT=80000
+  local REQ_NOFILES_HARD=80000
 
   local SET_SOFT=
   local SET_HARD=
