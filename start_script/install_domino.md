@@ -13,7 +13,7 @@ The following describes all the manual steps the installation script would perfo
 A very fast way to install your Domino server would be the following installation script, which is now part of the start script repository.
 
 ```
-curl -sfL https://domino.nashcom.de/install_domino.sh | bash -
+curl -sL https://github.com/IBM/domino-docker/raw/develop/start_script/install_domino.sh | bash -
 ```
 
 ## Update Linux
