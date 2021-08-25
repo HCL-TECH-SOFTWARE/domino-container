@@ -316,6 +316,11 @@ config_firewall()
 {
   header "Configure firewall"
 
+  if [ ! -e /usr/sbin/firewalld ]; then
+    echo "Firewalld not installed"
+    return 0
+  fi
+
   # add well known NRPC port
   cp /local/software/start_script/extra/firewalld/nrpc.xml /etc/firewalld/services/ 
 
@@ -349,7 +354,7 @@ install_software()
   yum -y install epel-release 
 
   # installes required and useful packages
-  yum -y install gdb perl-libs jq sysstat git bind-utils net-tools
+  yum -y install gdb tar perl-libs jq sysstat git bind-utils net-tools
 }
 
 
