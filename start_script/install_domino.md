@@ -42,7 +42,7 @@ Domino requires the following software installed.
   It is used to annotate the call-stacks of your Domino server's processes.
 
 ```
-yum -y install gdb perl-libs
+yum -y install gdb perl-libs tar
 ```
 
 ## Install Extra Packages for Enterprise Linux repository
