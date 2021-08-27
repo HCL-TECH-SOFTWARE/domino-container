@@ -324,6 +324,9 @@ config_firewall()
   # add well known NRPC port
   cp /local/software/start_script/extra/firewalld/nrpc.xml /etc/firewalld/services/ 
 
+  # reload just in case to let firewalld notice the change
+  firewall-cmd --reload
+
   # enable NRPC, HTTP, HTTPS and SMTP in firewall
   firewall-cmd --zone=public --permanent --add-service={nrpc,http,https,smtp}
 
