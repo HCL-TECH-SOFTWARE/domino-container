@@ -402,10 +402,12 @@ install_software()
   install_package gdb tar jq sysstat git bind-utils net-tools
 
   # first check if platform supports  perl-libs
-  install_package perl-libs
+  if [ ! -x /usr/bin/perl ]; then
+    install_package perl-libs
+  fi
 
   # if not found install full perl package
-  if [ -x /usr/bin/perl ]; then
+  if [ ! -x /usr/bin/perl ]; then
     install_package perl
   fi
 }
