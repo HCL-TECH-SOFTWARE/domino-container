@@ -57,6 +57,46 @@ header ()
 }
 
 
+install_package()
+{
+ if [ -x /usr/bin/zypper ]; then
+
+   zypper install -y "$@"
+
+ elif [ -x /usr/bin/yum ]; then
+
+   yum install -y "$@"
+
+ fi
+}
+
+remove_package()
+{
+ if [ -x /usr/bin/zypper ]; then
+   zypper rm -y "$@"
+
+ elif [ -x /usr/bin/yum ]; then
+   yum remove -y "$@"
+
+ fi
+}
+
+linux_update()
+{
+  if [ -x /usr/bin/zypper ]; then
+
+    header "Updating Linux via zypper"
+    zypper refersh -y
+    zypper update -y
+
+  elif [ -x /usr/bin/yum ]; then
+
+    header "Updating Linux via yum"
+    yum update -y
+  fi
+}
+
+
 get_download_name ()
 {
   DOWNLOAD_NAME=""
@@ -345,19 +385,29 @@ add_notes_user()
   fi 
 
   # creates notes:notes user and group
-  adduser notes -U
+  useradd notes -U -m
 }
 
 install_software()
 {
-  # updates CentOS 
-  yum -y update 
+  # updates Linux
+  linux_update()
 
-  # adds repository for additional software packages
-  yum -y install epel-release 
+  if [ -x /usr/bin/yum ]; then
+    # adds repository for additional software packages
+    install_package epel-release
+  fi
 
   # installes required and useful packages
-  yum -y install gdb tar perl-libs jq sysstat git bind-utils net-tools
+  install_package gdb tar jq sysstat git bind-utils net-tools
+
+  # first check if platform supports  perl-libs
+  install_package perl-libs
+
+  # if not found install full perl package
+  if [ -x /usr/bin/perl ]; then
+    install_package perl
+  fi
 }
 
 
@@ -366,13 +416,17 @@ create_directories()
   header "Create directory structure /local.."
 
   # creates local directory structure with the right owner notes:notes
-  mkdir -p $SOFTWARE_DIR 
+
+  mkdir -p $SOFTWARE_DIR
   mkdir -p /local/notesdata
   mkdir -p /local/translog
   mkdir -p /local/nif
   mkdir -p /local/ft
+  mkdir -p /local/backup
+  mkdir -p /local/log
+
   chown -R notes:notes /local
-  chown  -R notes:notes $SOFTWARE_DIR
+  chown -R notes:notes $SOFTWARE_DIR
 }
 
 install_start_script()
