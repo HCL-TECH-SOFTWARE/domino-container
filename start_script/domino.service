@@ -20,7 +20,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-Description=IBM Domino Server (notes)
+Description=HCL Domino Server (notes)
 After=syslog.target network.target
 
 [Service]
