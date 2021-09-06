@@ -1,15 +1,15 @@
 
-FROM ibmcom/domino:latest
+FROM hclcom/domino:latest
 
 # Headers
-LABEL description="IBM Domino Server 10 Acme Customized" \
+LABEL description="HCL Domino Server Acme Customized" \
   vendor="NashCom" \
   maintainer="Daniel Nashed <nsh@nashcom.de>" 
 
 ARG DownloadFrom=
 ARG DominoResponseFile=
 ARG LinuxYumUpdate=
-ARG SPECIAL_WGET_ARGUMENTS=
+ARG SPECIAL_CURL_ARGUMENTS=
 
 USER root
 
@@ -28,5 +28,5 @@ EXPOSE 1352 80 110 143 389 443 636 993 995 63148 63149
 
 ENTRYPOINT ["/domino_docker_entrypoint.sh"]
 
-USER notes
+USER 1000
 
