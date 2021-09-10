@@ -36,7 +36,7 @@ Domino Data directory needs to be a persistent volume. On Docker it will be auto
 ### Management Script
 The folder [Management](master/management) contains a script that simplifies the managing your containers. The Linux bash script is supposed to run on the Docker host.
 
-For details see the documentation of the [Management Script](doc/management.md)
+For details see the documentation of the [Management Script](docs/management.md)
 
 ### Manually creating a new container from an image
 First create a new/empty persistent volume that will be used as the Domino Data directory later on. In this example we are calling it "dominodata_demo1".
