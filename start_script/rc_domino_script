@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.5.0 15.01.2021                                                #
+# Version 3.5.1 18.09.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=3.5.0
+DOMINO_SCRIPT_VERSION=3.5.1
 
 VERBOSE_INFO="yes"
 
@@ -539,6 +539,20 @@ stop_monitor ()
   exit 0
 }
 
+remove_file ()
+{
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 2
+  fi
+
+  rm -rf "$1"
+  return 0
+}
+
 remove_tempfiles_default ()
 {
   if [ ! -z "$DOMINO_DATA_PATH" ]; then
@@ -655,14 +669,163 @@ list_config_file ()
 edit_systemd_cfg ()
 {
   if [ ! -z "$DOMINO_SYSTEMD_NAME" ]; then
-  	SYSTEMD_NAME=/etc/systemd/system/$DOMINO_SYSTEMD_NAME
+    SYSTEMD_NAME=/etc/systemd/system/$DOMINO_SYSTEMD_NAME
   	
-	  if [ -r "$SYSTEMD_NAME" ]; then
-	  	$EDIT_COMMAND $SYSTEMD_NAME
-	  else
-	    echo "systemd not configured!"	
+    if [ -r "$SYSTEMD_NAME" ]; then
+      $EDIT_COMMAND $SYSTEMD_NAME
+    else
+      echo "systemd not configured!"
     fi
   fi
+}
+
+
+check_json_file()
+{
+  local ONE_TOUCH_JSON_SCHEMA=$Notes_ExecDirectory/dominoOneTouchSetup.schema.json
+
+  if [ ! -e /usr/bin/jq ]; then
+    echo "warning: No jq tool installed"
+    return 0
+  fi
+
+  if [ -z "$1" ]; then
+    echo "No OneTouch setup JSON file specified!"
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    echo "OneTouch setup JSON file does not exist!"
+    return 1
+  fi
+
+  cat $1 | jq -e . >/dev/null 2>&1
+  JSON_STATUS=$?
+
+  if [ ! "$JSON_STATUS" = "0" ]; then
+    echo "Error OneTouch setup file Invalid JSON format!"
+    return 1
+  fi
+
+  SERVER_TYPE=$(cat $1 | jq .serverSetup.server.type)
+  case "$SERVER_TYPE" in
+    first|additonal)
+      ;;
+
+    *)
+      echo "Invalid server type [$SERVER_TYPE]!"
+      return 1
+      ;;
+  esac
+
+
+  return 0
+}
+
+
+edit_one_touch_setup()
+{
+
+  local DOMINO_AUTO_CONFIG_ENV_FILE=$DOMINO_DATA_PATH/DominoAutoConfig.env
+  local DOMINO_AUTO_CONFIG_JSON_FILE=$DOMINO_DATA_PATH/DominoAutoConfig.json
+  local CFG_FILE=
+  local CFG_TEMPLATE=
+  local TEMPLATE_DIR=/opt/nashcom/startscript/OneTouchSetup
+
+  if [ "$1" = "log" ]; then
+
+     local ONE_TOUCH_LOG=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/autoconfigure.log
+
+     if [ ! -e "$ONE_TOUCH_LOG" ]; then
+       echo "No One Touch setup log found [$ONE_TOUCH_LOG]"
+       return 0
+     fi
+
+    if [ "$2" = "edit" ]; then
+      $EDIT_COMMAND $ONE_TOUCH_LOG
+    else
+      echo "---------- autoconfigure.log ----------"
+      cat $ONE_TOUCH_LOG
+      echo "---------- autoconfigure.log ----------"
+    fi
+
+    return 0
+  fi
+  # Template name will be only set when creating or overwriting configuration
+
+  if [ "$1" = "env" ]; then
+     CFG_FILE=DOMINO_AUTO_CONFIG_ENV_FILE
+
+     if [ "$2" = "1" ]; then
+       CFG_TEMPLATE=$TEMPLATE_DIR/first_server.env
+
+     elif [ "$2" = "2" ]; then
+       CFG_TEMPLATE=$TEMPLATE_DIR/additional_server.env
+
+     else
+       if [ ! -e "$CFG_FILE" ]; then
+         CFG_TEMPLATE=$TEMPLATE_DIR/first_server.env
+       fi
+     fi
+
+    # Remove JSON file when switching to ENV config
+    if [ -n "$CFG_TEMPLATE" ]; then
+      remove_file "$DOMINO_AUTO_CONFIG_JSON_FILE"
+    fi
+
+  fi
+
+  if [ "$1" = "json" ]; then
+     CFG_FILE=DOMINO_AUTO_CONFIG_JSON_FILE
+
+     if [ "$2" = "1" ]; then
+       CFG_TEMPLATE=$TEMPLATE_DIR/first_server.json
+     elif [ "$2" = "2" ]; then
+       CFG_TEMPLATE=$TEMPLATE_DIR/additional_server.json
+     else
+       if [ ! -e "$CFG_FILE" ]; then
+         CFG_TEMPLATE=$TEMPLATE_DIR/first_server.json
+       fi
+     fi
+
+    # Remove ENV file when switching to JSON config
+    if [ -n "$CFG_TEMPLATE" ]; then
+      remove_file "$DOMINO_AUTO_CONFIG_ENV_FILE"
+    fi
+
+  fi
+
+  # Edit existing file or create a new first server env
+  if [ -z "$1" ]; then
+    if [ -e "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
+      CFG_FILE=$DOMINO_AUTO_CONFIG_JSON_FILE
+
+    elif [ -e "$DOMINO_AUTO_CONFIG_ENV_FILE" ]; then
+      CFG_FILE=$DOMINO_AUTO_CONFIG_ENV_FILE
+
+    else
+      CFG_FILE=$DOMINO_AUTO_CONFIG_ENV_FILE
+      CFG_TEMPLATE=$TEMPLATE_DIR/first_server.env
+    fi
+  fi
+
+  if [ -z "$CFG_FILE" ]; then
+    echo "Invalid setup option specified"
+    return 1
+  fi
+
+  # Create config file from template if requested
+  if [ -n "$CFG_TEMPLATE" ]; then
+    cp "$CFG_TEMPLATE" "$CFG_FILE"
+  fi
+
+  # Finally edit existing or new file
+  $EDIT_COMMAND "$CFG_FILE"
+
+  if [ "$1" = "json" ]; then
+    check_json_file "$CFG_FILE"
+  fi
+
 }
 
 show_log ()
@@ -1597,9 +1760,10 @@ usage ()
   echo "{ start live | stop live | restart live | compact | restartcompact | compactnextstart}"
   echo "{ version | cmd <command> <n> | help}"
   echo
-  echo "Diag Commands   :  {resources (res) | info | stacks | nsd | nsdnomem | memdump | hang | kill | cleanup}"
-  echo "Log Commands    :  {archivelog | clearlog | lastlog | log | systemlog}"
-  echo "Config Commands :  {inivar | ini | listini | config (cfg) | systemdcfg}"
+  echo "Diag Commands   :  {resources/res | info | stacks  |  nsd  | nsdnomem | memdump | hang | kill | cleanup}"
+  echo "Log Commands    :  {archivelog    | clearlog  | lastlog    | log | systemlog}"
+  echo "Config Commands :  {inivar | ini  | listini   | config/cfg | systemdcfg}"
+  echo "Setup  Commands :  {setup json    | setup env | setup      | setup log [edit] }"
 
   if [ -e "$DOMINO_DATA_PATH/trace" ]; then
     echo "ST Commands     :  {resetstlogs}"
@@ -1660,8 +1824,22 @@ help ()
   echo "inivar           show notes.ini variable"
   echo "ini              edit notes.ini"
   echo "listini          lists notes.ini - can be redirected and greped"
-  echo "config(cfg)      edit start script config file (default | server)"
+  echo "config/cfg       edit start script config file (default | server)"
   echo "systemdcfg       edit systemd config file"
+  echo
+
+
+  echo
+  echo "One Touch Setup Commands"
+  echo
+  echo "setup            edits an existing One Touch config file or creates a 1st server ENV file"
+  echo "setup env 1      creates and edits a first server ENV file"
+  echo "setup env 2      creates and edits an additional server ENV file"
+  echo "setup json 1     creates and edits a first server JSON file"
+  echo "setup json 2     creates and edits an additional server JSON file"
+  echo
+  echo "setup log        lists the One Touch setup log file"
+  echo "setup log edit   edits the One Touch setup log file"
   echo
 
   if [ -e "$DOMINO_DATA_PATH/trace" ]; then
@@ -2404,6 +2582,60 @@ reset_sametime_logs()
   return 0
 }
 
+check_one_touch_setup()
+{
+  echo "Checking OneTouchSetup" >> $DOMINO_OUTPUT_LOG
+  # Run OneTouchSetup if server is not configured yet and config files exist
+
+  if [ -n "$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)" ]; then
+    # Disabled OnTouchSetup on already configured server
+    export SetupAutoConfigure=
+    echo Domino already configured >> $DOMINO_OUTPUT_LOG
+    return 0
+  fi
+
+  # Check OnTouchSetup files only if not already specified (for example for container setup)
+  if [ -n "$SetupAutoConfigure" ]; then
+    echo "One Touch already set - Skipping auto detect config"  >> $DOMINO_OUTPUT_LOG
+    return 1
+  fi
+
+  DOMINO_AUTO_CONFIG_ENV_FILE=$DOMINO_DATA_PATH/DominoAutoConfig.env
+  DOMINO_AUTO_CONFIG_JSON_FILE=$DOMINO_DATA_PATH/DominoAutoConfig.json
+
+  if [ -e "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
+    export SetupAutoConfigureParams=$DOMINO_AUTO_CONFIG_JSON_FILE
+    export SetupAutoConfigure=1
+    echo Domino One Touch setup via $DOMINO_AUTO_CONFIG_JSON_FILE >> $DOMINO_OUTPUT_LOG
+    return 1
+  fi
+
+  if [ -e "$DOMINO_AUTO_CONFIG_ENV_FILE" ]; then
+
+    # Source in environment vars
+    set -a
+    . $DOMINO_AUTO_CONFIG_ENV_FILE
+    set +a
+    export SetupAutoConfigure=1
+    echo Domino One Touch setup via $DOMINO_AUTO_CONFIG_ENV_FILE >> $DOMINO_OUTPUT_LOG
+    export SERVERSETUP_SERVER_TYPE
+    return 1
+
+  fi
+
+  echo "No OneTouchConfig found" >> $DOMINO_OUTPUT_LOG
+}
+
+cleanup_one_touch_setup()
+{
+
+  # In any case remove OneTouchSetup files after setup
+
+  remove_file "$DOMINO_AUTO_CONFIG_ENV_FILE"
+
+  # JSON file is deleted by setup when done.
+
+}
 
 DebugText "==== Start Script Debug Begin ===="
 
@@ -2528,6 +2760,8 @@ case "$PARAM1" in
     archive_logs    
     startup_remove_file_check
     check_create_directories
+
+    check_one_touch_setup
 
     # Empty the input file
     cat /dev/null > $DOMINO_INPUT_FILE
@@ -2665,6 +2899,8 @@ case "$PARAM1" in
     
     # Remember status and be verbose
     rc_status -v
+
+    cleanup_one_touch_setup
 
     post_startup_operations
 
@@ -3197,6 +3433,14 @@ case "$PARAM1" in
     exit 0
     ;;
 
+  setup)
+
+    # setup On Touch Setup
+    echo
+    edit_one_touch_setup "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
+    echo
+    exit 0
+    ;;
   cfg)
 
     # edit start script config

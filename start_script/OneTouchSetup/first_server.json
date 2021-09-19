@@ -1,0 +1,262 @@
+{
+  "serverSetup": {
+    "server": {
+      "type": "first",
+      "name": "main.domino-lab.net",
+      "domainName": "DominoLab",
+      "title": "Domino Main Lab Server",
+      "password": null,
+      "minPasswordLength": 0,
+      "serverTasks": "replica,router,update,amgr,adminp,http,certmgr"
+    },
+
+    "network": {
+      "hostName": "main.domino-lab.net",
+      "enablePortEncryption": true,
+      "enablePortCompression": true
+    },
+
+    "org": {
+      "orgName": "DominoLab",
+      "certifierPassword": "domino4ever8"
+    },
+
+    "admin": {
+      "firstName": "Full",
+      "lastName": "Admin",
+      "password": "domino4ever8",
+      "IDFilePath": "/local/notesdata/domino/html/admin.id"
+    },
+
+    "notesINI": {
+      "Create_R12_databases": "1",
+      "Create_R85_log": "1",
+      "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION": "1",
+      "LOG_REPLICATION": "0",
+      "LOG_SESSIONS": "0",
+      "HTTPPublicURLs": "/iwaredir.nsf/*:/.well-known*",
+      "ENABLE_SNI": "1",
+      "HTTPEnableMethods": "GET,POST,PUT,DELETE,HEAD",
+      "ADMIN_CLIENT_SKIP_DOMINO": "1",
+      "COMPRESS_LZ1_CREATE": "1",
+      "CREATE_NIFNSF_DATABASES": "1",
+      "NIFNSFENABLE": "1",
+      "FTBASEPATH": "/local/nif",
+      "DAOS_ENCRYPT_NLO": "0",
+      "DAOS_MAX_FILES_PER_SUBCONTAINER": "10000",
+      "EVENT_POOL_SIZE": "41943040",
+      "SETUPLEAVESERVERTASKS": "1",
+      "SSL_DISABLE_EXTENDED_MASTER_SECRET": "1",
+      "Server_MinPossibleTransTime": "1500",
+      "Server_MaxPossibleTransTime": "20000000",
+      "NSF_BUFFER_POOL_SIZE_MB": "256",
+      "FT_FLY_INDEX_OFF": "1",
+      "UPDATE_FULLTEXT_THREAD": "1",
+      "FTG_USE_SYS_MEMORY": "1"
+    },
+
+    "security": {
+      "ACL": {
+        "prohibitAnonymousAccess": true,
+        "addLocalDomainAdmins": true
+      }
+    }
+  },
+
+  "autoConfigPreferences": {
+    "startServerAfterConfiguration": true 
+  },
+
+  "IDVault": {
+    "name": "O=dominolab_vault",
+    "description": "Domino Lab Vault",
+    "IDFile": "vault.id",
+    "IDPassword": "domino4ever8",
+    "path": "IBM_ID_VAULT/dominolab_vault.nsf",
+    "passwordReset": {
+      "helpText": "See Roy or Moss for a password reset. Good luck!"
+    },
+
+    "securitySettingsPolicy": {
+      "name": "DominoLab Vault Security Settings Policy",
+      "description": "DominoLab Vault Security Settings"
+    },
+
+    "masterPolicy": {
+      "description": "DominoLab Vault Master Policy Description"
+    }
+  },
+
+  "appConfiguration": {
+
+    "databases": [
+      {
+        "filePath": "names.nsf",
+        "action": "update",
+        "documents": [
+          {
+            "action": "update",
+            "findDocument": {
+              "Type": "Server",
+              "ServerName": "CN=main.domino-lab.net/O=DominoLab"
+            },
+            "items": {
+              "HTTP_SSLKeyFile": "main.domino-lab.net",
+              "TRANSLOG_AutoFixup": "",
+              "TRANSLOG_MaxSize": 1024,
+              "TRANSLOG_Path": "/local/translog",
+              "TRANSLOG_Performance": "2",
+              "TRANSLOG_Status": "1",
+              "TRANSLOG_Style": "0",
+              "TRANSLOG_UseAll": "0",
+
+              "QtaMthd": "1",
+              "DAOSEnable": "1",
+              "DAOSBasePath": "/local/daos",
+              "DAOSMinObjSize": "256000",
+              "DAOS_ENCRYPT_NLO": "0",
+
+              "HTTP_HomeURL": "homepage.nsf",
+              "FullAdmin": "LocalDomainAdmins",
+              "CreateAccess": "LocalDomainAdmins",
+              "ReplicaAccess": "LocalDomainAdmins",
+              "UnrestrictedList": "LocalDomainAdmins",
+              "OnBehalfOfLst": "LocalDomainAdmins",
+              "RestrictedList": "LocalDomainAdmins",
+
+              "HTTP_EnableSessionAuth": "1",
+              "HTTP_TCPNP": "1",
+              "HTTP_AllowAnonymous": "0",
+              "HTTP_NormalMode": "1",
+              "HTTP_SSLMode": "1",
+              "HTTP_SSLAnonymous": "0",
+
+              "NSDEnbld": "1",
+              "FREnbld": "1",
+              "FltRcvryNot": "LocalDomainAdmins",
+
+              "ServerBuildNumber": "12.0",
+              "MajVer": 12,
+              "SSLCipherList": [
+                "C030",
+                "9F",
+                "C02F",
+                "9E",
+                "C028",
+                "6B",
+                "C027",
+                "67"
+                ],
+              "SSLCipherSupportedList": [
+                "C030",
+                "9F",
+                "C02F",
+                "9E",
+                "C028",
+                "6B",
+                "C027",
+                "67"
+                ]
+            }
+          },
+
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "ServerConfig",
+              "UseAsDefault": "1",
+              "ServerName": "*",
+
+              "ILEnforce": "1",
+              "ILLockIP": "0",
+              "ILCountAgainstIP": "0",
+              "ILLogLockouts": "1",
+              "ILLogFailures": "1",
+              "ILMaxTries": 7,
+              "ILExpMinutes": 10,
+              "ILExpNum": 10,
+              "ILTimeFormat": ",minutes",
+              "ILClearNum": 10,
+              "ILClearMinutes": 10,
+              "ILTimeFormat2": ",minutes",
+              "PwdCheckInVault": "2",
+
+              "DCLoc": "CN=HCL Notes/O=Domino Fault Reports",
+              "DCMsgSize": 50,
+              "DCNSDSize": 40,
+              "DCDO": 10000,
+              "FAEnabled": "1",
+              "FADBs": "1"
+            }
+          }
+        ]
+      },
+
+      {
+        "action": "create",
+        "filePath": "domcfg.nsf",
+        "title": "Domino Web Server Configuration",
+        "templatePath": "domcfg5.ntf",
+        "signUsingAdminp": true,
+
+        "documents": [
+          {
+            "action": "create",
+            "items": {
+              "Form": "LoginMap",
+              "LF_LoginForm": "DWALoginForm",
+              "LF_LoginFormDB": "iwaredir.nsf",
+              "LF_ServerType": "0",
+              "LF_IP": "",
+              "$PublicAccess": "1"
+            }
+          }
+        ]
+      },
+
+      {
+        "action": "create",
+        "filePath": "iwaredir.nsf",
+        "title": "Redirect",
+        "templatePath": "iwaredir.ntf",
+        "signUsingAdminp": true,
+
+        "documents": [
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "AutoLogin",
+              "ServerNameSelect": "1",
+              "RedirectMessageWebView": "Redirecting...",
+              "$LANGUAGE": "en",
+              "$ServerSettingsTable": "Select",
+              "EnableUltraliteRadioButton": "0",
+              "MobileAgentKeywords": "ipod,iphone,android,ipad",
+              "SSLPort": "443",
+              "RedirectionTime": "1",
+              "RedirectionMessageText": "Redirecting...",
+              "WMRGlobalProfileURL": "/",
+              "ServerNameChange": "0",
+              "ForceSSL": "1",
+              "OmitProtocol": "0",
+              "UseHomeMailServer": "0",
+              "LoginOptions": "0",
+              "EncryptPassword": "0",
+              "WebMailRedirectEnableDebug": "0",
+              "WebMailRedirectProfileEnable": "0",
+              "WMRVersion": "650",
+              "WMRAttachmentNames": "BLANK",
+              "MailServerDomainName": "",
+              "RevProxyServerName": "",
+              "ForcePath": ""
+            }
+          }
+        ]
+      }
+
+    ]
+  }
+}
+

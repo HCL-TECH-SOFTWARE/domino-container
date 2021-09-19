@@ -1,6 +1,6 @@
 ###########################################################################
 # README - Start/Stop Script for Domino on xLinux/zLinux/AIX              #
-# Version 3.5.0 15.01.2021                                                #
+# Version 3.6.0 20.09.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -36,10 +36,10 @@ Out of the box the script is configured to use the "notes" user/group and the st
 directories for binaries (/opt/hcl/domino) and the data directory (/local/notesdata).
 You should setup all settings in the script configuration file.
 
-Note: For newer versions using systemd (CentOS 7 RHEL 7/ SLES 12) root permissions are
-required to start/stop the server.
+Note: Linux systemd (CentOS 7 RHEL 7/ SLES 12) requires root permissions for start/stop.
 One way to accomplish this is to grant "sudo" permissions for the "rc_domino" script.
 See the "Enable Startup with sudo" section for details.
+
 
 --------------------
 Simple Configuration
@@ -77,19 +77,22 @@ The script is pre-configured and will work for older versions with init.d and al
 - The next command enables the service (works for init.d and systemd)
 - And finally the server is started
 
+
 tar -xvf start_script.tar
 ./install_script
 
 domino service on
 domino start
 
-Other useful commands:
+Other useful commands
+---------------------
 
 domino status
 domino statusd
 domino console
 
 All details about configuration and commands are documented below.
+
 
 --------------------------
 Enable Startup with sudo
@@ -142,6 +145,66 @@ For systemd ensure the configuration of the domino.service file is matching and
 specially if it contains the right user name and path to the rc_domino_script.
 And also the right path for the "PIDFile"
 (See "Special platform considerations --> systemd (CentOS 7 RHEL 7/ SLES 12 or higher)"  for details).
+
+
+------------------------------
+One-touch Domino setup support
+------------------------------
+
+Quick mode:
+
+Use the "domino setup" command to setup variables for a first server" before you start your server.
+
+
+Domino V12 introduced a new automated setup/configuration option.
+One-touch Domino setup is a cross platform way to setup your Domino server.
+
+You can either use a.) environment variables or b.) a JSON file.
+
+Environment variable based setup allows you to set the most important server configuration options.
+The JSON based setup provides many more options including creating databases, documents and modifying the server document.
+The start script supports both methods and comes with default and sample configurations you can modify for your needs.
+
+The new OneTouchSetup directory contains configuration templates for first server and additional server setups.
+
+The new functionality provides a easy to use new "setup" command, which automatically creates a sample configuration for your.
+When you use the install script, all the files are automatically copied to the /opt/nashcom/startscript/OneTouchSetup directory.
+
+A new command "setup" allows you to configure the One-touch setup Domino configuration.
+
+The following setup command options are available:
+
+setup            edits an existing One Touch config file or creates a 1st server ENV file
+setup env 1      creates and edits a first server ENV file
+setup env 2      creates and edits an additional server ENV file
+setup json 1     creates and edits a first server JSON file
+setup json 2     creates and edits an additional server JSON file
+
+setup log        lists the One Touch setup log file
+setup log edit   edits the One Touch setup log file
+
+
+The "setup" command creates the following files:
+
+local/notesdata/DominoAutoConfig.json
+local/notesdata/DominoAutoConfig.env
+
+If present during first server start, the start script leverages One-touch Domino setup.
+If both files are present the JSON configuration is preferred.
+
+Refer to the Domino V12 documentation for details:
+https://help.hcltechsw.com/domino/12.0.0/admin/wn_one-touch_domino_setup.html
+
+
+Setup files deleted after configuration
+---------------------------------------
+
+After setup is executed the ENV file is automatically removed, because it can contain sensitive information.
+Specially for testing ensure to copy the files before starting your server.
+
+For timing reasons the JSON file is not deleted by the start script.
+But on successful setup One-touch Domino setup deletes the JSON file as well.
+
 
 
 Special Note for systemd
@@ -207,11 +270,11 @@ User=notes
 
 This is the Linux user name that your partition runs with.
 
-LimitNOFILE=60000
+LimitNOFILE=65535
 -----------------
 
 With systemd the security limit configuration is not used anymore and the limits
-are enforced by systemd. Starting with Domino 9 you should configure at least 60000 files.
+are enforced by systemd. Starting with Domino 9 you should configure at least 65535 files.
 Files means file handles and also TCP/IP sockets!
 
 LimitNPROC=8000
@@ -297,33 +360,6 @@ Sample Output:
   /etc/init.d/rc_domino
 
 
--------------------------------------------------
-Special platform considerations RedHat/CentOS 6.x
--------------------------------------------------
-
-On RedHat/CentOS you can use the chkconfig to add Domino to the run-level environment
-
-Example: chkconfig --add rc_domino
-
-To verify that your service is correctly added to the rc-levels use the following command
-
-find /etc/ -name '*domino*'
-
-etc/sysconfig/rc_domino_config
-/etc/rc.d/rc0.d/K19rc_domino
-/etc/rc.d/init.d/rc_domino
-/etc/rc.d/rc2.d/K19rc_domino
-/etc/rc.d/rc6.d/K19rc_domino
-/etc/rc.d/rc4.d/S66rc_domino
-/etc/rc.d/rc3.d/S66rc_domino
-/etc/rc.d/rc1.d/K19rc_domino
-/etc/rc.d/rc5.d/S66rc_domino
-
-And you can also query the runlevels in the following way
-
-chkconfig --list | grep -i domino
-rc_domino       0:off   1:off   2:off   3:on    4:on    5:on    6:off
-
 
 ------------------------------------
 Special platform considerations AIX
@@ -336,6 +372,7 @@ Make sure you change this line in rc_domino and rc_domino_script
 
 On AIX you can use the mkitab to include rc_domino in the right run-level
 Example: mkitab domino:2:once:"/etc/rc_domino start"
+
 
 ----------------------
 Domino Docker Support
@@ -369,6 +406,7 @@ And the only output you see in from the entry point script are the start and sto
 If you want to interact with the logs or use the monitor command, you can use a shell inside the container.
 Using a shell you can use all existing Start Script commands.
 But you should stop the Domino server by stopping the container and not use the 'stop' command provided by the start script.
+
 
 !! Important information !!
 ---------------------------
@@ -1515,6 +1553,9 @@ Linux
 You have to increase the number of open files that the server can open.
 Those file handles are required for files/databases and also for TCP/IP sockets.
 The default is too low and you have to increase the limits.
+
+Note: No change is required if you system already has higher default values.
+
 Using the ulimit command is not a solution. Settings the security limits via root
 before switching to the notes user executing the start script via "su -" does not work any more.
 And it would also not be the recommended way.
@@ -1525,8 +1566,8 @@ So you have to increase the limits by modifying /etc/security/limits.conf
 
 You should add a statement like this to /etc/security/limits.conf
 
-* soft nofile 60000
-* hard nofile 60000
+* soft nofile 65535
+* hard nofile 65535
 
 
 systemd Changes (CentOS 7 RHEL 7 /SLES 12)
@@ -1535,7 +1576,7 @@ systemd Changes (CentOS 7 RHEL 7 /SLES 12)
 This configuration is not needed to start servers with systemd.
 systemd does set the limits explicitly when starting the Domino server.
 The number of open files is the only setting that needs to be changed via
-LimitNOFILE=60000 in the domino.service file.
+LimitNOFILE=65535 in the domino.service file.
 
 
 export NOTES_SHARED_DPOOLSIZE=20971520
@@ -1565,7 +1606,7 @@ Inheriting the environment variables was not possible because the su command
 does discard all variables when specifying the "-" option which is needed
 to setup the environment for the new user.
 Therefore the beginning of the main script contains configuration parameters
-for each Domino partitions specified by UNIX user name for each partition.
+for each Domino partition specified by UNIX user name for each partition.
 
 
 -----------------------------------
@@ -1574,7 +1615,8 @@ Domino Start Script systemd Support
 
 Beginning with CentOS 7 RHEL 7 and SLES 12 Linux is using the new "systemd"
 (http://en.wikipedia.org/wiki/Systemd) for starting services daemons.
-All other platforms are also moving to systemd.
+
+All other Linux platforms are also moving to systemd.
 rc scripts are still working to some extent. but it makes sense to switch to the systemd service model.
 Most of the functionality in the Domino start script will remain the same and you will also
 continue to use the same files and configuration. But the start/stop operations are done by a "domino.service".
@@ -1582,10 +1624,12 @@ continue to use the same files and configuration. But the start/stop operations 
 The start script will continue to have a central entry point per partition "rc_domino" but that script
 is not used by the "rc environment" any more. You can place the file in any location and it is not leveraged by systemd.
 
-systemd will use a new "domino.service" per Domino partition.
-The service file will directly invoke the main script logic "rc_domino_script" after switching to the right user
+systemd uses a new "domino.service" per Domino partition.
+The service file is directly invoke the main script logic "rc_domino_script" after switching to the right user
 and setting the right resources like number of open files
 (before this was done with "su - notes" and the limits configuration of the corresponding pam module).
+It is still recommended to specify the same security limits also via /etc/security/limits.conf
+in case a server is started manually or other processes are started outside the server (e.g. backup).
 
 Starting and Stopping the Domino server can be done either by the rc_domino script which will invoke the
 right service calls in the background. Or directly using the systemd commands.
@@ -1622,7 +1666,7 @@ After=syslog.target network.target
 [Service]
 Type=forking
 User=notes
-LimitNOFILE=60000
+LimitNOFILE=65535
 PIDFile=/local/notesdata/domino.pid
 ExecStart=/opt/nashcom/startscript/rc_domino_script start
 ExecStop=/opt/nashcom/startscript/rc_domino_script stop
@@ -1784,55 +1828,43 @@ b.) - Ensure that your login shell is /bin/ksh
       prompt for password -- even when switching to the same UNIX user.
 
 
-SELinux (RedHat) RC-start level issue
--------------------------------------
-
-Depending on your configuration the RC-subsystem will ask for confirmation
-when starting Domino when switching the run-level.
-
-To avoid this question you have to ensure that your pam configuration for
-"su" is setup correctly.
-
-remove the "multiple" from the pam_selinux.so open statement
-
-example: /etc/pam.d/su
-session    required     pam_selinux.so open multiple
-
-extract from pam_selinux documentation
-
-multiple
-
-Tells pam_selinux.so to allow the user to select the security context they
-will login with, if the user has more than one role.
-
-This ensures that there are no questions asked when starting the Domino server
-during run-level change.
-
-
-!Caution!
----------
-Modifying the script to use "runuser" instead of "su" is not a solution,
-because "runuser" does not enforce the /etc/security/limits specified for the
-notes-user.
-This means that the security limits (max. number of open files, etc.)might be to low.
-You can check for the security limits in the output log of the script.
-The ulimit output is dumped when the server starts.
-
-
-!Note!
-------
-To enforce the security limits for the user you have to add the following line
-to /etc/security/limits before pam_selinux.so open
-
-session    required     pam_limits.so
-
-SLES10 does contain this setting by default.
-The default settings have been enhanced and different parts use include files.
-The include file used for "session" settings contains this entry already.
-
 --------------
 Change History
 --------------
+
+V3.6.0 20.09.2021
+
+New Features
+------------
+
+Support for One-touch Domino setup
+
+Two new files in notesdata directory to allow to configure One-touch Domino setup
+
+- DominoAutoConfig.env
+- DominoAutoConfig.json
+
+New command "setup" to configure the setup.
+
+setup env
+setup json
+setup log
+
+See detail in the "setup" configration section.
+
+
+Changes
+-------
+
+- Removed support for init.d configurations.
+
+All supported Domino versions only run on platforms leveraging systemd.
+In a next step the rc_domino script will move from /etc/init.d directory
+to the start script directory /opt/nashcom/startscript.
+
+
+- Removed old documentation about security limit pam configuration.
+
 
 V3.5.0 15.01.2021
 

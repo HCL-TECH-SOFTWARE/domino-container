@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version 3.5.0 15.01.2021                                                #
+# Version 3.6.0 20.09.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -32,7 +32,7 @@ DOMINO_DOCKER_SCRIPT=domino_docker_entrypoint.sh
 DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
 DONT_TOUCH_THIS_STANDARD_USER=notes
 
-DOMINO_SCRIPT_VERSION=3.5.0
+DOMINO_SCRIPT_VERSION=3.6.0
 
 # if you really really need to, change this and all files will be patched
 
@@ -297,6 +297,15 @@ patch_user_name()
   sed -i "s~${DONT_TOUCH_THIS_STANDARD_USER}~${DOMINO_USER}~g" "$1"
 }
 
+copy_one_touch_templates()
+{
+  local TARGET_DIR=$DOMINO_START_SCRIPT_DIR/OneTouchSetup
+  local SOURCE_DIR=$SCRIPT_DIR/OneTouchSetup
+  mkdir -p $TARGET_DIR
+  cp -f $SOURCE_DIR/* $TARGET_DIR
+  return 0
+}
+
 # rc script files install
 
 header "Installing StartScript & Config"
@@ -352,6 +361,8 @@ else
   install_file_noupdate "$DOMINO_INSTALL_CONFIG_FILE" "$DOMINO_INSTALL_CONFIG_TARGET" "$DOMINO_USER" "$DOMINO_GROUP" 644
   install_file_noupdate "$START_SCRIPT_DIR/systemdbs.ind" "$DOMINO_DATA_PATH/systemdbs.ind" "$DOMINO_USER" "$DOMINO_GROUP" 644
 fi
+
+copy_one_touch_templates
 
 # if old start script location exists, replace it with link to new start script location 
 

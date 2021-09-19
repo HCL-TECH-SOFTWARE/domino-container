@@ -2,7 +2,7 @@
 
 ###########################################################################
 # systemd Service - Start/Stop Script for Domino on xLinux/zLinux/AIX     #
-# Version 3.5.0 15.01.2021                                                #
+# Version 3.6.0 20.09.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
