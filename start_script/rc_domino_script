@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version 3.5.1 18.09.2021                                                #
+# Version 3.6.0 20.09.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=3.5.1
+DOMINO_SCRIPT_VERSION=3.6.0
 
 VERBOSE_INFO="yes"
 
@@ -754,7 +754,7 @@ edit_one_touch_setup()
   # Template name will be only set when creating or overwriting configuration
 
   if [ "$1" = "env" ]; then
-     CFG_FILE=DOMINO_AUTO_CONFIG_ENV_FILE
+     CFG_FILE=$DOMINO_AUTO_CONFIG_ENV_FILE
 
      if [ "$2" = "1" ]; then
        CFG_TEMPLATE=$TEMPLATE_DIR/first_server.env
@@ -776,7 +776,7 @@ edit_one_touch_setup()
   fi
 
   if [ "$1" = "json" ]; then
-     CFG_FILE=DOMINO_AUTO_CONFIG_JSON_FILE
+     CFG_FILE=$DOMINO_AUTO_CONFIG_JSON_FILE
 
      if [ "$2" = "1" ]; then
        CFG_TEMPLATE=$TEMPLATE_DIR/first_server.json
@@ -816,7 +816,8 @@ edit_one_touch_setup()
 
   # Create config file from template if requested
   if [ -n "$CFG_TEMPLATE" ]; then
-    cp "$CFG_TEMPLATE" "$CFG_FILE"
+    echo "Creating [$CFG_FILE] from [$CFG_TEMPLATE]"
+    cp -f "$CFG_TEMPLATE" "$CFG_FILE"
   fi
 
   # Finally edit existing or new file
