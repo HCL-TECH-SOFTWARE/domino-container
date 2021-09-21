@@ -99,17 +99,7 @@ Used by :
 Path and filename of a zip file containing files that will be extracted into the Domino Data directory.
 Values starting with 'http' will be handled as URL. The file will be downloaded from this URL.
 
-Intended to be used for deploying *.ntf and config.json file that will be used further on for auto-configuration of the Domino server.
-
-### ConfigFile
-File name of the JSON file that will be used for automated server configuration.
-
-Usage:
-- file name only : file is expected to be located in the Domino data directory.
-- path and file name : path and file name will be used
-- Values starting with 'http' will be handled as URL. The file will be downloaded from this URL.
-
-Useful in combination with CustomNotesdataZip since the zip file will be extracted before searching for the JSON config file. e.g.: ConfigFile=config.json
+Intended to be used for deploying *.ntf files that will be used further on for auto-configuration of the Domino server.
 
 ### DominoDomainName
 Name of the Domino domain

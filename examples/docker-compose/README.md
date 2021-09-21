@@ -21,13 +21,13 @@ docker-compose up -d
 Other examples can be started specifying the yml file explicitly.
 
 ```bash
-docker-compose -f volt.yml up -d
+docker-compose -f myimage.yml up -d
 ```
 
 To stop a service you specify the corresponding "down" command.
 
 ```bash
-docker-compose -f volt.yml down
+docker-compose -f myimage.yml down
 ```
 
 

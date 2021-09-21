@@ -98,7 +98,6 @@ docker run -it -e "ServerName=Volt" \
     -e "AdminLastName=Hampel" \
     -e "AdminPassword=passw0rd" \
     -e "OrganizationPassword=passw0rd" \
-    -e "ConfigFile=config.json" \
     -h volt.demo.com \
     -p 80:80 \
     -p 443:443 \

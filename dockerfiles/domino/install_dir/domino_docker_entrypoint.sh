@@ -262,7 +262,6 @@ cleanup_setup_env()
   unset OtherDirectoryServerAddress
   unset OtherDirectoryServerName
   unset ServerIDFile
-  unset ConfigFile 
   unset SafeIDFile
   unset ServerName
   unset ServerPassword

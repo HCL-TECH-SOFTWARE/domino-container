@@ -469,21 +469,6 @@ if [ ! -z "$Notesini" ]; then
   log
 fi
 
-# If config.json file downlaod URL defined, download from remote location and set variable to downloaded filename
-
-download_file_link ConfigFile
-
-if [ ! -z "$ConfigFile" ]; then
-  if [ -e "$ConfigFile" ]; then
-
-    header "Using [$ConfigFile] for Server Configuration"
-
-    $LOTUS/bin/java -jar ./DominoUpdateConfig.jar "$ConfigFile" >> $LOG_FILE
-    log 
-  else
-    log "ConfigFile [$ConfigFile] not found!"
-  fi
-fi
 
 # .oO Neuralizer .oO
 # Cleaning up environment variabels & history to reduce exposure of sensitive data

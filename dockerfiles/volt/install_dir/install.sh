@@ -115,7 +115,6 @@ cp -f "templates/"* "$VOLT_DATA_DIR"
 cp -f "bundles/"* "$PLUGINS_FOLDER"
 
 install_file "$INSTALL_DIR/install_addon_volt.sh" "$DOMDOCK_SCRIPT_DIR/install_addon_volt.sh" $ROOT_USER $ROOT_GROUP 755
-install_file "$INSTALL_DIR/config.json" "$DOMINO_DATA_PATH/config.json" $DOMINO_USER $DOMINO_GROUP 644
 
 # Overwrite Install Data Directory Copy File
 install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
