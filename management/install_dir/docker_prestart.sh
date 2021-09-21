@@ -143,26 +143,6 @@ if [ ! -z "$CustomNotesdataZip" ]; then
   fi
 fi
 
-# If config.json file downlaod URL defined, download from remote location and set variable to downloaded filename
-case "$ConfigFile" in
-  http*)
-    FileName=`basename $ConfigFile`
-    download_file "$ConfigFile" "$FileName"
-    ConfigFile=$FileName
-    ;;
-esac
-
-if [ ! -z "$ConfigFile" ]; then
-  if [ -e "$ConfigFile" ]; then
-    echo Using [$ConfigFile] for server configuration 
-
-    echo "---------------------------------------"
-    /opt/ibm/domino/bin/java -jar ./DominoUpdateConfig.jar "$ConfigFile"
-    echo "---------------------------------------"
-  else
-    echo "ConfigFile [$ConfigFile] not found!"
-  fi
-fi
 
 # cleaning up environment variabels as they might contain sensitive data
 unset isFirstServer
@@ -183,7 +163,6 @@ unset OrganizationPassword
 unset OtherDirectoryServerAddress
 unset OtherDirectoryServerName
 unset ServerIDFile
-unset ConfigFile 
 unset ServerName
 unset SystemDatabasePath
 unset ServerPassword

@@ -11,7 +11,6 @@
   - [AdminPassword](#adminpassword)
   - [CountryCode](#countrycode)
   - [CustomNotesdataZip](#customnotesdatazip)
-  - [ConfigFile](#configfile)
   - [DominoDomainName](#dominodomainname)
   - [HostName](#hostname)
   - [OrgUnitIDFile](#orgunitidfile)

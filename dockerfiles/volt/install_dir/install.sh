@@ -149,7 +149,7 @@ if [ -e "$INSTALL_DIR/demopack.zip" ]; then
 fi
 
 cd $DOMINO_DATA_PATH
-tar -czf $INSTALL_ADDON_DATA_TAR volt config.json DominoUpdateConfig.jar ${PROD_NAME}_ver.txt
+tar -czf $INSTALL_ADDON_DATA_TAR volt DominoUpdateConfig.jar ${PROD_NAME}_ver.txt
 
 remove_directory $DOMINO_DATA_PATH
 create_directory $DOMINO_DATA_PATH notes notes 770
