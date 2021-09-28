@@ -1,13 +1,10 @@
 
 CONTAINER_NAME=domino
 
-# Standard HCL image
-#CONTAINER_IMAGE=domino-docker:latest
-
-# Domino Docker Community/GitHub image 
+# Domino Docker Community/GitHub image
 CONTAINER_IMAGE=hclcom/domino:latest
 
-# Standard HCL image / does not support auto config nor start script operations
+# Standard HCL image
 #CONTAINER_IMAGE=domino-docker:latest
 
 # If not set, machine hostname is used by default
