@@ -5,7 +5,7 @@ domino|11.0.1|Domino_1101_Linux_English.tar|-|3b159e5a6d4084504e451b0ef64ff87942
 domino|11.0.1FP2|Domino_1101FP2_Linux.tar|-|9f358300e4e03b36a6e1d40a6e13c745bea7c7b1c46952806738ef48680ba083
 domino|11.0.1FP3|Domino_1101FP3_Linux.tar|-|3b7ff0d885ce33a44c64aaa1ca742ba5cb1f361c663103f79aee2bf4a0a6882c
 domino|12.0.0|Domino_12.0_Linux_English.tar|-|f8a8618c20717a04826344ca4fec808351c523d754737a688d86edd4f445ff40
-domino|12.0.1BETA1|Domino_1201_Linux_Beta1_English.tar|-|cdc6be754ab67243390096ff8d9ecc7bf513a2806c6559a4788516a02b7e76c6
+domino|12.0.1BETA2|Domino_1201_Linux_Beta2_English.tar|-|ed57e14f32a31a9bfd3080d46b6472a53943bc9bd1ac96c4b0b508cdf2cec33d
 traveler|11.0.0|Traveler_11.0_Linux_ML.tar.gz|-|381bfae133eb7288f37c531a636a8ec049d1d7bbb16318b40254e0ed08a294d8
 traveler|11.0.1|Traveler_11.0.1_Linux_ML.tar.gz|-|b3ef80877ad4892e2c8d78b12f4086118baf7c4377af4c459f4455e4898d80ff
 traveler|11.0.1FP1|Traveler_11.0.1FP1_Linux_ML.tar.gz|-|72b77c1aca83bdb5f3d5fd2af6e8c7201108b9d67ea3290bdafb6c215e452966
@@ -13,7 +13,7 @@ traveler|11.0.2|Traveler_11.0.2_Linux_ML.tar.gz|-|dd99edd8185b442c54e89f2e5e3860
 traveler|12.0.0|Traveler_12.0_Linux_ML.tar.gz|-|16d60a80f103dca6b0618cf45bc33ebbfdc8aa9bbff4e181e2de83ac6d9a0323
 traveler|12.0.0FP1|Traveler_12.0.0FP1_Linux_ML.tar.gz|-|a4f80923173098aecc604d5116b935e044350185bb01d79b171af1b31d950897
 traveler|12.0.0FP2|Traveler_12.0.0FP2_Linux_ML.tar.gz|-|30a0297dbdba9fc7e5dfd9fc262020e6f1e8cd6120fb56739b84ac627f515be7
-traveler|12.0.1BETA1|Traveler_12.0.1_Linux_Beta1_ML.tar.gz|-|bfa3122ada2d0db7d0a1cb6b3204fe83d5d4b0db4cabff737aba4e26a7bc8790
+traveler|12.0.1BETA2|Traveler_12.0.1_Linux_Beta2_ML.tar.gz|-|fdbe652b14c341b8939392cea97020c36b12c9a77f336502a4daf2538bececf4
 volt|1.0.3.18|hcl.domino.volt-1.0.3.18.zip|-|597eda820d34fa640f0ed1e049826d92082717e4dc5d105e1a32c8e6d7978799
 volt|1.0.3.21|hcl.domino.volt-1.0.3.21.zip|-|19dbda451f8c0c58be2c5194e11a21e078fe5fe6a0353fce27c34b9c6c6e16e6
 volt|1.0.4.10|hcl.domino.volt-1.0.4.10.zip|-|0890b7314e0398d37d82a76de48b52a95723ea91d4c01cb1080ad0583a5420f8
