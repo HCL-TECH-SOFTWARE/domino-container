@@ -31,6 +31,14 @@ PROD_VER_FILE=$LOTUS/DominoVersionInstalled.txt
 SPECIAL_CURL_ARGS=
 CURL_CMD="curl --fail --location --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
+if [ -z "$DOMINO_USER" ]; then
+  DOMINO_USER=notes
+fi
+
+if [ -z "$DOMINO_GROUP" ]; then
+  DOMINO_GROUP=notes
+fi
+
 print_delim ()
 {
   echo "--------------------------------------------------------------------------------"
@@ -320,8 +328,8 @@ set_security_limits()
   local SET_HARD=
   local UPD=FALSE
 
-  NOFILES_SOFT=$(su - notes -c ulimit' -n')
-  NOFILES_HARD=$(su - notes -c ulimit' -Hn')
+  NOFILES_SOFT=$(su - $DOMINO_USER -c ulimit' -n')
+  NOFILES_HARD=$(su - $DOMINO_USER -c ulimit' -Hn')
 
   if [ "$NOFILES_SOFT" -ne "$REQ_NOFILES_SOFT" ]; then
     SET_SOFT=$REQ_NOFILES_SOFT   
@@ -341,11 +349,11 @@ set_security_limits()
   echo "# -- Domino configuation begin --" >> /etc/security/limits.conf
 
   if [ -n "$SET_HARD" ]; then
-    echo "notes  hard    nofile  $SET_HARD" >> /etc/security/limits.conf
+    echo "$DOMINO_USER  hard    nofile  $SET_HARD" >> /etc/security/limits.conf
   fi
 
   if [ -n "$SET_SOFT" ]; then
-    echo "notes  soft    nofile  $SET_SOFT" >> /etc/security/limits.conf
+    echo "$DOMINO_USER  soft    nofile  $SET_SOFT" >> /etc/security/limits.conf
   fi
 
   echo "# -- Domino configuation end --" >> /etc/security/limits.conf
@@ -379,14 +387,16 @@ add_notes_user()
 {
   header "Add Notes user"
 
-  local NOTES_UID=$(id -u notes 2>/dev/null)
+  local NOTES_UID=$(id -u $DOMINO_USER 2>/dev/null)
   if [ -n "$NOTES_UID" ]; then
-    echo "notes user already exists (UID:$NOTES_UID)"
+    echo "$DOMINO_USER user already exists (UID:$NOTES_UID)"
     return 0
   fi 
 
-  # creates notes:notes user and group
-  useradd notes -U -m
+  # creates user and group
+
+  groupadd $DOMINO_GROUP
+  useradd $DOMINO_USER -g $DOMINO_GROUP -m
 }
 
 install_software()
@@ -418,7 +428,7 @@ create_directories()
 {
   header "Create directory structure /local.."
 
-  # creates local directory structure with the right owner notes:notes
+  # creates local directory structure with the right owner 
 
   mkdir -p $SOFTWARE_DIR
   mkdir -p /local/notesdata
@@ -428,8 +438,8 @@ create_directories()
   mkdir -p /local/backup
   mkdir -p /local/log
 
-  chown -R notes:notes /local
-  chown -R notes:notes $SOFTWARE_DIR
+  chown -R $DOMINO_USER:$DOMINO_GROUP /local
+  chown -R $DOMINO_USER:$DOMINO_GROUP $SOFTWARE_DIR
 }
 
 install_start_script()
