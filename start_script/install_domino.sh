@@ -505,6 +505,7 @@ install_start_script()
 
   tar -xf start_script.tar
   start_script/install_script
+  rm -rf start_script start_script.tar
 
 }
 
