@@ -15,9 +15,23 @@
 # - Sets security limits
 
 
-SOFTWARE_DIR=/local/software
 
-#DOWNLOAD_FROM=http://127.0.0.1:7777
+if [ -n "$DOWNLOAD_FROM" ]; then
+  echo "Downloading and installing software from [$DOWNLOAD_FROM]"
+
+elif [ -n "$SOFTWARE_DIR" ]; then
+  echo "Installing software from [$SOFTWARE_DIR]"
+
+else
+  SOFTWARE_DIR=/local/software
+  echo "Installing software from default location [$SOFTWARE_DIR]"
+fi
+
+# In any case set a software directory -- also when downloading
+if [ -z "$SOFTWARE_DIR" ]; then
+  SOFTWARE_DIR=/local/software
+fi
+
 PROD_NAME=domino
 
 DOMINO_DOCKER_GIT_URL=https://github.com/IBM/domino-docker/raw/master
@@ -38,6 +52,11 @@ fi
 if [ -z "$DOMINO_GROUP" ]; then
   DOMINO_GROUP=notes
 fi
+
+if [ -z "$DIR_PERM" ]; then
+  DIR_PERM=770
+fi
+
 
 print_delim ()
 {
@@ -423,6 +442,34 @@ install_software()
   fi
 }
 
+create_directory ()
+{
+  TARGET_FILE=$1
+  OWNER=$2
+  GROUP=$3
+  PERMS=$4
+
+  if [ -z "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  if [ -e "$TARGET_FILE" ]; then
+    return 0
+  fi
+
+  mkdir -p "$TARGET_FILE"
+
+  if [ ! -z "$OWNER" ]; then
+    chown $OWNER:$GROUP "$TARGET_FILE"
+  fi
+
+  if [ ! -z "$PERMS" ]; then
+    chmod "$PERMS" "$TARGET_FILE"
+  fi
+
+  return 0
+}
+
 
 create_directories()
 {
@@ -430,16 +477,17 @@ create_directories()
 
   # creates local directory structure with the right owner 
 
-  mkdir -p $SOFTWARE_DIR
-  mkdir -p /local/notesdata
-  mkdir -p /local/translog
-  mkdir -p /local/nif
-  mkdir -p /local/ft
-  mkdir -p /local/backup
-  mkdir -p /local/log
 
-  chown -R $DOMINO_USER:$DOMINO_GROUP /local
-  chown -R $DOMINO_USER:$DOMINO_GROUP $SOFTWARE_DIR
+
+  create_directory /local $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory /local/notesdata $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory /local/backup $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+
+  mkdir -p $SOFTWARE_DIR
 }
 
 install_start_script()
