@@ -429,7 +429,7 @@ install_software()
   fi
 
   # installes required and useful packages
-  install_package gdb tar jq sysstat git bind-utils net-tools
+  install_package glibc-langpack-en gdb tar which jq sysstat bind-utils net-tools hostname diffutils file
 
   # first check if platform supports  perl-libs
   if [ ! -x /usr/bin/perl ]; then
@@ -567,7 +567,7 @@ install_domino()
     CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_NAME$DOWNLOAD_LINK_FLEXNET_OPTIONS"
 
     header "Software download"
-    echo "Please download software from FlexNet to [$SOFTWARE_DIR]"
+    echo "Please download [$DOWNLOAD_NAME] from FlexNet to [$SOFTWARE_DIR]"
     echo
     echo 1. Log into Flexnet first: https://hclsoftware.flexnetoperations.com
     echo 2. Visit the following URL:
