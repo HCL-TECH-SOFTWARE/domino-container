@@ -429,7 +429,7 @@ install_software()
   fi
 
   # installes required and useful packages
-  install_package glibc-langpack-en gdb tar which jq sysstat bind-utils net-tools hostname diffutils file
+  install_package glibc-langpack-en gdb tar which jq sysstat bind-utils net-tools hostname diffutils file cpio
 
   # first check if platform supports  perl-libs
   if [ ! -x /usr/bin/perl ]; then
