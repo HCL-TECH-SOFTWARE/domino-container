@@ -653,6 +653,12 @@ if [ "$BORG_INSTALL" = "yes" ]; then
     if [ -e /etc/centos-release ]; then
       header "Installing Borg Backup"
       install_package epel-release 
+
+      # Borg Backup needs a different perl version in powertools
+      if [ -x /usr/bin/yum ]; then
+        yum config-manager --set-enabled powertools
+      fi
+
       install_package borgbackup openssh-clients
     fi
 fi
