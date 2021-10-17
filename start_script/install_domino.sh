@@ -560,10 +560,11 @@ install_domino()
       else
         log_ok "Updating Domino $PROD_VER_INSTALLED -> $PROD_VER"
       fi
-    fi
 
-    log_ok "Domino already installed"
-    return 0
+    else
+      log_ok "Domino already installed"
+      return 0
+    fi
 
   else
     log_ok "Installing Domino $PROD_VER"
