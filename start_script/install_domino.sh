@@ -126,6 +126,26 @@ linux_update()
   fi
 }
 
+remove_directory ()
+{
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 2
+  fi
+
+  rm -rf "$1"
+
+  if [ -e "$1" ]; then
+    echo " --- directory not completely deleted! ---"
+    ls -l "$1"
+    echo " --- directory not completely deleted! ---"
+  fi
+
+  return 0
+}
 
 get_download_name ()
 {
@@ -390,7 +410,7 @@ config_firewall()
   fi
 
   # add well known NRPC port
-  cp /local/software/start_script/extra/firewalld/nrpc.xml /etc/firewalld/services/ 
+  cp $SOFTWARE_DIR/start_script/extra/firewalld/nrpc.xml /etc/firewalld/services/ 
 
   # reload just in case to let firewalld notice the change
   firewall-cmd --reload
@@ -429,7 +449,7 @@ install_software()
   fi
 
   # installes required and useful packages
-  install_package glibc-langpack-en gdb tar which jq sysstat bind-utils net-tools hostname diffutils file cpio
+  install_package glibc-langpack-en gdb procps-ng tar which jq sysstat bind-utils net-tools hostname diffutils file cpio
 
   # first check if platform supports  perl-libs
   if [ ! -x /usr/bin/perl ]; then
@@ -505,8 +525,13 @@ install_start_script()
 
   tar -xf start_script.tar
   start_script/install_script
-  rm -rf start_script start_script.tar
+  rm -rf start_script.tar
 
+}
+
+cleanup_install_data ()
+{
+  remove_directory $SOFTWARE_DIR/start_script
 }
 
 install_domino()
@@ -602,6 +627,7 @@ install_start_script
 install_domino
 set_security_limits
 config_firewall
+cleanup_install_data
 
 cd $SAVED_DIR
 
