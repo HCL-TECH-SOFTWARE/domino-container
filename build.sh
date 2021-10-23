@@ -214,7 +214,7 @@ nginx_start ()
 
   if [ -z "$STATUS" ]; then
     echo "Creating Docker container: $SOFTWARE_CONTAINER hosting [$SOFTWARE_DIR]"
-    $DOCKER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:ro -d nginx
+    $DOCKER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:Z -d nginx
   elif [ "$STATUS" = "exited" ]; then
     echo "Starting existing Docker container: $SOFTWARE_CONTAINER"
     $DOCKER_CMD start $SOFTWARE_CONTAINER

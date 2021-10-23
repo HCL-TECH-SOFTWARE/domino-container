@@ -97,10 +97,10 @@ check_docker_environment()
 repo_start ()
 {
   # Check if we already have this container in status exited
-  STATUS="$($DOCKER_CMD inspect --format '{{ .State.Status }}' $SOFTWARE_CONTAINER)"
+  STATUS="$($DOCKER_CMD inspect --format '{{ .State.Status }}' $SOFTWARE_CONTAINER 2>/dev/null)"
   if [[ -z "$STATUS" ]] ; then
     echo "Creating Docker container: $SOFTWARE_CONTAINER"
-    $DOCKER_CMD run --name $SOFTWARE_CONTAINER -p 7777:80 -v $PWD:/usr/share/nginx/html:ro -d nginx
+    $DOCKER_CMD run --name $SOFTWARE_CONTAINER -p 7777:80 -v $PWD:/usr/share/nginx/html:Z -d nginx
   elif [ "$STATUS" = "exited" ] ; then 
     echo "Starting existing Docker container: $SOFTWARE_CONTAINER"
     $DOCKER_CMD start $SOFTWARE_CONTAINER
