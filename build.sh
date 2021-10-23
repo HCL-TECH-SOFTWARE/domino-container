@@ -386,6 +386,10 @@ for a in $@; do
       ;;
 
     -from=*)
+      FROM_IMAGE=`echo "$a" | cut -f2 -d= -s`
+      ;;
+
+    -base=*)
       BASE_IMAGE=`echo "$a" | cut -f2 -d= -s`
       ;;
 
@@ -420,7 +424,7 @@ for a in $@; do
 
     domino-docker:*)
       # to build on top of HCL image
-      BASE_IMAGE=$a
+      FROM_IMAGE=$a
       DOCKER_FILE=dockerfile_hcl
       ;;
 
@@ -506,8 +510,8 @@ echo "[Running in $DOCKER_CMD configuration]"
 # also bypass software download check
 # but check if the image is available
 
-if [ -n "$BASE_IMAGE" ]; then
-  echo "Building based on existing image : [$BASE_IMAGE]"
+if [ -n "$FROM_IMAGE" ]; then
+  echo "Building based on existing image : [$FROM_IMAGE]"
 
   if [ -z "$DOCKER_FILE" ]; then
     DOCKER_FILE=dockerfile_from
@@ -526,6 +530,8 @@ if [ -n "$BASE_IMAGE" ]; then
   # don't check software
   CHECK_SOFTWARE=no
   CHECK_HASH=no
+
+  BASE_IMAGE=$FROM_IMAGE
 fi
 
 TARGET_IMAGE=$PROD_NAME
