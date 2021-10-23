@@ -338,6 +338,18 @@ copy_config_file()
   fi
 }
 
+
+edit_config_file()
+{
+  if [ ! -e "$CONFIG_FILE" ]; then
+    echo "Creating new config file [$CONFIG_FILE]"
+    copy_config_file
+  fi
+
+  $EDIT_COMMAND $CONFIG_FILE
+}
+
+
 SCRIPT_DIR=`dirname $SCRIPT_NAME`
 SOFTWARE_PORT=7777
 SOFTWARE_CONTAINER=hclsoftware
@@ -413,7 +425,7 @@ for a in $@; do
       ;;
 
     cfg|config)
-      $EDIT_COMMAND $CONFIG_FILE
+      edit_config_file
       exit 0
       ;;
 
