@@ -525,7 +525,7 @@ if [ -n "$FROM_IMAGE" ]; then
 
   # Derive version from Docker image name
   PROD_NAME=domino
-  PROD_VER=`echo $BASE_IMAGE | cut -d":" -f 2 -s`
+  PROD_VER=`echo $FROM_IMAGE | cut -d":" -f 2 -s`
     
   # don't check software
   CHECK_SOFTWARE=no
