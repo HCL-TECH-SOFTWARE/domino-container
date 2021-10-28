@@ -844,6 +844,11 @@ container_build ()
 
   . build.cfg
 
+  # Podman started to use OCI images by default. We still want Docker image format
+  if [ -z "$BUILDAH_FORMAT" ]; then
+    BUILDAH_FORMAT=docker
+  fi
+
   if [ -z "$CONTAINER_FILE" ]; then
 
     if [ -r "Containerfile" ]; then
