@@ -517,7 +517,7 @@ glibc_lang_add()
 
     echo "Installing locale [$DOMINO_LANG] on Photon OS"
     yum install -y glibc-i18n
-    echo "$DOMINO_LANG UTF-8" > /etc/locale-gen.conf
+    echo "$DOMINO_LANG" > /etc/locale-gen.conf
     locale-gen.sh
     yum remove -y glibc-i18n
 
@@ -544,23 +544,37 @@ install_software()
   # updates Linux
   linux_update
 
-  # adds repository for additional software packages
-  if [ -x /usr/bin/dnf ]; then
-    install_package epel-release
+  # adds epel repository for additional software packages on RHEL/CentOS/Fedora platforms
 
-  elif [ -x /usr/bin/yum ]; then
-    install_package epel-release
-  fi
+  case "$LINUX_ID_LIKE" in
+
+    *fedora*|*rhel*)
+      install_package epel-release
+    ;;
+
+  esac
 
   # install required and useful packages
-  install_package gdb tar which jq sysstat bind-utils net-tools
+  install_package gdb tar sysstat net-tools jq
 
-  # Ubuntu needs different packages and doesn't provide some others
-  if [ -x /usr/bin/apt ]; then
+  # additional packages by platform
+
+  if [ "$LINUX_ID" = "photon" ]; then
+    # Photon OS packages
+    install_package bindutils
+
+  elif [ -x /usr/bin/apt ]; then
+    # Ubuntu needs different packages and doesn't provide some others
     install_package bind9-utils
 
   else
-    install_package procps-ng which bind-utils
+
+    # RHEL/CentOS/Fedora
+    case "$LINUX_ID_LIKE" in
+      *fedora*|*rhel*)
+        install_package procps-ng which bind-utils
+      ;;
+    esac
   fi
 
   # first check if platform supports perl-libs
@@ -732,6 +746,7 @@ SAVED_DIR=$(pwd)
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
+LINUX_ID_LIKE=$(cat /etc/os-release | grep "^ID_LIKE="| cut -d= -f2 | xargs)
 
 if [ -z "$LINUX_PRETTY_NAME" ]; then
   echo "Unsupported platform!"
