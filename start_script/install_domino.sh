@@ -146,6 +146,7 @@ linux_update()
   elif [ -x /usr/bin/apt ]; then
 
     header "Updating Linux via apt"
+    apt-get update -y
     apt-get upgrade -y
 
   fi
@@ -313,7 +314,7 @@ download_and_check_hash ()
     if [ -e $SOFTWARE_FILE ]; then
       echo
       echo "DOWNLOAD_FILE: [$DOWNLOAD_FILE]"
-      HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+      HASH=$($CURL_CMD $DOWNLOAD_FILE | cut -d" " -f1)
       echo
       FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
 
@@ -494,14 +495,25 @@ glibc_lang_add()
 {
 
   local INSTALL_LOCALE
+  local INSTALL_LANG
 
   if [ -z "$1" ]; then
     INSTALL_LOCALE=$(echo $DOMINO_LANG|cut -f1 -d"_")
+    INSTALL_LANG=$DOMINO_LANG
+
   else
-    INSTALL_LOCALE=$1
+    INSTALL_LOCALE=$(echo $1|cut -f1 -d"_")
+    INSTALL_LANG=$1
   fi
 
   if [ -z "$INSTALL_LOCALE" ]; then
+    return 0
+  fi
+
+  CHECK_LOCALE_INSTALLED=$(locale -a | grep "^$INSTALL_LOCALE")
+
+  if [ -n "$CHECK_LOCALE_INSTALLED" ]; then
+    echo "Locale [$INSTALL_LOCALE] already installed"
     return 0
   fi
 
@@ -509,21 +521,22 @@ glibc_lang_add()
 
   # Ubuntu
   if [ "$LINUX_ID" = "ubuntu" ]; then
-    apt install -y language-pack-$INSTALL_LOCALE
+    install_package language-pack-$INSTALL_LOCALE
   fi
 
   # Debian
   if [ "$LINUX_ID" = "debian" ]; then
-    echo "currently no way to add locales on [$LINUX_ID]"
+    # Debian has locales already installed
+    return 0
   fi
 
   #Photon OS
   if [ "$LINUX_ID" = "photon" ]; then
 
-    yum install -y glibc-i18n
-    echo "$DOMINO_LANG" > /etc/locale-gen.conf
+    install_package glibc-i18n
+    echo "$INSTALL_LANG UTF-8" > /etc/locale-gen.conf
     locale-gen.sh
-    yum remove -y glibc-i18n
+    #yum remove -y glibc-i18n
 
     return 0
   fi
@@ -797,8 +810,8 @@ install_software
 
 # Add locales
 if [ -z "$DOMINO_LANG" ]; then
-  glibc_lang_add en
-  glibc_lang_add de
+  glibc_lang_add en_US.UTF-8
+  glibc_lang_add de_DE.UTF-8
 else
   glibc_lang_add
 fi
