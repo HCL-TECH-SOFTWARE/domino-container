@@ -93,13 +93,13 @@ install_package()
    zypper install -y "$@"
 
  elif [ -x /usr/bin/dnf ]; then
-   dnf -y "$@"
+   dnf install -y "$@"
 
  elif [ -x /usr/bin/yum ]; then
    yum install -y "$@"
 
  elif [ -x /usr/bin/apt ]; then
-   apt -y "$@"
+   apt install -y "$@"
 
  else
   echo "No package manager found!"
@@ -463,20 +463,107 @@ add_notes_user()
   useradd $DOMINO_USER -g $DOMINO_GROUP -m
 }
 
+glibc_lang_update7()
+{
+  # on CentOS/RHEL 7 the locale is not containing all langauges
+  # removing override_install_langs from /etc/yum.conf and reinstalling glibc-common
+  # reinstall does only work if package is up to date
+
+  local STR="override_install_langs="
+  local FILE="/etc/yum.conf"
+
+  FOUND=$(grep "$STR" "$FILE")
+
+  if [ -z "$FOUND" ]; then
+    return 0
+  fi
+
+  grep -v -i "$STR" "$FILE" > "$FILE.updated"
+  mv "$FILE.updated" "$FILE"
+
+  echo
+  echo Updating glibc locale ...
+  echo
+
+  yum reinstall -y glibc-common
+
+  return 0
+}
+
+glibc_lang_add()
+{
+
+  local INSTALL_LOCALE
+
+  if [ -z "$1" ]; then
+    INSTALL_LOCALE=$(echo $DOMINO_LANG|cut -f1 -d"_")
+  else
+    INSTALL_LOCALE=$1
+  fi
+
+  if [ -z "$INSTALL_LOCALE" ]; then
+    return 0
+  fi
+
+  header "Installing locale [$INSTALL_LOCALE]"
+
+  # Ubuntu
+  if [ -x /usr/bin/apt ]; then
+    apt install -y language-pack-$INSTALL_LOCALE
+  fi
+
+  #Photon OS
+  if [ "$LINUX_ID" = "photon" ]; then
+
+    echo "Installing locale [$DOMINO_LANG] on Photon OS"
+    yum install -y glibc-i18n
+    echo "$DOMINO_LANG UTF-8" > /etc/locale-gen.conf
+    locale-gen.sh
+    yum remove -y glibc-i18n
+
+    return 0
+  fi
+
+  # Only needed for centos like platforms -> check if yum is installed
+
+  if [ ! -x /usr/bin/yum ]; then
+    return 0
+  fi
+
+  if [ "$LINUX_VERSION" = "7" ]; then
+      yum_glibc_lang_update7
+  else
+    yum install -y glibc-langpack-$INSTALL_LOCALE
+  fi
+
+  return 0
+}
+
 install_software()
 {
   # updates Linux
-  linux_update()
+  linux_update
 
-  if [ -x /usr/bin/yum ]; then
-    # adds repository for additional software packages
+  # adds repository for additional software packages
+  if [ -x /usr/bin/dnf ]; then
+    install_package epel-release
+
+  elif [ -x /usr/bin/yum ]; then
     install_package epel-release
   fi
 
-  # installes required and useful packages
-  install_package glibc-langpack-en gdb procps-ng tar which jq sysstat bind-utils net-tools hostname diffutils file cpio
+  # install required and useful packages
+  install_package gdb tar which jq sysstat bind-utils net-tools
 
-  # first check if platform supports  perl-libs
+  # Ubuntu needs different packages and doesn't provide some others
+  if [ -x /usr/bin/apt ]; then
+    install_package bind9-utils
+
+  else
+    install_package procps-ng which bind-utils
+  fi
+
+  # first check if platform supports perl-libs
   if [ ! -x /usr/bin/perl ]; then
     install_package perl-libs
   fi
@@ -518,11 +605,9 @@ create_directory ()
 
 create_directories()
 {
-  header "Create directory structure /local.."
+  header "Create directory structure /local ..."
 
   # creates local directory structure with the right owner 
-
-
 
   create_directory /local $DOMINO_USER $DOMINO_GROUP $DIR_PERM
   create_directory /local/notesdata $DOMINO_USER $DOMINO_GROUP $DIR_PERM
@@ -644,11 +729,29 @@ install_domino()
 
 SAVED_DIR=$(pwd)
 
-header "Nash!Com Domino Installer"
+LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
+LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
+
+if [ -z "$LINUX_PRETTY_NAME" ]; then
+  echo "Unsupported platform!"
+  exit 1
+fi
+
+header "Nash!Com Domino Installer for $LINUX_PRETTY_NAME"
 
 add_notes_user
 create_directories
 install_software
+
+# Add locales
+if [ -z "$DOMINO_LANG" ]; then
+  glibc_lang_add en
+  glibc_lang_add de
+else
+  glibc_lang_add
+fi
+
 install_start_script
 install_domino
 set_security_limits
