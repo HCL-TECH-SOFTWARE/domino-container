@@ -5,6 +5,7 @@
 ############################################################################
 
 # Domino on Linux installation script
+# Version 1.0.1 06.11.2021
 
 # - Installs required software
 # - Adds notes:notes user and group
@@ -13,7 +14,6 @@
 # - Creates a new NRPC firewall rule and opens ports NRPC, HTTP, HTTPS and SMTP
 # - Installs Domino with default options using silent install 
 # - Sets security limits
-
 
 
 if [ -n "$DOWNLOAD_FROM" ]; then
@@ -90,12 +90,20 @@ header ()
 install_package()
 {
  if [ -x /usr/bin/zypper ]; then
-
    zypper install -y "$@"
 
- elif [ -x /usr/bin/yum ]; then
+ elif [ -x /usr/bin/dnf ]; then
+   dnf -y "$@"
 
+ elif [ -x /usr/bin/yum ]; then
    yum install -y "$@"
+
+ elif [ -x /usr/bin/apt ]; then
+   apt -y "$@"
+
+ else
+  echo "No package manager found!"
+  exit 1
 
  fi
 }
@@ -105,8 +113,14 @@ remove_package()
  if [ -x /usr/bin/zypper ]; then
    zypper rm -y "$@"
 
+ elif [ -x /usr/bin/dnf ]; then
+   dnf remove -y "$@"
+
  elif [ -x /usr/bin/yum ]; then
    yum remove -y "$@"
+
+ elif [ -x /usr/bin/apt ]; then
+   apt remove -y "$@"
 
  fi
 }
@@ -119,10 +133,21 @@ linux_update()
     zypper refersh -y
     zypper update -y
 
+  elif [ -x /usr/bin/dnf ]; then
+
+    header "Updating Linux via dnf"
+    dnf update -y
+
   elif [ -x /usr/bin/yum ]; then
 
     header "Updating Linux via yum"
     yum update -y
+
+  elif [ -x /usr/bin/apt ]; then
+
+    header "Updating Linux via apt"
+    apt-get upgrade -y
+
   fi
 }
 
@@ -184,7 +209,7 @@ download_file_ifpresent ()
     return 0
   fi
 
-  pushd .
+  SAVED_DIR=$(pwd)
   if [ -n "$TARGET_DIR" ]; then
     mkdir -p "$TARGET_DIR"
     cd $TARGET_DIR
@@ -201,13 +226,13 @@ download_file_ifpresent ()
 
   if [ "$?" = "0" ]; then
     log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
-    popd
+    cd "$SAVED_DIR"
     return 0
 
   else
     log_error "File [$DOWNLOAD_FILE] not downloaded correctly"
     echo "CURL returned: [$CURL_RET]"
-    popd
+    cd "$SAVED_DIR"
     exit 1
   fi
 }
@@ -244,7 +269,7 @@ download_and_check_hash ()
     exit 1
   fi
 
-  pushd .
+  SAVED_DIR=$(pwd)
 
   if [ -n "$TARGET_DIR" ]; then
     mkdir -p "$TARGET_DIR"
@@ -271,7 +296,7 @@ download_and_check_hash ()
 
     if [ ! -e "$DOWNLOADED_FILE" ]; then
       log_error "File [$DOWNLOAD_FILE] not downloaded [1]"
-      popd
+      cd "$SAVED_DIR"
       exit 1
     fi
 
@@ -294,12 +319,12 @@ download_and_check_hash ()
 
       if [ "$FOUND" = "1" ]; then
         log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
-        popd
+        cd "$SAVED_DIR"
         return 0
 
       else
         log_error "File [$DOWNLOAD_FILE] not downloaded correctly [2]"
-        popd
+        cd "$SAVED_DIR"
         exit 1
       fi
     else
@@ -309,18 +334,18 @@ download_and_check_hash ()
 
       if [ "$?" = "0" ]; then
         log_ok "Successfully downloaded & extracted: [$DOWNLOAD_FILE] "
-        popd
+        cd "$SAVED_DIR"
         return 0
 
       else
         log_error "File [$DOWNLOAD_FILE] not downloaded correctly [3]"
-        popd
+        cd "$SAVED_DIR"
         exit 1
       fi
     fi
   fi
 
-  popd
+  cd "$SAVED_DIR"
   return 0
 }
 
