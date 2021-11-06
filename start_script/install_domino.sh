@@ -314,7 +314,7 @@ download_and_check_hash ()
     if [ -e $SOFTWARE_FILE ]; then
       echo
       echo "DOWNLOAD_FILE: [$DOWNLOAD_FILE]"
-      HASH=$($CURL_CMD $DOWNLOAD_FILE | cut -d" " -f1)
+      HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1)
       echo
       FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
 
@@ -510,14 +510,14 @@ glibc_lang_add()
     return 0
   fi
 
+  header "Installing locale [$INSTALL_LOCALE]"
+
   CHECK_LOCALE_INSTALLED=$(locale -a | grep "^$INSTALL_LOCALE")
 
   if [ -n "$CHECK_LOCALE_INSTALLED" ]; then
     echo "Locale [$INSTALL_LOCALE] already installed"
     return 0
   fi
-
-  header "Installing locale [$INSTALL_LOCALE]"
 
   # Ubuntu
   if [ "$LINUX_ID" = "ubuntu" ]; then
