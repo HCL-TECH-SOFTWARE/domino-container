@@ -508,14 +508,18 @@ glibc_lang_add()
   header "Installing locale [$INSTALL_LOCALE]"
 
   # Ubuntu
-  if [ -x /usr/bin/apt ]; then
+  if [ "$LINUX_ID" = "ubuntu" ]; then
     apt install -y language-pack-$INSTALL_LOCALE
+  fi
+
+  # Debian
+  if [ "$LINUX_ID" = "debian" ]; then
+    echo "currently no way to add locales on [$LINUX_ID]"
   fi
 
   #Photon OS
   if [ "$LINUX_ID" = "photon" ]; then
 
-    echo "Installing locale [$DOMINO_LANG] on Photon OS"
     yum install -y glibc-i18n
     echo "$DOMINO_LANG" > /etc/locale-gen.conf
     locale-gen.sh
@@ -616,7 +620,6 @@ create_directory ()
   return 0
 }
 
-
 create_directories()
 {
   header "Create directory structure /local ..."
@@ -632,6 +635,31 @@ create_directories()
   create_directory /local/backup $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
   mkdir -p $SOFTWARE_DIR
+}
+
+set_sh_shell()
+{
+  ORIG_SHELL_LINK=$(readlink /bin/sh)
+
+  if [ -z "$1" ]; then
+     echo "Current sh: [$ORIG_SHELL_LINK]"
+     ORIG_SHELL_LINK=
+     return 0
+  fi
+
+  if [ "$ORIG_SHELL_LINK" = "$1" ]; then
+    ORIG_SHELL_LINK=
+    return 0
+  fi
+
+  echo "Switching sh shell from [$ORIG_SHELL_LINK] to [$1]"
+
+  local SAVED_DIR=$(pwd)
+  cd /bin
+  ln -sf "$1" sh
+  cd "$SAVED_DIR"
+
+  return 1
 }
 
 install_start_script()
@@ -731,9 +759,17 @@ install_domino()
 
   # Installs Domino with silent response file
 
+  # Switch default sh shell from dash to bash on Ubuntu and Debian for Domino install
+  set_sh_shell bash
+
   cd $SOFTWARE_DIR/linux64
   ./install -f "$(pwd)/responseFile/installer.properties" -i silent
   
+  # Switch back sh shell if changed
+  if [ -n "$ORIG_SHELL_LINK" ]; then
+    set_sh_shell "$ORIG_SHELL_LINK"
+  fi
+
   cd $SOFTWARE_DIR 
   rm -rf linux64
 
