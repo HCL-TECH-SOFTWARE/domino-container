@@ -1,6 +1,6 @@
 ###########################################################################
 # README - Start/Stop Script for Domino on xLinux/zLinux/AIX              #
-# Version 3.6.0 20.09.2021                                                #
+# Version 3.6.1 06.11.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -1832,6 +1832,30 @@ b.) - Ensure that your login shell is /bin/ksh
 Change History
 --------------
 
+V3.6.1 06.11.2021
+
+
+Changes
+-------
+
+Beginning with this version the rc_domino script moved from /etc/init.d/rc_domino to /usr/bin/domino.
+A symbolic link is created in the old standard location.
+
+Some Linux distributions don't have a legacy /etc/init.d directory any more.
+Also systemd environments don't need etc/init.d.
+
+The script can still be still started from the old location. Just the locations swapped.
+
+
+Problems Solved
+---------------
+
+The trap statement for the monitor command (live console) contained the wrong function.
+This did not show up as an issue on most platforms but first showed up on Ubuntu.
+With this change the live console also works on Ubuntu.
+
+
+
 V3.6.0 20.09.2021
 
 New Features
@@ -1876,6 +1900,7 @@ New Features
 - New command "resetstlogs" to reset ST logs/diagnostics
 
 The Sametime Community server as some additional search path requirements, which are added to the search path
+
 
 V3.4.0 01.09.2020
 

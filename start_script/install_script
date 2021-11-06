@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version 3.6.0 20.09.2021                                                #
+# Version 3.6.1 06.11.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -32,7 +32,7 @@ DOMINO_DOCKER_SCRIPT=domino_docker_entrypoint.sh
 DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
 DONT_TOUCH_THIS_STANDARD_USER=notes
 
-DOMINO_SCRIPT_VERSION=3.6.0
+DOMINO_SCRIPT_VERSION=3.6.1
 
 # if you really really need to, change this and all files will be patched
 
@@ -54,6 +54,8 @@ ROOT_GROUP=root
 if [ -z "$DOMINO_DATA_PATH" ]; then
   DOMINO_DATA_PATH=/local/notesdata
 fi
+
+DOMINO_SCRIPT_BIN=/usr/bin/domino
 
 #DOMINO_DEBUG_MODE="yes"
 
@@ -329,9 +331,20 @@ if [ ! -e "$DOMINO_DATA_PATH" ]; then
   exit 1
 fi
 
-if [ -e "$INIT_PATH" ]; then
-  install_file "$START_SCRIPT_DIR/rc_domino" "$INIT_PATH/$DOMINO_RC_NAME" $ROOT_USER $ROOT_GROUP 755
+# domino script is now /usr/bin. convert link when needed
+
+if [ -L "$DOMINO_SCRIPT_BIN" ]; then
+  echo "Replacing symbolic link [$DOMINO_SCRIPT_BIN] with script file"
+  rm -f "$DOMINO_SCRIPT_BIN"
+
+  # also remove old init.d name and replace with link further down in logic
+  if [ -e "$INIT_PATH/$DOMINO_RC_NAME" ]; then
+    rm -f "$INIT_PATH/$DOMINO_RC_NAME"
+  fi
+
 fi
+
+install_file "$START_SCRIPT_DIR/rc_domino" "$DOMINO_SCRIPT_BIN" $ROOT_USER $ROOT_GROUP 755
 
 install_file "$START_SCRIPT_DIR/rc_domino_script" "$DOMINO_START_SCRIPT_DIR/rc_domino_script" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/rc_domino_readme.txt" "$DOMINO_START_SCRIPT_DIR/rc_domino_readme.txt" "$DOMINO_USER" "$DOMINO_GROUP" 644
@@ -387,11 +400,14 @@ fi
 # set link to include script as 'domino' into path
 if [ "$DOCKER_ENV" = "yes" ]; then
   # for Docker we just link the main script
-  create_link $DOMINO_START_SCRIPT_DIR/rc_domino_script /usr/bin/domino
+  create_link "$DOMINO_START_SCRIPT_DIR/rc_domino_script" "$DOMINO_SCRIPT_BIN"
 
 else
-  if [ ! -e /usr/bin/domino ]; then
-    create_link $INIT_PATH/$DOMINO_RC_NAME /usr/bin/domino
+  # create symbolic link in old standard init.d location if OS has init.d
+  if [ -e "$INIT_PATH" ]; then
+    if [ ! -e "$INIT_PATH/$DOMINO_RC_NAME" ]; then
+      create_link "$DOMINO_SCRIPT_BIN" "$INIT_PATH/$DOMINO_RC_NAME"
+    fi
   fi
 fi
 
@@ -420,14 +436,14 @@ else
     patch_user_name "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
 
     # add domino service (systemd/init.d)
-    $INIT_PATH/$DOMINO_RC_NAME service add
+    $DOMINO_SCRIPT_BIN service add
 
   fi
 fi
 
-if [ -e "$INIT_PATH/$DOMINO_RC_NAME" ]; then
-  patch_install_dir "$INIT_PATH/$DOMINO_RC_NAME"
-  patch_user_name "$INIT_PATH/$DOMINO_RC_NAME"
+if [ -e "$DOMINO_SCRIPT_BIN" ]; then
+  patch_install_dir "$DOMINO_SCRIPT_BIN"
+  patch_user_name "$DOMINO_SCRIPT_BIN"
 fi
 
 header Done
