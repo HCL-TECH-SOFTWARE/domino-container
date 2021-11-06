@@ -534,7 +534,7 @@ glibc_lang_add()
   if [ "$LINUX_ID" = "photon" ]; then
 
     install_package glibc-i18n
-    echo "$INSTALL_LANG UTF-8" > /etc/locale-gen.conf
+    echo "$INSTALL_LANG UTF-8" >> /etc/locale-gen.conf
     locale-gen.sh
     #yum remove -y glibc-i18n
 
