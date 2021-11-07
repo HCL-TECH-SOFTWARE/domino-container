@@ -264,6 +264,7 @@ fi
 # Additional internal script variables
 
 SCRIPT_NAME=$0
+SCRIPT_DIR_NAME=$(dirname $SCRIPT_NAME)
 PARAM=$1
 PARAM1=$1
 PARAM2=$2
@@ -1751,7 +1752,8 @@ usage ()
   echo
   echo "Usage: `basename $SCRIPT_NAME` { start | stop | restart | status | console (monitor) | quit}"
   echo "{ start live | stop live | restart live | compact | restartcompact | compactnextstart}"
-  echo "{ version | cmd <command> <n> | help}"
+  echo "{ cmd <command> <n>}"
+  echo "{ about(+) |version | help}"
   echo
   echo "Diag Commands   :  {resources/res | info | stacks  |  nsd  | nsdnomem | memdump | hang | kill | cleanup}"
   echo "Log Commands    :  {archivelog    | clearlog  | lastlog    | log | systemlog}"
@@ -1787,6 +1789,7 @@ help ()
   echo "restartcompact   stop server, run compact and restart server "
   echo "compactnextstart on|off|status -- enables/disables startup compact operations at next startup"
   echo "version          print start script version"
+  echo "about|about+     show machine info. With 'About' or 'about+' also show info from https://ipinfo.io/"
   echo "cmd <cmd> <n>    run command server command and optinally print last <n> console log lines"
   
   echo
@@ -3473,6 +3476,20 @@ case "$PARAM1" in
   resetstlogs)
 
     reset_sametime_logs
+    ;;
+
+  about)
+
+    if [ -x $SCRIPT_DIR_NAME/nshinfo.sh ]; then
+      $SCRIPT_DIR_NAME/nshinfo.sh
+    fi
+    ;;
+
+  About|about+)
+
+    if [ -x $SCRIPT_DIR_NAME/nshinfo.sh ]; then
+      $SCRIPT_DIR_NAME/nshinfo.sh ipinfo
+    fi
     ;;
 
   help)

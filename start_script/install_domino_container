@@ -202,6 +202,7 @@ fi
 
 install_file $START_SCRIPT_DIR/domino_container $DOMINO_START_SCRIPT_DIR/domino_container $ROOT_USER $ROOT_GROUP 755
 install_file $START_SCRIPT_DIR/software.txt $DOMINO_START_SCRIPT_DIR/software.txt $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/extra/nshinfo.sh" "$DOMINO_START_SCRIPT_DIR/nshinfo.sh" $ROOT_USER $ROOT_GROUP 755
 
 if [ ! -e /usr/bin/domino_container ]; then
   ln -s $DOMINO_START_SCRIPT_DIR/domino_container /usr/bin/domino_container
