@@ -130,7 +130,7 @@ linux_update()
   if [ -x /usr/bin/zypper ]; then
 
     header "Updating Linux via zypper"
-    zypper refresh -y
+    zypper refresh
     zypper update -y
 
   elif [ -x /usr/bin/dnf ]; then
