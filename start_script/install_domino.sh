@@ -571,6 +571,17 @@ install_software()
 
   esac
 
+  # epel on Oracle Linux has a different name
+
+  case "$LINUX_PRETTY_NAME" in
+
+    Oracle*)
+      local MAJOR_VER=$(echo $LINUX_PLATFORM_ID | cut -d ":" -f2)
+      install_package oracle-epel-release-$MAJOR_VER
+    ;;
+
+  esac
+
   # install required and useful packages
   install_package gdb tar sysstat net-tools jq
 
@@ -796,6 +807,7 @@ LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
 LINUX_ID_LIKE=$(cat /etc/os-release | grep "^ID_LIKE="| cut -d= -f2 | xargs)
+LINUX_PLATFORM_ID=$(cat /etc/os-release | grep "^PLATFORM_ID="| cut -d= -f2 | xargs)
 
 if [ -z "$LINUX_PRETTY_NAME" ]; then
   echo "Unsupported platform!"
