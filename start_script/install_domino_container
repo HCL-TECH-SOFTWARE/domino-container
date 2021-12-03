@@ -189,15 +189,14 @@ install_file_noupdate()
 header "Installing Domino Container Script & Config"
 
 if [ ! -e "$DOMINO_START_SCRIPT_DIR" ]; then
-  mkdir -p "$DOMINO_START_SCRIPT_DIR"
+  mkdir -p -m 755 "$DOMINO_START_SCRIPT_DIR"
 fi
 
 DebugText "START_SCRIPT_DIR: [$START_SCRIPT_DIR]"
 
 # create /etc/sysconfig if not present
 if [ ! -e "/etc/sysconfig" ]; then
-  mkdir /etc/sysconfig
-  chmod 755 /etc/sysconfig
+  mkdir -m 755 /etc/sysconfig
 fi
 
 install_file $START_SCRIPT_DIR/domino_container $DOMINO_START_SCRIPT_DIR/domino_container $ROOT_USER $ROOT_GROUP 755

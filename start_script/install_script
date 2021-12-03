@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version 3.6.1 06.11.2021                                                #
+# Version 3.6.2 04.12.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -32,7 +32,7 @@ DOMINO_DOCKER_SCRIPT=domino_docker_entrypoint.sh
 DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
 DONT_TOUCH_THIS_STANDARD_USER=notes
 
-DOMINO_SCRIPT_VERSION=3.6.1
+DOMINO_SCRIPT_VERSION=3.6.2
 
 # if you really really need to, change this and all files will be patched
 
@@ -303,7 +303,7 @@ copy_one_touch_templates()
 {
   local TARGET_DIR=$DOMINO_START_SCRIPT_DIR/OneTouchSetup
   local SOURCE_DIR=$SCRIPT_DIR/OneTouchSetup
-  mkdir -p $TARGET_DIR
+  mkdir -p -m 755 $TARGET_DIR
   cp -f $SOURCE_DIR/* $TARGET_DIR
   chown -R "$DOMINO_USER":"$DOMINO_GROUP" $TARGET_DIR
   chmod -R 644 $TARGET_DIR/*
@@ -315,7 +315,7 @@ copy_one_touch_templates()
 header "Installing StartScript & Config"
 
 if [ ! -e "$DOMINO_START_SCRIPT_DIR" ]; then
-  mkdir -p "$DOMINO_START_SCRIPT_DIR"
+  mkdir -p -m 755 "$DOMINO_START_SCRIPT_DIR"
 fi
 
 DebugText "DOMINO_USER: [$DOMINO_USER]" 
@@ -366,8 +366,7 @@ create_link $START_SCRIPT_CONFIG_VER $START_SCRIPT_CONFIG_LATEST
 
 # create /etc/sysconfig if not present
 if [ ! -e "/etc/sysconfig" ]; then
-  mkdir /etc/sysconfig
-  chmod 755 /etc/sysconfig
+  mkdir -m 755 /etc/sysconfig
 fi
 
 if [ "$PARAM1" = "upd" ]; then

@@ -1,6 +1,6 @@
 ###########################################################################
 # README - Start/Stop Script for Domino on xLinux/zLinux/AIX              #
-# Version 3.6.1 06.11.2021                                                #
+# Version 3.6.2 04.12.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2021                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -1831,6 +1831,15 @@ b.) - Ensure that your login shell is /bin/ksh
 --------------
 Change History
 --------------
+
+
+V3.6.2 04.12.2021
+
+Problems Solved
+---------------
+
+Fixed an issue in start script installer for environments with more strict "umask" settings 
+
 
 V3.6.1 06.11.2021
 
