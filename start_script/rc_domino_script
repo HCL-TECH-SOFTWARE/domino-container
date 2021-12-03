@@ -708,9 +708,9 @@ check_json_file()
     return 1
   fi
 
-  SERVER_TYPE=$(cat $1 | jq .serverSetup.server.type)
-  case "$SERVER_TYPE" in
-    first|additonal)
+  SERVER_TYPE=$(cat $1 | jq -r .serverSetup.server.type)
+  case $SERVER_TYPE in
+    first|additional)
       ;;
 
     *)

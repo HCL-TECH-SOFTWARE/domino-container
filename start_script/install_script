@@ -305,6 +305,8 @@ copy_one_touch_templates()
   local SOURCE_DIR=$SCRIPT_DIR/OneTouchSetup
   mkdir -p $TARGET_DIR
   cp -f $SOURCE_DIR/* $TARGET_DIR
+  chown -R "$DOMINO_USER":"$DOMINO_GROUP" $TARGET_DIR
+  chmod -R 644 $TARGET_DIR/*
   return 0
 }
 

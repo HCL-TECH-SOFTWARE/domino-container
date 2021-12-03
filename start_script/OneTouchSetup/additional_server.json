@@ -4,6 +4,7 @@
       "type": "additional",
       "name": "cluster.domino-lab.net",
       "domainName": "DominoLab",
+     "IDFilePath": "/local/notesdata/server.id",
       "title": "Domino Cluster Lab Server",
       "password": null,
       "minPasswordLength": 0,
