@@ -316,6 +316,8 @@ header "Installing StartScript & Config"
 
 if [ ! -e "$DOMINO_START_SCRIPT_DIR" ]; then
   mkdir -p -m 755 "$DOMINO_START_SCRIPT_DIR"
+  # Depending on the umask the directory might have still the wrong permissions
+  chmod 755 /opt/nashcom
 fi
 
 DebugText "DOMINO_USER: [$DOMINO_USER]" 
