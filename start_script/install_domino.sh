@@ -32,6 +32,11 @@ if [ -z "$SOFTWARE_DIR" ]; then
   SOFTWARE_DIR=/local/software
 fi
 
+if [ -z "$DOMINO_DATA_PATH" ]; then
+  DOMINO_DATA_PATH=/local/notesdata
+fi
+
+
 PROD_NAME=domino
 
 DOMINO_DOCKER_GIT_URL=https://github.com/IBM/domino-docker/raw/master
@@ -710,6 +715,59 @@ cleanup_install_data ()
   remove_directory $SOFTWARE_DIR/start_script
 }
 
+get_notes_ini_var()
+{
+  # $1 = filename
+  # $2 = ini.variable
+
+  ret_ini_var=""
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ -z "$2" ]; then
+    return 0
+  fi
+
+  ret_ini_var=`awk -F '=' -v SEARCH_STR="$2" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' $1 | xargs`
+  return 0
+}
+
+set_notes_ini_var()
+{
+  # updates or sets notes.ini parameter
+  local FILE=$1
+  local VAR=$2
+  local NEW=$3
+  local LINE_FOUND=
+  local LINE_NEW="$VAR=$NEW"
+
+  LINE_FOUND=$(grep -i "^$VAR=" $FILE)
+  if [ -z "$LINE_FOUND" ]; then
+    echo "$LINE_NEW"  >> $FILE
+    return 0
+  fi
+
+  echo "[$LINE_FOUND]"
+  echo "[$LINE_NEW]"
+
+  sed -i "s~${LINE_FOUND}~${LINE_NEW}~g" "$FILE"
+
+  return 0
+}
+
+setup_notes_ini()
+{
+  # Avoid Domino Directory Design Update Prompt
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
+
+  # Allow server names with dots and undercores
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION" "1"
+
+  # Ensure current ODS is used for V12 -> does not harm on earlier releases
+  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
+}
+
 install_domino()
 {
   header "Install Domino"
@@ -851,6 +909,7 @@ fi
 
 install_start_script
 install_domino
+setup_notes_ini
 set_security_limits
 config_firewall
 cleanup_install_data

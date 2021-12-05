@@ -78,27 +78,22 @@ get_notes_ini_var()
 set_notes_ini_var()
 {
   # updates or sets notes.ini parameter
-  file=$1
-  var=$2
-  new=$3
+  local FILE=$1
+  local VAR=$2
+  local NEW=$3
+  local LINE_FOUND=
+  local LINE_NEW="$VAR=$NEW"
 
-  get_notes_ini_var "$file" "$var"
-
-  if [ "$ret_ini_var" = "$new" ]; then
+  LINE_FOUND=$(grep -i "^$VAR=" $FILE)
+  if [ -z "$LINE_FOUND" ]; then
+    echo "$LINE_NEW"  >> $FILE
     return 0
   fi
 
-  # check if entry exists empty. if not present just append new entry, else use replace code
-  if [ -z "$ret_ini_var" ]; then
-    found=`grep -i "^$var=" $file`
-    if [ -z "$found" ]; then
-      echo $var=$new >> $file
-      return 0
-    fi
-  fi
+  echo "[$LINE_FOUND]"
+  echo "[$LINE_NEW]"
 
-  awk -v var="$var" -v new="$new" 'BEGIN{FS=OFS="=";IGNORECASE=1}match($1,"^"var"$") {$2=new}1' "$file" > $file.updated
-  mv $file.updated $file
+  sed -i "s~${LINE_FOUND}~${LINE_NEW}~g" "$FILE"
 
   return 0
 }
