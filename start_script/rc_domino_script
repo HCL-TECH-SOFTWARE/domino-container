@@ -520,6 +520,11 @@ errmsg_and_exit ()
    rc_exit
 }
 
+print_delim ()
+{
+  echo "--------------------------------------------------------------------------------"
+}
+
 nsd_check_set_posix_locale ()
 {
   if [ "$NSD_SET_POSIX_LC" = "yes" ]; then
@@ -680,15 +685,10 @@ edit_systemd_cfg ()
   fi
 }
 
-
 check_json_file()
 {
-  local ONE_TOUCH_JSON_SCHEMA=$Notes_ExecDirectory/dominoOneTouchSetup.schema.json
-
-  if [ ! -e /usr/bin/jq ]; then
-    echo "warning: No jq tool installed"
-    return 0
-  fi
+  local ONE_TOUCH_JSON_SCHEMA=dominoOneTouchSetup.schema.json
+  local VALIDJSON_BIN=
 
   if [ -z "$1" ]; then
     echo "No OneTouch setup JSON file specified!"
@@ -700,25 +700,73 @@ check_json_file()
     return 1
   fi
 
-  cat $1 | jq -e . >/dev/null 2>&1
-  JSON_STATUS=$?
+  if [ ! -e /usr/bin/jq ]; then
+    echo "Warning: No jq tool installed"
+  else
+    cat $1 | jq -e . >/dev/null 2>&1
+    JSON_STATUS=$?
 
-  if [ ! "$JSON_STATUS" = "0" ]; then
-    echo "Error OneTouch setup file Invalid JSON format!"
-    return 1
+    if [ ! "$JSON_STATUS" = "0" ]; then
+      echo "Error OneTouch setup file Invalid JSON format!"
+      return 1
+    fi
+
+    SERVER_TYPE=$(cat $1 | jq -r .serverSetup.server.type)
+
+    case $SERVER_TYPE in
+      first|additional)
+        ;;
+
+      *)
+        echo "Invalid server type [$SERVER_TYPE]!"
+        return 1
+        ;;
+    esac
   fi
 
-  SERVER_TYPE=$(cat $1 | jq -r .serverSetup.server.type)
-  case $SERVER_TYPE in
-    first|additional)
-      ;;
+  if [ -x "$LOTUS/bin/validjson" ]; then
+    VALIDJSON_BIN="$LOTUS/bin/validjson"
 
-    *)
-      echo "Invalid server type [$SERVER_TYPE]!"
-      return 1
-      ;;
-  esac
+  elif [ -x "$Notes_ExecDirectory/validjson" ]; then
+    VALIDJSON_BIN="$Notes_ExecDirectory/validjson"
 
+  else
+    VALIDJSON_BIN=
+  fi
+
+  if [ -n "$VALIDJSON_BIN" ]; then
+    # Save existing lib path
+    local SAVED_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+
+    # Ensure we can load Notes libs
+    export LD_LIBRARY_PATH="$Notes_ExecDirectory"
+
+    # For now copy the schema to data diretory, because validjson expects it in the current directoy
+    cp -f "$Notes_ExecDirectory/$ONE_TOUCH_JSON_SCHEMA" "$DOMINO_DATA_PATH"
+
+    local SAVED_PWD="$(pwd)"
+    cd "$DOMINO_DATA_PATH"
+
+    echo
+    print_delim
+    echo "One-Touch Domino Validation"
+    print_delim
+    echo
+
+    # Always run validation with the Notes user
+    if [ "$LOGNAME" = "$DOMINO_USER" ]; then
+      $VALIDJSON_BIN $1 -default
+
+    else
+      su $DOMINO_USER -c "$VALIDJSON_BIN $1 -default"
+    fi
+
+    print_delim
+
+    # Restore existing env
+    cd "$SAVED_PWD"
+    export LD_LIBRARY_PATH="$SAVED_LD_LIBRARY_PATH"
+  fi
 
   return 0
 }
@@ -824,9 +872,11 @@ edit_one_touch_setup()
   # Finally edit existing or new file
   $EDIT_COMMAND "$CFG_FILE"
 
-  if [ "$1" = "json" ]; then
-    check_json_file "$CFG_FILE"
-  fi
+  case "$CFG_FILE" in
+    *.json|*.JSON)
+      check_json_file "$CFG_FILE"
+      ;;
+  esac
 
 }
 
