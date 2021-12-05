@@ -583,7 +583,7 @@ install_software()
   esac
 
   # install required and useful packages
-  install_package gdb tar sysstat net-tools jq
+  install_package gdb hostname tar sysstat net-tools jq
 
   # additional packages by platform
 
@@ -801,6 +801,27 @@ install_domino()
 
 }
 
+print_runtime()
+{
+  echo
+
+  # the following line does not work on OSX
+  # echo "Completed in" `date -d@$SECONDS -u +%T`
+
+  hours=$((SECONDS / 3600))
+  seconds=$((SECONDS % 3600))
+  minutes=$((seconds / 60))
+  seconds=$((seconds % 60))
+  h=""; m=""; s=""
+  if [ ! $hours =  "1" ] ; then h="s"; fi
+  if [ ! $minutes =  "1" ] ; then m="s"; fi
+  if [ ! $seconds =  "1" ] ; then s="s"; fi
+
+  if [ ! $hours =  0 ] ; then echo "Completed in $hours hour$h, $minutes minute$m and $seconds second$s"
+  elif [ ! $minutes = 0 ] ; then echo "Completed in $minutes minute$m and $seconds second$s"
+  else echo "Completed in $seconds second$s"; fi
+}
+
 SAVED_DIR=$(pwd)
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
@@ -838,4 +859,5 @@ cd $SAVED_DIR
 
 echo
 echo "Done"
+print_runtime
 echo
