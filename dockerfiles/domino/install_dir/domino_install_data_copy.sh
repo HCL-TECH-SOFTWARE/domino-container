@@ -85,13 +85,11 @@ set_notes_ini_var()
   local LINE_NEW="$VAR=$NEW"
 
   LINE_FOUND=$(grep -i "^$VAR=" $FILE)
+
   if [ -z "$LINE_FOUND" ]; then
     echo "$LINE_NEW"  >> $FILE
     return 0
   fi
-
-  echo "[$LINE_FOUND]"
-  echo "[$LINE_NEW]"
 
   sed -i "s~${LINE_FOUND}~${LINE_NEW}~g" "$FILE"
 
