@@ -1,7 +1,7 @@
 #!/bin/bash
 ###########################################################################
 # Nash!Com Domino Container Management Script                             #
-# Version 1.0.2 18.08.2021                                                #
+# Version 1.0.3 10.12.2021                                                #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2021                                #
 # Feedback domino_unix@nashcom.de                                         #
@@ -60,7 +60,7 @@ if [ -z "$DOMINO_CFG_DIR" ]; then
   DOMINO_CFG_DIR=/etc/sysconfig
 fi
 
-CONTAINER_SCRIPT_VERSION=1.0.2
+CONTAINER_SCRIPT_VERSION=1.0.3
 
 # Get configuration from config file
 
@@ -517,7 +517,7 @@ inspect_container_native ()
   fi
   
   if [ -z "$CONTAINER_KEY" ]; then
-     CONTAINER_KEY=CONTAINER_NAME
+     CONTAINER_KEY=$CONTAINER_NAME
   fi
 
   CONTAINER_STATUS="$($CONTAINER_CMD inspect --format "{{ .State.Status }}" $CONTAINER_KEY 2>/dev/null)"
@@ -585,7 +585,7 @@ inspect_container ()
   CONTAINER_STATUS=
   CONTAINER_VERSION=
 
-  if [ ! -e /bin/jq ]; then
+  if [ ! -e /usr/bin/jq ]; then
     inspect_container_native "$@"
     return 0
   fi
@@ -922,6 +922,101 @@ container_build ()
   return 0
 }
 
+docker_deamon()
+{
+
+  if [ -z "$(uname -r|grep WSL)" ]; then
+    echo "Docker deamon command only available on WSL"
+    return 0
+  fi
+
+  local DOCKERD_PID=$(pgrep dockerd)
+
+  case "$1" in
+
+    status|"")
+
+      echo
+      if [ -z "$DOCKERD_PID" ]; then
+        echo "Docker deamon: Stopped"
+      else
+        echo "Docker deamon: Running"
+      fi
+      echo
+      ;;
+
+    start)
+
+      echo
+      if [ -n "$DOCKERD_PID" ]; then
+        echo "Docker deamon: Already running"
+      else
+        echo "Docker deamon: Starting ..."
+
+        if [ "0" = "$(id -u)" ]; then
+          dockerd > /dev/null 2>&1 &
+        else
+          su - -c "dockerd > /dev/null 2>&1 &"
+        fi
+
+        disown
+      fi
+      echo
+      ;;
+
+    stop)
+
+      echo
+      if [ -z "$DOCKERD_PID" ]; then
+        echo "Docker deamon: Not running"
+      else
+        echo "Docker deamon: Stopping ..."
+
+        if [ "0" = "$(id -u)" ]; then
+          pkill dockerd
+        else
+          su - -c "pkill dockerd"
+        fi
+
+        seconds=0
+        DOCKERD_PID=$(pgrep dockerd)
+        while [ -n "$DOCKERD_PID" ]; do
+          sleep 1
+          seconds=$(expr $seconds + 1)
+          sec_mod=$(expr $seconds "%" 10)
+          if [ "$sec_mod" = "0" ]; then
+            echo " ... waiting $seconds seconds"
+          fi
+
+          # Terminate Domino Server if still running
+          if [ "$seconds" -ge "$DOMINO_SHUTDOWN_TIMEOUT" ]; then
+            echo "Docker deamon is still running after $seconds seconds"
+            echo " ... now for the ungraceful method"
+
+            if [ "0" = "$(id -u)" ]; then
+              pkill -9 dockerd
+            else
+              su - -c "pkill -9 dockerd"
+            fi
+
+            echo ""
+
+            return 1
+          fi
+          DOCKERD_PID=$(pgrep dockerd)
+        done
+        echo "Docker deamon stopped ($seconds sec)"
+
+      fi
+      echo
+      ;;
+
+    *)
+      echo "Invalid docker deamon command [$1]"
+      ;;
+
+  esac
+}
 
 container_run ()
 {
@@ -1385,6 +1480,27 @@ copy_env_file()
   fi
 }
 
+install_package()
+{
+ if [ -x /usr/bin/zypper ]; then
+   zypper install -y "$@"
+
+ elif [ -x /usr/bin/dnf ]; then
+   dnf install -y "$@"
+
+ elif [ -x /usr/bin/yum ]; then
+   yum install -y "$@"
+
+ elif [ -x /usr/bin/apt ]; then
+   apt install -y "$@"
+
+ else
+  echo "No package manager found!"
+  exit 1
+
+ fi
+}
+
 install_software()
 {
   if [ -z "$JQ_VERSION" ] ; then
@@ -1399,8 +1515,13 @@ install_software()
     return 0
   fi
 
-  header "Installing Podman"
-  yum install -y podman
+  if [ -n "$(uname -r|grep WSL)" ]; then
+    header "Installing Docker"
+    install_package docker
+  else
+    header "Installing Podman"
+    install_package podman
+  fi
 
   check_container_environment install
 
@@ -1426,6 +1547,7 @@ check_hostname()
 
   CONTAINER_HOSTNAME=$(hostname -f 2>/dev/null)
 }
+
 
 check_container_environment "$PARAM1"
 check_root_permissions
@@ -1522,6 +1644,10 @@ case "$PARAM1" in
 
   domino)
     container_domino_cmd domino "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
+    ;;
+
+  docker)
+    docker_deamon "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
     ;;
 
   console)

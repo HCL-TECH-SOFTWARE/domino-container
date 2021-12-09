@@ -2332,13 +2332,15 @@ shutdown_domino_server ()
 
   echo " ... waiting for shutdown to complete"
 
-  count=0
+  seconds=0
   domino_is_running
   while [ $? -eq 1 ]; do
-    sleep 10
-    count=`expr $count + 1`
-    seconds=`expr $count "*" 10`
-    echo " ... waiting $seconds seconds"
+    sleep 1
+    seconds=$(expr $seconds + 1)
+    sec_mod=$(expr $seconds "%" 10)
+    if [ "$sec_mod" = "0" ]; then
+      echo " ... waiting $seconds seconds"
+    fi
 
     # Check Shutdown Delayed commands
 
@@ -2374,6 +2376,8 @@ shutdown_domino_server ()
   fi
 
   post_shutdown_operations
+
+ echo "Domino stopped ($seconds sec)"
 
   return 0
 }
