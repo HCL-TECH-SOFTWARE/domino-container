@@ -426,7 +426,7 @@ if [ "$DOCKER_ENV" = "yes" ]; then
     install_file_noupdate "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
   fi
 
-elif [ -n "$(uname -r|grep WSL)" ]; then
+elif [ -n "$(uname -r|grep microsoft)" ]; then
   # WSL does not support systemd
   DebugText "WSL detected"
 

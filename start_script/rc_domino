@@ -118,7 +118,7 @@ if [ "$DOCKER_ENV" = "yes" ]; then
 
   exit 0
 
-elif [ -n "$(uname -r|grep WSL)" ]; then
+elif [ -n "$(uname -r|grep microsoft)" ]; then
 
   # WSL does not support systemd -> Start the server directly
 

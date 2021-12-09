@@ -878,6 +878,16 @@ print_runtime()
   else echo "Completed in $seconds second$s"; fi
 }
 
+must_be_root()
+{
+  if [ "$EUID" = "0" ]; then
+    return 0
+  fi
+
+  log_error "Installation requires root permissions. Switch to root or try 'sudo'"
+  exit 1
+}
+
 SAVED_DIR=$(pwd)
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
@@ -891,8 +901,14 @@ if [ -z "$LINUX_PRETTY_NAME" ]; then
   exit 1
 fi
 
-header "Nash!Com Domino Installer for $LINUX_PRETTY_NAME"
+LINUX_VM_INFO=
+if [ -n "$uname -r|grep microsoft" ]; then
+  LINUX_VM_INFO="on WSL"
+fi
 
+header "Nash!Com Domino Installer for $LINUX_PRETTY_NAME $LINUX_VM_INFO"
+
+must_be_root
 add_notes_user
 create_directories
 install_software

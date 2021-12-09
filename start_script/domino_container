@@ -925,7 +925,7 @@ container_build ()
 docker_deamon()
 {
 
-  if [ -z "$(uname -r|grep WSL)" ]; then
+  if [ -z "$(uname -r|grep microsoft)" ]; then
     echo "Docker deamon command only available on WSL"
     return 0
   fi
@@ -1515,7 +1515,7 @@ install_software()
     return 0
   fi
 
-  if [ -n "$(uname -r|grep WSL)" ]; then
+  if [ -n "$(uname -r|grep microsoft)" ]; then
     header "Installing Docker"
     install_package docker
   else
