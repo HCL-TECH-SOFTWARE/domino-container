@@ -119,9 +119,6 @@ install_file "$INSTALL_DIR/install_addon_volt.sh" "$DOMDOCK_SCRIPT_DIR/install_a
 # Overwrite Install Data Directory Copy File
 install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
 
-# Overwrite Domino Update Config File
-install_file "$INSTALL_DIR/DominoUpdateConfig.jar" "$DOMINO_DATA_PATH/DominoUpdateConfig.jar" notes notes 644
-
 # Update java security policy to grant all permissions to Groovy templates
 
 cat $INSTALL_DIR/java.policy.update >> $Notes_ExecDirectory/jvm/lib/security/java.policy
@@ -149,7 +146,6 @@ if [ -e "$INSTALL_DIR/demopack.zip" ]; then
 fi
 
 cd $DOMINO_DATA_PATH
-tar -czf $INSTALL_ADDON_DATA_TAR volt DominoUpdateConfig.jar ${PROD_NAME}_ver.txt
 
 remove_directory $DOMINO_DATA_PATH
 create_directory $DOMINO_DATA_PATH notes notes 770
