@@ -48,7 +48,7 @@ DIR_PERM=770
 # String definitions 
 
 DOM_V10_STRING_OK="Dominoserver Installation successful"
-DOM_V11_STRING_OK="install Domino Server Installation Successful"
+DOM_V11_STRING_OK="Domino Server Installation Successful"
 LP_STRING_OK="Selected Language Packs are successfully installed."
 FP_STRING_OK="The installation completed successfully."
 HF_STRING_OK="The installation completed successfully."
