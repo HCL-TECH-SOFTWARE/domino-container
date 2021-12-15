@@ -34,7 +34,7 @@ COPY install_dir $LocalInstallDir
 # Prepare environment for Domino
 # Update, Install required packages and run separate install script
 
-RUN yum install -y openssl bc which nano unzip lsof gdb file net-tools hostname cpio procps-ng diffutils glibc-langpack-en glibc-langpack-de && \
+RUN yum install -y openssl bc which nano unzip lsof gdb file net-tools hostname cpio procps-ng diffutils glibc-langpack-en glibc-langpack-de findutils && \
   $LocalInstallDir/install_domino.sh && \
   rm -rf $LocalInstallDir
 
