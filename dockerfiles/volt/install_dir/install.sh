@@ -147,6 +147,8 @@ fi
 
 cd $DOMINO_DATA_PATH
 
+tar -czf $INSTALL_ADDON_DATA_TAR volt ${PROD_NAME}_ver.txt
+
 remove_directory $DOMINO_DATA_PATH
 create_directory $DOMINO_DATA_PATH notes notes 770
 
