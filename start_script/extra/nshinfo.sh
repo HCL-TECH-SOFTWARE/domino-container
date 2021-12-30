@@ -76,9 +76,12 @@ print_infos()
   fi
 
   if [ -x "/usr/bin/docker" ]; then
-    CONTAINER_STR=$(docker -v)
-    DOCKER_RUNTIME_VERSION=$(echo $CONTAINER_STR | cut -d" " -f3|cut -d"," -f1)
-    printf "Docker        :      $DOCKER_RUNTIME_VERSION\n"
+    # only check if docker is a binary and not a podman script
+    if [ -n "$(file /usr/bin/docker | grep ELF)" ]; then
+      CONTAINER_STR=$(docker -v)
+      DOCKER_RUNTIME_VERSION=$(echo $CONTAINER_STR | cut -d" " -f3|cut -d"," -f1)
+      printf "Docker        :      $DOCKER_RUNTIME_VERSION\n"
+    fi
   fi
 
   printf "\n"

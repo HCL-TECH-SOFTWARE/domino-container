@@ -703,10 +703,12 @@ check_json_file()
   if [ ! -e /usr/bin/jq ]; then
     echo "Warning: No jq tool installed"
   else
-    cat $1 | jq -e . >/dev/null 2>&1
+    # Don't show JSON but show error log
+    cat $1 | jq -e . >/dev/null
     JSON_STATUS=$?
 
     if [ ! "$JSON_STATUS" = "0" ]; then
+      echo
       echo "Error OneTouch setup file Invalid JSON format!"
       return 1
     fi
@@ -865,8 +867,19 @@ edit_one_touch_setup()
 
   # Create config file from template if requested
   if [ -n "$CFG_TEMPLATE" ]; then
-    echo "Creating [$CFG_FILE] from [$CFG_TEMPLATE]"
-    cp -f "$CFG_TEMPLATE" "$CFG_FILE"
+
+    case "$CFG_FILE" in
+      *.json|*.JSON)
+        . $SCRIPT_DIR_NAME/domCfgJSON.sh "$CFG_TEMPLATE" "$CFG_FILE"
+        check_json_file "$CFG_FILE"
+        return 0
+        ;;
+
+      *)
+        echo "Creating [$CFG_FILE] from [$CFG_TEMPLATE]"
+        cp -f "$CFG_TEMPLATE" "$CFG_FILE"
+        ;;
+    esac
   fi
 
   # Finally edit existing or new file

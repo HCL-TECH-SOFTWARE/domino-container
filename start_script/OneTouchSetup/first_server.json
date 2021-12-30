@@ -2,30 +2,30 @@
   "serverSetup": {
     "server": {
       "type": "first",
-      "name": "main.domino-lab.net",
-      "domainName": "DominoLab",
-      "title": "Domino Main Lab Server",
+      "name": "{{ SERVERSETUP_SERVER_NAME }}",
+      "domainName": "{{ SERVERSETUP_SERVER_DOMAINNAME }}",
+      "title": "{{ SERVERSETUP_SERVER_TITLE }}",
       "password": null,
       "minPasswordLength": 0,
       "serverTasks": "replica,router,update,amgr,adminp,http,certmgr"
     },
 
     "network": {
-      "hostName": "main.domino-lab.net",
+      "hostName": "{{ SERVERSETUP_NETWORK_HOSTNAME }}",
       "enablePortEncryption": true,
       "enablePortCompression": true
     },
 
     "org": {
-      "orgName": "DominoLab",
-      "certifierPassword": "domino4ever8"
+      "orgName": "{{ SERVERSETUP_ORG_ORGNAME }}",
+      "certifierPassword": "{{ SERVERSETUP_ORG_CERTIFIERPASSWORD }}"
     },
 
     "admin": {
-      "firstName": "Full",
-      "lastName": "Admin",
-      "password": "domino4ever8",
-      "IDFilePath": "/local/notesdata/domino/html/admin.id"
+      "firstName": "{{ SERVERSETUP_ADMIN_FIRSTNAME }}",
+      "lastName": "{{ SERVERSETUP_ADMIN_LASTNAME }}",
+      "password": "{{ SERVERSETUP_ADMIN_PASSWORD }}",
+      "IDFilePath": "{{ SERVERSETUP_ADMIN_IDFILEPATH }}"
     },
 
     "notesINI": {
@@ -67,26 +67,6 @@
     "startServerAfterConfiguration": true 
   },
 
-  "IDVault": {
-    "name": "O=dominolab_vault",
-    "description": "Domino Lab Vault",
-    "IDFile": "vault.id",
-    "IDPassword": "domino4ever8",
-    "path": "IBM_ID_VAULT/dominolab_vault.nsf",
-    "passwordReset": {
-      "helpText": "See Roy or Moss for a password reset. Good luck!"
-    },
-
-    "securitySettingsPolicy": {
-      "name": "DominoLab Vault Security Settings Policy",
-      "description": "DominoLab Vault Security Settings"
-    },
-
-    "masterPolicy": {
-      "description": "DominoLab Vault Master Policy Description"
-    }
-  },
-
   "appConfiguration": {
 
     "databases": [
@@ -98,10 +78,10 @@
             "action": "update",
             "findDocument": {
               "Type": "Server",
-              "ServerName": "CN=main.domino-lab.net/O=DominoLab"
+              "ServerName": "CN={{ SERVERSETUP_SERVER_NAME }}/O={{ SERVERSETUP_ORG_ORGNAME }}"
             },
             "items": {
-              "HTTP_SSLKeyFile": "main.domino-lab.net",
+              "HTTP_SSLKeyFile": "{{ SERVERSETUP_NETWORK_HOSTNAME }}",
               "TRANSLOG_AutoFixup": "",
               "TRANSLOG_MaxSize": 1024,
               "TRANSLOG_Path": "/local/translog",
