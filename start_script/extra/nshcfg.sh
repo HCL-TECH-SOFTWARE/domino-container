@@ -1,0 +1,310 @@
+#!/bin/bash
+
+###########################################################################
+# Linux configuration JSON based script                                   #
+# Version 1.0.0 02.01.2022                                                #
+#                                                                         #
+# (C) Copyright Daniel Nashed/NashCom 2022                                #
+# Feedback domino_unix@nashcom.de                                         #
+#                                                                         #
+# Licensed under the Apache License, Version 2.0 (the "License");         #
+# you may not use this file except in compliance with the License.        #
+# You may obtain a copy of the License at                                 #
+#                                                                         #
+#      http://www.apache.org/licenses/LICENSE-2.0                         #
+#                                                                         #
+# Unless required by applicable law or agreed to in writing, software     #
+# distributed under the License is distributed on an "AS IS" BASIS,       #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
+# See the License for the specific language governing permissions and     #
+# limitations under the License.                                          #
+###########################################################################
+
+
+# This script is mainly designed to deploy Domino One-Touch JSON configurations.
+# It is based on a flexible design, it can be also used to deploy other files.
+# The script uses a flexible menu structure which is designed to load configurations from https://, http:// and file:/ URLs.
+# The menu is explicitly designed to span multiple files e.g. in multiple GitHub repositories.
+# It also supports auto detection if no configuration is specified for automated setups.
+
+# Parameters
+# ----------
+
+# $1 -> Local target file 
+# -----------------------
+#
+# Local file name to be written.
+# Existing files are not overwritten for security reasons.
+# In additon the remote site should not be able to specify the file name or directory for security reasons. 
+
+
+# $2 -> Download URL
+# ------------------
+#
+# The URL can be either https://, http:// or file:/ for a local file
+# If no URL is specified, domain name of the current server with the well known URL on HTTPS is assumed
+
+# Example: https://www.acme.com/.well-known/domino.cfg
+
+# $3 -> Index in JSON file 
+# ------------------------
+#
+# Index in JSON file can be optionally configured.
+# By default /config is assumed 
+
+
+LogError()
+{
+  echo "ERROR: $@"
+}
+
+DownloadFile()
+{
+  local URL=$1
+
+  if [ -z "$URL" ]; then
+    LogError "No download URL returned!"
+    return 1
+  fi
+
+  curl -sL "$URL" -o $TARGET_CFG_FILE
+
+  echo "DOWNLOAD [$URL] -> [$TARGET_CFG_FILE]"
+
+  return 0
+}
+
+GetConfig()
+{
+  local N=0
+  local KEY=
+  local CFG=
+  local LINE=
+  local INDEX=
+  local URL=
+  local ONE_TOUCH_ENV=
+  local ONE_TOUCH_JSON=
+  local DXL=
+  local SELECTED=
+
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e /usr/bin/jq ]; then
+    LogError "Setup requires JQ!"
+    return 1
+  fi
+
+  JSON=$(curl -sL $1)
+
+  if [ -z "$JSON" ]; then
+    LogError "No JSON returned!"
+    return 1
+  fi 
+
+  KEY=$(echo $2 | tr [/] [.])
+  CFG=$(echo $JSON | jq $KEY.index.cfg 2>/dev/null) 
+
+  if [ "null" = "$CFG" ]; then
+    CFG=$(echo $JSON | jq $KEY.cfg) 
+
+    if [ "null" = "$CFG" ]; then
+      LogError "No configruation found!"
+      return 1
+    fi
+  fi
+
+  SELECT=$(echo $CFG | jq -r ' . | map (.name) | join("\n")')
+
+  echo
+  N=0
+  while IFS= read -r LINE 
+  do
+    if [ -n "$LINE" ]; then
+      N=$(($N + 1))
+      # Don't print lines with one dot only
+      if [ "." != "$LINE" ]; then
+        echo "[$N] $LINE"
+      fi
+    fi
+  done <<< "$SELECT"
+
+  if [ "$N" = "0" ]; then
+    LogError "No configuration found!"
+    return 1
+  fi
+
+  # Set to one to automatically select if only one entry is in list
+  if [ "$N" = "1" ]; then
+    SELECTED=1
+  else
+    echo 
+    read -p "Select [1-$N] 0 to cancel? " SELECTED 
+    echo 
+
+    if [ "$SELECTED" = "0" ]; then
+      return 0
+    fi
+  fi
+
+  N=0
+  while IFS= read -r LINE 
+  do
+    if [ -n "$LINE" ]; then
+      N=$(($N + 1))
+      if [ "$N" = "$SELECTED" ]; then
+        KEY=$LINE
+      fi
+    fi
+  done <<< "$SELECT"
+
+  # Get config
+  URL=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .URL')
+  INDEX=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .index')
+  ONE_TOUCH_ENV=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .oneTouchENV')
+  ONE_TOUCH_JSON=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .oneTouchJSON')
+  DXL=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .DXL')
+
+  # Process setup index config
+  if [ "null" != "$URL" ] || [ "null" != "$INDEX" ]; then
+
+    if [ "null" = "$URL" ]; then
+      URL=
+    fi
+
+    if [ "null" = "$INDEX" ]; then
+      INDEX=
+    fi
+
+    if [ -z "$URL" ]; then
+      URL=$1
+    fi
+
+    # Ensure to clear previous selection before jumping to sub "menu"
+    SELECTED=
+    GetConfig "$URL" "$INDEX"
+  fi
+
+  if [ "null" = "$ONE_TOUCH_JSON" ] ; then
+    ONE_TOUCH_JSON=
+  fi
+
+  if [ "null" = "$ONE_TOUCH_ENV" ]; then
+    ONE_TOUCH_ENV=
+  fi
+
+  if [ "null" = "$DXL" ]; then
+    DXL=
+  fi
+
+  if [ -n "$ONE_TOUCH_JSON" ] ; then
+    DownloadFile "$ONE_TOUCH_JSON"
+    return 0
+  fi
+
+  if [ -n "$ONE_TOUCH_ENV" ]; then
+    DownloadFile "$ONE_TOUCH_ENV"
+    return 0
+  fi
+
+  if [ -n "$DXL" ]; then
+    DownloadFile "$DXL"
+    return 0
+  fi
+
+  if [ "$SELECTED" != "0" ] && [ -n "$SELECTED" ]; then
+    LogError "No configuration option found [$SELECTED]"
+  fi
+
+  return 1
+}
+
+DownloadConfig()
+{
+  TARGET_CFG_FILE=$1
+
+  local URL=$2
+  local INDEX=$3
+  local DOMAIN=
+
+  # For security reasons a target file cannot be assumed!
+  if [ -z "$TARGET_CFG_FILE" ]; then
+    LogError "No target file specified!"
+    return 1
+  fi
+
+  # For security reasons, never overwrite files!
+  if [ -e "$TARGET_CFG_FILE" ]; then
+    LogError "Target file already exists! [$TARGET_CFG_FILE]"
+    return 1
+  fi
+
+  # Dot is a placeholder for an empty hostname
+  if [ "." = "$URL" ]; then
+    URL=
+  fi
+
+  # Use server's domain for target URL, if not specified
+  if [ -z "$URL" ]; then
+    DOMAIN=$(hostname -d)
+    if [ -n "$DOMAIN" ]; then
+      URL=https://$DOMAIN/.well-known/domino.cfg
+    fi
+  fi
+
+  if [ -z "$URL" ]; then
+    LogError "No URL specified!"
+    return 1
+  fi
+
+  # Assume well known config if no known file extension is specified
+  case $URL in
+    *.cfg)
+      ;;
+
+    *.json)
+      ;;
+
+    *.txt)
+      ;;
+
+    *)
+      URL=$URL/.well-known/domino.cfg 
+      ;;
+  esac
+
+  # Set protocol to https:// if not specified
+  case $URL in
+    http://*)
+      ;;
+
+    https://*)
+      ;;
+
+    file:/*)
+      ;;
+
+    *)
+      URL=https://$URL
+      ;;
+  esac
+
+  # Set index to /index if not specified
+  if [ -n "$INDEX" ]; then
+    case $INDEX in
+      /*)
+        ;;
+      *)
+       INDEX=/$INDEX 
+       ;;
+    esac
+  fi
+
+  echo "Getting configuration from $URL $INDEX"
+
+  GetConfig "$URL" "$INDEX" 
+}
+
+DownloadConfig "$@"
+
