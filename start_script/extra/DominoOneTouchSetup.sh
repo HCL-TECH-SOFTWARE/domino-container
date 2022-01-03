@@ -245,6 +245,7 @@ EditOneTouchSetup()
 
     return 0
   fi
+
   # Template name will be only set when creating or overwriting configuration
 
   if [ "$1" = "env" ]; then
@@ -292,8 +293,15 @@ EditOneTouchSetup()
   # Check for remote configuration options
   local CFG_URL=
   local CFG_INDEX=
+  local OPTION=$1
 
-  case $1 in
+  if [ -z "$OPTION" ]; then
+    if [ ! -e "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
+      OPTION=local
+    fi
+  fi
+
+  case $OPTION in
     http://*)
       CFG_URL=$1
       CFG_INDEX=$2
@@ -309,11 +317,27 @@ EditOneTouchSetup()
       CFG_INDEX=$2
       ;;
 
+    /*)
+      CFG_URL=$1
+      CFG_INDEX=$2
+      ;;
+
     auto|remote)
       CFG_URL=$2
       CFG_INDEX=$3
       if [ -z "$CFG_URL" ]; then
         CFG_URL=.
+      fi
+      ;;
+
+    local)
+      if [ -e /etc/sysconfig/domino.cfg ]; then
+        CFG_URL=/etc/sysconfig/domino.cfg
+        CFG_INDEX=$2
+
+      elif [ -e /opt/nashcom/startscript/domino.cfg ]; then
+        CFG_URL=/opt/nashcom/startscript/domino.cfg
+        CFG_INDEX=$2
       fi
       ;;
 

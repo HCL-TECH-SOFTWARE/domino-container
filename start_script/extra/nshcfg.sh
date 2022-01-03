@@ -80,9 +80,20 @@ DownloadFile()
     return 1
   fi
 
-  curl -sL "$URL" -o $TARGET_FILE
+  case $URL in
+    /*)
+      if [ ! -e "$URL" ]; then
+        LogError "Cannot copy file. Local source file does not exist!"
+        return 1
+      fi
 
-  echo "DOWNLOAD [$URL] -> [$TARGET_FILE]"
+      cp "$URL" "$TARGET_FILE"
+      ;;
+
+  esac
+
+  curl -sL "$URL" -o "$TARGET_FILE"
+  #echo "[$URL] -> [$TARGET_FILE]"
 
   return 0
 }
@@ -109,10 +120,20 @@ GetConfig()
     return 1
   fi
 
-  JSON=$(curl -sL $1)
+  case $1 in
+    /*)
+      if [ -e "$1" ]; then
+        JSON=$(cat $1)
+      fi
+      ;;
+
+    *)
+      JSON=$(curl -sL $1)
+      ;;
+  esac
 
   if [ -z "$JSON" ]; then
-    LogError "No JSON returned!"
+    LogError "No JSON returned from [$1]!"
     return 1
   fi 
 
@@ -202,6 +223,7 @@ GetConfig()
     # Ensure to clear previous selection before jumping to sub "menu"
     SELECTED=
     GetConfig "$URL" "$INDEX"
+    return 0
   fi
 
   if [ "null" = "$ONE_TOUCH_JSON" ] ; then
@@ -218,7 +240,7 @@ GetConfig()
 
   # Allow to download multiple files and only log errors if none is found
 
-   local FOUND=
+  local FOUND=
 
   if [ -n "$ONE_TOUCH_JSON" ] ; then
     DownloadFile "$ONE_TOUCH_JSON"
@@ -312,6 +334,9 @@ DownloadConfig()
       ;;
 
     file:/*)
+      ;;
+
+    /*)
       ;;
 
     *)

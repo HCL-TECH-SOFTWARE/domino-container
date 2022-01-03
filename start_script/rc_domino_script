@@ -3293,7 +3293,11 @@ case "$PARAM1" in
 
     # setup On Touch Setup
     echo
-    . $SCRIPT_DIR_NAME/DominoOneTouchSetup.sh "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
+    if [ -e "$SCRIPT_DIR_NAME/DominoOneTouchSetup.sh" ]; then
+      . "$SCRIPT_DIR_NAME/DominoOneTouchSetup.sh" "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5"
+    else
+      echo "Domino One-Touch Setup not available!"
+    fi
     echo
     exit 0
     ;;
