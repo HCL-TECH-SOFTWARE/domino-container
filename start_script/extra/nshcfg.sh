@@ -52,6 +52,9 @@
 # Index in JSON file can be optionally configured.
 # By default /config is assumed 
 
+# Default config environment file
+DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE=/local/notesdata/DominoAutoConfigDefault.env
+
 
 LogError()
 {
@@ -61,15 +64,25 @@ LogError()
 DownloadFile()
 {
   local URL=$1
+  local TARGET_FILE=$2
 
   if [ -z "$URL" ]; then
-    LogError "No download URL returned!"
+    LogError "No download URL specified!"
     return 1
   fi
 
-  curl -sL "$URL" -o $TARGET_CFG_FILE
+  if [ -z "$TARGET_FILE" ]; then
+    TARGET_FILE="$TARGET_CFG_FILE"
+  fi
 
-  echo "DOWNLOAD [$URL] -> [$TARGET_CFG_FILE]"
+  if [ -z "$TARGET_FILE" ]; then
+    LogError "No download target file specified!"
+    return 1
+  fi
+
+  curl -sL "$URL" -o $TARGET_FILE
+
+  echo "DOWNLOAD [$URL] -> [$TARGET_FILE]"
 
   return 0
 }
@@ -113,6 +126,11 @@ GetConfig()
       LogError "No configruation found!"
       return 1
     fi
+  fi
+
+  if [ -z "$CFG" ]; then
+    LogError "No configuration or invalid JSON!"
+    return 1
   fi
 
   SELECT=$(echo $CFG | jq -r ' . | map (.name) | join("\n")')
@@ -198,26 +216,37 @@ GetConfig()
     DXL=
   fi
 
+  # Allow to download multiple files and only log errors if none is found
+
+   local FOUND=
+
   if [ -n "$ONE_TOUCH_JSON" ] ; then
     DownloadFile "$ONE_TOUCH_JSON"
-    return 0
+    FOUND=1
   fi
 
   if [ -n "$ONE_TOUCH_ENV" ]; then
-    DownloadFile "$ONE_TOUCH_ENV"
-    return 0
+
+    # In case a JSON was already found, an environment file is a defaults file with a fixed name
+    if [ -z "$FOUND" ]; then
+      DownloadFile "$ONE_TOUCH_ENV"
+      FOUND=1
+    else
+      DownloadFile "$ONE_TOUCH_ENV" "$DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE"
+    fi
   fi
 
   if [ -n "$DXL" ]; then
     DownloadFile "$DXL"
-    return 0
+    FOUND=1
   fi
 
-  if [ "$SELECTED" != "0" ] && [ -n "$SELECTED" ]; then
+  if [ -z "$FOUND" ]; then
     LogError "No configuration option found [$SELECTED]"
+    return 1
   fi
 
-  return 1
+  return 0
 }
 
 DownloadConfig()

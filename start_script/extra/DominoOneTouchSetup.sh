@@ -42,6 +42,9 @@
 # Ignore existing values
 #domCfgJSON_mode=ignore
 
+# Default config environment file
+DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE=/local/notesdata/DominoAutoConfigDefault.env
+
 # ---------------------------------------------
 
 check_json_file()
@@ -188,6 +191,13 @@ ConfigJSON()
   if [ ! -r "$JSON_TEMPLATE" ]; then
     echo "Cannot read template file: [$JSON_TEMPLATE]"
     exit 1
+  fi
+
+  # If exists source in environment setup file for defaults
+  if [ -n "$DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE" ]; then
+    if [ -e "$DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE" ]; then
+      . "$DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE"
+    fi
   fi
 
   CHECKED_VAR=
