@@ -334,10 +334,6 @@ EditOneTouchSetup()
       if [ -e /etc/sysconfig/domino.cfg ]; then
         CFG_URL=/etc/sysconfig/domino.cfg
         CFG_INDEX=$2
-
-      elif [ -e /opt/nashcom/startscript/domino.cfg ]; then
-        CFG_URL=/opt/nashcom/startscript/domino.cfg
-        CFG_INDEX=$2
       fi
       ;;
 
@@ -406,7 +402,7 @@ EditOneTouchSetup()
 
     case "$CFG_FILE" in
       *.json|*.JSON)
-        . $SCRIPT_DIR_NAME/domCfgJSON.sh "$CFG_TEMPLATE" "$CFG_FILE"
+       ConfigJSON "$CFG_TEMPLATE" "$CFG_FILE"
         check_json_file "$CFG_FILE"
         return 0
         ;;

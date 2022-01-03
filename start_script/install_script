@@ -356,7 +356,7 @@ install_file "$START_SCRIPT_DIR/rc_domino_readme.txt" "$DOMINO_START_SCRIPT_DIR/
 install_file "$START_SCRIPT_DIR/extra/nshinfo.sh" "$DOMINO_START_SCRIPT_DIR/nshinfo.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/extra/DominoOneTouchSetup.sh" "$DOMINO_START_SCRIPT_DIR/DominoOneTouchSetup.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/extra/nshcfg.sh" "$DOMINO_START_SCRIPT_DIR/nshcfg.sh" $ROOT_USER $ROOT_GROUP 755
-install_file "$START_SCRIPT_DIR/extra/domino.cfg" "$DOMINO_START_SCRIPT_DIR/domino.cfg" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/extra/domino.cfg" "$DOMINO_START_SCRIPT_DIR/domino-example.cfg" $ROOT_USER $ROOT_GROUP 755
 
 START_SCRIPT_CONFIG_VER=$DOMINO_START_SCRIPT_DIR/rc_domino_config_$DOMINO_SCRIPT_VERSION.txt
 START_SCRIPT_CONFIG_LATEST=$DOMINO_START_SCRIPT_DIR/rc_domino_config_latest.txt
