@@ -338,7 +338,7 @@ EditOneTouchSetup()
       ;;
 
     github)
-      CFG_URL=https://raw.githubusercontent.com/IBM/domino-docker/master/start_script/extra/domino.cfg
+      CFG_URL=https://raw.githubusercontent.com/IBM/domino-docker/master/start_script/domino.cfg
       CFG_INDEX=$2
       ;;
 
@@ -353,7 +353,19 @@ EditOneTouchSetup()
       rm -f "$CFG_TEMPLATE"
     fi
 
-    $SCRIPT_DIR_NAME/nshcfg.sh "$CFG_TEMPLATE" "$CFG_URL" "$CFG_INDEX"
+    # For JSON files use direct download
+    case "$CFG_URL" in
+
+      *.json)
+        #echo "[$CFG_URL] -> [$CFG_TEMPLATE]"
+        curl -sL "$CFG_URL" -o "$CFG_TEMPLATE"
+        ;;
+
+      *)
+        $SCRIPT_DIR_NAME/nshcfg.sh "$CFG_TEMPLATE" "$CFG_URL" "$CFG_INDEX"
+        ;;
+
+    esac
 
     if [ ! -e "$CFG_TEMPLATE" ]; then
       echo "No remote JSON configuration found"

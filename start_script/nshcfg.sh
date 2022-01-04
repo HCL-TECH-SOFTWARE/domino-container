@@ -150,7 +150,7 @@ GetConfig()
   fi
 
   if [ -z "$CFG" ]; then
-    LogError "No configuration or invalid JSON!"
+    LogError "No configuration or invalid JSON! [$1]"
     return 1
   fi
 
