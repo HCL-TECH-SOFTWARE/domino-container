@@ -325,7 +325,7 @@ if [ -n "$CHECK_SERVER_SETUP" ]; then
   cleanup_setup_env
 
 elif [ -n "$SetupAutoConfigure" ]; then
-  echo "Running On Touche Setup"
+  echo "Running Domino One-Touch setup"
 
 else
 
