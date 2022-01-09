@@ -6,6 +6,14 @@ Refere to the documentation for details.
 
 # Change History
 
+## V3.7.0 09.01.2022
+
+### New Features
+
+- Documentation switched from readme.txt to markdown format with separate files on-line readable.
+- Beta support for "setup auto configuration and templating". Detailed documentation follows.
+  This version is intended to get the code out for preview.
+
 ## V3.6.2 04.12.2021
 
 ### Problems solved

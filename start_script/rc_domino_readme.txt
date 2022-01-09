@@ -20,6 +20,12 @@
 
 Note: See end of file for detailed Change History
 
+Starting with V3.7.0 documentation switched to markdown format.
+See new functionality and improved formatting in the docs directory or on-line.
+
+Current location: https://github.com/IBM/domino-docker/tree/master/start_script/docs
+
+
 ------------
 Introduction
 ------------
@@ -1831,6 +1837,15 @@ b.) - Ensure that your login shell is /bin/ksh
 --------------
 Change History
 --------------
+
+V3.7.0 09.01.2022
+
+New Features
+------------
+
+- Documentation switched from readme.txt to markdown format with separate files on-line readable.
+- Beta support for "setup auto configuration and templating". Detailed documentation follows.
+  This version is intended to get the code out for preview.
 
 
 V3.6.2 04.12.2021
