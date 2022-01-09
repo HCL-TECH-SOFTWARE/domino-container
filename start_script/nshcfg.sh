@@ -52,9 +52,21 @@
 # Index in JSON file can be optionally configured.
 # By default /config is assumed 
 
+# Debug Mode
+# nshcfg_debug=yes
+
+
 # Default config environment file
 DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE=/local/notesdata/DominoAutoConfigDefault.env
 
+DebugText()
+{
+  if [ "$nshcfg_debug" = "yes" ]; then
+    echo "$(date '+%F %T') Debug:" $@
+  fi
+
+  return 0
+}
 
 LogError()
 {
@@ -93,7 +105,7 @@ DownloadFile()
   esac
 
   curl -sL "$URL" -o "$TARGET_FILE"
-  #echo "[$URL] -> [$TARGET_FILE]"
+  DebugText "DownloadFile [$URL] -> [$TARGET_FILE]"
 
   return 0
 }

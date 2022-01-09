@@ -42,10 +42,23 @@
 # Ignore existing values
 #domCfgJSON_mode=ignore
 
+# Debug Mode
+#domCfgJSON_debug=yes
+
 # Default config environment file
 DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE=/local/notesdata/DominoAutoConfigDefault.env
 
 # ---------------------------------------------
+
+DebugText()
+{
+  if [ "$domCfgJSON_debug" = "yes" ]; then
+    echo "$(date '+%F %T') Debug:" $@
+  fi
+
+  return 0
+}
+
 
 check_json_file()
 {
@@ -349,6 +362,7 @@ EditOneTouchSetup()
     CFG_FILE=$DOMINO_AUTO_CONFIG_JSON_FILE
     CFG_TEMPLATE=$CFG_FILE.template
 
+    # Remove existing template first
     if [ -e "$CFG_TEMPLATE" ]; then
       rm -f "$CFG_TEMPLATE"
     fi
@@ -357,30 +371,26 @@ EditOneTouchSetup()
     case "$CFG_URL" in
 
       *.json)
-        #echo "[$CFG_URL] -> [$CFG_TEMPLATE]"
+        DebugText "JSON direct download: [$CFG_URL] -> [$CFG_TEMPLATE]"
         curl -sL "$CFG_URL" -o "$CFG_TEMPLATE"
         ;;
 
       *)
+        DebugText "nshcfg.sh [$CFG_URL/$CFG_INDEX] -> [$CFG_TEMPLATE]"
         $SCRIPT_DIR_NAME/nshcfg.sh "$CFG_TEMPLATE" "$CFG_URL" "$CFG_INDEX"
         ;;
 
     esac
 
-    if [ ! -e "$CFG_TEMPLATE" ]; then
-      echo "No remote JSON configuration found"
-      return 1
+    # If tempalte found, convert template to config
+    if [ -e "$CFG_TEMPLATE" ]; then
+
+      ConfigJSON "$CFG_TEMPLATE" "$CFG_FILE"
+      rm -f "$CFG_TEMPLATE"
     fi
 
-    if [ ! -e "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
-      echo "No JSON configuration found"
-      return 1
-    fi
-
-    ConfigJSON "$CFG_TEMPLATE" "$CFG_FILE"
-    rm -f "$CFG_TEMPLATE"
-
-    if [ ! -e "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
+    # Finally we have to have a config file
+    if [ ! -e "$CFG_FILE" ]; then
       echo "No JSON configuration found"
       return 1
     fi
