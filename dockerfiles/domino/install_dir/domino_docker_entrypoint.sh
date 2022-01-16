@@ -306,7 +306,8 @@ CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
 if [ -z "$CHECK_SERVER_SETUP" ]; then
   if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-      $DOMINO_DOCKER_CFG_SCRIPT
+      # Ensure variables modified in pre start script are returned
+      . $DOMINO_DOCKER_CFG_SCRIPT
     fi
   fi
   DOMINO_IS_CONFIGURED=false
