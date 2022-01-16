@@ -1,2 +1,2 @@
 
-k3s kubectl delete ns kubernetes-dashboard
+kubectl delete ns kubernetes-dashboard
