@@ -588,7 +588,7 @@ install_software()
   esac
 
   # install required and useful packages
-  install_package gdb hostname tar sysstat net-tools jq
+  install_package gdb hostname tar sysstat net-tools jq gettext
 
   # additional packages by platform
 
