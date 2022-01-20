@@ -564,7 +564,8 @@ glibc_lang_add()
 install_software()
 {
   # updates Linux
-  linux_update
+  # don't run automatic update
+  # linux_update
 
   # adds epel repository for additional software packages on RHEL/CentOS/Fedora platforms
 
@@ -888,6 +889,9 @@ must_be_root()
   exit 1
 }
 
+
+# -- Main logic --
+
 SAVED_DIR=$(pwd)
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
@@ -902,7 +906,7 @@ if [ -z "$LINUX_PRETTY_NAME" ]; then
 fi
 
 LINUX_VM_INFO=
-if [ -n "$uname -r|grep microsoft" ]; then
+if [ -n "$(uname -r|grep microsoft)" ]; then
   LINUX_VM_INFO="on WSL"
 fi
 
@@ -920,6 +924,9 @@ if [ -z "$DOMINO_LANG" ]; then
 else
   glibc_lang_add
 fi
+
+# Set posix locale for installing Domino to ensure the right res/C link
+export LANG=C
 
 install_start_script
 install_domino
