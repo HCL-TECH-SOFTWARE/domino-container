@@ -95,6 +95,11 @@ if [ -e "/run/.containerenv" ]; then
   DOCKER_ENV=yes
 fi
 
+# K8s environment
+if [ -n "$KUBERNETES_SERVICE_HOST" ]; then
+  DOCKER_ENV=yes
+fi
+
 if [ "$DOCKER_ENV" = "yes" ]; then
 
   # in Docker environments check LOGNAME first. If not present use whoami, which could also fail

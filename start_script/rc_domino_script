@@ -40,6 +40,11 @@ if [ -e "/run/.containerenv" ]; then
   DOCKER_ENV=yes
 fi
 
+# K8s environment
+if [ -n "$KUBERNETES_SERVICE_HOST" ]; then
+  DOCKER_ENV=yes
+fi
+
 if [ -z "$LOGNAME" ]; then
   if [ "$DOCKER_ENV"="yes" ]; then
 
