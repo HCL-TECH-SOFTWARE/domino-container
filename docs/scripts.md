@@ -79,10 +79,6 @@ domino|10.0.1|DOM_SVR_V10.0.1_64_BIT_Lnx.tar|CNXL9EN|57a19f56da492740d50457bcb3e
 Helper file which contains the checksums build by sha256sum.
 The content of this file is added to software.txt
 
-## domino_install_data_prep.sh
-
-Helper script to compact install databases and templates (brings them to current ODS, enables compression and releases free space).
-
 ## domino_docker_entrypoint.sh
 
 [located in / owned by root]

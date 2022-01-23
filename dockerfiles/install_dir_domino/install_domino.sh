@@ -807,15 +807,6 @@ chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
 # Now export the lib path just in case for Domino to run
 export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
 
-# disabled because su doesn't work any more with CentOS 8 & Co
-#if [ "$FIRST_TIME_SETUP" = "1" ]; then
-  # Prepare data directory (compact NSFs and NTFs)
-
-  # header "Prepare $DOMINO_DATA_PATH via compact"
-
-  # su - $DOMINO_USER -c $INSTALL_DIR/domino_install_data_prep.sh
-#fi
-
 # If configured, move data directory to a compressed tar file
 
 if [ ! -z "$DominoMoveInstallData" ]; then
