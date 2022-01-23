@@ -31,9 +31,5 @@ update_file()
   return 0
 }
 
-for FILE_NAME in `find ../dockerfiles/* -maxdepth 0 -type d`; do
-  update_file software.txt $FILE_NAME/install_dir/software.txt
-done
-
-update_file software.txt ../management/install_dir/software.txt
+update_file software.txt ../dockerfiles/install_dir_common/software.txt
 
