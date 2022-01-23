@@ -5,10 +5,10 @@
 This is the main start point for building docker images.
 You can specify the image to build.
 
-Currently supported are the following images
+The following images are supported
 
-- domino - Domino 11.x including current fixpacks
-- traveler - Traveler 11.0.1.x including current fixepack
+- domino - Domino 12
+- traveler - Traveler 12
 - volt - HCL Domino Volt 1.x
 
 We are constantly updating the software.txt repository file with current software releases.
@@ -18,8 +18,8 @@ Inside this script you can configure a remote download http target if you are ho
 You can also specify a download directoy on your Docker host which will be served by a temporary Docker container running a NGINX server to provide the software.
 
 The following three options are available
-1. Remote Download specified with example: DOWNLOAD_FROM=http://192.168.1.1
-2. Local directory specified with example: SOFTWARE_DIR=/local/software hosted via NGINX server
+1. Remote Download specified with example: `DOWNLOAD_FROM=http://192.168.1.1`
+2. Local directory specified with example: `SOFTWARE_DIR=/local/software` hosted via NGINX server
 3. Standard location in the software sub-directory hosted via NGINX server in temporary container
 
 Before you start you have to download the required software packages.
@@ -38,22 +38,9 @@ This directory contains a sub-directory for each product that can be installed.
 
 The domino directory contains all files needed to install a HCL Domino server
 
-# build_domino.sh
+## Install directories "install_dir.."
 
-Build file used to build the HCL Domino server.
-This script invokes the actual docker build command
-
-dockerfile
-
-The default dockerfile is based on centos:7.
-It contains just the basic logic required for a dockerfile.
-All install logic is covered in a separate install script.
-
-The project supports alternate dockerfiles for different base images like CentOS 8 and the [Redhat Universal Baseimage (UBI)](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
-
-## Directory "instal_dir"
-
-This directory contains files and scripts to build the Docker image.
+These directories contain files and scripts to build ocker images.
 Those files are copied to /tmp/install_dir during install process and are invoked by the build process.
 
 # install_domino.sh
@@ -67,17 +54,14 @@ This file is used to find the right file to download by product and version. And
 
 The format of the file is as follows:
 
+```
 product|version|filename|product-code|sha256-hash
-
-Example:
-```bash
-domino|10.0.1|DOM_SVR_V10.0.1_64_BIT_Lnx.tar|CNXL9EN|57a19f56da492740d50457bcb3eec6f2b5410e8e122608c19e1886cf3fb36515
 ```
 
-## software_dir_sha256.txt
-
-Helper file which contains the checksums build by sha256sum.
-The content of this file is added to software.txt
+Example:
+```
+domino|12.0.1|Domino_12.0.1_Linux_English.tar|-|a9d561b05f7b6850ed1230efa68ea1931cfdbb44685aad159613c29fa15e5eea
+```
 
 ## domino_docker_entrypoint.sh
 
@@ -107,24 +91,4 @@ You can customize this script for your needs. But usually server availability ca
 
 Nash!Com Domino start and management script which supports Docker and contains an installation routine which is Docker aware
 
-## domino10_response.dat
-
-Response file used for silent server installation
-
-* SetupProfile.pds
-* signWithAdminP.sh
-* DatabaseSigner.jar
-
-Used to configure the Domino Server (see separate documentation)
-
-
-## Directory "dockerfiles/traveler"
-
-This directory is very similar to the domino directory and ins used to install a Traveler server based on an existing Domino image.
-It uses very similar logic but is less complex than the Domino install logic, because it just leverages the base that The Domino images builds. 
-
-
-## Directory "dockerfiles/volt"
-
-This directory provides HCL Volt as another add-on for Domino, which is also based on the Domino image.
 

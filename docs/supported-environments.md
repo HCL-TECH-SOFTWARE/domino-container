@@ -16,7 +16,7 @@ Other Kubernetes based environments might work as well. Please provide feedback 
 
 - RedHat OpenShift 4.x+
 
-*) Note: If Podman and Docker are installed on the same machine, Podman is used by default. You can switch manually from Podman to Docker for the build and run-time environment using `DOCKER_CMD=docker` either in the configuration or exporting an environment variable in your shell.
+*) Note: If Podman and Docker are installed on the same machine, Podman is used by default. You can switch manually from Podman to Docker for the build and run-time environment using `CONTAINER_CMD=docker` either in the configuration or exporting an environment variable in your shell.
 
 ## Supported build environments
 
@@ -25,14 +25,21 @@ Other Kubernetes based environments might work as well. Please provide feedback 
 
 - Podman 1.5.0+ on Linux *)
 
+- Rancher Desktop 1.0+
+
 *) Same Podman/Docker note applies
 
 
 ## Supported base images
 
-- CentOS 7
-- CentOS 8
-- RedHat Universal Base Image (UBI) Version 8
+- CentOS Stream 8.x
+- CentOS 7.x
+- RockyLinux 8.x
+- AlmaLinux 8.x
+- VMware PhotonOS
+- SUSE Leap 15.3
+- RedHat Universal Base Image (UBI) 8
+
 
 ## Recommended Linux Versions and Tips
 
@@ -43,18 +50,24 @@ Older RedHat and SLES releases might also have older Podman versions.
 You should not try to run with earlier Docker/Podman versions than stated above, because those versions don't provided the needed feature set. 
 
 - RHEL/CentOS 8 ship with a current version of Podman
-- RHEL/CentOS 8 ships with an older containerd version which prevents Docker CE 19.x to be installed
-- SLES 15 SP2 shipps with the current Docker version
+- SLES 15 SP2 shipps with a current Docker version
 - If your platform does not come with a current Docker version there is an official way to install Docker on most platforms https://docs.docker.com/engine/install/
 
-### Recommended combinations (9/2020)
+## Recommended combinations (1/2022)
 
-- RHEL/CentOS 7 with Docker 19.x installed from Docker website
-- SLES 15 SP2 with Docker 19.x included in SLES
-- RHEL/CentOS 8 with Podman 1.6.x
-- Current version of Docker Desktop on Windows (run-time only)
+### Build and run-time environments
+
+- RHEL 8/CentOS (Stream)8 with Docker 20.x installed from Docker website
+- SUSE SLES/Leap 15.3 with Docker 20.x included
+- RHEL/CentOS 8 with Podman
+- Current Rancher Desktop
 - Current version of Docker Desktop with WSL2 sub-system to build the image
 - Current version of Docker Desktop on Mac
+
+### Run-time environments
+
+- Current version of Docker Desktop on Windows
+- k3s Rancher
 - Current version of Kubernetes
 - Current version of OpenShift
 
@@ -75,13 +88,14 @@ You should not try to run with earlier Docker/Podman versions than stated above,
 - Podman
   https://podman.io/
 
+- K3S Lightweight Kubernetes
+  https://k3s.io/
+
 - Kubernetes (K8s)
   https://kubernetes.io/
 
 - RedHat OpenShift
   https://www.openshift.com/
 
-- RedHat Universal Base Image (UBI)
-  https://developers.redhat.com/products/rhel/ubi
-
-
+- Rancher Desktop
+  https://rancherdesktop.io/

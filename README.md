@@ -30,8 +30,8 @@ The process will perform all required actions to create the image in the version
 
 Other options available:
 
-* ```build traveler``` - Traveler on Domino
-* ```build volt``` - Volt on Domino
+* ```./build traveler``` - Traveler on Domino
+* ```./build volt``` - Volt on Domino
 
 ## How to use this image
 When a new container is created from the HCL Domino Docker image, it takes [environment variables](docs/run-variables.md) into account for auto-configuring the Domino server.

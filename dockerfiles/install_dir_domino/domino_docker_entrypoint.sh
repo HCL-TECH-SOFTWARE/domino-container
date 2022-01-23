@@ -228,37 +228,12 @@ cleanup_setup_env()
     fi
   done
 
-  # Classic setup
+  # Additional variables 
 
-  unset isFirstServer
-  unset AdminFirstName
-  unset AdminIDFile
-  unset AdminLastName
-  unset AdminMiddleName
-  unset AdminPassword
-  unset CountryCode
-  unset DominoDomainName
-  unset HostName
-  unset OrgUnitIDFile
-  unset OrgUnitName
-  unset OrgUnitPassword
-  unset OrganizationIDFile
-  unset OrganizationName
-  unset OrganizationPassword
-  unset OtherDirectoryServerAddress
-  unset OtherDirectoryServerName
-  unset ServerIDFile
+  unset SetupAutoConfigureParams
+  unset DominoTrialKeyFile
   unset SafeIDFile
-  unset ServerName
-  unset ServerPassword
-  unset SystemDatabasePath
   unset Notesini
-
-  unset ServerType
-  unset AdminUserIDPath
-  unset CertifierPassword
-  unset DomainName
-  unset OrgName
 
   if [ -e ~/.bash_history ]; then
     cat /dev/null > ~/.bash_history

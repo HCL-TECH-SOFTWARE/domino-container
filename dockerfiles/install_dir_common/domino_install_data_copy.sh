@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -71,7 +71,7 @@ get_notes_ini_var()
     return 0
   fi
 
-  ret_ini_var=`awk -F '=' -v SEARCH_STR="$2" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' $1 | xargs`
+  ret_ini_var=$(awk -F '=' -v SEARCH_STR="$2" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' $1 | xargs)
   return 0
 }
 
@@ -102,7 +102,7 @@ remove_notes_ini_var()
   file=$1
   var=$2
 
-  found=`grep -i "^$var=" $file`
+  found=$(grep -i "^$var=" $file)
   echo "found: [$found]"
   if [ -z "$found" ]; then
     return 0
@@ -154,9 +154,9 @@ update_traveler_ini()
   BAK_IFS=$IFS
   IFS=$'\n'
 
-  for x in `grep "^NTS_" $upd_file` ; do
-    var=`echo "$x" | cut -d= -f1`
-    val=`echo "$x" | cut -d= -f2-`
+  for x in $(grep "^NTS_" $upd_file) ; do
+    var=$(echo "$x" | cut -d= -f1)
+    val=$(echo "$x" | cut -d= -f2-)
     update_traveler_ini_var "$file" "$var" "$val"
   done
 
@@ -193,10 +193,10 @@ copy_files_for_major_version ()
     return 1
   fi
 
-  DOMINO_VERSION=`cat $VersionFile`
+  DOMINO_VERSION=$(cat $VersionFile)
 
   if [ -r $InstalledFile ]; then
-    INSTALLED_VERSION=`cat $InstalledFile`
+    INSTALLED_VERSION=$(cat $InstalledFile)
   else
     INSTALLED_VERSION=""
   fi
@@ -253,12 +253,12 @@ copy_files_for_version ()
   fi
 
   if [ -r $InstalledFile ]; then
-    INSTALLED_VERSION=`cat $InstalledFile`
+    INSTALLED_VERSION=$(cat $InstalledFile)
   else
     INSTALLED_VERSION=""
   fi
 
-  DOMINO_VERSION=`cat $VersionFile`
+  DOMINO_VERSION=$(cat $VersionFile)
 
   # echo "DOMINO_VERSION: [$DOMINO_VERSION]"
   # echo "INSTALLED_VERSION: [$INSTALLED_VERSION]"
@@ -409,12 +409,12 @@ copy_files_for_addon ()
   fi
 
   if [ -r $InstalledFile ]; then
-    INST_VER=`cat $InstalledFile`
+    INST_VER=$(cat $InstalledFile)
   else
     INST_VER=""
   fi
 
-  PROD_VER=`cat $VersionFile`
+  PROD_VER=$(cat $VersionFile)
 
   # echo "PROD_VER: [$PROD_VER]"
   # echo "INST_VER: [$INST_VER]"
@@ -439,7 +439,7 @@ copy_files_for_addon ()
 
   if [ "$PROD_NAME" = "traveler" ]; then
 
-    # updating Traveler notes.ini parameters
+    # Updating Traveler notes.ini parameters
 
     header "Updating Traveler notes.ini parameters"
 
@@ -453,12 +453,12 @@ copy_files_for_addon ()
 
 # --- Main Logic ---
 
-NOW=`date`
+NOW=$(date)
 
 # check data update only at first container start
 
 if [ -e $UPDATE_CHECK_STATUS_FILE ]; then
-  UPDATE_CHECKED=`cat $UPDATE_CHECK_STATUS_FILE`
+  UPDATE_CHECKED=$(cat $UPDATE_CHECK_STATUS_FILE)
   exit 0
 fi
 
@@ -475,6 +475,11 @@ copy_files_for_version fp
 copy_files_for_version hf
 
 copy_files_for_addon traveler
+
+# TODO: Quick script to get Volt data deployed
+if [ -x $DOMDOCK_SCRIPT_DIR/install_addon_volt.sh ]; then
+  $DOMDOCK_SCRIPT_DIR/install_addon_volt.sh
+fi
 
 print_delim
 log
