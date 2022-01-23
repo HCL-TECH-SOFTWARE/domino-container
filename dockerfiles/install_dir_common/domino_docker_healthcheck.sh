@@ -31,13 +31,7 @@ HEALTH_CHECK_PORT_FILE=/local/notesdata/health_port.cfg
 HEALTH_CHECK_FILE=/tmp/domino_check.txt
 HEALTHY_STRING="OK"
 
-if [ -z "$LOTUS" ]; then
-  if [ -x /opt/hcl/domino/bin/server ]; then
-    LOTUS=/opt/hcl/domino
-  else
-    LOTUS=/opt/ibm/domino
-  fi
-fi
+LOTUS=/opt/hcl/domino
 
 # We support "ready" checks and by default health checks
 if [ "$1" = "ready" ]; then

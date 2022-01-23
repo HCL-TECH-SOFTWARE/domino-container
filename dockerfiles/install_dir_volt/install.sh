@@ -1,29 +1,16 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
 ############################################################################
 
-INSTALL_DIR=`dirname $0`
+INSTALL_DIR=$(dirname $0)
 
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
-
-if [ -z "$LOTUS" ]; then
-  if [ -x /opt/hcl/domino/bin/server ]; then
-    export LOTUS=/opt/hcl/domino
-  elif [ -x /opt/ibm/domino/bin/server ]; then
-    export LOTUS=/opt/ibm/domino
-  else
-    echo "No Domino installation found"
-    exit 1
-  fi
-fi
-
-echo "LOTUS: [$LOTUS]"
-ls -l /opt/hcl/domino/bin
+export LOTUS=/opt/hcl/domino
 
 # export required environment variables
 export LOGNAME=notes
@@ -38,8 +25,6 @@ export LANG=C
 INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${PROD_NAME}.taz
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
-
 CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 # Include helper functions
@@ -70,7 +55,7 @@ header "$PROD_NAME Installation"
 
 INST_VER=$PROD_VER
 
-if [ ! -z "$INST_VER" ]; then
+if [ -n "$INST_VER" ]; then
   get_download_name $PROD_NAME $INST_VER
   download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" $PROD_NAME 
 else
@@ -116,13 +101,9 @@ cp -f "bundles/"* "$PLUGINS_FOLDER"
 
 install_file "$INSTALL_DIR/install_addon_volt.sh" "$DOMDOCK_SCRIPT_DIR/install_addon_volt.sh" $ROOT_USER $ROOT_GROUP 755
 
-# Overwrite Install Data Directory Copy File
-install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
-
 # Update java security policy to grant all permissions to Groovy templates
 
 cat $INSTALL_DIR/java.policy.update >> $Notes_ExecDirectory/jvm/lib/security/java.policy
-
 
 # Install helper binary
 install_binary "$INSTALL_DIR/nshdocker"

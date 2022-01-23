@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -10,18 +10,10 @@ if [ "$DOMDOCK_DEBUG_SHELL" = "yes" ]; then
   set -x
 fi
 
-# Configure server based on environment variables
-
-if [ -z "$LOTUS" ]; then
-  if [ -x /opt/hcl/domino/bin/server ]; then
-    LOTUS=/opt/hcl/domino
-  else
-    LOTUS=/opt/ibm/domino
-  fi
-fi
+export LOTUS=/opt/hcl/domino
 
 # ServerName variable or Auto Config is the configuration trigger
-if [ -z "$ServerName" ] && [ -z "$SetupAutoConfigure" ]; then
+if [ -z "$SetupAutoConfigure" ]; then
   echo "No Setup Environment Configuration -- Skipping setup"
   exit 0
 fi
@@ -33,25 +25,12 @@ fi
 
 LOG_FILE=$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/domino_server_setup.log
 
-WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
 CURL_CMD="curl --silent --location --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
-
-dominosilentsetup=$DOMDOCK_DIR/SetupProfile.pds
-dominoprofileedit="./java -cp cfgdomserver.jar lotus.domino.setup.DominoServerProfileEdit"
-
-# In case this is an additional server in an existing environment switch to different pds file
-# because variable isFirstServer can not be changed programmatically.
-
-if [ "$isFirstServer" = "false" ]; then
-  dominosilentsetup=$DOMDOCK_DIR/SetupProfileSecondServer.pds
-fi
-
 
 log()
 {
   echo "$@" >> $LOG_FILE
 }
-
 
 log_space()
 {
@@ -60,12 +39,10 @@ log_space()
   echo  >> $LOG_FILE
 }
 
-
 print_delim()
 {
   echo "--------------------------------------------------------------------------------" >> $LOG_FILE
 }
-
 
 header()
 {
@@ -81,8 +58,6 @@ log_debug()
   if [ "$DOMDOCK_DEBUG" = "yes" ]; then
     echo "$(date '+%F %T') debug: $@"
   fi
-
-  return 0
 }
 
 secure_move_file()
@@ -129,9 +104,7 @@ secure_move_file()
     log "Error copying file [$1] to [$2]"
     return 1
   fi
-
 }
-
 
 download_file ()
 {
@@ -139,7 +112,7 @@ download_file ()
   local DOWNLOAD_FILE=$2
   local HEADER=
 
-  if [ ! -z "$3" ]; then
+  if [ -n "$3" ]; then
     HEADER="$3: "
   fi
 
@@ -171,7 +144,6 @@ download_file ()
   fi
 }
 
-
 download_file_link()
 {
   local S1=$1
@@ -180,7 +152,7 @@ download_file_link()
   case "$S2" in
 
     http:*|https:*)
-      local FILE_NAME=`basename $S2`
+      local FILE_NAME=$(basename $S2)
       export $1=$FILE_NAME
       download_file "$S2" "$FILE_NAME"
 
@@ -195,7 +167,6 @@ download_file_link()
   esac
 }
 
-
 get_secret_via_http()
 {
   local DOWNLOAD_URL=$2 
@@ -206,21 +177,21 @@ get_secret_via_http()
     exit 1 
   fi 
 
-  export $1=`$CURL_CMD "$DOWNLOAD_URL"`
+  export $1=$($CURL_CMD "$DOWNLOAD_URL")
 }
 
 get_secret_via_file()
 {
-  local SECRET_FILE=`echo $2|cut -d":" -f2`
+  local SECRET_FILE=$(echo $2|cut -d":" -f2)
   if [ ! -r "$SECRET_FILE" ]; then
     log "File not found [$SECRET_FILE]"
     exit 1
   fi
 
-  export $1=`cat $SECRET_FILE`
+  export $1=$(cat $SECRET_FILE)
 }
 
-get_secret_var ()
+get_secret_var()
 {
   local S1=$1
   local S2=${!1}
@@ -250,30 +221,6 @@ replace_secret_vars()
   get_secret_var OrgUnitPassword
 }
 
-check_kyr_name()
-{
-  # check if kyr file has .kyr extension and generate matching .sth file
-  local fname
-  local ext
-
-  if [ -z "DominoKyrFile" ]; then
-    DominoSthFile=
-    return 0
-  fi
-
-  fname=`echo $DominoKyrFile | awk -F"." '{print $NF}'`
-  ext=`echo $DominoKyrFile | awk -F"." '{print $NF}'`
-
-  if [ -z "$ext" ]; then
-    DominoKyrFile=
-    DominoSthFile=
-    return 0
-  fi
-
-  return 0
-}
-
-
 check_download_file_links()
 {
   # Donwload ID files if they start with http(s):
@@ -286,30 +233,7 @@ check_download_file_links()
   download_file_link DominoTrialKeyFile
 
   download_file_link SetupAutoConfigureParams
-
-  # Download kyr file 
-  if [ -n "$DominoKyrFile" ]; then
-
-    check_kyr_name
-
-    download_file_link DominoKyrFile
-
-    if [ -n DominoSthFile ]; then
-      download_file_link DominoSthFile
-    fi
-
-    return 0
-  fi
-
-  if [ -n "$DominoPemFile" ]; then
-
-    # Create keyring.kyr from PEM
-    download_file_link DominoPemFile
-    header "creating keyring from [$DominoPemFile]"
-
-    $DOMDOCK_SCRIPT_DIR/create_keyring.sh "$DominoPemFile"
-    rm -f "$DominoPemFile"
-  fi
+  download_file_link DominoPemFile
 
   return 0
 }
@@ -317,7 +241,7 @@ check_download_file_links()
 
 # --- Main Logic ---
 
-NOW=`date`
+NOW=$(date)
 header "$NOW"
 
 # Switch to data directory for downloads
@@ -328,7 +252,7 @@ download_file_link CustomNotesdataZip
 
 # Expand & delete ZIP
 
-if [ ! -z "$CustomNotesdataZip" ]; then
+if [ -n "$CustomNotesdataZip" ]; then
   if [ -r "$CustomNotesdataZip" ]; then
     log "Extracting custom notesdata file [$CustomNotesdataZip]"
 
@@ -340,32 +264,6 @@ if [ ! -z "$CustomNotesdataZip" ]; then
     log "Custom notesdata [$CustomNotesdataZip] not found!"
   fi
 fi
-
-
-# Get Git Repo if configured into /local/git (temporary for setup)
-
-if [ ! -z "$GitSetupRepo" ]; then
-  if [ -e /usr/bin/git ]; then
-    /usr/bin/git clone "$GitSetupRepo" /local/git 
-    if [ -e /local/git/notesdata ]; then
-      cp -R /local/git/notesdata/* /local/notesdata 
-    fi
-  else
-    log "skipping Git Repo -- No git installed!"
-  fi
-fi
-
-# Git setup script can be used to run commands to copy and modify files
-
-if [ ! -z "$GitSetupScript" ]; then
-  if [ -x "$GitSetupScript" ]; then
-    log "Executing [$GitSetupScript]"
-    log "---------------------------------------"
-    $GitSetupScript
-    log "---------------------------------------"
-  fi
-fi
-
 
 # Replace secret variables with file content or http download
 replace_secret_vars
@@ -390,78 +288,16 @@ if [ -e "$DominoTrialKeyFile" ]; then
   fi
 fi
 
-if [ ! -e keyfile.kyr ]; then
-
-  if [ -z "$SkipKyrCreate" ]; then
-    header "Creating Domino Key Ring File from local CA"
-    $DOMDOCK_SCRIPT_DIR/create_ca_kyr.sh
-  fi
-fi
-
-if [ -n "$SetupAutoConfigure" ]; then
-
-  if [ -z "$HostName" ]; then
-    if [ -x /usr/bin/hostname ]; then
-      export HostName=`hostname`
-    else
-      export HostName=`cat /proc/sys/kernel/hostname`
-    fi
-  fi
-
-  log  "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
-  echo "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
-
-  cd $DOMINO_DATA_PATH 
-  header "Server start will run Domino Server Auto Setup"
-
-else
-
-  header "Starting Domino Server Silent Setup"
-
-  # Switch to executable directory for setup
-  cd $Notes_ExecDirectory
-
-  [ ! -z "$AdminFirstName" ] && $dominoprofileedit -AdminFirstName "$AdminFirstName" $dominosilentsetup
-  [ ! -z "$AdminIDFile" ] && $dominoprofileedit -AdminIDFile "$AdminIDFile" $dominosilentsetup
-  [ ! -z "$AdminLastName" ] && $dominoprofileedit -AdminLastName "$AdminLastName" $dominosilentsetup
-  [ ! -z "$AdminMiddleName" ] && $dominoprofileedit -AdminMiddleName "$AdminMiddleName" $dominosilentsetup
-  [ ! -z "$AdminPassword" ] && $dominoprofileedit -AdminPassword "$AdminPassword" $dominosilentsetup
-  [ ! -z "$CountryCode" ] && $dominoprofileedit -CountryCode "$CountryCode" $dominosilentsetup
-  [ ! -z "$DominoDomainName" ] && $dominoprofileedit -DominoDomainName "$DominoDomainName" $dominosilentsetup
-  [ ! -z "$HostName" ] && $dominoprofileedit -HostName "$HostName" $dominosilentsetup
-  [ ! -z "$OrgUnitIDFile" ] && $dominoprofileedit -OrgUnitIDFile "$OrgUnitIDFile" $dominosilentsetup
-  [ ! -z "$OrgUnitName" ] && $dominoprofileedit -OrgUnitName "$OrgUnitName" $dominosilentsetup
-  [ ! -z "$OrgUnitPassword" ] && $dominoprofileedit -OrgUnitPassword "$OrgUnitPassword" $dominosilentsetup
-  [ ! -z "$OrganizationIDFile" ] && $dominoprofileedit -OrganizationIDFile "$OrganizationIDFile" $dominosilentsetup
-  [ ! -z "$OrganizationName" ] && $dominoprofileedit -OrganizationName "$OrganizationName" $dominosilentsetup
-  [ ! -z "$OrganizationPassword" ] && $dominoprofileedit -OrganizationPassword "$OrganizationPassword" $dominosilentsetup
-  [ ! -z "$OtherDirectoryServerAddress" ] && $dominoprofileedit -OtherDirectoryServerAddress "$OtherDirectoryServerAddress" $dominosilentsetup
-  [ ! -z "$OtherDirectoryServerName" ] && $dominoprofileedit -OtherDirectoryServerName "$OtherDirectoryServerName" $dominosilentsetup
-  [ ! -z "$ServerIDFile" ] && $dominoprofileedit -ServerIDFile "$ServerIDFile" $dominosilentsetup
-  [ ! -z "$ServerName" ] && $dominoprofileedit -ServerName "$ServerName" $dominosilentsetup
-  [ ! -z "$SystemDatabasePath" ] && $dominoprofileedit -SystemDatabasePath "$SystemDatabasePath" $dominosilentsetup
-  [ ! -z "$ServerPassword" ] && $dominoprofileedit -ServerPassword "$ServerPassword" $dominosilentsetup
-
-  header "Silent Setup Settings"
-  $dominoprofileedit -dump $dominosilentsetup >> $LOG_FILE
-  log
-
-  cd $DOMINO_DATA_PATH 
-  $LOTUS/bin/server -silent $dominosilentsetup 
-fi
-
-header "Done"
-
-if [ -n "$ServerName" ]; then
-  if [ -z `grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini` ]; then
-    log_space "Server Setup unsuccessful -- check [$DOMINO_DATA_PATH/setuplog.txt] for details"
+if [ -z "$HostName" ]; then
+  if [ -x /usr/bin/hostname ]; then
+    export HostName=$(hostname)
   else
-    log_space "Server Setup done"
+    export HostName=$(cat /proc/sys/kernel/hostname)
   fi
 fi
 
 # Add notes.ini variables if requested
-if [ ! -z "$Notesini" ]; then
+if [ -n "$Notesini" ]; then
   echo $Notesini >> $DOMINO_DATA_PATH/notes.ini
   
   header "Adding notes.ini Settings"
@@ -469,15 +305,10 @@ if [ ! -z "$Notesini" ]; then
   log
 fi
 
+log  "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
+echo "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
 
-# .oO Neuralizer .oO
-# Cleaning up environment variabels & history to reduce exposure of sensitive data
+cd $DOMINO_DATA_PATH
+header "Server start will run Domino Server Auto Setup"
 
-# Remove temporary git download
-if [ -e /local/git ]; then
-  rm -rf /local/git
-fi
-
-echo
-echo "Finished prestart script"
-echo
+header "Prestart script - Done"

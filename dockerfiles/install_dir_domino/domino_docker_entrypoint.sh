@@ -1,13 +1,12 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
 ############################################################################
 
 # This script is the main entry point for Docker container and used instead of rc_domino.
 # You can still interact with the start script invoking "domino" which is Docker aware.
 # This entry point is invoked by Docker to start the Domino server and also acts as a shutdown monitor.
-
 
 if [ "$DOMDOCK_DEBUG_SHELL" = "yes" ]; then
   echo "--- Enable shell debugging ---"
@@ -20,24 +19,12 @@ export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 export DOMINO_REQEST_FILE=/tmp/domino_request
 export DOMINO_STATUS_FILE=/tmp/domino_status
-
-if [ -z "$LOTUS" ]; then
-  if [ -x /opt/hcl/domino/bin/server ]; then
-    export LOTUS=/opt/hcl/domino
-  else
-    export LOTUS=/opt/ibm/domino
-  fi
-fi
-
-# Export required environment variables
+export LOTUS=/opt/hcl/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DOMINO_DATA_PATH=/local/notesdata
 
 DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
-
-# This feature needs to be enabled per Docker container using an environment setting
-# DOMINO_STATISTICS_FILE=/local/notesdata/domino/html/domino_stats.txt
 
 # Get Linux version and platform
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
@@ -54,7 +41,7 @@ if [ "$CURRENT_UID" = "0" ]; then
   # if running as root set user to "notes"
   DOMINO_USER="notes"
 else
-  
+
   if [ ! "$LOGNAME" = "notes" ]; then
 
     if [ -z "$LOGNAME" ]; then
@@ -62,7 +49,7 @@ else
       $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
       LOGNAME=notes
     else
-      if [ ! -z "$DOCKER_UID_NOTES_MAP_FORCE" ]; then
+      if [ -n "$DOCKER_UID_NOTES_MAP_FORCE" ]; then
         # if the uid/user is not in /etc/passwd, update notes entry and remove numeric entry for UID if present
         $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
         LOGNAME=notes
@@ -87,7 +74,6 @@ log_debug()
   if [ "$DOMDOCK_DEBUG" = "yes" ]; then
     echo "$(date '+%F %T') debug: $@"
   fi
-
   return 0
 }
 
@@ -108,7 +94,7 @@ run_external_script ()
     return 0
   fi
 
-  if [ ! -z "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
+  if [ -n "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
     SCRIPT_OWNER=$(stat -c %U $SCRIPT2RUN)
     if [ ! "$SCRIPT_OWNER" = "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
       echo "Wrong owner for script -- not executing" [$SCRIPT2RUN]
@@ -116,9 +102,9 @@ run_external_script ()
     fi
   fi
 
-  echo "--- [$1] ---" 
+  echo "--- [$1] ---"
   $SCRIPT2RUN
-  echo "--- [$1] ---" 
+  echo "--- [$1] ---"
 
   return 0
 }
@@ -155,8 +141,8 @@ check_process_request()
   fi
 
   if [ "$DOMINO_REQUEST" = "0" ]; then
-    $DOMINO_START_SCRIPT stop  
-    echo "0" > "$DOMINO_STATUS_FILE" 
+    $DOMINO_START_SCRIPT stop
+    echo "0" > "$DOMINO_STATUS_FILE"
     return 0
   fi
 
@@ -167,7 +153,7 @@ check_process_request()
   fi
 
   if [ "$DOMINO_REQUEST" = "c" ]; then
-    $DOMINO_START_SCRIPT restartcompact 
+    $DOMINO_START_SCRIPT restartcompact
     echo "c" > "$DOMINO_STATUS_FILE"
     return 0
   fi
@@ -204,15 +190,15 @@ wait_time_or_string()
 
   while [ "$seconds" -lt "$MAX_SECONDS" ]; do
 
-    found=`grep -e "$SEARCH_STR" "$FILE" 2>/dev/null | wc -l`
+    found=$(grep -e "$SEARCH_STR" "$FILE" 2>/dev/null | wc -l)
 
     if [ "$found" -ge "$COUNT" ]; then
       return 0
     fi
 
     sleep 2
-    seconds=`expr $seconds + 2`
-    if [ `expr $seconds % 10` -eq 0 ]; then
+    seconds=$(expr $seconds + 2)
+    if [ $(expr $seconds % 10) -eq 0 ]; then
       echo " ... waiting $seconds seconds"
     fi
 
@@ -284,15 +270,8 @@ cleanup_setup_env()
 # "docker stop" will send a SIGTERM to the shell. catch it and stop Domino gracefully.
 # Use e.g. "docker stop --time=90 .." to ensure server has sufficient time to terminate.
 
-# signal child died causes issues in bash 5.x
-case "$BASH_VERSION" in
-  5*)
-    trap "stop_server" 1 2 3 4 6 9 13 15 19 23
-    ;;
-  *)
-    trap "stop_server" 1 2 3 4 6 9 13 15 17 19 23
-    ;;
-esac
+# Note: signal child died causes issues in bash 5.x
+trap "stop_server" 1 2 3 4 6 9 13 15 19 23
 
 run_external_script before_data_copy.sh
 
@@ -304,7 +283,7 @@ run_external_script before_config_script.sh
 # Check if server is configured. Else start custom configuration script
 CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
 if [ -z "$CHECK_SERVER_SETUP" ]; then
-  if [ ! -z "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
+  if [ -n "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
       # Ensure variables modified in pre start script are returned
       . $DOMINO_DOCKER_CFG_SCRIPT
@@ -313,7 +292,7 @@ if [ -z "$CHECK_SERVER_SETUP" ]; then
   DOMINO_IS_CONFIGURED=false
 else
   DOMINO_IS_CONFIGURED=true
-fi 
+fi
 
 run_external_script after_config_script.sh
 
@@ -358,7 +337,7 @@ if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
   if [ -n "$DominoConfigRestartWaitTime" ] || [ -n "$DominoConfigRestartWaitString" ]; then
 
     sleep 2
-    wait_time_or_string "$DominoConfigRestartWaitTime" $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/console.log "$DominoConfigRestartWaitString" 
+    wait_time_or_string "$DominoConfigRestartWaitTime" $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/console.log "$DominoConfigRestartWaitString"
 
     #cleanup environment at restart
     cleanup_setup_env
@@ -370,9 +349,8 @@ if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
 fi
 
 
-# Wait for shutdown signal. This loop should never terminate, because it would 
+# Wait for shutdown signal. This loop should never terminate, because it would
 # shutdown the Docker container immediately and kill Domino.
-
 
 while true
 do
@@ -397,7 +375,7 @@ do
     elif [ "$var" = "q" ]; then
       echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
     else
-      if [ ! -z "$var" ]; then
+      if [ -n "$var" ]; then
         cd "$DOMINO_DATA_PATH"
         $LOTUS/bin/server -c "$var"
       fi

@@ -1,6 +1,6 @@
 #!/bin/bash
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -16,19 +16,7 @@ if [ -z "$LOGNAME" ]; then
   export LOGNAME=$(whoami)
 fi
 
-
-# Since Domino 11 the new install directory is /opt/hcl/domino
-case "$PROD_VER" in
-  9*|10*)
-    INSTALLER_VERSION=10
-    export LOTUS=/opt/ibm/domino
-    ;;
-  *)
-    INSTALLER_VERSION=11
-    export LOTUS=/opt/hcl/domino
-    ;;
-esac
-
+export LOTUS=/opt/hcl/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DYLD_LIBRARY_PATH=$Notes_ExecDirectory:$DYLD_LIBRARY_PATH
 
@@ -45,10 +33,9 @@ CURL_CMD="curl --fail --location --connect-timeout 15 --max-time 300 $SPECIAL_CU
 
 DIR_PERM=770
 
-# String definitions 
+# String definitions
 
-DOM_V10_STRING_OK="Dominoserver Installation successful"
-DOM_V11_STRING_OK="Domino Server Installation Successful"
+DOM_V12_STRING_OK="Domino Server Installation Successful"
 LP_STRING_OK="Selected Language Packs are successfully installed."
 FP_STRING_OK="The installation completed successfully."
 HF_STRING_OK="The installation completed successfully."
@@ -56,7 +43,6 @@ TRAVELER_STRING_OK="Installation completed with warnings."
 HF_UNINSTALL_STRING_OK="The installation completed successfully."
 JVM_STRING_OK="Patch was successfully applied."
 JVM_STRING_FP_OK="Tree diff file patch successful!"
-
 
 INST_DOM_LOG=$DOMDOCK_LOG_DIR/install_domino.log
 INST_FP_LOG=$DOMDOCK_LOG_DIR/install_fp.log
@@ -80,7 +66,7 @@ install_domino ()
     INST_FP=""
   else
     INST_FP=$PROD_VER$PROD_FP
-    
+
     check_installed_version fp $INST_FP
     if [ "$?" = "1" ]; then
       INST_FP=""
@@ -91,101 +77,45 @@ install_domino ()
     INST_HF=""
   else
     INST_HF=$PROD_VER$PROD_FP$PROD_HF
-    
+
     check_installed_version hf $INST_HF
     if [ "$?" = "1" ]; then
-    	INST_HF=""
+      INST_HF=""
     fi
   fi
-  
-  echo
-  echo "Downloading Domino Installation files ..."
-  echo
-  
-  if [ ! -z "$INST_VER" ]; then
+
+  log_space "Downloading Domino Installation files ..."
+
+  if [ -n "$INST_VER" ]; then
     get_download_name $PROD_NAME $INST_VER
     download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_server
   fi
 
-  if [ ! -z "$INST_FP" ]; then
+  if [ -n "$INST_FP" ]; then
     get_download_name $PROD_NAME $INST_FP domino_fp
     download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_fp
   fi
 
-  if [ ! -z "$INST_HF" ]; then
+  if [ -n "$INST_HF" ]; then
     get_download_name $PROD_NAME $INST_HF domino_hf
     download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_hf
   fi
 
-  if [ ! -z "$INST_VER" ]; then
+  if [ -n "$INST_VER" ]; then
     header "Installing $PROD_NAME $INST_VER"
     pushd .
 
-    echo
-    echo "Running Domino Silent Install -- This takes a while ..."
-    echo
+    log_space "Running Domino Silent Install -- This takes a while ..."
 
-    if [ "$INSTALLER_VERSION" = "10" ]; then
+    DominoResponseFile=domino_install.properties
+    cd domino_server/linux64
 
-      # Install Domino 10 (Older Installer InstallShield Multi Platform)
+    ./install -f "$INSTALL_DIR/$DominoResponseFile" -i silent
 
-      if [ -z "$DominoResponseFile" ]; then
-        DominoResponseFile=domino10_response.dat
-      fi
+    INSTALL_LOG=$(find $LOTUS -name "HCL_Domino_Install_*.log")
 
-      case "$PROD_NAME" in
-        domino)
-          cd domino_server/linux64/domino
-          ;;
-
-        domino-ce)
-          cd domino_server/linux64/DominoEval
-          ;;
-
-        *)
-          log_error "Unknown product [$PROD_NAME] - Terminating installation"
-          popd
-          exit 1
-          ;;
-      esac
-
-      ./install -silent -options "$INSTALL_DIR/$DominoResponseFile"
-      
-      mv "$Notes_ExecDirectory/DominoInstall.log" "$INST_DOM_LOG"
-      check_file_str "$INST_DOM_LOG" "$DOM_V10_STRING_OK"
-
-    else
-
-      # Install Domino 11 and higher (Installer changed to InstallAnyware Multi Platform)
-
-      if [ -z "$DominoResponseFile" ]; then
-        DominoResponseFile=domino11_install.properties
-      fi
-
-      case "$PROD_NAME" in
-        domino)
-          cd domino_server/linux64
-          ;;
-
-        domino-ce)
-          cd domino_server/linux64/DominoEval
-          ;;
-
-        *)
-          log_error "Unknown product [$PROD_NAME] - Terminating installation"
-          popd
-          exit 1
-          ;;
-      esac
-
-
-      ./install -f "$INSTALL_DIR/$DominoResponseFile" -i silent
-
-      INSTALL_LOG=$(find $LOTUS -name "HCL_Domino_Install_*.log")
-
-      mv "$INSTALL_LOG" "$INST_DOM_LOG"
-      check_file_str "$INST_DOM_LOG" "$DOM_V11_STRING_OK"
-    fi
+    mv "$INSTALL_LOG" "$INST_DOM_LOG"
+    check_file_str "$INST_DOM_LOG" "$DOM_V12_STRING_OK"
 
     if [ "$?" = "1" ]; then
       echo
@@ -213,12 +143,10 @@ install_domino ()
 
   fi
 
-  if [ ! -z "$INST_FP" ]; then
+  if [ -n "$INST_FP" ]; then
     header "Installing Fixpack $INST_FP"
 
-    echo
-    echo "Running Domino Fixpack Silent Install -- This takes a while ..."
-    echo
+    log_space "Running Domino Fixpack Silent Install -- This takes a while ..."
 
     pushd .
     cd domino_fp/linux64/domino
@@ -248,14 +176,12 @@ install_domino ()
     popd
     rm -rf domino_fp
 
-  fi  
+  fi
 
-  if [ ! -z "$INST_HF" ]; then
+  if [ -n "$INST_HF" ]; then
     header "Installing IF/HF INST_HF"
 
-    echo
-    echo "Running Domino Iterimsfix/Hotfix Silent Install -- This takes a while ..."
-    echo
+    log_space "Running Domino Iterimsfix/Hotfix Silent Install -- This takes a while ..."
 
     pushd .
     cd domino_hf/linux64
@@ -323,7 +249,7 @@ install_verse()
   cd $ADDON_NAME
   echo "Unzipping files .."
   unzip -q  *.zip
-  unzip -q HCL_Verse.zip 
+  unzip -q HCL_Verse.zip
 
   echo "Copying files .."
 
@@ -337,12 +263,9 @@ install_verse()
 
   install_file "iwaredir.ntf" "$DOMINO_DATA_PATH/iwaredir.ntf" $DOMINO_USER $DOMINO_GROUP 644
 
-  echo
-  echo Installed $ADDON_NAME
-  echo
+  log_space Installed $ADDON_NAME
 
   popd
-
 }
 
 docker_set_timezone ()
@@ -355,22 +278,16 @@ docker_set_timezone ()
   SET_TZ=/usr/share/zoneinfo/$DOCKER_TZ
 
   if [ "$CURRENT_TZ" = "$SET_TZ" ]; then
-    echo
-    echo "Timezone [$DOCKER_TZ] already set"
-    echo
+    log_space "Timezone [$DOCKER_TZ] already set"
     return 0
   fi
 
   if [ ! -e "$SET_TZ" ]; then
-    echo
-    echo "Cannot read timezone [$SET_TZ] -- Timezone not changed"
-    echo
+    log_space "Cannot read timezone [$SET_TZ] -- Timezone not changed"
     return 1
   fi
 
-  echo
-  echo "Timezone set to [$DOCKER_TZ]"
-  echo
+  log_space "Timezone set to [$DOCKER_TZ]"
   ln -sf "$SET_TZ" /etc/localtime
 
   return 0
@@ -394,15 +311,12 @@ yum_glibc_lang_update7()
   grep -v -i "$STR" "$FILE" > "$FILE.updated"
   mv "$FILE.updated" "$FILE"
 
-  echo
-  echo Updating glibc locale ...
-  echo
-
+  log_space Updating glibc locale ...
 
   if [ "$LinuxYumUpdate" = "yes" ]; then
     # packages have been already updated, just need reinstall
     yum reinstall -y glibc-common
-  else  
+  else
     # update first before reinstall
 
     # RedHat update
@@ -412,7 +326,6 @@ yum_glibc_lang_update7()
 
   return 0
 }
-
 
 yum_glibc_lang_update_centos()
 {
@@ -445,8 +358,8 @@ yum_glibc_lang_update()
     fi
 
     return 0
-  fi 
-  
+  fi
+
   # Only needed for centos like platforms -> check if yum is installed
 
   if [ ! -x /usr/bin/yum ]; then
@@ -476,7 +389,7 @@ set_ini_var_if_not_set()
 
   # check if entry exists empty. if not present append new entry
 
-  local found=`grep -i "^$var=" $file`
+  local found=$(grep -i "^$var=" $file)
   if [ -z "$found" ]; then
     echo $var=$new >> $file
   fi
@@ -486,7 +399,6 @@ set_ini_var_if_not_set()
 
 set_default_notes_ini_variables ()
 {
-
   # Avoid Domino Directory Design Update Prompt
   set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
 
@@ -495,12 +407,10 @@ set_default_notes_ini_variables ()
 
   # Use current ODS
   set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
-
 }
 
 
 # --- Main Install Logic ---
-
 
 export DOMINO_USER=notes
 export DOMINO_GROUP=notes
@@ -535,12 +445,10 @@ fi
 
 yum_glibc_lang_update
 
-# This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1) 
+# This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1)
 if [ -e $LOTUS ]; then
   FIRST_TIME_SETUP=0
-  echo
-  echo "!! Incremantal install based on exiting Domino image !!"
-  echo
+  log_space "!! Incremantal install based on exiting Domino image !!"
 else
   FIRST_TIME_SETUP=1
 fi
@@ -551,11 +459,11 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   if [ -z "$DominoUserID" ]; then
     useradd $DOMINO_USER -U -m
   else
-    useradd $DOMINO_USER -U -m -u $DominoUserID 
+    useradd $DOMINO_USER -U -m -u $DominoUserID
   fi
 
   # Set User Local if configured
-  if [ ! -z "$DOMINO_LANG" ]; then
+  if [ -n "$DOMINO_LANG" ]; then
     echo "export LANG=$DOMINO_LANG" >> /home/$DOMINO_USER/.bash_profile
   fi
 
@@ -565,11 +473,11 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   echo '* soft nofile 65535' >> /etc/security/limits.conf
   echo '* hard nofile 65535' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
- 
+
 else
 
   # Check for existing user's group and overwrite (for base images with different group - like root)
-  export DOMINO_GROUP=`id -gn "$DOMINO_USER"`
+  export DOMINO_GROUP=$(id -gn "$DOMINO_USER")
 
   # Don't install perl for Domino installer
   NO_PERL_INSTALL=yes
@@ -597,21 +505,18 @@ create_directory $DOMDOCK_SCRIPT_DIR root root 755
 # Needs full permissions for mount points
 create_directory /local root root 777
 create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
-create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
+create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/backup $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/restore $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
-
 if [ "$BORG_INSTALL" = "yes" ]; then
   create_directory /local/borg $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 fi
 
-
 docker_set_timezone
-
 
 # check if HCL Domino image is already installed -> in that case just set version
 if [ -e "/tmp/notesdata.tbz2" ]; then
@@ -623,7 +528,6 @@ if [ -e "/tmp/notesdata.tbz2" ]; then
 
   NO_PERL_INSTALL=yes
 fi
-
 
 # Temporary install perl for installers if not already installed
 
@@ -647,12 +551,11 @@ if [ "$GIT_INSTALL" = "yes" ]; then
   fi
 fi
 
-
 if [ "$BORG_INSTALL" = "yes" ]; then
 
     if [ -e /etc/centos-release ]; then
       header "Installing Borg Backup"
-      install_package epel-release 
+      install_package epel-release
 
       # Borg Backup needs a different perl version in powertools
       if [ -x /usr/bin/yum ]; then
@@ -663,14 +566,12 @@ if [ "$BORG_INSTALL" = "yes" ]; then
     fi
 fi
 
-
 if [ "$OPENSSL_INSTALL" = "yes" ]; then
   if [ ! -e /usr/bin/openssl ]; then
     header "Installing openssl"
     install_package openssl
   fi
 fi
-
 
 cd "$INSTALL_DIR"
 
@@ -679,7 +580,7 @@ download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
   case "$PROD_NAME" in
-    domino|domino-ce)
+    domino)
       install_domino
       ;;
 
@@ -690,14 +591,13 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   esac
 fi
 
-
 # Install Verse if requested
 install_verse "$VERSE_VERSION"
 
 # Removing perl if temporary installed
 
 if [ "$UNINSTALL_PERL_AFTER_INSTALL" = "yes" ]; then
-  # removing perl 
+  # removing perl
   header "Uninstalling perl"
   remove_package perl
 fi
@@ -733,8 +633,6 @@ fi
 $INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
-install_file "$INSTALL_DIR/SetupProfile.pds" "$DOMDOCK_DIR/SetupProfile.pds" $DOMINO_USER $DOMINO_GROUP 666
-install_file "$INSTALL_DIR/SetupProfileSecondServer.pds" "$DOMDOCK_DIR/SetupProfileSecondServer.pds" $DOMINO_USER $DOMINO_GROUP 666
 
 if [ "$BORG_INSTALL" = "yes" ]; then
   # Install Borg Backup scripts
@@ -747,10 +645,10 @@ header "Final Steps & Configuration"
 install_file "$INSTALL_DIR/docker_prestart.sh" "$DOMDOCK_SCRIPT_DIR/docker_prestart.sh" root root 755
 
 # Copy Docker specific start script configuration if provided
-install_file "$INSTALL_DIR/rc_domino_config" "$DOMINO_DATA_PATH/rc_domino_config" root root 644 
+install_file "$INSTALL_DIR/rc_domino_config" "$DOMINO_DATA_PATH/rc_domino_config" root root 644
 install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/domino_docker_entrypoint.sh" root root 755
 
-# Install Data Directory Copy File 
+# Install Data Directory Copy File
 install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
 
 # Install health check script
@@ -769,8 +667,7 @@ set_default_notes_ini_variables
 # --- Cleanup Routines to reduce image size ---
 
 # Remove Fixpack/Hotfix backup files
-find $Notes_ExecDirectory -maxdepth 1 -type d -name "100**" -exec rm -rf {} \; 2>/dev/null
-find $Notes_ExecDirectory -maxdepth 1 -type d -name "110**" -exec rm -rf {} \; 2>/dev/null
+find $Notes_ExecDirectory -maxdepth 1 -type d -name "120**" -exec rm -rf {} \; 2>/dev/null
 
 # Remove not needed domino/html data to keep image smaller
 find $DOMINO_DATA_PATH/domino/html -name "*.dll" -exec rm -rf {} \; 2>/dev/null
@@ -779,11 +676,7 @@ find $DOMINO_DATA_PATH/domino/html -name "*.msi" -exec rm -rf {} \; 2>/dev/null
 remove_directory "$DOMINO_DATA_PATH/domino/html/download/filesets"
 remove_directory "$DOMINO_DATA_PATH/domino/html/help"
 
-# Remove Domino 10 and earlier uninstaller --> we never uninstall but rebuild from scratch
-remove_directory "$Notes_ExecDirectory/_uninst"
-
-
-# Remove Domino 11 and  higher uninstaller --> we never uninstall but rebuild from scratch
+# Remove Domino 12 and  higher uninstaller --> we never uninstall but rebuild from scratch
 remove_directory "$Notes_ExecDirectory/_HCL Domino_installation"
 
 # Domino 11 uses InstallAnywhere, which has it's own install JRE (see above)
@@ -803,13 +696,12 @@ remove_file $DOMINO_DATA_PATH/tika-server.jar
 # Ensure permissons are set correctly for data directory
 chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
 
-
 # Now export the lib path just in case for Domino to run
 export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
 
 # If configured, move data directory to a compressed tar file
 
-if [ ! -z "$DominoMoveInstallData" ]; then
+if [ -n "$DominoMoveInstallData" ]; then
 
   INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
@@ -829,4 +721,3 @@ clean_linux_repo_cache
 header "Successfully completed installation!"
 
 exit 0
-

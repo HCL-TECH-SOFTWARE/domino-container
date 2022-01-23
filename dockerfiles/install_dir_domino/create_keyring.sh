@@ -17,15 +17,8 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-if [ -z "$LOTUS" ]; then
-  if [ -x /opt/hcl/domino/bin/server ]; then
-    LOTUS=/opt/hcl/domino
-  else
-    LOTUS=/opt/ibm/domino
-  fi
-fi
-
-PEM_FILE=`realpath "$1"`
+LOTUS=/opt/hcl/domino
+PEM_FILE=$(realpath "$1")
 KEYRING_FILE="$2"
 KEYRING_PASSWORD="$3"
 
@@ -42,7 +35,7 @@ fi
 
 if [ -z "$KEYRING_PASSWORD" ]; then
   echo "Generating random keyring-file password"
-  KEYRING_PASSWORD=`sha1sum /local/notesdata/notes.ini`
+  KEYRING_PASSWORD=$(sha1sum /local/notesdata/notes.ini)
 fi
 
 $LOTUS/bin/kyrtool create -k "$KEYRING_FILE" -p "$KEYRING_PASSWORD"

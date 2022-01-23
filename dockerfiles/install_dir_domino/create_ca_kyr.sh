@@ -36,14 +36,7 @@ CREATE_KEYRINGS="yes"
 USE_LOCAL_CA=yes
 KEYRING_PASSWORD=KyrSafePassword
 
-if [ -z "$LOTUS" ]; then
-  if [ -x /opt/hcl/domino/bin/server ]; then
-    LOTUS=/opt/hcl/domino
-  else
-    LOTUS=/opt/ibm/domino
-  fi
-fi
-
+LOTUS=/opt/hcl/domino
 KYRTOOL_BIN=$LOTUS/bin/kyrtool
 
 if [ -z "$DOMINO_DATA_PATH" ]; then
@@ -104,7 +97,7 @@ fi
 
 # Set correct directories based on main path
 
-CERTMGR_DIR=`realpath "$CERTMGR_DIR"`
+CERTMGR_DIR=$(realpath "$CERTMGR_DIR")
 
 CA_DIR=$CERTMGR_DIR/ca
 KEY_DIR=$CERTMGR_DIR/key
@@ -229,10 +222,10 @@ create_keyring_files ()
 
   log
 
-  ALL_CRTS=`find "$CRT_DIR" -type f -name "*.crt" -printf "%p\n" | sort`
+  ALL_CRTS=$(find "$CRT_DIR" -type f -name "*.crt" -printf "%p\n" | sort)
 
   for CRT in $ALL_CRTS; do
-    NAME=`basename "$CRT" | cut -d"." -f1`
+    NAME=$(basename "$CRT" | cut -d"." -f1)
     create_keyring "$NAME"
   done
 }
@@ -261,7 +254,7 @@ create_key_cert()
 
   SANS_DNS=""
   if [ ! -z "$SANS" ]; then
-    for i in `echo $SANS | tr ',' '\n'` ; do
+    for i in $(echo $SANS | tr ',' '\n') ; do
       if [ -z "$SANS_DNS" ]; then
         SANS_DNS=DNS:$i
       else
@@ -407,10 +400,10 @@ check_cert()
   PEM_ALL_FILE="$PEM_DIR/${NAME}_all.pem"
 
   if [ -e "$CRT_FILE" ]; then
-    SUBJECT=`openssl x509 -subject -noout -in $CRT_FILE | awk -F'subject= ' '{print $2 }'`
-    DNS_NAME=`openssl x509 -text -noout -in $CRT_FILE | grep DNS | cut -d":" -f2`
-    NOT_AFTER=`openssl x509 -enddate -noout -in $CRT_FILE | awk -F'notAfter=' '{print $2 }'`
-    CA=`openssl x509 -issuer -noout -in $CRT_FILE | awk -F'issuer= ' '{print $2 }'`
+    SUBJECT=$(openssl x509 -subject -noout -in $CRT_FILE | awk -F'subject= ' '{print $2 }')
+    DNS_NAME=$(openssl x509 -text -noout -in $CRT_FILE | grep DNS | cut -d":" -f2)
+    NOT_AFTER=$(openssl x509 -enddate -noout -in $CRT_FILE | awk -F'notAfter=' '{print $2 }')
+    CA=$(openssl x509 -issuer -noout -in $CRT_FILE | awk -F'issuer= ' '{print $2 }')
 
     openssl x509 -text -noout -in $CRT_FILE > $TXT_DIR/$NAME.txt
   
@@ -427,7 +420,7 @@ check_cert()
     KEYLEN="$CA_KEYLEN bit"
   else
     if [ -e "$KEY_FILE" ]; then
-      KEYLEN=`openssl rsa -in $KEY_FILE -text -noout|  grep "Private-Key:" | awk -F'Private-Key: ' '{print $2 }' | tr -d "()"`
+      KEYLEN=$(openssl rsa -in $KEY_FILE -text -noout|  grep "Private-Key:" | awk -F'Private-Key: ' '{print $2 }' | tr -d "()")
     else
       KEYLEN=""
       STATUS="NO RSA Private/Public Key"
@@ -471,10 +464,10 @@ check_keys_and_certs ()
 {
   log
 
-  ALL_KEYS=`find "$KEY_DIR" -type f -name "*.key" -printf "%p\n" | sort`
+  ALL_KEYS=$(find "$KEY_DIR" -type f -name "*.key" -printf "%p\n" | sort)
 
   for KEY in $ALL_KEYS; do
-    NAME=`basename "$KEY" | cut -d"." -f1`
+    NAME=$(basename "$KEY" | cut -d"." -f1)
     create_pem_kyr  "$NAME"
   done
 
@@ -483,7 +476,7 @@ check_keys_and_certs ()
   check_cert ca 
 
   for KEY in $ALL_KEYS; do
-    NAME=`basename "$KEY" | cut -d"." -f1`
+    NAME=$(basename "$KEY" | cut -d"." -f1)
     check_cert "$NAME"
   done
 
@@ -505,9 +498,9 @@ else
 
   if [ -z "$DOMINO_HOST_NAME" ]; then
     if [ -x /usr/bin/hostname ]; then
-      DOMINO_HOST_NAME=`hostname`
+      DOMINO_HOST_NAME=$(hostname)
     else
-      DOMINO_HOST_NAME=`cat /proc/sys/kernel/hostname`
+      DOMINO_HOST_NAME=$(cat /proc/sys/kernel/hostname)
     fi
   fi
 

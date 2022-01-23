@@ -1,34 +1,23 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-INSTALL_DIR=`dirname $0`
+INSTALL_DIR=$(dirname $0)
 
 export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 
-if [ -z "$LOTUS" ]; then
-  if [ -x /opt/hcl/domino/bin/server ]; then
-    export LOTUS=/opt/hcl/domino
-    if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
-      TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino1201.properties
-    elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "12*")" ]; then
-      TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
-    else
-      TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_hcl.properties
-    fi
-  elif [ -x /opt/ibm/domino/bin/server ]; then
-    export LOTUS=/opt/ibm/domino
-    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_ibm.properties
-  else
-    echo "No Domino installation found"
-    exit 1
-  fi
+export LOTUS=/opt/hcl/domino
+
+if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
+  TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino1201.properties
+else [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "12*")" ]; then
+  TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
 fi
 
 # export required environment variables
@@ -44,7 +33,7 @@ export LANG=C
 INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
-WGET_COMMAND="wget --connect-timeout=10 --tries=1 $SPECIAL_WGET_ARGUMENTS"
+CURL_CMD="curl --fail --location --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 TRAVELER_STRING_OK="Installation completed successfully."
 TRAVELER_STRING_WARNINGS="Installation completed with warnings."
@@ -55,7 +44,7 @@ INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 . $INSTALL_DIR/script_lib.sh
 
 
-install_traveler ()
+install_traveler()
 {
   header "$PROD_NAME Installation"
 
@@ -84,7 +73,6 @@ install_traveler ()
   cd traveler
 
   header "Running Traveler silent install"
-
 
   ./TravelerSetup -f $TRAVELER_INSTALLER_PROPERTIES -i SILENT -l en > $INST_TRAVELER_LOG
 

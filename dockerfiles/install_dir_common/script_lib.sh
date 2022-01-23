@@ -33,13 +33,20 @@ print_delim ()
 
 log_ok ()
 {
-  echo "$1"
+  echo "$@"
+}
+
+log_space ()
+{
+  echo
+  echo "$@"
+  echo
 }
 
 log_error ()
 {
   echo
-  echo "Failed - $1"
+  echo "Failed - $@"
   echo
 }
 
@@ -358,11 +365,11 @@ install_file()
   
   cp -f "$SOURCE_FILE" "$TARGET_FILE"
  
-  if [ ! -z "$OWNER" ]; then
+  if [ -n "$OWNER" ]; then
     chown $OWNER:$GROUP "$TARGET_FILE"
   fi
 
-  if [ ! -z "$PERMS" ]; then
+  if [ -n "$PERMS" ]; then
     chmod "$PERMS" "$TARGET_FILE"
   fi
 
@@ -390,7 +397,7 @@ install_binary()
     return 0
   fi
 
-  INSTALL_BIN_NAME=`basename $SOURCE_BIN`
+  INSTALL_BIN_NAME=$(basename $SOURCE_BIN)
 
   if [ -z "$INSTALL_BIN_NAME" ]; then
     echo "no file specified"
@@ -460,11 +467,11 @@ create_directory ()
   
   mkdir -p "$TARGET_FILE"
   
-  if [ ! -z "$OWNER" ]; then
+  if [ -n "$OWNER" ]; then
     chown $OWNER:$GROUP "$TARGET_FILE"
   fi
 
-  if [ ! -z "$PERMS" ]; then
+  if [ -n "$PERMS" ]; then
     chmod "$PERMS" "$TARGET_FILE"
   fi
   
@@ -557,7 +564,7 @@ get_domino_version ()
 
     find_str=$(tail "$DOMINO_INSTALL_DAT" | grep "rev = " | awk -F " = " '{print $2}' | tr -d '"')
 
-    if [ ! -z "$find_str" ]; then
+    if [ -n "$find_str" ]; then
       DOMINO_VERSION=$find_str
 
       if [ "$DOMINO_VERSION" = "11000000" ]; then
@@ -623,7 +630,7 @@ set_ini_var_if_not_set()
 
   # check if entry exists empty. if not present append new entry
 
-  local found=`grep -i "^$var=" $file`
+  local found=$(grep -i "^$var=" $file)
   if [ -z "$found" ]; then
     echo $var=$new >> $file
   fi
