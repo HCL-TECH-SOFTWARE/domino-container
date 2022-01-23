@@ -43,7 +43,7 @@ CUSTOM_VER=`echo "$2" | awk '{print toupper($0)}'`
 CUSTOM_FP=`echo "$3" | awk '{print toupper($0)}'`
 CUSTOM_HF=`echo "$4" | awk '{print toupper($0)}'`
 
-if [ ! -z "$CUSTOM_VER" ]; then
+if [ -n "$CUSTOM_VER" ]; then
   PROD_VER=$CUSTOM_VER
   PROD_FP=$CUSTOM_FP
   PROD_HF=$CUSTOM_HF
@@ -53,8 +53,13 @@ DOCKER_IMAGE_NAME="hclcom/$PROD_NAME"
 DOCKER_IMAGE_VERSION=$PROD_VER$PROD_FP$PROD_HF$PROD_EXT
 
 # Set default or custom LATEST tag
-if [ ! -z "$TAG_LATEST" ]; then
+if [ -n "$TAG_LATEST" ]; then
   DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:$TAG_LATEST"
+fi
+
+if [ "$CONTAINER_CMD" = "nerdctl" ]; then
+  # Currently nerdctl cannot handle a second tag
+  DOCKER_TAG_LATEST=
 fi
 
 build_domino()

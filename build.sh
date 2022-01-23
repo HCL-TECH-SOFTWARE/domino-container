@@ -128,6 +128,13 @@ check_container_environment()
     DOCKER_VERSION_STR=$(podman version | head -1)
     DOCKER_VERSION=$(echo $DOCKER_VERSION_STR | cut -d" " -f3)
     check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$CONTAINER_CMD"
+
+    if [ -z "$DOCKER_NETWORK" ]; then
+      if [ -n "$DOCKER_NETWORK_NAME" ]; then
+        CONTAINER_NETWORK_CMD="--network=$CONTAINER_NETWORK_NAME"
+      fi
+    fi
+
     return 0
   fi
 
@@ -157,15 +164,9 @@ check_container_environment()
     fi
 
     if [ -z "$DOCKER_NETWORK" ]; then
-
       if [ -n "$DOCKER_NETWORK_NAME" ]; then
         CONTAINER_NETWORK_CMD="--network=$CONTAINER_NETWORK_NAME"
       fi
-
-      if [ -n "$CONTAINER_NAMESPACE" ]; then
-        CONTAINER_NETWORK="--namespace=$CONTAINER_NAMESPACE"
-      fi
-
     fi
 
     return 0
@@ -173,6 +174,11 @@ check_container_environment()
 
   if [ "$CONTAINER_CMD" = "nerdctl" ]; then
     DOCKER_ENV_NAME=nerdctl
+
+    if [ -n "$CONTAINER_NAMESPACE" ]; then
+      CONTAINER_NETWORK="--namespace=$CONTAINER_NAMESPACE"
+    fi
+
   fi
 
   return 0
