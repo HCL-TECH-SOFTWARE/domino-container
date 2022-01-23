@@ -215,25 +215,32 @@ get_secret_var()
 
 replace_secret_vars()
 {
-  get_secret_var AdminPassword
-  get_secret_var ServerPassword
-  get_secret_var OrganizationPassword
-  get_secret_var OrgUnitPassword
+  # Domino One-Touch Password variables
+
+  get_secret_var SERVERSETUP_ADMIN_PASSWORD
+  get_secret_var SERVERSETUP_SERVER_PASSWORD
+  get_secret_var SERVERSETUP_ORG_CERTIFIERPASSWORD
+  get_secret_var SERVERSETUP_ORG_ORGUNITPASSWORD
+  get_secret_var SERVERSETUP_SECURITY_TLSSETUP_IMPORTFILEPASSWORD
+  get_secret_var SERVERSETUP_SECURITY_TLSSETUP_EXPORTPASSWORD
 }
 
 check_download_file_links()
 {
-  # Donwload ID files if they start with http(s):
+  # Domino One-Touch ID file variables
 
-  download_file_link OrganizationIDFile
-  download_file_link OrgUnitIDFile
-  download_file_link ServerIDFile
-  download_file_link AdminIDFile
-  download_file_link SafeIDFile
-  download_file_link DominoTrialKeyFile
+  # Donwload ID files if they start with http(s):
+  download_file_link SERVERSETUP_ORG_CERTIFIERIDFILEPATH
+  download_file_link SERVERSETUP_ORG_ORGUNITIDFILEPATH
+  download_file_link SERVERSETUP_SERVER_IDFILEPATH
+  download_file_link SERVERSETUP_ADMIN_IDFILEPATH
+  download_file_link SERVERSETUP_SECURITY_TLSSETUP_IMPORTFILEPATH
 
   download_file_link SetupAutoConfigureParams
-  download_file_link DominoPemFile
+
+  # Additional Community image paramters
+  download_file_link SafeIDFile
+  download_file_link DominoTrialKeyFile
 
   return 0
 }
@@ -288,11 +295,13 @@ if [ -e "$DominoTrialKeyFile" ]; then
   fi
 fi
 
-if [ -z "$HostName" ]; then
+# Domino One-Touch needs the hostname. Try to determine it, if not specified.
+
+if [ -z "$SERVERSETUP_NETWORK_HOSTNAME" ]; then
   if [ -x /usr/bin/hostname ]; then
-    export HostName=$(hostname)
+    export SERVERSETUP_NETWORK_HOSTNAME=$(hostname)
   else
-    export HostName=$(cat /proc/sys/kernel/hostname)
+    export SERVERSETUP_NETWORK_HOSTNAME=$(cat /proc/sys/kernel/hostname)
   fi
 fi
 

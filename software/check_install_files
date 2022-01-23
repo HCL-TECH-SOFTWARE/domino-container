@@ -51,9 +51,9 @@ get_download_name ()
 test_install_software ()
 {
   PROD_NAME=DOMINO
-  PROD_VER=10.0.1
-  PROD_FP=FP1
-  PROD_HF=IF1
+  PROD_VER=12.0.1
+  PROD_FP=
+  PROD_HF=
 
   INST_VER=$PROD_VER
 
@@ -92,11 +92,11 @@ update_software_list ()
   fi
 
   while read line; do    
-    HASH=`echo $line | cut -d" " -f1`
-    FILENAME=`echo $line | cut -d"*" -f2`
+    HASH=$(echo $line | cut -d" " -f1)
+    FILENAME=$(echo $line | cut -d"*" -f2)
     
     if [ -e "$FULL_SOFTWARE_FILE" ]; then
-      DOWNLOAD_NAME=`grep "|$HASH" "$FULL_SOFTWARE_FILE" | grep "|$FILENAME|" | cut -d"|" -f3`
+      DOWNLOAD_NAME=$(grep "|$HASH" "$FULL_SOFTWARE_FILE" | grep "|$FILENAME|" | cut -d"|" -f3)
     else
       DOWNLOAD_NAME=""
     fi
