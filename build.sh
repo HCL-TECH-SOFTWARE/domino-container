@@ -175,10 +175,11 @@ check_container_environment()
   if [ "$CONTAINER_CMD" = "nerdctl" ]; then
     DOCKER_ENV_NAME=nerdctl
 
-    if [ -n "$CONTAINER_NAMESPACE" ]; then
-      CONTAINER_NETWORK="--namespace=$CONTAINER_NAMESPACE"
+    if [ -z "$CONTAINER_NAMESPACE" ]; then
+      CONTAINER_NAMESPACE=k8s.io
     fi
 
+    CONTAINER_NAMESPACE_CMD="--namespace=$CONTAINER_NAMESPACE"
   fi
 
   return 0
