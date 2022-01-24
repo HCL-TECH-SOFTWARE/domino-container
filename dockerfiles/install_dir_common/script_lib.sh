@@ -1,6 +1,6 @@
 #!/bin/bash
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2021 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -13,18 +13,6 @@ if [ -z "$DIR_PERM" ]; then
 fi
 
 # Helper Functions
-
-pushd()
-{
-  command pushd "$@" > /dev/null
-}
-
-popd ()
-{
-  command popd "$@" > /dev/null
-}
-
-export pushd popd
 
 print_delim ()
 {
@@ -122,6 +110,7 @@ get_download_name ()
 
 download_file_ifpresent ()
 {
+  CURRENT_DIR=
   DOWNLOAD_SERVER=$1
   DOWNLOAD_FILE=$2
   TARGET_DIR=$3
@@ -139,7 +128,8 @@ download_file_ifpresent ()
     return 0
   fi
 
-  pushd .
+  CURRENT_DIR=$(pwd)
+
   if [ -n "$TARGET_DIR" ]; then
     mkdir -p "$TARGET_DIR"
     cd $TARGET_DIR
@@ -155,16 +145,16 @@ download_file_ifpresent ()
   $CURL_CMD "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" -o "$(basename $DOWNLOAD_FILE)" 2>/dev/null
   echo
 
+  cd $CURRENT_DIR
+
   if [ "$?" = "0" ]; then
     log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
     echo
-    popd
     return 0
 
   else
     log_error "File [$DOWNLOAD_FILE] not downloaded correctly"
     echo "CURL returned: [$CURL_RET]"
-    popd
     exit 1
   fi
 }
@@ -201,7 +191,7 @@ download_and_check_hash ()
     exit 1
   fi
 
-  pushd .
+  CURRENT_DIR=$(pwd)
 
   if [ -n "$TARGET_DIR" ]; then
     mkdir -p "$TARGET_DIR"
@@ -223,12 +213,11 @@ download_and_check_hash ()
     # download without extracting for none tar files
     
     echo
-    local DOWNLOADED_FILE=$(basename $DOWNLOAD_FILE)
+    DOWNLOADED_FILE=$(basename $DOWNLOAD_FILE)
     $CURL_CMD "$DOWNLOAD_FILE" -o "$DOWNLOADED_FILE"
 
     if [ ! -e "$DOWNLOADED_FILE" ]; then
       log_error "File [$DOWNLOAD_FILE] not downloaded [1]"
-      popd
       exit 1
     fi
 
@@ -250,12 +239,8 @@ download_and_check_hash ()
 
       if [ "$FOUND" = "1" ]; then
         log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
-        popd
-        return 0
-
       else
         log_error "File [$DOWNLOAD_FILE] not downloaded correctly [2]"
-        popd
         exit 1
       fi
     else
@@ -265,18 +250,14 @@ download_and_check_hash ()
 
       if [ "$?" = "0" ]; then
         log_ok "Successfully downloaded & extracted: [$DOWNLOAD_FILE] "
-        popd
-        return 0
-
       else
         log_error "File [$DOWNLOAD_FILE] not downloaded correctly [3]"
-        popd
         exit 1
       fi
     fi
   fi
 
-  popd
+  cd $CURRENT_DIR
   return 0
 }
 
@@ -439,10 +420,10 @@ install_binary()
       ;;
 
     *)
-      pushd .
+      CURRENT_DIR=$(pwd)
       cd $LOTUS/bin
       ln -f -s tools/startup "$INSTALL_BIN_NAME"
-      popd
+      cd $CURRENT_DIR
       ;;
 
   esac
@@ -491,9 +472,9 @@ remove_directory ()
   rm -rf "$1"
 
   if [ -e "$1" ]; then
-    echo " --- directory not completely deleted! ---"
+    echo " --- Directory not completely deleted! ---"
     ls -l "$1"
-    echo " --- directory not completely deleted! ---"
+    echo " --- Directory not completely deleted! ---"
   fi
   
   return 0

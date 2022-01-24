@@ -89,8 +89,6 @@ create_directory "$PLUGINS_FOLDER" $ROOT_USER $ROOT_GROUP 777
 
 echo 'path='$LINK_PATH > $LINK_FILE
 
-pushd .
-
 cd $PROD_NAME
 echo "Unzipping files .."
 unzip -q *.zip
@@ -108,7 +106,7 @@ cat $INSTALL_DIR/java.policy.update >> $Notes_ExecDirectory/jvm/lib/security/jav
 # Install helper binary
 install_binary "$INSTALL_DIR/nshdocker"
 
-popd
+cd ..
 remove_directory $PROD_NAME 
 
 header "Final Steps & Configuration"

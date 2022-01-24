@@ -16,7 +16,10 @@ export LOTUS=/opt/hcl/domino
 
 if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
   TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino1201.properties
-else [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "12*")" ]; then
+elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "12*")" ]; then
+  TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
+else
+  # Assume Domino 12 properties
   TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
 fi
 
@@ -68,8 +71,6 @@ install_traveler()
     tar xf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH"
   fi
 
-  pushd .
-
   cd traveler
 
   header "Running Traveler silent install"
@@ -101,7 +102,7 @@ install_traveler()
     fi
   fi
 
-  popd
+  cd ..
   remove_directory traveler 
   create_directory $DOMINO_DATA_PATH root root 777 
 

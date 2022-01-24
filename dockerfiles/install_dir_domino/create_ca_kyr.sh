@@ -113,16 +113,6 @@ CA_PEM_ALL_FILE=$CA_DIR/ca_all.pem
 
 # -------------------------- #
 
-pushd()
-{
-  command pushd "$@" > /dev/null
-}
-
-popd()
-{
-  command popd "$@" > /dev/null
-}
-
 log ()
 {
   echo $1 $2 $3 $4 
@@ -205,14 +195,14 @@ create_keyring ()
   
   check_kyrtool
   
-  pushd .
+  CURRENT_DIR=$(pwd)
 
   cd "$DOMINO_DATA_PATH"
   $KYRTOOL_BIN create -k "$KYR_FILE" -p "$KEYRING_PASSWORD"
   $KYRTOOL_BIN import all -k "$KYR_FILE" -i "$PEM_ALL_FILE"
   $KYRTOOL_BIN verify "$PEM_ALL_FILE" > "$TXT_DIR/kyr_$1.txt"
   
-  popd
+  cd "$CURRENT_DIR"
 }
 
 create_keyring_files ()

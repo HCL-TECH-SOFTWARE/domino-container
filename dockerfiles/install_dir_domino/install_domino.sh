@@ -103,14 +103,14 @@ install_domino ()
 
   if [ -n "$INST_VER" ]; then
     header "Installing $PROD_NAME $INST_VER"
-    pushd .
-
     log_space "Running Domino Silent Install -- This takes a while ..."
 
     DominoResponseFile=domino_install.properties
-    cd domino_server/linux64
 
+    CURRENT_DIR=$(pwd)
+    cd domino_server/linux64
     ./install -f "$INSTALL_DIR/$DominoResponseFile" -i silent
+    cd $CURRENT_DIR
 
     INSTALL_LOG=$(find $LOTUS -name "HCL_Domino_Install_*.log")
 
@@ -130,11 +130,9 @@ install_domino ()
       print_delim
 
       log_error "Domino Installation failed!!!"
-      popd
       exit 1
     fi
 
-    popd
     rm -rf domino_server
 
     # Copy license files
@@ -148,10 +146,11 @@ install_domino ()
 
     log_space "Running Domino Fixpack Silent Install -- This takes a while ..."
 
-    pushd .
+    CURRENT_DIR=$(pwd)
     cd domino_fp/linux64/domino
 
     ./install -script script.dat > $INST_FP_LOG
+    cd $CURRENT_DIR
 
     check_file_str "$INST_FP_LOG" "$FP_STRING_OK"
 
@@ -169,11 +168,9 @@ install_domino ()
       cat $INST_FP_LOG
       print_delim
       log_error "Fixpack Installation failed!!!"
-      popd
       exit 1
     fi
 
-    popd
     rm -rf domino_fp
 
   fi
@@ -183,10 +180,11 @@ install_domino ()
 
     log_space "Running Domino Iterimsfix/Hotfix Silent Install -- This takes a while ..."
 
-    pushd .
+    CURRENT_DIR=$(pwd)
     cd domino_hf/linux64
 
     ./install -script script.dat > $INST_HF_LOG
+    cd $CURRENT_DIR
 
     check_file_str "$INST_HF_LOG" "$HF_STRING_OK"
 
@@ -205,11 +203,9 @@ install_domino ()
       print_delim
       log_error "InterimsFix/HotFix Installation failed!!!"
 
-      popd
       exit 1
     fi
 
-    popd
     rm -rf domino_hf
 
   fi
@@ -245,7 +241,7 @@ install_verse()
   PLUGINS_FOLDER=$OSGI_FOLDER"/shared/eclipse/plugins"
 
   mkdir -p $PLUGINS_FOLDER
-  pushd .
+  CURRENT_DIR=$(pwd)
   cd $ADDON_NAME
   echo "Unzipping files .."
   unzip -q  *.zip
@@ -265,7 +261,7 @@ install_verse()
 
   log_space Installed $ADDON_NAME
 
-  popd
+  cd $CURRENT_DIR
 }
 
 docker_set_timezone ()
