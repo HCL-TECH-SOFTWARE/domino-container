@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #

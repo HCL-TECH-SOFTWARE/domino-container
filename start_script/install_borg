@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Domino Borg Backup script installation
 
 SCRIPT_NAME=$0
