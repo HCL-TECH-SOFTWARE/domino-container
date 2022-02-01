@@ -47,30 +47,6 @@ header ()
   echo
 }
 
-install_package()
-{
- if [ -x /usr/bin/zypper ]; then
-
-   zypper install -y "$@"
-
- elif [ -x /usr/bin/yum ]; then
-
-   yum install -y "$@"
-
- fi
-}
-
-remove_package()
-{
- if [ -x /usr/bin/zypper ]; then
-   zypper rm -y "$@"
-
- elif [ -x /usr/bin/yum ]; then
-   yum remove -y "$@"
-
- fi
-}
-
 check_file_str ()
 {
   CURRENT_FILE="$1"
@@ -619,41 +595,100 @@ set_ini_var_if_not_set()
   return 0
 }
 
+install_package()
+{
+ if [ -x /usr/bin/zypper ]; then
+   zypper install -y "$@"
+
+ elif [ -x /usr/bin/dnf ]; then
+   dnf install -y "$@"
+
+ elif [ -x /usr/bin/yum ]; then
+   yum install -y "$@"
+
+ elif [ -x /usr/bin/apt ]; then
+   apt install -y "$@"
+
+ else
+  echo "No package manager found!"
+  exit 1
+
+ fi
+}
+
+remove_package()
+{
+ if [ -x /usr/bin/zypper ]; then
+   zypper rm -y "$@"
+
+ elif [ -x /usr/bin/dnf ]; then
+   dnf remove -y "$@"
+
+ elif [ -x /usr/bin/yum ]; then
+   yum remove -y "$@"
+
+ elif [ -x /usr/bin/apt ]; then
+   apt remove -y "$@"
+
+ fi
+}
+
 check_linux_update()
 {
   # Install Linux updates if requested
-  if [ "$LinuxYumUpdate" = "yes" ]; then
+  if [ ! "$LinuxYumUpdate" = "yes" ]; then
+    return 0
+  fi
 
-    if [ -x /usr/bin/zypper ]; then
+  if [ -x /usr/bin/zypper ]; then
 
-      header "Updating Linux via zypper"
-      zypper refersh -y
-      zypper update -y
+    header "Updating Linux via zypper"
+    zypper refresh
+    zypper update -y
 
-    elif [ -x /usr/bin/yum ]; then
+  elif [ -x /usr/bin/dnf ]; then
 
-      header "Updating Linux via yum"
-      yum update -y
+    header "Updating Linux via dnf"
+    dnf update -y
 
-    fi
+  elif [ -x /usr/bin/yum ]; then
+
+    header "Updating Linux via yum"
+    yum update -y
+
+  elif [ -x /usr/bin/apt ]; then
+
+    header "Updating Linux via apt"
+    apt-get update -y
+    apt-get upgrade -y
+
   fi
 }
 
 clean_linux_repo_cache()
 {
-    if [ -x /usr/bin/zypper ]; then
+  if [ -x /usr/bin/zypper ]; then
 
-      header "Cleaning zypper cache"
-      zypper clean --all >/dev/null
-      rm -fr /var/cache
+    header "Cleaning zypper cache"
+    zypper clean --all >/dev/null
+    rm -fr /var/cache
 
-    elif [ -x /usr/bin/yum ]; then
+  elif [ -x /usr/bin/dnf ]; then
 
-      header "Cleaning yum cache"
-      yum clean all >/dev/null
-      rm -fr /var/cache/yum
+    header "Cleaning dnf cache"
+    dnf clean all >/dev/null
 
-    fi
+  elif [ -x /usr/bin/yum ]; then
+
+    header "Cleaning yum cache"
+    yum clean all >/dev/null
+    rm -fr /var/cache/yum
+
+  elif [ -x /usr/bin/apt ]; then
+
+    header "Cleaning apt cache"
+    apt-get clean
+  fi
 }
 
 install_custom_packages()
@@ -662,4 +697,3 @@ install_custom_packages()
     install_package "$LinuxAddOnPackages"
   fi
 }
-

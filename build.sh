@@ -13,8 +13,6 @@
 # In case of a local software directory it hosts the software on a local NGINX container.
 
 SCRIPT_NAME=$0
-TARGET_IMAGE=$1
-TARGET_DIR=$(echo $1 | cut -f 1 -d"-")
 
 # Standard configuration overwritten by build.cfg
 # (Default) NIGX is used hosting software from the local "software" directory.
@@ -401,6 +399,110 @@ edit_config_file()
   $EDIT_COMMAND $CONFIG_FILE
 }
 
+check_for_hcl_image()
+{
+  # If the base is the HCL Domino image,
+  # Also bypass software download check.
+  # But check if the image is available.
+
+  case "$FROM_IMAGE" in
+
+    domino-docker*)
+      LINUX_NAME="HCL Base Image"
+      BASE_IMAGE=$FROM_IMAGE
+      ;;
+
+    *)
+      return 0
+      ;;
+  esac
+
+  IMAGE_ID=$($CONTAINER_CMD images $BASE_IMAGE -q)
+  if [ -z "$IMAGE_ID" ]; then
+    log_error_exit "Base image [$FROM_IMAGE] does not exist"
+  fi
+
+  # Derive version from Docker image name
+  PROD_NAME=domino
+  PROD_VER=$(echo $FROM_IMAGE | cut -d":" -f 2 -s)
+
+  # don't check software
+  CHECK_SOFTWARE=no
+  CHECK_HASH=no
+}
+
+check_from_image()
+{
+  if [ -z "$FROM_IMAGE" ]; then
+    LINUX_NAME="CentOS Stream"
+    BASE_IMAGE=quay.io/centos/centos:stream8
+    return 0
+  fi
+
+  case "$FROM_IMAGE" in
+
+    centos8)
+      LINUX_NAME="CentOS Stream"
+      BASE_IMAGE=quay.io/centos/centos:stream8
+      ;;
+
+    centos9)
+      LINUX_NAME="CentOS Stream 9"
+      BASE_IMAGE=quay.io/centos/centos:stream9
+      ;;
+
+    rocky)
+      LINUX_NAME="Rocky Linux"
+      BASE_IMAGE=rockylinux/rockylinux
+      ;;
+
+    alma)
+      LINUX_NAME="Alma Linux"
+      BASE_IMAGE=almalinux/almalinux:8
+      ;;
+
+    amazon)
+      LINUX_NAME="Amazon Linux"
+      BASE_IMAGE=amazonlinux
+      ;;
+
+    oracle)
+      LINUX_NAME="Oracle Linux"
+      BASE_IMAGE=oraclelinux:8
+      ;;
+
+    photon)
+      LINUX_NAME="Photon OS"
+      BASE_IMAGE=photon
+      ;;
+
+    ubi)
+      LINUX_NAME="RedHat UBI"
+      BASE_IMAGE=redhat/ubi8
+      ;;
+
+    leap)
+      LINUX_NAME="SUSE Leap"
+      BASE_IMAGE=opensuse/leap
+      ;;
+
+    astra)
+      LINUX_NAME="Astra Linux"
+      BASE_IMAGE=orel:latest
+      ;;
+
+    *)
+      LINUX_NAME="Manual specified base image"
+      BASE_IMAGE=$FROM_IMAGE
+      echo "Info: Manual specified base image used! [$FROM_IMAGE]"
+      ;;
+
+    header "Base Image - $LINUX_NAME"
+
+  esac
+}
+
+
 build_domino()
 {
   CONTAINER_DESCRIPTION="HCL Domino Enterprise Server"
@@ -442,6 +544,7 @@ build_domino()
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
+    --build-arg START_SCRIPT_VER="$START_SCRIPT_VER" \
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 }
@@ -567,6 +670,9 @@ docker_build()
 
     domino)
 
+      # Find the right base image to build with
+      check_from_image
+
       if [ -z "$DOCKER_FILE" ]; then
         DOCKER_FILE=dockerfile
       fi
@@ -598,7 +704,6 @@ docker_build()
       log_error_exit "Unknown product [$PROD_NAME] - Terminating installation"
       ;;
   esac
-
 
   echo
   return 0
@@ -683,12 +788,12 @@ for a in $@; do
       fi
       ;;
 
-    -from=*)
-      FROM_IMAGE=$(echo "$a" | cut -f2 -d= -s)
+    -startscript=*)
+      START_SCRIPT_VER=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
-    -base=*)
-      BASE_IMAGE=$(echo "$a" | cut -f2 -d= -s)
+    -from=*)
+      FROM_IMAGE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     9*|10*|11*|12*)
@@ -804,36 +909,6 @@ check_container_environment
 
 echo "[Running in $CONTAINER_CMD configuration]"
 
-# In case we are starting with a specific image (for example HCL Domino image), set the DOCKER_FILE accordingly if not explicitly specified.
-# Also bypass software download check.
-# But check if the image is available.
-
-if [ -n "$FROM_IMAGE" ]; then
-  echo "Building based on existing image : [$FROM_IMAGE]"
-
-  if [ -z "$DOCKER_FILE" ]; then
-    DOCKER_FILE=dockerfile_from
-  fi
-
-  IMAGE_ID=$($CONTAINER_CMD images $BASE_IMAGE -q)
-  if [ -z "$IMAGE_ID" ]; then
-    log_error_exit "Base image [$BASE_IMAGE] does not exist"
-  fi
-
-  # Derive version from Docker image name
-  PROD_NAME=domino
-  PROD_VER=$(echo $FROM_IMAGE | cut -d":" -f 2 -s)
-
-  # don't check software
-  CHECK_SOFTWARE=no
-  CHECK_HASH=no
-
-  BASE_IMAGE=$FROM_IMAGE
-fi
-
-TARGET_IMAGE=$PROD_NAME
-TARGET_DIR=$(echo $TARGET_IMAGE | cut -f 1 -d"-")
-
 # In case software directory is not set and the well know location is filled with software
 
 if [ -z "$SOFTWARE_DIR" ]; then
@@ -855,6 +930,7 @@ if [ -z "$PROD_VER" ]; then
   PROD_VER="latest"
 fi
 
+check_for_hcl_image
 dump_config
 
 if [ "$PROD_VER" = "latest" ]; then
@@ -892,8 +968,8 @@ fi
 
 echo
 
-if [ -z "$TARGET_IMAGE" ]; then
-  log_error_exit "No Target Image specified! - Terminating"
+if [ -z "$PROD_NAME" ]; then
+  log_error_exit "No product specified! - Terminating"
 fi
 
 if [ -z "$PROD_VER" ]; then

@@ -405,6 +405,30 @@ set_default_notes_ini_variables ()
   set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
 }
 
+check_linux_packages()
+{
+  header "Installing required and useful Linux packages"
+
+  # Common packages for all distributions
+  install_package openssl gdb lsof bc which file net-tools hostname cpio procps-ng diffutils file findutils gettext gzip tar unzip
+
+  # SUSE
+  if [ -x /usr/bin/zypper ]; then
+    install_package glibc-locale libcap-progs vim
+  fi
+
+  # PhotonOS
+  if [ -e /etc/photon-release ]; then
+    install_package shadow gawk rpm coreutils-selinux util-linux vim tzdata
+    return 0
+  fi
+
+  # Installing the English local should always work
+  install_package glibc-langpack-en
+
+  # Installing the German locale might fail if UBI systems is running on machine without Redhat subscrption
+  install_package glibc-langpack-de
+}
 
 # --- Main Install Logic ---
 
@@ -430,6 +454,11 @@ echo "VERSE_VERSION         = [$VERSE_VERSION]"
 # Check for Linux updates if requested first
 check_linux_update
 
+# Needed by Astra Linux
+if [ -x /usr/bin/apt ]; then
+   apt install -y apt-utils
+fi
+
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
@@ -438,6 +467,8 @@ LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
 if [ -n "$LINUX_PRETTY_NAME" ]; then
   header "$LINUX_PRETTY_NAME"
 fi
+
+check_linux_packages
 
 yum_glibc_lang_update
 
