@@ -1,4 +1,0 @@
-#!/bin/bash
-
-sudo /opt/nashcom/startscript/inst_domino_bin "$1"
-exit 0
