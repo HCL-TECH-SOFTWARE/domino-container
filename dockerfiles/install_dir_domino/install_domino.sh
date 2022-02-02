@@ -84,7 +84,7 @@ install_domino ()
     fi
   fi
 
-  log_space "Downloading Domino Installation files ..."
+  header "Downloading Domino Installation files ..."
 
   if [ -n "$INST_VER" ]; then
     get_download_name $PROD_NAME $INST_VER
@@ -343,7 +343,7 @@ yum_glibc_lang_update_centos()
 
 yum_glibc_lang_update()
 {
-  if [ "$LINUX_ID" = "photon" ]; then
+  if [ -e /etc/photon-release ]; then
 
     if [ -n "$DOMINO_LANG" ]; then
       echo "Installing locale [$DOMINO_LANG] on Photon OS"
@@ -410,11 +410,24 @@ check_linux_packages()
   header "Installing required and useful Linux packages"
 
   # Common packages for all distributions
-  install_package openssl gdb lsof bc which file net-tools hostname cpio procps-ng diffutils file findutils gettext gzip tar unzip
+  install_package openssl curl gdb lsof ncurses bc which file net-tools cpio diffutils file findutils gettext gzip tar unzip
 
   # SUSE
   if [ -x /usr/bin/zypper ]; then
     install_package glibc-locale libcap-progs vim
+
+  else
+
+    # SUSE does not require those packages
+
+    install_package procps-ng
+
+    # Installing the English local should always work
+    install_package glibc-langpack-en
+
+    # Installing the German locale might fail if UBI systems is running on machine without Redhat subscrption
+    install_package glibc-langpack-de
+
   fi
 
   # PhotonOS
@@ -423,12 +436,60 @@ check_linux_packages()
     return 0
   fi
 
-  # Installing the English local should always work
-  install_package glibc-langpack-en
 
-  # Installing the German locale might fail if UBI systems is running on machine without Redhat subscrption
-  install_package glibc-langpack-de
+  if [ -z $(which hostname) ]; then
+    install_package hostname
+  fi
+
+  if [ -z $(which xargs) ]; then
+    install_package xargs
+  fi
+
 }
+
+install_perl()
+{
+  # Temporary install perl for installers if not already installed
+
+  if [ -e /usr/bin/perl ]; then
+    return 0
+  fi
+
+  if [ -n "$NO_PERL_INSTALL" ]; then
+    return 0
+  fi
+
+  header "Installing perl"
+
+  if [ -e /etc/photon-release ]; then
+    install_package perl
+    return 0
+  fi
+
+  if [ -x /usr/bin/zypper ]; then
+    install_package perl
+    return 0
+  fi
+
+  install_package perl-libs
+
+  # Mark perl for uninstall
+  UNINSTALL_PERL_AFTER_INSTALL=yes
+}
+
+remove_perl()
+{
+  # Removing perl if temporary installed
+
+  if [ ! "$UNINSTALL_PERL_AFTER_INSTALL" = "yes" ]; then
+    return 0
+  fi
+
+  header "Uninstalling perl"
+
+  remove_package perl-libs perl
+}
+
 
 # --- Main Install Logic ---
 
@@ -459,6 +520,8 @@ if [ -x /usr/bin/apt ]; then
    apt install -y apt-utils
 fi
 
+check_linux_packages
+
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
@@ -467,8 +530,6 @@ LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
 if [ -n "$LINUX_PRETTY_NAME" ]; then
   header "$LINUX_PRETTY_NAME"
 fi
-
-check_linux_packages
 
 yum_glibc_lang_update
 
@@ -556,27 +617,8 @@ if [ -e "/tmp/notesdata.tbz2" ]; then
   NO_PERL_INSTALL=yes
 fi
 
-# Temporary install perl for installers if not already installed
+install_perl
 
-  if [ -z "$NO_PERL_INSTALL" ]; then
-  if [ ! -e /usr/bin/perl ]; then
-    header "Installing perl"
-    install_package perl
-    # disable uninstall because git requires it
-    UNINSTALL_PERL_AFTER_INSTALL=yes
-  fi
-fi
-
-# Yes we want git along like we want curl ;-)
-# But than we need to keep Perl
-
-if [ "$GIT_INSTALL" = "yes" ]; then
-  if [ ! -e /usr/bin/git ]; then
-    header "Installing git"
-    install_package install git
-    UNINSTALL_PERL_AFTER_INSTALL=no
-  fi
-fi
 
 if [ "$BORG_INSTALL" = "yes" ]; then
 
@@ -621,13 +663,7 @@ fi
 # Install Verse if requested
 install_verse "$VERSE_VERSION"
 
-# Removing perl if temporary installed
-
-if [ "$UNINSTALL_PERL_AFTER_INSTALL" = "yes" ]; then
-  # removing perl
-  header "Uninstalling perl"
-  remove_package perl
-fi
+remove_perl
 
 header "Installing Start Script"
 

@@ -497,9 +497,9 @@ check_from_image()
       echo "Info: Manual specified base image used! [$FROM_IMAGE]"
       ;;
 
-    header "Base Image - $LINUX_NAME"
-
   esac
+
+  header "Base Image - $LINUX_NAME"
 }
 
 
@@ -540,7 +540,6 @@ build_domino()
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
     --build-arg LinuxYumUpdate=$LinuxYumUpdate \
     --build-arg DominoMoveInstallData=$DominoMoveInstallData \
-    --build-arg GIT_INSTALL="$GIT_INSTALL" \
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
@@ -891,10 +890,6 @@ for a in $@; do
 
     -openssl)
       OPENSSL_INSTALL=yes
-      ;;
-
-    -git)
-      GIT_INSTALL=YES
       ;;
 
     *)
