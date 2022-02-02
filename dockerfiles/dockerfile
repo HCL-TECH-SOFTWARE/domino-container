@@ -7,7 +7,6 @@ ARG BASE_IMAGE=
 FROM $BASE_IMAGE
 
 # External arguments with a default value
-ARG BASE_IMAGE=
 ARG LinuxYumUpdate=
 ARG DownloadFrom=
 ARG PROD_NAME=

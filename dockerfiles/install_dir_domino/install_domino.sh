@@ -11,19 +11,13 @@ export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 
-# in docker environment the LOGNAME is not set
+# In container environments the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
   export LOGNAME=$(whoami)
 fi
 
 export LOTUS=/opt/hcl/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
-export DYLD_LIBRARY_PATH=$Notes_ExecDirectory:$DYLD_LIBRARY_PATH
-
-# we can't set the lib path here. curl uses openssl and this conflicts once the server is installed
-# setting the pass after we are done before the compact etc just in case
-#export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
-
 export NUI_NOTESDIR=$LOTUS
 export DOMINO_DATA_PATH=/local/notesdata
 export PATH=$PATH:$DOMINO_DATA_PATH
@@ -31,6 +25,7 @@ export PATH=$PATH:$DOMINO_DATA_PATH
 SOFTWARE_FILE=$INSTALL_DIR/software.txt
 CURL_CMD="curl --fail --location --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
+# Directory permissions to set (same as umask for files)
 DIR_PERM=770
 
 # String definitions
@@ -289,43 +284,8 @@ docker_set_timezone ()
   return 0
 }
 
-yum_glibc_lang_update7()
+yum_glibc_lang_update()
 {
-  # on CentOS/RHEL 7 the locale is not containing all langauges
-  # removing override_install_langs from /etc/yum.conf and reinstalling glibc-common
-  # reinstall does only work if package is up to date
-
-  local STR="override_install_langs="
-  local FILE="/etc/yum.conf"
-
-  FOUND=$(grep "$STR" "$FILE")
-
-  if [ -z "$FOUND" ]; then
-    return 0
-  fi
-
-  grep -v -i "$STR" "$FILE" > "$FILE.updated"
-  mv "$FILE.updated" "$FILE"
-
-  log_space Updating glibc locale ...
-
-  if [ "$LinuxYumUpdate" = "yes" ]; then
-    # packages have been already updated, just need reinstall
-    yum reinstall -y glibc-common
-  else
-    # update first before reinstall
-
-    # RedHat update
-    yum update -y glibc-common
-    yum reinstall -y glibc-common
-  fi
-
-  return 0
-}
-
-yum_glibc_lang_update_centos()
-{
-  # install correct locale settings
 
   local INSTALL_LOCALE=$(echo $DOMINO_LANG|cut -f1 -d"_")
 
@@ -333,41 +293,23 @@ yum_glibc_lang_update_centos()
     return 0
   fi
 
-  if [ -n "$INSTALL_LOCALE" ]; then
-    yum install -y glibc-langpack-$INSTALL_LOCALE
-  fi
-
-  echo
-  return 0
-}
-
-yum_glibc_lang_update()
-{
   if [ -e /etc/photon-release ]; then
 
-    if [ -n "$DOMINO_LANG" ]; then
-      echo "Installing locale [$DOMINO_LANG] on Photon OS"
-      yum install -y glibc-i18n
-      echo "$DOMINO_LANG UTF-8" > /etc/locale-gen.conf
-      locale-gen.sh
-      yum remove -y glibc-i18n
-    fi
-
+    echo "Installing locale [$DOMINO_LANG] on Photon OS"
+    install_package glibc-i18n
+    echo "$DOMINO_LANG UTF-8" > /etc/locale-gen.conf
+    locale-gen.sh
+    remove_package glibc-i18n
     return 0
   fi
 
-  # Only needed for centos like platforms -> check if yum is installed
+  # Only needed for CentOS like platforms -> check if yum is installed
 
   if [ ! -x /usr/bin/yum ]; then
-    echo "not centos"
     return 0
   fi
 
-  if [ "$LINUX_VERSION" = "7" ]; then
-      yum_glibc_lang_update7
-  else
-      yum_glibc_lang_update_centos
-  fi
+  install_package glibc-langpack-$INSTALL_LOCALE
 
   return 0
 }
@@ -383,7 +325,7 @@ set_ini_var_if_not_set()
     return 0
   fi
 
-  # check if entry exists empty. if not present append new entry
+  # Check if entry exists empty. if not present append new entry
 
   local found=$(grep -i "^$var=" $file)
   if [ -z "$found" ]; then
@@ -405,7 +347,7 @@ set_default_notes_ini_variables ()
   set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
 }
 
-check_linux_packages()
+install_linux_packages()
 {
   header "Installing required and useful Linux packages"
 
@@ -436,7 +378,6 @@ check_linux_packages()
     return 0
   fi
 
-
   if [ -z $(which hostname) ]; then
     install_package hostname
   fi
@@ -444,6 +385,9 @@ check_linux_packages()
   if [ -z $(which xargs) ]; then
     install_package xargs
   fi
+
+  # jq the ultimate tool for JSON files...
+  install_package jq
 
 }
 
@@ -520,7 +464,8 @@ if [ -x /usr/bin/apt ]; then
    apt install -y apt-utils
 fi
 
-check_linux_packages
+# Check if all Linux packages are install. Even xargs could be missing..
+install_linux_packages
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
@@ -536,7 +481,7 @@ yum_glibc_lang_update
 # This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1)
 if [ -e $LOTUS ]; then
   FIRST_TIME_SETUP=0
-  log_space "!! Incremantal install based on exiting Domino image !!"
+  header "!! Incremantal install based on exiting Domino image !!"
 else
   FIRST_TIME_SETUP=1
 fi
@@ -575,7 +520,7 @@ fi
 # Those directories might get replaced with mount points or re-created on startup of the container when /local mount is used.
 # Ensure only root can write into the script directory!
 
-# if inheriting an existing installation, it's important to ensure /local has the right permissions root:root including all permissions
+# If inheriting an existing installation, it's important to ensure /local has the right permissions root:root including all permissions
 # Without the full permissions mounts to sub directories don't work if specifying different users
 
 if [ -e "/local" ]; then
@@ -606,12 +551,12 @@ fi
 
 docker_set_timezone
 
-# check if HCL Domino image is already installed -> in that case just set version
+# Check if HCL Domino image is already installed -> In that case just set version
 if [ -e "/tmp/notesdata.tbz2" ]; then
   set_domino_version ver
   FIRST_TIME_SETUP=
   DominoMoveInstallData=
-  # set link to install data
+  # Set link to install data
   ln -s /tmp/notesdata.tbz2 $DOMDOCK_DIR/install_data_domino.taz
 
   NO_PERL_INSTALL=yes
@@ -619,20 +564,19 @@ fi
 
 install_perl
 
-
 if [ "$BORG_INSTALL" = "yes" ]; then
 
-    if [ -e /etc/centos-release ]; then
-      header "Installing Borg Backup"
-      install_package epel-release
+  if [ -e /etc/centos-release ]; then
+    header "Installing Borg Backup"
+    install_package epel-release
 
-      # Borg Backup needs a different perl version in powertools
-      if [ -x /usr/bin/yum ]; then
-        yum config-manager --set-enabled powertools
-      fi
-
-      install_package borgbackup openssh-clients
+    # Borg Backup needs a different perl version in powertools
+    if [ -x /usr/bin/yum ]; then
+      yum config-manager --set-enabled powertools
     fi
+
+    install_package borgbackup openssh-clients
+  fi
 fi
 
 if [ "$OPENSSL_INSTALL" = "yes" ]; then
@@ -671,10 +615,10 @@ header "Installing Start Script"
 cd $INSTALL_DIR
 tar -xf start_script.tar
 
-# explicitly set docker environment to ensure any Docker implementation works
+# Explicitly set docker environment to ensure any Docker implementation works
 export DOCKER_ENV=yes
 
-# allow gdb to use sys ptrace --> needs to be granted explicitly on some container platforms
+# Allow gdb to use sys ptrace --> Needs to be granted explicitly on some container platforms
 
 if [ -x /usr/bin/gdb ]; then
   if [ ! -L /usr/bin/gdb ]; then
@@ -684,7 +628,7 @@ if [ -x /usr/bin/gdb ]; then
   fi
 fi
 
-# some platforms like UBI use a sym link for gdb
+# Some platforms like UBI use a sym link for gdb
 if [ -x /usr/libexec/gdb ]; then
   if [ ! -L /usr/libexec/gdb ]; then
     setcap 'cap_sys_ptrace+ep' /usr/libexec/gdb
@@ -741,9 +685,6 @@ remove_directory "$DOMINO_DATA_PATH/domino/html/help"
 
 # Remove Domino 12 and  higher uninstaller --> we never uninstall but rebuild from scratch
 remove_directory "$Notes_ExecDirectory/_HCL Domino_installation"
-
-# Domino 11 uses InstallAnywhere, which has it's own install JRE (see above)
-remove_directory "$Notes_ExecDirectory/jre"
 
 # Create missing links
 
