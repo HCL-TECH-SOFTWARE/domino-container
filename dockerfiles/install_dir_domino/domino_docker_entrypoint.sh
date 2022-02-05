@@ -17,11 +17,12 @@ export DOMDOCK_DIR=/domino-docker
 export DOMDOCK_LOG_DIR=/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
-export DOMINO_REQEST_FILE=/tmp/domino_request
-export DOMINO_STATUS_FILE=/tmp/domino_status
 export LOTUS=/opt/hcl/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DOMINO_DATA_PATH=/local/notesdata
+
+export DOMINO_REQEST_FILE=/tmp/domino_request
+export DOMINO_STATUS_FILE=/tmp/domino_status
 
 DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
@@ -38,19 +39,23 @@ LOGNAME=$(whoami 2>/dev/null)
 CURRENT_UID=$(id -u)
 
 if [ "$CURRENT_UID" = "0" ]; then
-  # if running as root set user to "notes"
+  # If running as root set Domino user to "notes"
   DOMINO_USER="notes"
 else
+
+  # Special configuration for K8s environments to ensure the user is mapped correctly.
+  # OpenShift adds the UID to /etc/passwd automatically.
+  # This logic is only required for K8s environments not providing user mapping.
 
   if [ ! "$LOGNAME" = "notes" ]; then
 
     if [ -z "$LOGNAME" ]; then
-      # if the uid/user is not in /etc/passwd, update notes entry --> empty if uid cannot be mapped
+      # If the uid/user is not in /etc/passwd, update notes entry --> empty if uid cannot be mapped
       $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
       LOGNAME=notes
     else
       if [ -n "$DOCKER_UID_NOTES_MAP_FORCE" ]; then
-        # if the uid/user is not in /etc/passwd, update notes entry and remove numeric entry for UID if present
+        # If the uid/user is not in /etc/passwd, update notes entry and remove numeric entry for UID if present
         $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
         LOGNAME=notes
       fi
@@ -69,15 +74,7 @@ export DOMINO_GROUP
 # Set more paranoid umask to ensure files can be only read by user
 umask 0077
 
-log_debug()
-{
-  if [ "$DOMDOCK_DEBUG" = "yes" ]; then
-    echo "$(date '+%F %T') debug: $@"
-  fi
-  return 0
-}
-
-run_external_script ()
+run_external_script()
 {
   if [ -z "$1" ]; then
     return 0
@@ -109,7 +106,7 @@ run_external_script ()
   return 0
 }
 
-stop_server ()
+stop_server()
 {
   echo "--- Stopping Domino Server ---"
 
@@ -228,7 +225,7 @@ cleanup_setup_env()
     fi
   done
 
-  # Additional variables 
+  # Additional variables
 
   unset SetupAutoConfigureParams
   unset DominoTrialKeyFile
@@ -248,31 +245,42 @@ cleanup_setup_env()
 # Note: signal child died causes issues in bash 5.x
 trap "stop_server" 1 2 3 4 6 9 13 15 19 23
 
-run_external_script before_data_copy.sh
+# Check data update only at first container start
 
-# Data Update Operations
-$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh
+DOMDOCK_UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
 
-run_external_script before_config_script.sh
+if [ ! -e "$DOMDOCK_UPDATE_CHECK_STATUS_FILE" ]; then
+  run_external_script before_data_copy.sh
 
-# Check if server is configured. Else start custom configuration script
+  "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh"
+  date > "$DOMDOCK_UPDATE_CHECK_STATUS_FILE"
+fi
+
+# Check if server is configured. Else start custom configuration script.
+
 CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
 if [ -z "$CHECK_SERVER_SETUP" ]; then
+
+  run_external_script before_config_script.sh
+
+  DOMINO_IS_CONFIGURED=false
   if [ -n "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-      # Ensure variables modified in pre start script are returned
-      . $DOMINO_DOCKER_CFG_SCRIPT
+        if [ -n "$SetupAutoConfigure" ]; then
+            # Ensure variables modified in pre start script are returned
+            . "$DOMINO_DOCKER_CFG_SCRIPT"
+        fi
     fi
   fi
-  DOMINO_IS_CONFIGURED=false
+
+ run_external_script after_config_script.sh
+
 else
   DOMINO_IS_CONFIGURED=true
 fi
 
-run_external_script after_config_script.sh
-
 # Check if server is configured or Domino One Touch Setup is requested.
-# Else start remote configuation on port 1352
+# Else start remote configuration on port 1352
 
 CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
 if [ -n "$CHECK_SERVER_SETUP" ]; then
@@ -286,14 +294,12 @@ else
 
   echo "Configuration for automated setup not found."
   echo "Starting Domino Server in listen mode"
-
   echo "--- Configuring Domino Server ---"
 
   cd $DOMINO_DATA_PATH
   $LOTUS/bin/server -listen 1352
 
-  echo "--- Configuration ended ---"
-  echo
+  log_space "--- Configuration ended ---"
 fi
 
 run_external_script before_server_start.sh
@@ -314,7 +320,7 @@ if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
     sleep 2
     wait_time_or_string "$DominoConfigRestartWaitTime" $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/console.log "$DominoConfigRestartWaitString"
 
-    #cleanup environment at restart
+    # Cleanup environment at restart
     cleanup_setup_env
 
     # Invoke restart server command
@@ -329,7 +335,6 @@ fi
 
 while true
 do
-
   check_process_request
 
   # Read from console if using Docker standard output option
@@ -341,6 +346,7 @@ do
     CHARS=$(echo "$var" | wc -m)
     if [ "$CHARS" -lt 4 ]; then
       : # Invalid input
+
     elif [ "$var" = "exit" ]; then
       echo "'$var' ignored. use 'QUIT' to shutdown the server. use 'close' or 'stop' to close live console"
     elif [ "$var" = "quit" ]; then
@@ -364,8 +370,9 @@ done
 # For debug purposes we want to keep the container alive if requested
 if [ "$DOMDOCK_NOEXIT" = "yes" ]; then
   while true
-    sleep 10
+    sleep 1
   do
 fi
 
+# Exit terminates the calling script cleanly
 exit 0

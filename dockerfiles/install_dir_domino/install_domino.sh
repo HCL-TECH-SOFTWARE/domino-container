@@ -5,31 +5,12 @@
 ############################################################################
 
 INSTALL_DIR=$(dirname $0)
+export LANG=C
 
-export DOMDOCK_DIR=/domino-docker
-export DOMDOCK_LOG_DIR=/domino-docker
-export DOMDOCK_TXT_DIR=/domino-docker
-export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
+# Include helper functions & defines
+. $INSTALL_DIR/script_lib.sh
 
-# In container environments the LOGNAME is not set
-if [ -z "$LOGNAME" ]; then
-  export LOGNAME=$(whoami)
-fi
-
-export LOTUS=/opt/hcl/domino
-export Notes_ExecDirectory=$LOTUS/notes/latest/linux
-export NUI_NOTESDIR=$LOTUS
-export DOMINO_DATA_PATH=/local/notesdata
-export PATH=$PATH:$DOMINO_DATA_PATH
-
-SOFTWARE_FILE=$INSTALL_DIR/software.txt
-CURL_CMD="curl --fail --location --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
-
-# Directory permissions to set (same as umask for files)
-DIR_PERM=770
-
-# String definitions
-
+# Installer string definitions to check for successful installation
 DOM_V12_STRING_OK="Domino Server Installation Successful"
 LP_STRING_OK="Selected Language Packs are successfully installed."
 FP_STRING_OK="The installation completed successfully."
@@ -39,16 +20,14 @@ HF_UNINSTALL_STRING_OK="The installation completed successfully."
 JVM_STRING_OK="Patch was successfully applied."
 JVM_STRING_FP_OK="Tree diff file patch successful!"
 
+# Log Files
 INST_DOM_LOG=$DOMDOCK_LOG_DIR/install_domino.log
 INST_FP_LOG=$DOMDOCK_LOG_DIR/install_fp.log
 INST_HF_LOG=$DOMDOCK_LOG_DIR/install_hf.log
 INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 
-# Include helper functions
-. $INSTALL_DIR/script_lib.sh
 
-
-install_domino ()
+install_domino()
 {
   INST_VER=$PROD_VER
 
@@ -259,7 +238,7 @@ install_verse()
   cd $CURRENT_DIR
 }
 
-docker_set_timezone ()
+docker_set_timezone()
 {
   if [ -z "$DOCKER_TZ" ]; then
     return 0
@@ -335,7 +314,7 @@ set_ini_var_if_not_set()
   return 0
 }
 
-set_default_notes_ini_variables ()
+set_default_notes_ini_variables()
 {
   # Avoid Domino Directory Design Update Prompt
   set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "SERVER_UPGRADE_NO_DIRECTORY_UPGRADE_PROMPT" "1"
@@ -449,7 +428,6 @@ echo "Version               = [$PROD_VER]"
 echo "Fixpack               = [$PROD_FP]"
 echo "InterimsFix/Hotfix    = [$PROD_HF]"
 echo "DominoResponseFile    = [$DominoResponseFile]"
-echo "DominoMoveInstallData = [$DominoMoveInstallData]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
@@ -495,7 +473,7 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
     useradd $DOMINO_USER -U -m -u $DominoUserID
   fi
 
-  # Set User Local if configured
+  # Set user local if configured
   if [ -n "$DOMINO_LANG" ]; then
     echo "export LANG=$DOMINO_LANG" >> /home/$DOMINO_USER/.bash_profile
   fi
@@ -532,11 +510,17 @@ if [ -e "$DOMINO_DATA_PATH" ]; then
   chmod $DIR_PERM "$DOMINO_DATA_PATH"
 fi
 
-create_directory $DOMDOCK_DIR root root 777
+# Ensure this directories are owned by root and nobody else can write to the directory
+create_directory $DOMDOCK_DIR root root 755
 create_directory $DOMDOCK_SCRIPT_DIR root root 755
+
+#Owned by root but writable for everyone
+create_directory $DOMDOCK_LOG_DIR root root 777
 
 # Needs full permissions for mount points
 create_directory /local root root 777
+
+# All other directories are owned by Domino
 create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
@@ -553,12 +537,15 @@ docker_set_timezone
 
 # Check if HCL Domino image is already installed -> In that case just set version
 if [ -e "/tmp/notesdata.tbz2" ]; then
+
   set_domino_version ver
   FIRST_TIME_SETUP=
-  DominoMoveInstallData=
+  SkipDominoMoveInstallData=yes
+
   # Set link to install data
   ln -s /tmp/notesdata.tbz2 $DOMDOCK_DIR/install_data_domino.taz
 
+  # Domino is already installed. No perl needed
   NO_PERL_INSTALL=yes
 fi
 
@@ -651,6 +638,9 @@ header "Final Steps & Configuration"
 # Copy pre-start configuration
 install_file "$INSTALL_DIR/docker_prestart.sh" "$DOMDOCK_SCRIPT_DIR/docker_prestart.sh" root root 755
 
+# Copy script lib used by other installers
+install_file "$INSTALL_DIR/script_lib.sh" "$DOMDOCK_SCRIPT_DIR/script_lib.sh" root root 755
+
 # Copy Docker specific start script configuration if provided
 install_file "$INSTALL_DIR/rc_domino_config" "$DOMINO_DATA_PATH/rc_domino_config" root root 644
 install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/domino_docker_entrypoint.sh" root root 755
@@ -692,6 +682,7 @@ create_startup_link kyrtool
 create_startup_link dbmt
 install_res_links
 
+# Remove tune kernel binary, because it cannot be used in container environments
 remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 
 # In some versions the Tika file is also in the data directory.
@@ -705,18 +696,20 @@ export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
 
 # If configured, move data directory to a compressed tar file
 
-if [ -n "$DominoMoveInstallData" ]; then
+if [ "$SkipDominoMoveInstallData" = "yes" ]; then
+  header "Skipping notesdata compression for incremental build"
 
-  INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
+else
+  DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
-  header "Moving install data $DOMINO_DATA_PATH -> [$INSTALL_DATA_TAR]"
+  header "Moving install data $DOMINO_DATA_PATH -> [$DOMDOCK_INSTALL_DATA_TAR]"
 
   cd $DOMINO_DATA_PATH
-  remove_file "$INSTALL_DATA_TAR"
-  tar -czf "$INSTALL_DATA_TAR" .
+  remove_file "$DOMDOCK_INSTALL_DATA_TAR"
+  tar -czf "$DOMDOCK_INSTALL_DATA_TAR" .
 
   rm -rf $DOMINO_DATA_PATH
-  create_directory $DOMINO_DATA_PATH root root 777
+  create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 fi
 
 # Cleanup repository cache to save space

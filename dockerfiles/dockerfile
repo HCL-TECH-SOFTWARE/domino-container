@@ -14,7 +14,6 @@ ARG PROD_VER=
 ARG PROD_FP=
 ARG PROD_HF=
 ARG DominoResponseFile=
-ARG DominoMoveInstallData=
 ARG LocalInstallDir=/tmp/install
 ARG DominoUserID=
 ARG DOMINO_LANG=

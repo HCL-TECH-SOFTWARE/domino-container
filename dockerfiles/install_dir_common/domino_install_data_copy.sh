@@ -6,113 +6,10 @@
 ############################################################################
 
 DOMINO_INSTDATA_BACKUP=$Notes_ExecDirectory/data1_bck
-UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
 LOG_FILE=$DOMDOCK_LOG_DIR/domino_data_update.log
 
-DIR_PERM=770
-
-log()
-{
-  echo "$1 $2 $3 $4 $5" >> $LOG_FILE
-}
-
-log_space()
-{
-  echo  >> $LOG_FILE
-  echo "$1 $2 $3 $4 $5" >> $LOG_FILE
-  echo  >> $LOG_FILE
-}
-
-
-print_delim()
-{
-  echo "--------------------------------------------------------------------------------" >> $LOG_FILE
-}
-
-header()
-{
-  echo >> $LOG_FILE
-  print_delim
-  echo "$1" >> $LOG_FILE
-  print_delim
-  echo >> $LOG_FILE
-}
-
-debug_show_data_dir()
-{
-  if [ -z "$DEBUG" ]; then
-    return 0
-  fi
-
-  echo
-  echo "----------------------------[$@] ------------------------------"
-  ls -l /local
-  echo "----------------------------[$@] ------------------------------"
-  echo
-
-  log
-  log "-----------------------------[$@]------------------------------"
-  ls -l /local >> $LOG_FILE
-  log "-----------------------------[$@]------------------------------"
-  log
-}
-
-get_notes_ini_var()
-{
-  # $1 = filename
-  # $2 = ini.variable
-
-  ret_ini_var=""
-  if [ -z "$1" ]; then
-    return 0
-  fi
-
-  if [ -z "$2" ]; then
-    return 0
-  fi
-
-  ret_ini_var=$(awk -F '=' -v SEARCH_STR="$2" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' $1 | xargs)
-  return 0
-}
-
-set_notes_ini_var()
-{
-  # updates or sets notes.ini parameter
-  local FILE=$1
-  local VAR=$2
-  local NEW=$3
-  local LINE_FOUND=
-  local LINE_NEW="$VAR=$NEW"
-
-  LINE_FOUND=$(grep -i "^$VAR=" $FILE)
-
-  if [ -z "$LINE_FOUND" ]; then
-    echo "$LINE_NEW"  >> $FILE
-    return 0
-  fi
-
-  sed -i "s~${LINE_FOUND}~${LINE_NEW}~g" "$FILE"
-
-  return 0
-}
-
-remove_notes_ini_var()
-{
-  # updates or sets notes.ini parameter
-  file=$1
-  var=$2
-
-  found=$(grep -i "^$var=" $file)
-  echo "found: [$found]"
-  if [ -z "$found" ]; then
-    return 0
-  fi
-
-  grep -v -i "^$var=" $file > $file.updated
-  mv $file.updated $file
-
-  return 0
-}
+# Include helper functions & defines
+. /domino-docker/scripts/script_lib.sh
 
 update_traveler_ini_var()
 {
@@ -141,7 +38,7 @@ update_traveler_ini_var()
   fi
 
   set_notes_ini_var "$file" "$var" "$val"
-  log "[$var] -> [$val]"
+  log_ok "[$var] -> [$val]"
   UPD_INI=1
 }
 
@@ -165,26 +62,26 @@ update_traveler_ini()
   BAK_IFS=
 }
 
-copy_files ()
+copy_files()
 {
   if [ ! -e "$1" ]; then
-    log "source directory does not exist [$1]" 
+    log_ok "source directory does not exist [$1]"
     return 1
   fi
 
   if [ ! -e "$2" ]; then
-    log "taget directory does not exist [$2]" 
+    log_ok "taget directory does not exist [$2]"
     return 2
   fi
 
-  log
-  log "Copying files [$1] --> [$2]" 
+  log_ok
+  log_ok "Copying files [$1] --> [$2]"
   cp -rvf "$1/" "$2" >> $LOG_FILE
 
   return 0
 }
 
-copy_files_for_major_version ()
+copy_files_for_major_version()
 {
   VersionFile=$DOMDOCK_TXT_DIR/domino_ver.txt
   InstalledFile=$DOMINO_DATA_PATH/domino_ver.txt
@@ -221,16 +118,15 @@ copy_files_for_major_version ()
   # Ensure current ODS is used for V12 -> does not harm on earlier releases
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
 
-
   header "Copying new data files for Version $DOMINO_VERSION"
 
-  # Extracting new data files 
+  # Extracting new data files
 
-  INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
+  DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
   debug_show_data_dir "before unzip"
 
-  tar xvf "$INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./dfc ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 2>&1
+  tar -xvf "$DOMDOCK_INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./dfc ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 2>&1
 
   debug_show_data_dir "after unzip"
 
@@ -242,8 +138,7 @@ copy_files_for_major_version ()
   return 0
 }
 
-
-copy_files_for_version ()
+copy_files_for_version()
 {
   VersionFile=$DOMDOCK_TXT_DIR/domino_$1.txt
   InstalledFile=$DOMINO_DATA_PATH/domino_$1.txt
@@ -279,68 +174,12 @@ copy_files_for_version ()
   return 0
 }
 
-
-delete_directory ()
-{
-  TARGET_FILE=$1
-
-  if [ -z "$TARGET_FILE" ]; then
-    return 0
-  fi
-
-  if [ ! -e "$TARGET_FILE" ]; then
-    return 0
-  fi
-
-  mountpoint -q "$TARGET_FILE"
-  if [ "$?" = "0" ]; then
-    echo "skipping directory delete for [$TARGET_FILE] -> is a mount point!"
-    return 0
-  fi
-
-  rmdir "$TARGET_FILE"
-
-  return 0
-}
-
-create_directory ()
-{
-  TARGET_FILE=$1
-  OWNER=$2
-  GROUP=$3
-  PERMS=$4
-
-  if [ -z "$TARGET_FILE" ]; then
-    return 0
-  fi
-
-  if [ -e "$TARGET_FILE" ]; then
-    return 0
-  fi
-
-  mkdir -p "$TARGET_FILE"
-
-  if [ ! -z "$PERMS" ]; then
-    chmod "$PERMS" "$TARGET_FILE"
-  fi
-
-
-  # script always runs as user. only root can change owner!
-  return 0
-
-  if [ ! -z "$OWNER" ]; then
-    chown $OWNER:$GROUP "$TARGET_FILE"
-  fi
-
-  return 0
-}
-
-copy_data_directory ()
+copy_data_directory()
 {
   if [ -e "$DOMINO_DATA_PATH/notes.ini" ]; then
     log_space "Data directory already exists - nothing to copy."
     return 0
-  fi 
+  fi
 
 
   if [ -e "$DOMINO_DATA_PATH" ]; then
@@ -349,27 +188,27 @@ copy_data_directory ()
   else
     echo "creating directories with user: [$DOMINO_USER] group: [$DOMINO_GROUP] perm: [$DIR_PERM]"
   fi
-  
+
   debug_show_data_dir "before create"
 
-  create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
-  create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM 
+  create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory /local/translog $DOMINO_USER $DOMINO_GROUP $DIR_PERM
   create_directory /local/daos $DOMINO_USER $DOMINO_GROUP $DIR_PERM
   create_directory /local/nif $DOMINO_USER $DOMINO_GROUP $DIR_PERM
   create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
   debug_show_data_dir "after create"
 
-  INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
+  DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
-  if [ ! -e "$INSTALL_DATA_TAR" ]; then
-    log_space "Install data [$INSTALL_DATA_TAR] does not exist - cannot create data directory!!"
+  if [ ! -e "$DOMDOCK_INSTALL_DATA_TAR" ]; then
+    log_space "Install data [$DOMDOCK_INSTALL_DATA_TAR] does not exist - cannot create data directory!!"
     return 0
-  fi 
+  fi
 
-  header "Extracting install data directory from [$INSTALL_DATA_TAR]" 
-  
-  tar xvf "$INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
+  header "Extracting install data directory from [$DOMDOCK_INSTALL_DATA_TAR]"
+
+  tar -xvf "$DOMDOCK_INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
   debug_show_data_dir "after extract"
 
   # Just needed for first setup if not using our notes.ini
@@ -397,9 +236,15 @@ copy_data_directory ()
   fi
 }
 
-copy_files_for_addon ()
+copy_files_for_addon()
 {
   PROD_NAME=$1
+
+  # Domino image has it's own logic
+  if [ "$PROD_NAME" = "domino" ]; then
+    return 0
+  fi
+
   VersionFile=$DOMDOCK_TXT_DIR/${PROD_NAME}_ver.txt
   InstalledFile=$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt
 
@@ -416,9 +261,6 @@ copy_files_for_addon ()
 
   PROD_VER=$(cat $VersionFile)
 
-  # echo "PROD_VER: [$PROD_VER]"
-  # echo "INST_VER: [$INST_VER]"
-
   if [ "$PROD_VER" = "$INST_VER" ]; then
     log_space "Data already installed for $PROD_NAME $PROD_VER"
     return 0
@@ -426,16 +268,16 @@ copy_files_for_addon ()
 
   header "Copying new data files for $PROD_NAME $PROD_VER"
 
-  INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz
+  DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz
 
-  if [ ! -e "$INSTALL_DATA_TAR" ]; then
-    log_space "Install data [$INSTALL_DATA_TAR] does not exist - cannot copy files to data directory!!"
+  if [ ! -e "$DOMDOCK_INSTALL_DATA_TAR" ]; then
+    log_space "Install data [$DOMDOCK_INSTALL_DATA_TAR] does not exist - Cannot copy files to data directory!!"
     return 0
   fi
 
-  header "Extracting add-on install data directory from [$INSTALL_DATA_TAR]"
+  header "Extracting add-on install data directory from [$DOMDOCK_INSTALL_DATA_TAR]"
 
-  tar xvf "$INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE 2>&1
+  tar -xvf "$DOMDOCK_INSTALL_DATA_TAR" -C $DOMINO_DATA_PATH >> $LOG_FILE 2>&1
 
   if [ "$PROD_NAME" = "traveler" ]; then
 
@@ -446,24 +288,30 @@ copy_files_for_addon ()
     update_traveler_ini $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
   fi
 
+  # Optional: Run special script for each product
+  if [ -x $DOMDOCK_SCRIPT_DIR/install_addon_$PROD_NAME.sh ]; then
+    $DOMDOCK_SCRIPT_DIR/install_addon_$PROD_NAME.sh
+  fi
+
   echo $PROD_VER > $InstalledFile
 
   return 0
 }
 
+copy_files_for_all_addons()
+{
+  # Check for all add-ons
+
+  PROD_LIST=$(find "$DOMDOCK_TXT_DIR" -maxdepth 1 -name "*_ver.txt" | cut -d"_" -f 1 | rev | cut -d"/" -f 1 | rev)
+
+  for PROD in $PROD_LIST; do
+    copy_files_for_addon $PROD
+  done
+}
+
 # --- Main Logic ---
 
 NOW=$(date)
-
-# check data update only at first container start
-
-if [ -e $UPDATE_CHECK_STATUS_FILE ]; then
-  UPDATE_CHECKED=$(cat $UPDATE_CHECK_STATUS_FILE)
-  exit 0
-fi
-
-echo $NOW > $UPDATE_CHECK_STATUS_FILE
-
 header "$NOW"
 
 copy_data_directory
@@ -474,14 +322,7 @@ copy_files_for_major_version
 copy_files_for_version fp
 copy_files_for_version hf
 
-copy_files_for_addon traveler
-
-# TODO: Quick script to get Volt data deployed
-if [ -x $DOMDOCK_SCRIPT_DIR/install_addon_volt.sh ]; then
-  $DOMDOCK_SCRIPT_DIR/install_addon_volt.sh
-fi
+copy_files_for_all_addons
 
 print_delim
-log
-
-exit 0
+log_ok

@@ -4,8 +4,54 @@
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
+# Global helper script only included once.
+# The script is installed by the Domino installer script and is used by add-on installers and run-time config scripts.
+
+if [ -n "$DOMDOCK_SCRIPT_LIB_INCLUDED" ]; then
+  # Only included once. Use "return" - exit would terminate also the calling script!
+  return 0
+fi
+export DOMDOCK_SCRIPT_LIB_INCLUDED=DONE
+
+# Global definitions
+export DOMDOCK_DIR=/domino-docker
+export DOMDOCK_TXT_DIR=/domino-docker
+export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
+export DOMDOCK_LOG_DIR=/tmp/domino-docker
+export DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
+
+# Ensure the environment is setup
+export LOTUS=/opt/hcl/domino
+export Notes_ExecDirectory=$LOTUS/notes/latest/linux
+export NUI_NOTESDIR=$LOTUS
+export PATH=$PATH:$DOMINO_DATA_PATH
+export SOFTWARE_FILE=$INSTALL_DIR/software.txt
+
+# In container environments the LOGNAME is not set
+if [ -z "$LOGNAME" ]; then
+  export LOGNAME=$(whoami)
+fi
+
+# Ensure environment is defined, if not already set
+
+if [ -z "$DOMINO_DATA_PATH" ]; then
+export DOMINO_DATA_PATH=/local/notesdata
+fi
+
+if [ -z "$DOMINO_INI_PATH" ]; then
+  export DOMINO_INI_PATH=$DOMINO_DATA_PATH/notes.ini
+fi
+
 if [ -z "$CURL_CMD" ]; then
   CURL_CMD="curl --fail --location --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
+fi
+
+if [ -z "$DOMINO_USER" ]; then
+  DOMINO_USER=notes
+fi
+
+if [ -z "$DOMINO_GROUP" ]; then
+  DOMINO_GROUP=notes
 fi
 
 if [ -z "$DIR_PERM" ]; then
@@ -14,31 +60,38 @@ fi
 
 # Helper Functions
 
-print_delim ()
+print_delim()
 {
   echo "--------------------------------------------------------------------------------"
 }
 
-log_ok ()
+log_ok()
 {
   echo "$@"
 }
 
-log_space ()
+log_space()
 {
   echo
   echo "$@"
   echo
 }
 
-log_error ()
+log_error()
 {
   echo
-  echo "Failed - $@"
+  echo "ERROR - $@"
   echo
 }
 
-header ()
+log_debug()
+{
+  if [ "$DOMDOCK_DEBUG" = "yes" ]; then
+    echo "$(date '+%F %T') debug: $@"
+  fi
+}
+
+header()
 {
   echo
   print_delim
@@ -47,7 +100,7 @@ header ()
   echo
 }
 
-check_file_str ()
+check_file_str()
 {
   CURRENT_FILE="$1"
   CURRENT_STRING="$2"
@@ -66,12 +119,12 @@ check_file_str ()
   return 0
 }
 
-get_download_name ()
+get_download_name()
 {
   DOWNLOAD_NAME=""
   if [ -e "$SOFTWARE_FILE" ]; then
     DOWNLOAD_NAME=$(grep "$1|$2|" "$SOFTWARE_FILE" | cut -d"|" -f3)
-  else 
+  else
     log_error "Download file [$SOFTWARE_FILE] not found!"
     exit 1
   fi
@@ -84,7 +137,7 @@ get_download_name ()
   return 0
 }
 
-download_file_ifpresent ()
+download_file_ifpresent()
 {
   CURRENT_DIR=
   DOWNLOAD_SERVER=$1
@@ -135,7 +188,7 @@ download_file_ifpresent ()
   fi
 }
 
-download_and_check_hash ()
+download_and_check_hash()
 {
   DOWNLOAD_SERVER=$1
   DOWNLOAD_STR=$2
@@ -187,7 +240,7 @@ download_and_check_hash ()
   if [ -z "$TAR_OPTIONS" ]; then
 
     # download without extracting for none tar files
-    
+
     echo
     DOWNLOADED_FILE=$(basename $DOWNLOAD_FILE)
     $CURL_CMD "$DOWNLOAD_FILE" -o "$DOWNLOADED_FILE"
@@ -319,9 +372,9 @@ install_file()
       return 1
     fi
   fi
-  
+
   cp -f "$SOURCE_FILE" "$TARGET_FILE"
- 
+
   if [ -n "$OWNER" ]; then
     chown $OWNER:$GROUP "$TARGET_FILE"
   fi
@@ -407,7 +460,53 @@ install_binary()
   return 0
 }
 
-create_directory ()
+secure_move_file()
+{
+  # Routine to move a file with proper error checks and warnings
+
+  # Check if source file is present
+  if [ ! -e "$1" ]; then
+    log_error "Cannot rename [$1] - file does not exist"
+    return 1
+  fi
+
+  # Check if target already exist and try to remove first
+  if [ -e "$2" ]; then
+
+    rm -f "$2" > /dev/null 2>&1
+
+    if [ -e "$2" ]; then
+      log_error "Cannot rename [$1] to [$2]  - target cannot be removed"
+      return 1
+    else
+      log_ok "Replacing file [$2] with [$1]"
+    fi
+
+  else
+    log_ok "Renaming file [$1] to [$2]"
+  fi
+
+  # Now copy file
+  cp -f "$1" "$2" > /dev/null 2>&1
+
+  if [ -e "$2" ]; then
+
+    # Try to remove source file after copy
+    rm -f "$1" > /dev/null 2>&1
+
+    if [ -e "$1" ]; then
+      log_ok "Warning: cannot remove source file [$1]"
+    fi
+
+    return 0
+
+  else
+    log_error "Cannot copy file [$1] to [$2]"
+    return 1
+  fi
+}
+
+create_directory()
 {
   TARGET_FILE=$1
   OWNER=$2
@@ -421,9 +520,9 @@ create_directory ()
   if [ -e "$TARGET_FILE" ]; then
     return 0
   fi
-  
+
   mkdir -p "$TARGET_FILE"
-  
+
   if [ -n "$OWNER" ]; then
     chown $OWNER:$GROUP "$TARGET_FILE"
   fi
@@ -431,11 +530,11 @@ create_directory ()
   if [ -n "$PERMS" ]; then
     chmod "$PERMS" "$TARGET_FILE"
   fi
-  
+
   return 0
 }
 
-remove_directory ()
+remove_directory()
 {
   if [ -z "$1" ]; then
     return 1
@@ -452,11 +551,11 @@ remove_directory ()
     ls -l "$1"
     echo " --- Directory not completely deleted! ---"
   fi
-  
+
   return 0
 }
 
-remove_file ()
+remove_file()
 {
   if [ -z "$1" ]; then
     return 1
@@ -465,12 +564,153 @@ remove_file ()
   if [ ! -e "$1" ]; then
     return 2
   fi
-  
+
   rm -rf "$1"
   return 0
 }
 
-install_res_links ()
+get_notes_ini_var()
+{
+  # $1 = filename
+  # $2 = ini.variable
+
+  ret_ini_var=""
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ ! -r "$1" ]; then
+    echo "cannot read [$1]"
+    return 0
+  fi
+
+  if [ -z "$2" ]; then
+    return 0
+  fi
+
+  ret_ini_var=$(awk -F '(=| =)' -v SEARCH_STR="$2" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' $1 | xargs)
+  return 0
+}
+
+set_notes_ini_var()
+{
+  # updates or sets notes.ini parameter
+  file=$1
+  var=$2
+  new=$3
+
+  if [ ! -w "$file" ]; then
+    echo "cannot write [$file]"
+    return 0
+  fi
+
+  get_notes_ini_var "$file" "$var"
+
+  if [ "$ret_ini_var" = "$new" ]; then
+    return 0
+  fi
+
+  # check if entry exists empty. if not present just append new entry, else use replace code
+  if [ -z "$ret_ini_var" ]; then
+    found=$(grep -i "^$var=" $file)
+    if [ -z "$found" ]; then
+      echo $var=$new >> $file
+      return 0
+    fi
+  fi
+
+  awk -v var="$var" -v new="$new" 'BEGIN{FS=OFS="=";IGNORECASE=1}match($1,"^"var"$") {$2=new}1' "$file" > $file.updated
+  mv $file.updated $file
+
+  return 0
+}
+
+add_list_ini()
+{
+  # appends entry to ini list
+  file=$1
+  var=$2
+  param=$3
+
+  get_notes_ini_var "$file" "$var"
+
+  if [ -z "$ret_ini_var" ]; then
+    set_notes_ini_var "$file" "$var" "$param"
+    # echo "entry [$param] set"
+    return 1
+  fi
+
+  for CHECK_ENTRY in $(echo "$ret_ini_var" | awk '{print tolower($0)}' | tr "," "\n") ; do
+    if [ $CHECK_ENTRY = "$param" ]; then
+      # echo "entry [$param] already set"
+      return 0
+    fi
+  done
+
+  set_notes_ini_var "$file" "$var" "$ret_ini_var,$param"
+  # echo "entry [$param] added"
+
+  return 1
+}
+
+remove_list_ini()
+{
+  # remove entry to ini list
+  file=$1
+  var=$2
+  param=$3
+  found=
+  newlist=
+
+  get_notes_ini_var "$file" "$var"
+
+  if [ -z "$ret_ini_var" ]; then
+    # echo "entry [$var] empty"
+    return 0
+  fi
+
+  for CHECK_ENTRY in $(echo "$ret_ini_var" | awk '{print tolower($0)}' | tr "," "\n") ; do
+    if [ $CHECK_ENTRY = "$param" ]; then
+      found=YES
+    else
+      if [ -z "$newlist" ]; then
+        newlist="$CHECK_ENTRY"
+      else
+        newlist="$newlist,$CHECK_ENTRY"
+      fi
+    fi
+  done
+
+  if [ -z "$found" ]; then
+    # echo "entry [$param] not found"
+    return 0
+  fi
+
+  set_notes_ini_var "$file" "$var" "$newlist"
+  # echo "entry [$param] removed"
+
+  return 0
+}
+
+remove_notes_ini_var()
+{
+  # updates or sets notes.ini parameter
+  file=$1
+  var=$2
+
+  found=$(grep -i "^$var=" $file)
+  echo "found: [$found]"
+  if [ -z "$found" ]; then
+    return 0
+  fi
+
+  grep -v -i "^$var=" $file > $file.updated
+  mv $file.updated $file
+
+  return 0
+}
+
+install_res_links()
 {
   DOMINO_RES_DIR=$Notes_ExecDirectory/res
   GERMAN_LOCALE="de_DE.UTF-8"
@@ -485,7 +725,7 @@ install_res_links ()
 
   if [ ! -e "$DOMINO_RES_DIR/$GERMAN_LOCALE" ]; then
     echo "Creating symbolic link for German res files ($GERMAN_LOCALE)"
-    ln -s C $GERMAN_LOCALE 
+    ln -s C $GERMAN_LOCALE
   fi
 
   if [ ! -e "$DOMINO_RES_DIR/$ENGLISH_LOCALE" ]; then
@@ -496,24 +736,24 @@ install_res_links ()
   return 0
 }
 
-create_startup_link ()
+create_startup_link()
 {
   if [ -z "$1" ]; then
     return 0
   fi
-  
+
   TARGET_PATH=$LOTUS/bin/$1
   SOURCE_PATH=$LOTUS/bin/tools/startup
-  
+
   if [ ! -e "$TARGET_PATH" ]; then
-    ln -f -s $SOURCE_PATH $TARGET_PATH 
+    ln -f -s $SOURCE_PATH $TARGET_PATH
     echo "Installed startup link for [$1]"
   fi
 
   return 0
 }
 
-get_domino_version ()
+get_domino_version()
 {
   DOMINO_INSTALL_DAT=$LOTUS/.install.dat
 
@@ -546,34 +786,34 @@ get_domino_version ()
   return 0
 }
 
-set_domino_version ()
+set_domino_version()
 {
   get_domino_version
   echo $PROD_VER > $DOMDOCK_TXT_DIR/domino_$1.txt
   echo $PROD_VER > $DOMINO_DATA_PATH/domino_$1.txt
 }
 
-check_installed_version ()
+check_installed_version()
 {
   VersionFile=$DOMDOCK_TXT_DIR/domino_$1.txt
-  
+
   if [ ! -r $VersionFile ]; then
     return 0
   fi
 
  CHECK_VERSION=$(cat $VersionFile)
  INSTALL_VERSION=$(echo $2 | tr -d '.')
- 
+
  if [ "$CHECK_VERSION" = "$INSTALL_VERSION" ]; then
-   echo "Domino $INSTALL_VERSION already installed" 
+   echo "Domino $INSTALL_VERSION already installed"
    return 1
  else
    return 0
  fi
- 
+
 }
 
-set_version ()
+set_version()
 {
   echo $PROD_VER > "$DOMDOCK_TXT_DIR/${PROD_NAME}_ver.txt"
   echo $PROD_VER > "$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt"
@@ -696,4 +936,23 @@ install_custom_packages()
   if [ -n "$LinuxAddOnPackages" ]; then
     install_package "$LinuxAddOnPackages"
   fi
+}
+
+debug_show_data_dir()
+{
+  if [ -z "$DEBUG" ]; then
+    return 0
+  fi
+
+  echo
+  echo "----------------------------[$@] ------------------------------"
+  ls -l /local
+  echo "----------------------------[$@] ------------------------------"
+  echo
+
+  log_ok
+  log_ok "-----------------------------[$@]------------------------------"
+  ls -l /local >> $LOG_FILE
+  log_ok "-----------------------------[$@]------------------------------"
+  log_ok
 }

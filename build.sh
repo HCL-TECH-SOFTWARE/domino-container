@@ -17,8 +17,6 @@ SCRIPT_NAME=$0
 # Standard configuration overwritten by build.cfg
 # (Default) NIGX is used hosting software from the local "software" directory.
 
-DominoMoveInstallData=yes
-
 # Default: Update CentOS while building the image
 LinuxYumUpdate=yes
 
@@ -29,14 +27,14 @@ CHECK_SOFTWARE=yes
 
 log_error_exit()
 {
-  echo 
+  echo
   echo $@
-  echo 
+  echo
 
   exit 1
 }
 
-check_version ()
+check_version()
 {
   count=1
 
@@ -184,7 +182,7 @@ check_container_environment()
 }
 
 
-usage ()
+usage()
 {
   echo
   echo "Usage: $(basename $SCRIPT_NAME) { domino | traveler | volt } version fp hf"
@@ -216,12 +214,12 @@ usage ()
 }
 
 
-print_delim ()
+print_delim()
 {
   echo "--------------------------------------------------------------------------------"
 }
 
-header ()
+header()
 {
   echo
   print_delim
@@ -230,7 +228,7 @@ header ()
   echo
 }
 
-dump_config ()
+dump_config()
 {
   header "Build Configuration"
   echo "Build Environment  : [$CONTAINER_CMD]"
@@ -253,7 +251,7 @@ dump_config ()
   return 0
 }
 
-nginx_start ()
+nginx_start()
 {
   # Create a nginx container hosting software download locally
 
@@ -308,7 +306,7 @@ print_runtime()
   else echo "Completed in $seconds second$s"; fi
 }
 
-get_current_version ()
+get_current_version()
 {
   if [ -n "$DOWNLOAD_FROM" ]; then
 
@@ -340,7 +338,7 @@ get_current_version ()
   return 0
 }
 
-get_current_addon_version ()
+get_current_addon_version()
 {
   local S1=$2
   local S2=${!2}
@@ -539,7 +537,6 @@ build_domino()
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
     --build-arg LinuxYumUpdate=$LinuxYumUpdate \
-    --build-arg DominoMoveInstallData=$DominoMoveInstallData \
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
@@ -645,7 +642,7 @@ docker_build()
   fi
 
   echo "Building Image : " $IMAGENAME
-  
+
   if [ -z "$DOCKER_TAG_LATEST" ]; then
     DOCKER_IMAGE=$DOCKER_IMAGE_NAMEVERSION
     DOCKER_TAG_LATEST_CMD=""
@@ -655,7 +652,7 @@ docker_build()
   fi
 
   # Get Build Time
-  BUILDTIME=`date +"%d.%m.%Y %H:%M:%S"`
+  BUILDTIME=$(date +"%d.%m.%Y %H:%M:%S")
 
   # Get build arguments
   DOCKER_IMAGE=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_VERSION
