@@ -10,6 +10,9 @@ if [ "$DOMDOCK_DEBUG_SHELL" = "yes" ]; then
   set -x
 fi
 
+# Include helper functions & defines
+. /domino-docker/scripts/script_lib.sh
+
 # Write setup log -> ensure directory is created
 if [ ! -e "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT" ]; then
   mkdir -p $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT
@@ -29,29 +32,29 @@ download_file()
   fi
 
   if [ -z "$DOWNLOAD_FILE" ]; then
-    log_error "Error: No download file specified!"
+    log_file "Error: No download file specified!"
     exit 1
   fi
 
   $CURL_CMD -o /dev/null --head "$DOWNLOAD_URL"
   if [ ! "$?" = "0" ]; then
-    log_error "Error: Download file does not exist [$DOWNLOAD_FILE]"
+    log_file "Error: Download file does not exist [$DOWNLOAD_FILE]"
     exit 1
   fi
 
-  log_ok "[download:$DOWNLOAD_FILE]"
+  log_file "[download:$DOWNLOAD_FILE]"
   if [ -e "$DOWNLOAD_FILE" ]; then
-    log_ok "Replacing existing file [$DOWNLOAD_FILE]"
+    log_file "Replacing existing file [$DOWNLOAD_FILE]"
     rm -f "$DOWNLOAD_FILE"
   fi
 
   $CURL_CMD "$DOWNLOAD_URL" -o $DOWNLOAD_FILE
 
   if [ "$?" = "0" ]; then
-    log_ok "${HEADER}Successfully downloaded: [$DOWNLOAD_FILE]"
+    log_file "${HEADER}Successfully downloaded: [$DOWNLOAD_FILE]"
     return 0
   else
-    log_error "${HEADER}File [$DOWNLOAD_FILE] not downloaded correctly from [$DOWNLOAD_URL]"
+    log_file "${HEADER}File [$DOWNLOAD_FILE] not downloaded correctly from [$DOWNLOAD_URL]"
     return 1
   fi
 }
@@ -85,7 +88,7 @@ get_secret_via_http()
 
   $CURL_CMD -o /dev/null --head "$DOWNLOAD_URL"
   if [ ! "$?" = "0" ]; then
-    log_error "Error: Cannot download [$2]"
+    log_file "Error: Cannot download [$2]"
     exit 1
   fi
 
@@ -96,7 +99,7 @@ get_secret_via_file()
 {
   local SECRET_FILE=$(echo $2|cut -d":" -f2)
   if [ ! -r "$SECRET_FILE" ]; then
-    log_error "File not found [$SECRET_FILE]"
+    log_file "File not found [$SECRET_FILE]"
     exit 1
   fi
 
@@ -160,7 +163,7 @@ check_download_file_links()
 # --- Main Logic ---
 
 NOW=$(date)
-header "$NOW"
+log_file_header "$NOW"
 
 # Switch to data directory for downloads
 cd $DOMINO_DATA_PATH
@@ -172,14 +175,13 @@ download_file_link CustomNotesdataZip
 
 if [ -n "$CustomNotesdataZip" ]; then
   if [ -r "$CustomNotesdataZip" ]; then
-    log_ok "Extracting custom notesdata file [$CustomNotesdataZip]"
+    log_file_header "Extracting custom notesdata file [$CustomNotesdataZip]"
 
-    log_ok "---------------------------------------"
-    unzip -o "$CustomNotesdataZip"
+    unzip -o "$CustomNotesdataZip" >> $LOG_FILE 2>&1
     rm -f "$CustomNotesdataZip"
-    log_ok "---------------------------------------"
+
   else
-    log_ok "Custom notesdata [$CustomNotesdataZip] not found!"
+    log_file "Custom notesdata [$CustomNotesdataZip] not found!"
   fi
 fi
 
@@ -209,9 +211,11 @@ if [ -z "$SERVERSETUP_NETWORK_HOSTNAME" ]; then
   fi
 fi
 
-log_ok  "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
+log_file "SetupAutoConfigureParams: [$SetupAutoConfigureParams]"
 
 cd $DOMINO_DATA_PATH
 
-header "Server start will run Domino Server Auto Setup"
-header "Prestart script - Done"
+log_file "Server start will run Domino Server Auto Setup"
+
+log_file "Prestart script - Done"
+

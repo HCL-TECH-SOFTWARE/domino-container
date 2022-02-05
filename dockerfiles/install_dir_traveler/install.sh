@@ -25,6 +25,7 @@ fi
 TRAVELER_STRING_OK="Installation completed successfully."
 TRAVELER_STRING_WARNINGS="Installation completed with warnings."
 INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
+INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${PROD_NAME}.taz
 
 install_traveler()
 {
@@ -129,11 +130,11 @@ set_version
 # Take a backup copy of Product Data Files
 
 cd $DOMINO_DATA_PATH
-tar -czf $DOMDOCK_DIR/install_data_${PROD_NAME}_${PROD_VER}.taz traveler domino/workspace ${PROD_NAME}_ver.txt
+tar -czf "$INSTALL_ADDON_DATA_TAR" traveler domino/workspace ${PROD_NAME}_ver.txt
 cp -f $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
 
-remove_directory $DOMINO_DATA_PATH
-create_directory $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+remove_directory "$DOMINO_DATA_PATH"
+create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
 # Cleanup repository cache to save space
 clean_linux_repo_cache

@@ -70,6 +70,30 @@ log_ok()
   echo "$@"
 }
 
+log_file()
+{
+  echo "$@"
+
+  if [ -z "$LOG_FILE" ]; then
+    return 0
+  fi
+  echo "$@" >> $LOG_FILE 2>&1
+}
+
+log_file_delim()
+{
+   log_file "--------------------------------------------------------------------------------"
+}
+
+log_file_header()
+{
+   log_file
+   log_file_delim
+   log_file "$@"
+   log_file_delim
+   log_file
+}
+
 log_space()
 {
   echo
@@ -871,6 +895,28 @@ remove_package()
    apt remove -y "$@"
 
  fi
+}
+
+install_if_missing()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ -x  "/usr/bin/$1" ]; then
+    echo "already exists: $1"
+    return 0
+  fi
+
+  if [ -x "/usr/local/bin/$1" ]; then
+    return 0
+  fi
+
+  if [ -z "$2" ]; then
+    install_package "$1"
+  else
+    install_package "$2"
+  fi
 }
 
 check_linux_update()

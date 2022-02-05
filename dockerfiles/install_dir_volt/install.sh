@@ -71,14 +71,9 @@ echo "Copying files .."
 cp -f "templates/"* "$VOLT_DATA_DIR"
 cp -f "bundles/"* "$PLUGINS_FOLDER"
 
-install_file "$INSTALL_DIR/install_addon_volt.sh" "$DOMDOCK_SCRIPT_DIR/install_addon_volt.sh" root root 755
-
 # Update java security policy to grant all permissions to Groovy templates
 
 cat $INSTALL_DIR/java.policy.update >> $Notes_ExecDirectory/jvm/lib/security/java.policy
-
-# Install helper binary
-install_binary "$INSTALL_DIR/nshdocker"
 
 cd ..
 remove_directory $PROD_NAME
@@ -99,11 +94,10 @@ if [ -e "$INSTALL_DIR/demopack.zip" ]; then
 fi
 
 cd $DOMINO_DATA_PATH
+tar -czf "$INSTALL_ADDON_DATA_TAR" volt ${PROD_NAME}_ver.txt
 
-tar -czf $INSTALL_ADDON_DATA_TAR volt ${PROD_NAME}_ver.txt
-
-remove_directory $DOMINO_DATA_PATH
-create_directory $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+remove_directory "$DOMINO_DATA_PATH"
+create_directory "$DOMINO_DATA_PATH" "$DOMINO_USER" $DOMINO_GROUP $DIR_PERM
 
 # Cleanup repository cache to save space
 clean_linux_repo_cache

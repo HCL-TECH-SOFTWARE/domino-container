@@ -14,7 +14,7 @@ if [ "$DOMDOCK_DEBUG_SHELL" = "yes" ]; then
 fi
 
 export DOMDOCK_DIR=/domino-docker
-export DOMDOCK_LOG_DIR=/domino-docker
+export DOMDOCK_LOG_DIR=/tmp/domino-docker
 export DOMDOCK_TXT_DIR=/domino-docker
 export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
 export LOTUS=/opt/hcl/domino
@@ -26,6 +26,7 @@ export DOMINO_STATUS_FILE=/tmp/domino_status
 
 DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
+DOMDOCK_UPDATE_CHECK_STATUS_FILE=$DOMDOCK_LOG_DIR/domdock_data_upd_checked.txt
 
 # Get Linux version and platform
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
@@ -74,6 +75,14 @@ export DOMINO_GROUP
 # Set more paranoid umask to ensure files can be only read by user
 umask 0077
 
+
+log()
+{
+  echo
+  echo "$@"
+  echo
+}
+
 run_external_script()
 {
   if [ -z "$1" ]; then
@@ -87,34 +96,34 @@ run_external_script()
   fi
 
   if [ ! -x "$SCRIPT2RUN" ]; then
-    echo "Cannot execute script " [$SCRIPT2RUN]
+    log "Cannot execute script " [$SCRIPT2RUN]
     return 0
   fi
 
   if [ -n "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
     SCRIPT_OWNER=$(stat -c %U $SCRIPT2RUN)
     if [ ! "$SCRIPT_OWNER" = "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
-      echo "Wrong owner for script -- not executing" [$SCRIPT2RUN]
+      log "Wrong owner for script -- not executing" [$SCRIPT2RUN]
       return 0
     fi
   fi
 
-  echo "--- [$1] ---"
+  log "--- [$1] ---"
   $SCRIPT2RUN
-  echo "--- [$1] ---"
+  log "--- [$1] ---"
 
   return 0
 }
 
 stop_server()
 {
-  echo "--- Stopping Domino Server ---"
+  log "--- Stopping Domino Server ---"
 
   run_external_script before_shutdown.sh
 
   $DOMINO_START_SCRIPT stop
 
-  echo "--- Domino Server Shutdown ---"
+  log "--- Domino Server Shutdown ---"
 
   run_external_script after_shutdown.sh
 
@@ -155,7 +164,7 @@ check_process_request()
     return 0
   fi
 
-  echo "Invalid request: [$DOMINO_REQUEST]"
+  log "Invalid request: [$DOMINO_REQUEST]"
 }
 
 wait_time_or_string()
@@ -193,8 +202,8 @@ wait_time_or_string()
       return 0
     fi
 
-    sleep 2
-    seconds=$(expr $seconds + 2)
+    sleep 1
+    seconds=$(expr $seconds + 1)
     if [ $(expr $seconds % 10) -eq 0 ]; then
       echo " ... waiting $seconds seconds"
     fi
@@ -247,8 +256,6 @@ trap "stop_server" 1 2 3 4 6 9 13 15 19 23
 
 # Check data update only at first container start
 
-DOMDOCK_UPDATE_CHECK_STATUS_FILE=$DOMDOCK_TXT_DIR/data_update_checked.txt
-
 if [ ! -e "$DOMDOCK_UPDATE_CHECK_STATUS_FILE" ]; then
   run_external_script before_data_copy.sh
 
@@ -284,29 +291,31 @@ fi
 
 CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
 if [ -n "$CHECK_SERVER_SETUP" ]; then
-  echo "Server already setup"
+  log "Server already setup"
   cleanup_setup_env
 
 elif [ -n "$SetupAutoConfigure" ]; then
-  echo "Running Domino One-Touch setup"
+  log "Running Domino One-Touch setup"
+
+elif [ -r "$DOMINO_DATA_PATH/DominoAutoConfig.json" ]; then
+  log "Running Domino One-Touch setup via StartScript"
 
 else
 
-  echo "Configuration for automated setup not found."
-  echo "Starting Domino Server in listen mode"
-  echo "--- Configuring Domino Server ---"
+  log "Configuration for automated setup not found - Starting Domino Server in listen mode"
+  log "--- Configuring Domino Server ---"
 
   cd $DOMINO_DATA_PATH
   $LOTUS/bin/server -listen 1352
 
-  log_space "--- Configuration ended ---"
+  log "--- Configuration ended ---"
 fi
 
 run_external_script before_server_start.sh
 
 # Finally start server
 
-echo "--- Starting Domino Server ---"
+log "--- Starting Domino Server ---"
 
 # Cleanup all setup variables & co if still set
 
@@ -324,7 +333,7 @@ if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
     cleanup_setup_env
 
     # Invoke restart server command
-    echo "Restarting Domino server to finalize configuration"
+    log "Restarting Domino server to finalize configuration"
     $DOMINO_START_SCRIPT cmd "restart server"
   fi
 fi

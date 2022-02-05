@@ -107,7 +107,7 @@ install_domino()
       exit 1
     fi
 
-    rm -rf domino_server
+    remove_directory domino_server
 
     # Copy license files
     mkdir -p /licenses
@@ -145,7 +145,7 @@ install_domino()
       exit 1
     fi
 
-    rm -rf domino_fp
+    remove_directory domino_fp
 
   fi
 
@@ -180,7 +180,7 @@ install_domino()
       exit 1
     fi
 
-    rm -rf domino_hf
+    remove_directory domino_hf
 
   fi
 
@@ -357,16 +357,12 @@ install_linux_packages()
     return 0
   fi
 
-  if [ -z $(which hostname) ]; then
-    install_package hostname
-  fi
-
-  if [ -z $(which xargs) ]; then
-    install_package xargs
-  fi
+  # On some platforms certain programs are in their iwn package not installed by default..
+  install_if_missing hostname
+  install_if_missing xargs
 
   # jq the ultimate tool for JSON files...
-  install_package jq
+  install_if_missing jq
 
 }
 
@@ -477,6 +473,9 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   if [ -n "$DOMINO_LANG" ]; then
     echo "export LANG=$DOMINO_LANG" >> /home/$DOMINO_USER/.bash_profile
   fi
+
+  # This alias is really missing ..
+  echo "alias ll='ls -l'" >> /home/$DOMINO_USER/.bashrc
 
   # Set security limits for pam modules (su needs it)
   echo >> /etc/security/limits.conf
@@ -708,8 +707,8 @@ else
   remove_file "$DOMDOCK_INSTALL_DATA_TAR"
   tar -czf "$DOMDOCK_INSTALL_DATA_TAR" .
 
-  rm -rf $DOMINO_DATA_PATH
-  create_directory $DOMINO_DATA_PATH $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  remove_directory "$DOMINO_DATA_PATH"
+  create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 fi
 
 # Cleanup repository cache to save space
