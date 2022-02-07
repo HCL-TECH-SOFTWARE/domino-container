@@ -44,18 +44,18 @@ log_debug ()
 
 check_software ()
 {
-  CURRENT_NAME=`echo $1|cut -d'|' -f1` 
-  CURRENT_VER=`echo $1|cut -d'|' -f2` 
-  CURRENT_FILES=`echo $1|cut -d'|' -f3` 
-  CURRENT_PARTNO=`echo $1|cut -d'|' -f4` 
-  CURRENT_HASH=`echo $1|cut -d'|' -f5` 
+  CURRENT_NAME=$(echo $1|cut -d'|' -f1)
+  CURRENT_VER=$(echo $1|cut -d'|' -f2)
+  CURRENT_FILES=$(echo $1|cut -d'|' -f3)
+  CURRENT_PARTNO=$(echo $1|cut -d'|' -f4)
+  CURRENT_HASH=$(echo $1|cut -d'|' -f5)
 
   if [ -z "$DOWNLOAD_FROM" ]; then
  
     FOUND=
     DOWNLOAD_1ST_FILE=
  
-    for CHECK_FILE in `echo "$CURRENT_FILES" | tr "," "\n"` ; do
+    for CHECK_FILE in $(echo "$CURRENT_FILES" | tr "," "\n") ; do
       if [ -z "$DOWNLOAD_1ST_FILE" ]; then
         DOWNLOAD_1ST_FILE=$CHECK_FILE
       fi
@@ -74,7 +74,7 @@ check_software ()
         if [ ! "$CHECK_HASH" = "yes" ]; then
           CURRENT_STATUS="OK"
         else
-          HASH=`sha256sum $SOFTWARE_DIR/$CURRENT_FILE -b | cut -d" " -f1`
+          HASH=$(sha256sum $SOFTWARE_DIR/$CURRENT_FILE -b | cut -d" " -f1)
 
           if [ "$CURRENT_HASH" = "$HASH" ]; then
             CURRENT_STATUS="OK"
@@ -91,7 +91,7 @@ check_software ()
     FOUND=
     DOWNLOAD_1ST_FILE=
   
-    for CHECK_FILE in `echo "$CURRENT_FILES" | tr "," "\n"` ; do
+    for CHECK_FILE in $(echo "$CURRENT_FILES" | tr "," "\n") ; do
 
       if [ -z "$DOWNLOAD_1ST_FILE" ]; then
         DOWNLOAD_1ST_FILE=$CHECK_FILE
@@ -148,7 +148,7 @@ check_software ()
       ;;
   esac
 
-  count=`echo $CURRENT_VER | wc -c`
+  count=$(echo $CURRENT_VER | wc -c)
   while [[ $count -lt 20 ]] ;
   do
     CURRENT_VER="$CURRENT_VER "
@@ -206,7 +206,7 @@ check_software_file ()
     if [ ! "$FOUND" = "TRUE" ]; then
 
       CURRENT_VER=$2
-      count=`echo $CURRENT_VER | wc -c`
+      count=$(echo $CURRENT_VER | wc -c)
       while [[ $count -lt 20 ]] ;
       do
         CURRENT_VER="$CURRENT_VER "
@@ -279,9 +279,9 @@ check_software_status ()
 }
 
 PROD_NAME=$1
-PROD_VER=`echo "$2" | awk '{print toupper($0)}'`
-PROD_FP=`echo "$3" | awk '{print toupper($0)}'`
-PROD_HF=`echo "$4" | awk '{print toupper($0)}'`
+PROD_VER=$(echo "$2" | awk '{print toupper($0)}')
+PROD_FP=$(echo "$3" | awk '{print toupper($0)}')
+PROD_HF=$(echo "$4" | awk '{print toupper($0)}')
 
 if [ "$ERROR_COUNT" = "0" ]; then
   check_software_status

@@ -429,6 +429,7 @@ echo "DominoUserID          = [$DominoUserID]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 echo "DOMINO_LANG           = [$DOMINO_LANG]"
 echo "VERSE_VERSION         = [$VERSE_VERSION]"
+echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
 
 # Check for Linux updates if requested first
 check_linux_update

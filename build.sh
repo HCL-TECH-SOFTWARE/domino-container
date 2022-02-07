@@ -232,6 +232,8 @@ dump_config()
 {
   header "Build Configuration"
   echo "Build Environment  : [$CONTAINER_CMD]"
+  echo "BASE_IMAGE         : [$BASE_IMAGE]"
+  echo "NAMESPACE          : [$CONTAINER_NAMESPACE]"
   echo "DOWNLOAD_FROM      : [$DOWNLOAD_FROM]"
   echo "SOFTWARE_DIR       : [$SOFTWARE_DIR]"
   echo "PROD_NAME          : [$PROD_NAME]"
@@ -245,6 +247,7 @@ dump_config()
   echo "TAG_LATEST         : [$TAG_LATEST]"
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
+  echo "STARTSCRIPT_VER    : [$VERSE_VER]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
   echo "DOMINO_LANG        : [$DOMINO_LANG]"
   echo
@@ -415,7 +418,7 @@ check_for_hcl_image()
       ;;
   esac
 
-  IMAGE_ID=$($CONTAINER_CMD images $BASE_IMAGE -q)
+  IMAGE_ID=$($CONTAINER_CMD $CONTAINER_NAMESPACE_CMD images $BASE_IMAGE -q)
   if [ -z "$IMAGE_ID" ]; then
     log_error_exit "Base image [$FROM_IMAGE] does not exist"
   fi
@@ -432,8 +435,14 @@ check_for_hcl_image()
 check_from_image()
 {
   if [ -z "$FROM_IMAGE" ]; then
-    LINUX_NAME="CentOS Stream"
-    BASE_IMAGE=quay.io/centos/centos:stream8
+
+    if [ "$PROD_NAME" = "domino" ]; then
+      LINUX_NAME="CentOS Stream"
+      BASE_IMAGE=quay.io/centos/centos:stream8
+    else
+      BASE_IMAGE=hclcom/domino:latest
+    fi
+
     return 0
   fi
 
@@ -540,7 +549,7 @@ build_domino()
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
-    --build-arg START_SCRIPT_VER="$START_SCRIPT_VER" \
+    --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 }
@@ -666,9 +675,6 @@ docker_build()
 
     domino)
 
-      # Find the right base image to build with
-      check_from_image
-
       if [ -z "$DOCKER_FILE" ]; then
         DOCKER_FILE=dockerfile
       fi
@@ -677,21 +683,15 @@ docker_build()
       ;;
 
     traveler)
-      DOCKER_FILE=dockerfile_traveler
 
-      if [ -z "$BASE_IMAGE" ]; then
-        BASE_IMAGE=hclcom/domino:latest
-      fi
+      DOCKER_FILE=dockerfile_traveler
 
       build_traveler
       ;;
 
     volt)
-      DOCKER_FILE=dockerfile_volt
 
-      if [ -z "$BASE_IMAGE" ]; then
-        BASE_IMAGE=hclcom/domino:latest
-      fi
+      DOCKER_FILE=dockerfile_volt
 
       build_volt
       ;;
@@ -785,7 +785,7 @@ for a in $@; do
       ;;
 
     -startscript=*)
-      START_SCRIPT_VER=$(echo "$a" | cut -f2 -d= -s)
+      STARTSCRIPT_VER=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -from=*)
@@ -923,6 +923,8 @@ if [ -z "$PROD_VER" ]; then
 fi
 
 check_for_hcl_image
+check_from_image
+
 dump_config
 
 if [ "$PROD_VER" = "latest" ]; then
