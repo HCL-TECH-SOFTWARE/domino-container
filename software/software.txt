@@ -9,3 +9,4 @@ volt|1.0.3.21|hcl.domino.volt-1.0.3.21.zip|-|19dbda451f8c0c58be2c5194e11a21e078f
 volt|1.0.4.10|hcl.domino.volt-1.0.4.10.zip|-|0890b7314e0398d37d82a76de48b52a95723ea91d4c01cb1080ad0583a5420f8
 verse|2.1.0|HCL_Verse_2.1.0.zip|-|245b93a160601b7bd537f033d1fb91a93a1a2e7a870b031bf7268fc941ddcb94
 verse|2.2.0|HCL_Verse_2.2.0.zip|-|c637e9ca63553d40d0f6d68e943a90e7b63f49bec88f2a77e10e87acaa22f522
+startscript|3.7.0|domino-startscript_v3.7.0.taz|-|29193313f5210b1ee16f9227623c0f27cde2ae0a3e2c5b9af4595ef539e6cb6b

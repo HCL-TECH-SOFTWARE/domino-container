@@ -247,7 +247,7 @@ dump_config()
   echo "TAG_LATEST         : [$TAG_LATEST]"
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
-  echo "STARTSCRIPT_VER    : [$VERSE_VER]"
+  echo "STARTSCRIPT_VER    : [$STARTSCRIPT_VER]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
   echo "DOMINO_LANG        : [$DOMINO_LANG]"
   echo

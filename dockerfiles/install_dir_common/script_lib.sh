@@ -217,11 +217,7 @@ download_and_check_hash()
   DOWNLOAD_SERVER=$1
   DOWNLOAD_STR=$2
   TARGET_DIR=$3
-
-  if [ -z "$DOWNLOAD_FILE" ]; then
-    log_error "No download file specified!"
-    exit 1
-  fi
+  DOWNLOAD_FILE=
 
   # check if file exists before downloading
 
@@ -294,6 +290,14 @@ download_and_check_hash()
         log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
       else
         log_error "File [$DOWNLOAD_FILE] not downloaded correctly [2]"
+        echo "HASH         : [$HASH]"
+        echo "SOFTWARE_FILE: [$SOFTWARE_FILE]"
+        echo "CURRENT_FILE : [$CURRENT_FILE]"
+        echo "--- software file ---"
+        cat $SOFTWARE_FILE
+        echo "--- software file ---"
+        curl -L $DOWNLOAD_FILE -o test.tar
+        sha256sum test.tar
         exit 1
       fi
     else

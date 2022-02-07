@@ -2,3 +2,4 @@ domino|12.0.1||if1
 traveler|12.0.1
 volt|1.0.4.10
 verse|2.2.0
+startscript|3.7.0

@@ -155,7 +155,7 @@ check_software ()
     count=$((count+1));
   done;
 
-  echo "$CURRENT_VER [$CURRENT_STATUS]  $DOWNLOAD_1ST_FILE  ($CURRENT_PARTNO)"
+  echo "$CURRENT_VER [$CURRENT_STATUS]  $DOWNLOAD_1ST_FILE"
 
   if [ ! -z "$DOWNLOAD_URLS_SHOW" ]; then
     echo $CURRENT_DOWNLOAD_URL
@@ -253,6 +253,10 @@ check_software_status ()
       check_software_file "verse" "$VERSE_VERSION"
     fi
 
+    if [ -n "$STARTSCRIPT_VER" ]; then
+      check_software_file "startscript" "$STARTSCRIPT_VER"
+    fi
+
   else
     echo
 
@@ -272,6 +276,10 @@ check_software_status ()
 
     if [ -n "$VERSE_VERSION" ]; then
       check_software_file "verse" "$VERSE_VERSION"
+    fi
+
+    if [ -n "$STARTSCRIPT_VER" ]; then
+      check_software_file "startscript" "$STARTSCRIPT_VER"
     fi
 
     echo

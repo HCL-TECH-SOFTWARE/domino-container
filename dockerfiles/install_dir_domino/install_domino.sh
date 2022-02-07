@@ -331,7 +331,7 @@ install_linux_packages()
   header "Installing required and useful Linux packages"
 
   # Common packages for all distributions
-  install_package openssl curl gdb lsof ncurses bc which file net-tools cpio diffutils file findutils gettext gzip tar unzip
+  install_package curl gdb lsof ncurses bc which file net-tools cpio diffutils file findutils gettext gzip tar unzip
 
   # SUSE
   if [ -x /usr/bin/zypper ]; then
@@ -409,6 +409,32 @@ remove_perl()
   remove_package perl-libs perl
 }
 
+install_startscript()
+{
+
+  # Install start script version included in the repository
+  if [ -z "$STARTSCRIPT_VER" ]; then
+
+    header "Installing Start Script"
+
+    cd $INSTALL_DIR
+    tar -xf domino-startscript.tar
+
+    # Run start script installer
+    $INSTALL_DIR/domino-startscript/install_script
+
+    return 0
+  fi
+
+  header "Installing Start Script $STARTSCRIPT_VER"
+  
+  cd $INSTALL_DIR
+  get_download_name startscript $STARTSCRIPT_VER
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" 
+  cd domino-startscript
+  ./install_script
+
+}
 
 # --- Main Install Logic ---
 
@@ -596,11 +622,8 @@ install_verse "$VERSE_VERSION"
 
 remove_perl
 
-header "Installing Start Script"
-
-# Extracting start script files
-cd $INSTALL_DIR
-tar -xf start_script.tar
+# Install Domino start script
+install_startscript
 
 # Explicitly set docker environment to ensure any Docker implementation works
 export DOCKER_ENV=yes
@@ -622,9 +645,6 @@ if [ -x /usr/libexec/gdb ]; then
     echo "Setting cap_sys_ptrace for /usr/libexec/gdb"
   fi
 fi
-
-# Run start script installer
-$INSTALL_DIR/start_script/install_script
 
 # Install Setup Files and Docker Entrypoint
 
