@@ -33,12 +33,11 @@ Other Kubernetes based environments might work as well. Please provide feedback 
 ## Supported base images
 
 - CentOS Stream 8.x
-- CentOS 7.x
+- RedHat Universal Base Image (UBI) 8
 - RockyLinux 8.x
 - AlmaLinux 8.x
 - VMware PhotonOS
 - SUSE Leap 15.3
-- RedHat Universal Base Image (UBI) 8
 
 
 ## Recommended Linux Versions and Tips
@@ -53,7 +52,7 @@ You should not try to run with earlier Docker/Podman versions than stated above,
 - SLES 15 SP2 shipps with a current Docker version
 - If your platform does not come with a current Docker version there is an official way to install Docker on most platforms https://docs.docker.com/engine/install/
 
-## Recommended combinations (1/2022)
+## Recommended combinations (2/2022)
 
 ### Build and run-time environments
 

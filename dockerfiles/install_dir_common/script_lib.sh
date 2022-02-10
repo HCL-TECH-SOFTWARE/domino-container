@@ -884,6 +884,14 @@ install_package()
  fi
 }
 
+install_packages()
+{
+  local PACKAGE=
+  for PACKAGE in $*; do
+    install_package $PACKAGE
+  done
+}
+
 remove_package()
 {
  if [ -x /usr/bin/zypper ]; then
@@ -899,6 +907,14 @@ remove_package()
    apt remove -y "$@"
 
  fi
+}
+
+remove_packages()
+{
+  local PACKAGE=
+  for PACKAGE in $*; do
+    remove_package $PACKAGE
+  done
 }
 
 install_if_missing()
@@ -984,7 +1000,7 @@ clean_linux_repo_cache()
 install_custom_packages()
 {
   if [ -n "$LinuxAddOnPackages" ]; then
-    install_package "$LinuxAddOnPackages"
+    install_packages "$LinuxAddOnPackages"
   fi
 }
 

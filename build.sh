@@ -15,7 +15,7 @@
 SCRIPT_NAME=$0
 
 # Standard configuration overwritten by build.cfg
-# (Default) NIGX is used hosting software from the local "software" directory.
+# (Default) NGINX is used hosting software from the local "software" directory.
 
 # Default: Update CentOS while building the image
 LinuxYumUpdate=yes
@@ -198,10 +198,11 @@ usage()
   echo
   echo Add-On options
   echo
-  echo "-git            adds Git client to Domino image"
+  echo "-from:<image>   builds from a specified build image. there are named images like 'ubi' predefined"
   echo "-openssl        adds OpenSSL to Domino image"
   echo "-borg           adds borg client and Domino Borg Backup integration to image"
   echo "-verse          adds the latest verse version to a Domino image"
+  echo "-startscript=x  installs specified start script version from software repository"
   echo
   echo
   echo "Examples:"

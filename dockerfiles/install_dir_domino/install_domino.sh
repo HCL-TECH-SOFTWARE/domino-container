@@ -331,11 +331,11 @@ install_linux_packages()
   header "Installing required and useful Linux packages"
 
   # Common packages for all distributions
-  install_package curl gdb lsof ncurses bc which file net-tools cpio diffutils file findutils gettext gzip tar unzip
+  install_packages curl gdb lsof ncurses bc which file net-tools cpio diffutils file findutils gettext gzip tar unzip
 
   # SUSE
   if [ -x /usr/bin/zypper ]; then
-    install_package glibc-locale libcap-progs vim
+    install_packages glibc-locale libcap-progs vim
 
   else
 
@@ -353,7 +353,7 @@ install_linux_packages()
 
   # PhotonOS
   if [ -e /etc/photon-release ]; then
-    install_package shadow gawk rpm coreutils-selinux util-linux vim tzdata
+    install_packages shadow gawk rpm coreutils-selinux util-linux vim tzdata
     return 0
   fi
 
@@ -588,7 +588,7 @@ if [ "$BORG_INSTALL" = "yes" ]; then
       yum config-manager --set-enabled powertools
     fi
 
-    install_package borgbackup openssh-clients
+    install_packages borgbackup openssh-clients
   fi
 fi
 
