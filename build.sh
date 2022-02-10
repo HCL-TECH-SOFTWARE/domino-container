@@ -672,6 +672,8 @@ docker_build()
 
   DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
 
+  export BUILDAH_FORMAT
+
   case "$PROD_NAME" in
 
     domino)
