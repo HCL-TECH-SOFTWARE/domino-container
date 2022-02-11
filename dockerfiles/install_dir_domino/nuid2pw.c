@@ -1,4 +1,14 @@
 
+/*
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2020-2022 - APACHE 2.0 see LICENSE
+############################################################################
+
+  Helper tool to patch a /etc/passwd file for specifying specific uids for the 'notes' user.
+  OpenShift has an own mechanism adding the uid to the /etc/passwd file.
+  An alternate solution would be an init container adding the right user to the container.
+*/
+
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -23,7 +33,7 @@ void strdncpy (char *s, const char *ct, size_t n)
   }
 }
 
-int strbegins(const char *str, const char *prefix)
+int strbegins (const char *str, const char *prefix)
 {
   while(*prefix)
   {
@@ -35,18 +45,13 @@ int strbegins(const char *str, const char *prefix)
 
 int update_passwd_notes (const char *passwd_file, const char *uid_str, const char *homedir)
 {
-  FILE *fp;
-  int  count;
-  int  i;
-  char line[MAX_LINES+1][MAX_TEXT_LINE+1];
-  char num_user[255];
+  FILE *fp   = NULL;
+  int  count = 0;
+  int  i     = 0;
+  char line[MAX_LINES+1][MAX_TEXT_LINE+1] = {0};
 
-  sprintf (num_user, "%s:", uid_str);
-
-  count = 0;
   fp = fopen (passwd_file, "r");
-
-  if (fp == NULL)
+  if (NULL == fp)
   {
     printf ("error -- canot open [%s] for reading\n", passwd_file);
     return 1;
@@ -54,18 +59,16 @@ int update_passwd_notes (const char *passwd_file, const char *uid_str, const cha
 
   while (fgets(line[count], MAX_TEXT_LINE, fp))
   {
-    if (count >= MAX_LINES) break;
+    if (count >= MAX_LINES)
+      break;
     count++;
   }
-  
+
   fclose (fp);
   fp = NULL;
 
-  // printf ("entries %d read\n", count);
-
   fp = fopen (passwd_file, "w");
-
-  if (fp == NULL)
+  if (NULL == fp)
   {
     printf ("error -- canot open [%s] for writing\n", passwd_file);
     return 1;
@@ -74,43 +77,33 @@ int update_passwd_notes (const char *passwd_file, const char *uid_str, const cha
   for (i=0; i<count; i++)
   {
     if (strbegins (line[i], "notes:"))
-    {
-      fprintf (fp, "notes:x:%s:0::%s:/bin/bash\n", uid_str, homedir);  
-    }
-    else if (strbegins (line[i], num_user))
-    {
-      // skip
-    }
+      fprintf (fp, "notes:x:%s:0::%s:/bin/bash\n", uid_str, homedir);
     else
-    {
-      fprintf (fp, "%s", line[i]);  
-    } 
+      fprintf (fp, "%s", line[i]);
   }
 
   fclose (fp);
   fp = NULL;
 
-  printf("updated notes uid [%s] in [%s] \n", uid_str, passwd_file);
+  printf ("updated notes uid [%s] in [%s] \n", uid_str, passwd_file);
+  return 0;
 }
 
 int main (int argc, char *argv[])
 {
-  int  ret;
-  char uid_str[255];
-   
-  ret = 0;
- 
+  int  ret = 0;
+  char uid_str[255] = {0};
+
   if (argc > 1)
   {
-    strdncpy (uid_str, argv[1], 250);
+    strdncpy (uid_str, argv[1], sizeof (uid_str));
   }
   else
   {
     return ret;
   }
-  ret = update_passwd_notes ("/etc/passwd", uid_str, "/local/notesdata");
+
+  ret = update_passwd_notes ("/etc/passwd", uid_str, "/home/notes");
 
   return ret;
 }
-
-

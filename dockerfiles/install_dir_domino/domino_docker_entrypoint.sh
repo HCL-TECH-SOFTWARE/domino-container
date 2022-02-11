@@ -52,15 +52,25 @@ else
 
     if [ -z "$LOGNAME" ]; then
       # If the uid/user is not in /etc/passwd, update notes entry --> empty if uid cannot be mapped
-      $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
-      LOGNAME=notes
+      if [ -x "$DOMDOCK_SCRIPT_DIR/nuid2pw" ]; then
+        $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
+        LOGNAME=notes
+      else
+        echo "Warning: Cannot enable K8s runAsUser support not found (nuid2pw)!"
+      fi
+
     else
       if [ -n "$DOCKER_UID_NOTES_MAP_FORCE" ]; then
         # If the uid/user is not in /etc/passwd, update notes entry and remove numeric entry for UID if present
-        $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
-        LOGNAME=notes
+        if [ -x "$DOMDOCK_SCRIPT_DIR/nuid2pw" ]; then
+          $DOMDOCK_SCRIPT_DIR/nuid2pw $CURRENT_UID
+          LOGNAME=notes
+        else
+          echo "Warning: Cannot enable K8s runAsUser support not found (nuid2pw)!"
+        fi
       fi
     fi
+
   fi
 
   DOMINO_USER=$LOGNAME

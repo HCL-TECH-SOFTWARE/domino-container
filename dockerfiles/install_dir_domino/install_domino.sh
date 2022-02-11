@@ -436,6 +436,30 @@ install_startscript()
 
 }
 
+install_k8s_runas_user_support()
+{
+  if [ ! "$K8S_RUNAS_USER_SUPPORT" = "yes" ]; then
+    return 0
+  fi
+
+  header "Installing K8s runAsUser support"
+
+  cd $INSTALL_DIR
+
+  install_packages gcc make
+  make
+  remove_packages gcc make
+
+  install_file nuid2pw "$DOMDOCK_SCRIPT_DIR/nuid2pw" root root 4550
+
+  if [ ! -e $DOMDOCK_SCRIPT_DIR/nuid2pw ]; then
+    echo "Cannot install nuid2pw (K8s runAsUser support)!"
+    exit 1
+  fi
+
+  log_space "K8s runAsUser support installed"
+}
+
 # --- Main Install Logic ---
 
 export DOMINO_USER=notes
@@ -456,6 +480,7 @@ echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 echo "DOMINO_LANG           = [$DOMINO_LANG]"
 echo "VERSE_VERSION         = [$VERSE_VERSION]"
 echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
+echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
 
 # Check for Linux updates if requested first
 check_linux_update
@@ -676,7 +701,7 @@ install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthc
 install_file "$INSTALL_DIR/create_keyring.sh" "$DOMDOCK_SCRIPT_DIR/create_keyring.sh" root root 755
 install_file "$INSTALL_DIR/create_ca_kyr.sh" "$DOMDOCK_SCRIPT_DIR/create_ca_kyr.sh" root root 755
 
-install_file "$INSTALL_DIR/nuid2pw" "$DOMDOCK_SCRIPT_DIR/nuid2pw" root root 4550
+install_k8s_runas_user_support
 
 # Set notes.ini variables needed
 set_default_notes_ini_variables

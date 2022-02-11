@@ -202,6 +202,7 @@ usage()
   echo "-openssl        adds OpenSSL to Domino image"
   echo "-borg           adds borg client and Domino Borg Backup integration to image"
   echo "-verse          adds the latest verse version to a Domino image"
+  echo "-k8s-runas      adds K8s runas user support"
   echo "-startscript=x  installs specified start script version from software repository"
   echo
   echo
@@ -234,7 +235,6 @@ dump_config()
   header "Build Configuration"
   echo "Build Environment  : [$CONTAINER_CMD]"
   echo "BASE_IMAGE         : [$BASE_IMAGE]"
-  echo "NAMESPACE          : [$CONTAINER_NAMESPACE]"
   echo "DOWNLOAD_FROM      : [$DOWNLOAD_FROM]"
   echo "SOFTWARE_DIR       : [$SOFTWARE_DIR]"
   echo "PROD_NAME          : [$PROD_NAME]"
@@ -251,6 +251,8 @@ dump_config()
   echo "STARTSCRIPT_VER    : [$STARTSCRIPT_VER]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
   echo "DOMINO_LANG        : [$DOMINO_LANG]"
+  echo "NAMESPACE          : [$CONTAINER_NAMESPACE]"
+  echo "K8S_RUNAS_USER     : [$K8S_RUNAS_USER_SUPPORT]"
   echo
   return 0
 }
@@ -552,6 +554,7 @@ build_domino()
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
     --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
+    --build-arg K8S_RUNAS_USER_SUPPORT="$K8S_RUNAS_USER_SUPPORT" \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 }
 
@@ -890,6 +893,10 @@ for a in $@; do
 
     -openssl)
       OPENSSL_INSTALL=yes
+      ;;
+
+    -k8s-runas)
+      K8S_RUNAS_USER_SUPPORT=yes
       ;;
 
     *)
