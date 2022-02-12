@@ -196,9 +196,12 @@ usage()
   echo "cfg|config      edits config file (either in current directory or if created in home dir)"
   echo "cpcfg           copies standard config file to config directory (default: $CONFIG_FILE)"
   echo
+  echo "-tag=<image>    additional image tag"
+  echo "-push=<image>   tag and push image to registry"
+  echo
   echo Add-On options
   echo
-  echo "-from:<image>   builds from a specified build image. there are named images like 'ubi' predefined"
+  echo "-from=<image>   builds from a specified build image. there are named images like 'ubi' predefined"
   echo "-openssl        adds OpenSSL to Domino image"
   echo "-borg           adds borg client and Domino Borg Backup integration to image"
   echo "-verse          adds the latest verse version to a Domino image"
@@ -246,6 +249,8 @@ dump_config()
   echo "CHECK_HASH         : [$CHECK_HASH]"
   echo "DOWNLOAD_URLS_SHOW : [$DOWNLOAD_URLS_SHOW]"
   echo "TAG_LATEST         : [$TAG_LATEST]"
+  echo "TAG_IMAGE          : [$TAG_IMAGE]"
+  echo "PUSH_IMAGE         : [$PUSH_IMAGE]"
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
   echo "STARTSCRIPT_VER    : [$STARTSCRIPT_VER]"
@@ -519,7 +524,7 @@ build_domino()
 
   $CONTAINER_CMD build --no-cache \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
-    -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
+    -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
     --label name="HCL Domino Community Image" \
@@ -564,7 +569,7 @@ build_traveler()
 
   $CONTAINER_CMD build --no-cache \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
-    -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
+    -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
     --label name="HCL Traveler Community Image" \
@@ -595,7 +600,7 @@ build_volt()
 
   $CONTAINER_CMD build --no-cache \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
-    -t $DOCKER_IMAGE $DOCKER_TAG_LATEST_CMD \
+    -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
     --label name="HCL Volt Community Image" \
@@ -656,14 +661,6 @@ docker_build()
 
   echo "Building Image : " $IMAGENAME
 
-  if [ -z "$DOCKER_TAG_LATEST" ]; then
-    DOCKER_IMAGE=$DOCKER_IMAGE_NAMEVERSION
-    DOCKER_TAG_LATEST_CMD=""
-  else
-    DOCKER_IMAGE=$DOCKER_TAG_LATEST
-    DOCKER_TAG_LATEST_CMD="-t $DOCKER_TAG_LATEST"
-  fi
-
   # Get Build Time
   BUILDTIME=$(date +"%d.%m.%Y %H:%M:%S")
 
@@ -707,10 +704,316 @@ docker_build()
       ;;
   esac
 
+  if  [ ! "$?" = "0" ]; then
+    log_error_exit "Image build failed!"
+  fi
+
+  if [ -n "$DOCKER_TAG_LATEST" ]; then
+    $CONTAINER_CMD tag $DOCKER_IMAGE $DOCKER_TAG_LATEST
+    echo
+  fi
+
+  if [ -n "$TAG_IMAGE" ]; then
+    $CONTAINER_CMD tag $DOCKER_IMAGE $TAG_IMAGE
+    echo
+  fi
+
+  if [ -n "$PUSH_IMAGE" ]; then
+    $CONTAINER_CMD tag $DOCKER_IMAGE $PUSH_IMAGE
+
+    header "Pushing image $PUSH_IMAGE to registry"
+    $CONTAINER_CMD push $PUSH_IMAGE
+    echo
+  fi
+
   echo
   return 0
 }
 
+check_software()
+{
+  CURRENT_NAME=$(echo $1|cut -d'|' -f1)
+  CURRENT_VER=$(echo $1|cut -d'|' -f2)
+  CURRENT_FILES=$(echo $1|cut -d'|' -f3)
+  CURRENT_PARTNO=$(echo $1|cut -d'|' -f4)
+  CURRENT_HASH=$(echo $1|cut -d'|' -f5)
+
+  if [ -z "$DOWNLOAD_FROM" ]; then
+
+    FOUND=
+    DOWNLOAD_1ST_FILE=
+
+    for CHECK_FILE in $(echo "$CURRENT_FILES" | tr "," "\n"); do
+      if [ -z "$DOWNLOAD_1ST_FILE" ]; then
+        DOWNLOAD_1ST_FILE=$CHECK_FILE
+      fi
+
+      if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
+        CURRENT_FILE="$CHECK_FILE"
+        FOUND=TRUE
+        break
+      fi
+    done
+
+    if [ "$FOUND" = "TRUE" ]; then
+      if [ -z "$CURRENT_HASH" ]; then
+        CURRENT_STATUS="NA"
+      else
+        if [ ! "$CHECK_HASH" = "yes" ]; then
+          CURRENT_STATUS="OK"
+        else
+          HASH=$(sha256sum $SOFTWARE_DIR/$CURRENT_FILE -b | cut -d" " -f1)
+
+          if [ "$CURRENT_HASH" = "$HASH" ]; then
+            CURRENT_STATUS="OK"
+          else
+            CURRENT_STATUS="CR"
+          fi
+        fi
+      fi
+    else
+      CURRENT_STATUS="NA"
+    fi
+  else
+
+    FOUND=
+    DOWNLOAD_1ST_FILE=
+
+    for CHECK_FILE in $(echo "$CURRENT_FILES" | tr "," "\n") ; do
+
+      if [ -z "$DOWNLOAD_1ST_FILE" ]; then
+        DOWNLOAD_1ST_FILE=$CHECK_FILE
+      fi
+
+      DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
+
+      CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
+      STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+
+      if [ -n "$STATUS_RET" ]; then
+        CURRENT_FILE="$CHECK_FILE"
+        FOUND=TRUE
+        break
+      fi
+    done
+
+    if [ ! "$FOUND" = "TRUE" ]; then
+      CURRENT_STATUS="NA"
+    else
+      if [ -z "$CURRENT_HASH" ]; then
+        CURRENT_STATUS="OK"
+      else
+        if [ ! "$CHECK_HASH" = "yes" ]; then
+          CURRENT_STATUS="OK"
+        else
+          DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
+          HASH=$($CURL_CMD --silent $DOWNLOAD_FILE 2>/dev/null | sha256sum -b | cut -d" " -f1)
+
+          if [ "$CURRENT_HASH" = "$HASH" ]; then
+            CURRENT_STATUS="OK"
+          else
+            CURRENT_STATUS="CR"
+          fi
+        fi
+      fi
+    fi
+  fi
+
+  case "$CURRENT_NAME" in
+    domino|traveler|volt)
+
+      if [ -z "$CURRENT_PARTNO" ]; then
+        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+      elif [ "$CURRENT_PARTNO" = "-" ]; then
+        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+      else
+        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+      fi
+      ;;
+
+    startscript)
+      STARTSCRIPT_FILE=domino-startscript_v${CURRENT_VER}.taz
+      CURRENT_DOWNLOAD_URL=${STARTSCRIPT_GIT_URL}/releases/download/v${CURRENT_VER}/domino-startscript_v${CURRENT_VER}.taz
+     ;;
+
+    *)
+      CURRENT_DOWNLOAD_URL=""
+      ;;
+  esac
+
+  count=$(echo $CURRENT_VER | wc -c)
+  while [[ $count -lt 20 ]] ;
+  do
+    CURRENT_VER="$CURRENT_VER "
+    count=$((count+1));
+  done;
+
+  echo "$CURRENT_VER [$CURRENT_STATUS] $DOWNLOAD_1ST_FILE"
+
+  if [ ! -z "$DOWNLOAD_URLS_SHOW" ]; then
+    echo $CURRENT_DOWNLOAD_URL
+  elif [ ! "$CURRENT_STATUS" = "OK" ]; then
+    echo $CURRENT_DOWNLOAD_URL
+    echo
+    DOWNLOAD_ERROR_COUNT=$((DOWNLOAD_ERROR_COUNT+1))
+  fi
+
+  return 0
+}
+
+check_software_file()
+{
+  FOUND=""
+
+  if [ -z "$PROD_NAME" ]; then
+    echo
+    echo "--- $1 ---"
+    echo
+  fi
+
+  if [ -z "$2" ]; then
+    SEARCH_STR="^$1|"
+  else
+    SEARCH_STR="^$1|$2|"
+  fi
+
+  if [ -z "$DOWNLOAD_SOFTWARE_FILE" ]; then
+
+    while read LINE
+    do
+      check_software $LINE
+      FOUND="TRUE"
+    done < <(grep "$SEARCH_STR" $SOFTWARE_FILE)
+  else
+    while read LINE
+    do
+      check_software $LINE
+      FOUND="TRUE"
+    done < <($CURL_CMD --silent $DOWNLOAD_SOFTWARE_FILE | grep "$SEARCH_STR")
+  fi
+
+  if [ -z "$PROD_NAME" ]; then
+    echo
+  else
+    if [ ! "$FOUND" = "TRUE" ]; then
+
+      CURRENT_VER=$2
+      count=$(echo $CURRENT_VER | wc -c)
+      while [[ $count -lt 20 ]] ;
+      do
+        CURRENT_VER="$CURRENT_VER "
+        count=$((count+1));
+      done;
+
+      echo "$CURRENT_VER [NA] Not found in software file!"
+      DOWNLOAD_ERROR_COUNT=$((DOWNLOAD_ERROR_COUNT+1))
+    fi
+  fi
+}
+
+check_software_status()
+{
+  if [ ! -z "$DOWNLOAD_FROM" ]; then
+
+    DOWNLOAD_FILE=$DOWNLOAD_FROM/$SOFTWARE_FILE_NAME
+
+    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
+    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+    if [ -n "$STATUS_RET" ]; then
+
+      DOWNLOAD_SOFTWARE_FILE=$DOWNLOAD_FILE
+      echo "Checking software via [$DOWNLOAD_SOFTWARE_FILE]"
+    fi
+
+  else
+
+    if [ ! -r "$SOFTWARE_FILE" ]; then
+      echo "Software [$SOFTWARE_FILE] Not found!"
+      DOWNLOAD_ERROR_COUNT=99
+      return 1
+    else
+      echo "Checking software via [$SOFTWARE_FILE]"
+    fi
+  fi
+
+  if [ -z "$PROD_NAME" ]; then
+    check_software_file "domino"
+    check_software_file "traveler"
+    check_software_file "volt"
+
+    if [ -n "$VERSE_VERSION" ]; then
+      check_software_file "verse" "$VERSE_VERSION"
+    fi
+
+    if [ -n "$STARTSCRIPT_VER" ]; then
+      check_software_file "startscript" "$STARTSCRIPT_VER"
+    fi
+
+  else
+    echo
+
+    if [ -z "$PROD_VER" ]; then
+      check_software_file "$PROD_NAME"
+    else
+      check_software_file "$PROD_NAME" "$PROD_VER"
+
+      if [ ! -z "$PROD_FP" ]; then
+        check_software_file "$PROD_NAME" "$PROD_VER$PROD_FP"
+      fi
+
+      if [ ! -z "$PROD_HF" ]; then
+        check_software_file "$PROD_NAME" "$PROD_VER$PROD_FP$PROD_HF"
+      fi
+    fi
+
+    if [ -n "$VERSE_VERSION" ]; then
+      check_software_file "verse" "$VERSE_VERSION"
+    fi
+
+    if [ -n "$STARTSCRIPT_VER" ]; then
+      check_software_file "startscript" "$STARTSCRIPT_VER"
+    fi
+
+    echo
+  fi
+}
+
+check_all_software()
+{
+  SOFTWARE_FILE=$SOFTWARE_DIR/software.txt
+
+  # if software file isn't found check standard location (check might lead to the same directory if standard location already)
+  if [ ! -e "$SOFTWARE_FILE" ]; then
+    SOFTWARE_FILE=$PWD/software/$SOFTWARE_FILE_NAME
+  fi
+
+  DOWNLOAD_LINK_FLEXNET="https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search="
+  DOWNLOAD_LINK_FLEXNET_OPTIONS="+&resultType=Files&sortBy=eff_date&listButton=Search"
+  STARTSCRIPT_GIT_URL=https://github.com/nashcom/domino-startscript
+
+  DOWNLOAD_ERROR_COUNT=0
+
+  check_software_status
+
+  if [ ! "$DOWNLOAD_ERROR_COUNT" = "0" ]; then
+    echo "Correct Software Download Error(s) before building image [$DOWNLOAD_ERROR_COUNT]"
+
+    if [ -z "$DOWNLOAD_FROM" ]; then
+      if [ -z $SOFTWARE_DIR ]; then
+        echo "No download location or software directory specified!"
+        DOWNLOAD_ERROR_COUNT=99
+      else
+        echo "Copy files to [$SOFTWARE_DIR]"
+      fi
+    else
+      echo "Upload files to [$DOWNLOAD_FROM]"
+    fi
+
+    echo
+  fi
+
+  CHECK_SOFTWARE_STATUS=$DOWNLOAD_ERROR_COUNT
+}
 
 # --- Main script logic ---
 
@@ -796,6 +1099,14 @@ for a in $@; do
 
     -from=*)
       FROM_IMAGE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+   -tag=*)
+      TAG_IMAGE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+   -push=*)
+      PUSH_IMAGE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     9*|10*|11*|12*)
@@ -935,21 +1246,26 @@ fi
 check_for_hcl_image
 check_from_image
 
-dump_config
-
 if [ "$PROD_VER" = "latest" ]; then
   get_current_version "$PROD_NAME"
-  echo
-  echo "Product to install: $PROD_NAME $PROD_VER $PROD_FP $PROD_HF"
-  echo
 
   if [ -z "$TAG_LATEST" ]; then
     TAG_LATEST="latest"
   fi
 fi
 
+# Ensure product versions are always uppercase
+PROD_FP=$(echo "$PROD_FP" | awk '{print toupper($0)}')
+PROD_HF=$(echo "$PROD_HF" | awk '{print toupper($0)}')
+
+echo
+echo "Product to install: $PROD_NAME $PROD_VER $PROD_FP $PROD_HF"
+echo
+
+dump_config
+
 if [ "$CHECK_SOFTWARE" = "yes" ]; then
-  . ./check_software.sh "$PROD_NAME" "$PROD_VER" "$PROD_FP" "$PROD_HF"
+  check_all_software
 
   if [ ! "$CHECK_SOFTWARE_STATUS" = "0" ]; then
     #Terminate if status is not OK. Errors are already logged
