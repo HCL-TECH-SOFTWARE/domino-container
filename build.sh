@@ -1019,6 +1019,7 @@ check_all_software()
 
 SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 SOFTWARE_PORT=7777
+SOFTWARE_FILE_NAME=software.txt
 SOFTWARE_CONTAINER=hclsoftware
 CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
