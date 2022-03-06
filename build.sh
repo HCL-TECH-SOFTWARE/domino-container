@@ -205,6 +205,7 @@ usage()
   echo "-openssl        adds OpenSSL to Domino image"
   echo "-borg           adds borg client and Domino Borg Backup integration to image"
   echo "-verse          adds the latest verse version to a Domino image"
+  echo "-capi           adds the C-API sdk/toolkit to a Domino image"
   echo "-k8s-runas      adds K8s runas user support"
   echo "-startscript=x  installs specified start script version from software repository"
   echo
@@ -253,6 +254,7 @@ dump_config()
   echo "PUSH_IMAGE         : [$PUSH_IMAGE]"
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
+  echo "CAPI_VERSION       : [$CAPI_VERSION]"
   echo "STARTSCRIPT_VER    : [$STARTSCRIPT_VER]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
   echo "DOMINO_LANG        : [$DOMINO_LANG]"
@@ -557,6 +559,7 @@ build_domino()
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
+    --build-arg CAPI_VERSION="$CAPI_VERSION" \
     --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
     --build-arg K8S_RUNAS_USER_SUPPORT="$K8S_RUNAS_USER_SUPPORT" \
@@ -945,6 +948,10 @@ check_software_status()
       check_software_file "verse" "$VERSE_VERSION"
     fi
 
+    if [ -n "$CAPI_VERSION" ]; then
+      check_software_file "capi" "$CAPI_VERSION"
+    fi
+
     if [ -n "$STARTSCRIPT_VER" ]; then
       check_software_file "startscript" "$STARTSCRIPT_VER"
     fi
@@ -968,6 +975,10 @@ check_software_status()
 
     if [ -n "$VERSE_VERSION" ]; then
       check_software_file "verse" "$VERSE_VERSION"
+    fi
+
+    if [ -n "$CAPI_VERSION" ]; then
+      check_software_file "capi" "$CAPI_VERSION"
     fi
 
     if [ -n "$STARTSCRIPT_VER" ]; then
@@ -1091,6 +1102,14 @@ for a in $@; do
 
       if [ -z "$VERSE_VERSION" ]; then
         get_current_addon_version verse VERSE_VERSION
+      fi
+      ;;
+
+   -capi*)
+      CAPI_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$CAPI_VERSION" ]; then
+        get_current_addon_version capi CAPI_VERSION
       fi
       ;;
 

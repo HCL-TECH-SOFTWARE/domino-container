@@ -238,6 +238,59 @@ install_verse()
   cd $CURRENT_DIR
 }
 
+
+install_capi()
+{
+  local ADDON_NAME=capi
+  local ADDON_VER=$1
+
+  if [ -z "$ADDON_VER" ]; then
+    return 0
+  fi
+
+  header "$ADDON_NAME Installation"
+
+  get_download_name $ADDON_NAME $ADDON_VER
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+
+  header "Installing $ADDON_NAME $ADDON_VER"
+
+  CURRENT_DIR=$(pwd)
+
+  cd $ADDON_NAME
+  echo "Unzipping files .."
+
+  unzip -q -d "$LOTUS" *.zip */lib/linux64/*
+  unzip -q -d "$LOTUS" *.zip */include/*
+
+  rm -f *.zip
+  cd $LOTUS
+
+  # sym link current sdk
+  NOTES_SDK_DIR=$(find . -maxdepth 1 -name "notesapi1*")
+  ln -s notesapi* notesapi
+
+  header "Install gcc and gcc++ compilers"
+  install_packages gcc gcc-c++ make
+
+  # Update notes user's profile
+  local NOTES_BASH_PROFIL=/home/notes/.bashrc
+  echo >> $NOTES_BASH_PROFIL
+  echo "# -- Begin Notes C-API environment vars --" >> $NOTES_BASH_PROFIL
+  echo "export LOTUS=$LOTUS" >> $NOTES_BASH_PROFIL
+  echo "export Notes_ExecDirectory=$LOTUS/notes/latest/linux" >> $NOTES_BASH_PROFIL
+  echo "export INCLUDE=$LOTUS/notesapi/include" >> $NOTES_BASH_PROFIL
+  echo "# -- End Notes C-API environment vars --" >> $NOTES_BASH_PROFIL
+  echo >> $NOTES_BASH_PROFIL
+
+  echo
+  echo Installed $ADDON_NAME
+  echo
+
+  cd $CURRENT_DIR
+}
+
+
 docker_set_timezone()
 {
   if [ -z "$DOCKER_TZ" ]; then
@@ -479,6 +532,7 @@ echo "DominoUserID          = [$DominoUserID]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 echo "DOMINO_LANG           = [$DOMINO_LANG]"
 echo "VERSE_VERSION         = [$VERSE_VERSION]"
+echo "CAPI_VERSION          = [$CAPI_VERSION]"
 echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
 echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
 
@@ -644,6 +698,9 @@ fi
 
 # Install Verse if requested
 install_verse "$VERSE_VERSION"
+
+# Install C-API if requested
+install_capi "$CAPI_VERSION"
 
 remove_perl
 
