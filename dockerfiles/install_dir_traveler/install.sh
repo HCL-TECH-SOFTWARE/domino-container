@@ -9,7 +9,7 @@ INSTALL_DIR=$(dirname $0)
 export LANG=C
 
 # Include helper functions & defines
-. /domino-docker/scripts/script_lib.sh
+. /domino-container/scripts/script_lib.sh
 
 
 if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
@@ -115,7 +115,7 @@ header "Final Steps & Configuration"
 install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
 
 # Install health check script
-install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
+install_file "$INSTALL_DIR/healthcheck.sh" "/healthcheck.sh" root root 755
 
 # --- Cleanup Routines to reduce image size ---
 

@@ -121,8 +121,8 @@ check_container_environment()
 
   if [ "$CONTAINER_CMD" = "podman" ]; then
     DOCKER_ENV_NAME=Podman
-    DOCKER_VERSION_STR=$(podman version | head -1)
-    DOCKER_VERSION=$(echo $DOCKER_VERSION_STR | cut -d" " -f3)
+    DOCKER_VERSION_STR=$(podman -v | head -1)
+    DOCKER_VERSION=$(echo $DOCKER_VERSION_STR | awk -F'version ' '{print $2 }')
     check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$CONTAINER_CMD"
 
     if [ -z "$DOCKER_NETWORK" ]; then
@@ -143,8 +143,8 @@ check_container_environment()
     fi
 
     # check docker environment
-    DOCKER_VERSION_STR=$(docker -v)
-    DOCKER_VERSION=$(echo $DOCKER_VERSION_STR | cut -d" " -f3|cut -d"," -f1)
+    DOCKER_VERSION_STR=$(docker -v | head -1)
+    DOCKER_VERSION=$(echo $DOCKER_VERSION_STR | awk -F'version ' '{print $2 }'|cut -d"," -f1)
 
     check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$CONTAINER_CMD"
 
@@ -176,6 +176,9 @@ check_container_environment()
     fi
 
     CONTAINER_NAMESPACE_CMD="--namespace=$CONTAINER_NAMESPACE"
+
+    DOCKER_VERSION_STR=$(nerdctl -v | head -1)
+    DOCKER_VERSION=$(echo $DOCKER_VERSION_STR | awk -F'version ' '{print $2 }')
   fi
 
   return 0

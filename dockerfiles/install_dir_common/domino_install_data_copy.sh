@@ -9,7 +9,7 @@ DOMINO_INSTDATA_BACKUP=$Notes_ExecDirectory/data1_bck
 LOG_FILE=$DOMDOCK_LOG_DIR/data_update.log
 
 # Include helper functions & defines
-. /domino-docker/scripts/script_lib.sh
+. /domino-container/scripts/script_lib.sh
 
 update_traveler_ini_var()
 {

@@ -13,10 +13,10 @@ if [ "$DOMDOCK_DEBUG_SHELL" = "yes" ]; then
   set -x
 fi
 
-export DOMDOCK_DIR=/domino-docker
-export DOMDOCK_LOG_DIR=/tmp/domino-docker
-export DOMDOCK_TXT_DIR=/domino-docker
-export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
+export DOMDOCK_DIR=/domino-container
+export DOMDOCK_LOG_DIR=/tmp/domino-container
+export DOMDOCK_TXT_DIR=/domino-container
+export DOMDOCK_SCRIPT_DIR=/domino-container/scripts
 export LOTUS=/opt/hcl/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DOMINO_DATA_PATH=/local/notesdata
@@ -24,9 +24,9 @@ export DOMINO_DATA_PATH=/local/notesdata
 export DOMINO_REQEST_FILE=/tmp/domino_request
 export DOMINO_STATUS_FILE=/tmp/domino_status
 
-DOMINO_DOCKER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/docker_prestart.sh
+DOMINO_CONTAINER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/domino_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
-DOMDOCK_UPDATE_CHECK_STATUS_FILE=$DOMDOCK_LOG_DIR/domdock_data_upd_checked.txt
+DOMDOCK_UPDATE_CHECK_STATUS_FILE=$DOMDOCK_LOG_DIR/domino_data_upd_checked.txt
 
 # Get Linux version and platform
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
@@ -281,11 +281,11 @@ if [ -z "$CHECK_SERVER_SETUP" ]; then
   run_external_script before_config_script.sh
 
   DOMINO_IS_CONFIGURED=false
-  if [ -n "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
-    if [ -x "$DOMINO_DOCKER_CFG_SCRIPT" ]; then
+  if [ -n "$DOMINO_CONTAINER_CFG_SCRIPT" ]; then
+    if [ -x "$DOMINO_CONTAINER_CFG_SCRIPT" ]; then
         if [ -n "$SetupAutoConfigure" ]; then
             # Ensure variables modified in pre start script are returned
-            . "$DOMINO_DOCKER_CFG_SCRIPT"
+            . "$DOMINO_CONTAINER_CFG_SCRIPT"
         fi
     fi
   fi

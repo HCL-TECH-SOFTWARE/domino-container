@@ -14,10 +14,10 @@ fi
 export DOMDOCK_SCRIPT_LIB_INCLUDED=DONE
 
 # Global definitions
-export DOMDOCK_DIR=/domino-docker
-export DOMDOCK_TXT_DIR=/domino-docker
-export DOMDOCK_SCRIPT_DIR=/domino-docker/scripts
-export DOMDOCK_LOG_DIR=/tmp/domino-docker
+export DOMDOCK_DIR=/domino-container
+export DOMDOCK_TXT_DIR=/domino-container
+export DOMDOCK_SCRIPT_DIR=/domino-container/scripts
+export DOMDOCK_LOG_DIR=/tmp/domino-container
 export DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
 # Ensure the environment is setup

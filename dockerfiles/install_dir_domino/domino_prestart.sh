@@ -11,7 +11,7 @@ if [ "$DOMDOCK_DEBUG_SHELL" = "yes" ]; then
 fi
 
 # Include helper functions & defines
-. /domino-docker/scripts/script_lib.sh
+. /domino-container/scripts/script_lib.sh
 
 # Write setup log -> ensure directory is created
 if [ ! -e "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT" ]; then

@@ -291,7 +291,7 @@ install_capi()
 }
 
 
-docker_set_timezone()
+container_set_timezone()
 {
   if [ -z "$DOCKER_TZ" ]; then
     return 0
@@ -638,7 +638,7 @@ if [ "$BORG_INSTALL" = "yes" ]; then
   create_directory /local/borg $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 fi
 
-docker_set_timezone
+container_set_timezone
 
 # Check if HCL Domino image is already installed -> In that case just set version
 if [ -e "/tmp/notesdata.tbz2" ]; then
@@ -738,20 +738,23 @@ fi
 header "Final Steps & Configuration"
 
 # Copy pre-start configuration
-install_file "$INSTALL_DIR/docker_prestart.sh" "$DOMDOCK_SCRIPT_DIR/docker_prestart.sh" root root 755
+install_file "$INSTALL_DIR/domino_prestart.sh" "$DOMDOCK_SCRIPT_DIR/domino_prestart.sh" root root 755
 
 # Copy script lib used by other installers
 install_file "$INSTALL_DIR/script_lib.sh" "$DOMDOCK_SCRIPT_DIR/script_lib.sh" root root 755
 
 # Copy Docker specific start script configuration if provided
 install_file "$INSTALL_DIR/rc_domino_config" "$DOMINO_DATA_PATH/rc_domino_config" root root 644
-install_file "$INSTALL_DIR/domino_docker_entrypoint.sh" "/domino_docker_entrypoint.sh" root root 755
+install_file "$INSTALL_DIR/entrypoint.sh" "/entrypoint.sh" root root 755
 
 # Install Data Directory Copy File
 install_file "$INSTALL_DIR/domino_install_data_copy.sh" "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh" root root 755
 
 # Install health check script
-install_file "$INSTALL_DIR/domino_docker_healthcheck.sh" "/domino_docker_healthcheck.sh" root root 755
+install_file "$INSTALL_DIR/healthcheck.sh" "/healthcheck.sh" root root 755
+
+# add symbolic link to old location for now
+ln -s "/healthcheck.sh" "/domino_docker_healthcheck.sh"
 
 # Install keyring create/update script
 

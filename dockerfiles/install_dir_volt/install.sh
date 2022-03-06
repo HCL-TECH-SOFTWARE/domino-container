@@ -8,7 +8,7 @@ INSTALL_DIR=$(dirname $0)
 export LANG=C
 
 # Include helper functions
-. /domino-docker/scripts/script_lib.sh
+. /domino-container/scripts/script_lib.sh
 
 INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${PROD_NAME}.taz
 
