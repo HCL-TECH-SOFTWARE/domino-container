@@ -1,1 +1,0 @@
-domino-docker|12.0.0|Domino_12.0_DockerImage.tgz|V1200_05142021prod|4db06a78b5cabcc5cdf11a71ae949d72c99b0b62dcc375a37af7e2ccdeaa3667
