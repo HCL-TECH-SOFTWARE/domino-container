@@ -71,10 +71,6 @@ echo "Copying files .."
 cp -f "templates/"* "$VOLT_DATA_DIR"
 cp -f "bundles/"* "$PLUGINS_FOLDER"
 
-# Update java security policy to grant all permissions to Groovy templates
-
-cat $INSTALL_DIR/java.policy.update >> $Notes_ExecDirectory/jvm/lib/security/java.policy
-
 cd ..
 remove_directory $PROD_NAME
 
