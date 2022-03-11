@@ -817,6 +817,14 @@ else
   create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 fi
 
+# Remove gcc compiler if no C-API toolkit is installed
+# gdb installs gcc on most platforms and gcc can be up to 100 MB
+
+if [ -z "$CAPI_VERSION" ]; then
+  remove_package gcc
+fi
+
+
 # Cleanup repository cache to save space
 clean_linux_repo_cache
 
