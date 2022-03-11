@@ -1,0 +1,37 @@
+
+We've moved
+-----------
+
+The Nash!Com Domino Start script has moved sources to a separate GitHub project.
+Those sources have been in the project for convenience and have never been actively used.
+
+The container project uses a tar file containing the start script as part of the deployment.
+With the current build script the start script is now pluggable and can be downloaded separately like any other install software.
+It is part of the software.txt directory and can be switched once new versions are released.
+
+You find the new git repository, the new documentation and the download here:
+
+
+GitHub Repository
+-----------------
+
+https://github.com/nashcom/domino-startscript
+
+
+To clone the repository you can use the following git command in a directory outside this repo (e.g. cd ..)
+
+git clone https://github.com/nashcom/domino-startscript.git
+
+
+Documentation
+-------------
+
+https://nashcom.github.io/domino-startscript/
+
+
+Release Download
+----------------
+
+https://github.com/nashcom/domino-startscript/releases
+
+
