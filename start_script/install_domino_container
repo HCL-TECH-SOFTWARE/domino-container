@@ -10,5 +10,7 @@ tar -C /tmp -xf $START_SCRIPT_TAR
 
 cd /tmp/domino-startscript
 ./install_domino_container
+cd ..
 
 cd $CURRENT_DIR
+rm -rf /tmp/domino-startscript
