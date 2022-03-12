@@ -471,7 +471,7 @@ install_startscript()
     header "Installing Start Script"
 
     cd $INSTALL_DIR
-    tar -xf domino-startscript.tar
+    tar -xf domino-startscript.taz
 
     # Run start script installer
     $INSTALL_DIR/domino-startscript/install_script
