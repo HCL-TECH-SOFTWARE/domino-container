@@ -1,7 +1,8 @@
 ---
 layout: default
 title: "Build Commands"
-nav_order: 3
+nav_order: 1
+parent: "Reference"
 description: "Container build commands"
 has_children: false
 ---

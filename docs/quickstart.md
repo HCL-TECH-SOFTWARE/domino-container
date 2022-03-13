@@ -6,7 +6,7 @@ description: "HCL Domino Quickstart"
 has_children: false
 ---
 
-The default configuration should work for many environments.
+The default configuration should work for most environments.  
 For special requirements check the documentation for details.
 
 ## Ensure you have a supported build environment

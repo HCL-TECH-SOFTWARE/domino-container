@@ -1,9 +1,9 @@
 ---
 layout: default
-title: "Startup/Config Flow"
+title: "Startup & Config Flow"
 nav_order: 1
 description: "Startup and Configuration Flow"
-parent: "Concepts"
+parent: "Architecture"
 has_children: false
 ---
 
@@ -94,4 +94,3 @@ This script is used for additional operations before a OneTouch Setup is invoked
 If no configuration is found and no OneTouch Setup is specified the server will launch the remote setup listening on port 1352.
 
 The server will be automatically started with `server -listen 1352` as a fall-back.
-

@@ -1,7 +1,8 @@
 ---
 layout: default
 title: "Runtime Variables"
-nav_order: 4
+nav_order: 2
+parent: "Reference"
 description: "Container environment variables"
 has_children: false
 ---

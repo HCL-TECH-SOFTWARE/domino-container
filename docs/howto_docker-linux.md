@@ -41,5 +41,3 @@ docker version
 This completes the setup for your Docker environment.
 
 Contine with [Quickstart](quickstart.md) to build and run your first container.
-
-

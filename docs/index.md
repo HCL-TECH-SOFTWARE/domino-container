@@ -1,9 +1,9 @@
 ---
 layout: default
-title: "Domino Container"
+title: "Concept & Overview"
 nav_order: 1
-description: "HCL Domino on Docker and other containers"
-has_children: false
+description: "HCL Domino Container"
+has_children: true
 ---
 
 [Quickstart](https://ibm.github.io/domino-docker/quickstart){: .btn }
@@ -27,9 +27,10 @@ See detailed information about [supported run-time and build environments](suppo
 
 ## Where to get HCL Domino software
 
-The project uses the official HCL web-kit installers to build container images download from the official HCL Flexnet repository.  
-All HCL customers with active maintenance should have a download account for [HCL Flexnet software portal](https://hclsoftware.flexnetoperations.com/flexnet/operationsportal).  
-HCL Business Partners with the [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) can download software in a similar way.
+The project uses the official HCL web-kit installers to build container images download from the official HCL Flexnet repository.
+
+- All HCL customers with active maintenance should have a download account for [HCL Flexnet software portal](https://hclsoftware.flexnetoperations.com/flexnet/operationsportal)
+- HCL Business Partners with the [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) can download software in a similar way
 
 ## How download this project
 

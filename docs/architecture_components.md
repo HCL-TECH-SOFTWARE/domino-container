@@ -20,7 +20,7 @@ The following images are supported
 - **traveler** - Traveler 12
 - **volt** - HCL Domino Volt 1.x
 
-The file `software.txt` contains an up to date list of current HCL Domino releated software.
+The file `software.txt` contains an up to date list of current HCL Domino related software.
 Unless you specify a distinct version the current version will be installed and tagged as "latest".
  
 Inside this script you can configure a remote download HTTP(S) target if you are hosting the downloaded software on a different machine.
@@ -45,9 +45,11 @@ This file is used to find the right file to download by product and version. And
 
 The format of the file is as follows:
 
+
 ```
 product|version|filename|product-code|sha256-hash
 ```
+
 
 Example:
 ```
@@ -79,20 +81,20 @@ Contains the install logic and performs the actual install of all components aft
 
 ## entrypoint.sh
 
-- Located in / owned by root
+- Located in `/` owned by root
 - Main entry point started when the container is started
 - Contains the logic to start and stop the server.
 - Contains the logic triggered at first server start to invoke the configuration of the server.
 
 ## domino_prestart.sh
 
-- Located in /domino-docker/scripts owned by root
-- Invoked by entrypoint.sh script to check which additional configuration is needed before the server is started for the first time
+- Located in `/domino-docker/scripts` owned by root
+- Invoked by `entrypoint.sh script` to check which additional configuration is needed before the server is started for the first time
 
 ## domino_install_data_copy.sh
 
-- Located in /domino-docker/scripts owned by root
-- Invoked by the entrypoint.sh script to check if templates and other files have been updated by an image update
+- Located in `/domino-docker/scripts` owned by root
+- Invoked by `entrypoint.sh script` to check if templates and other files have been updated by an image update
 
 ## healthcheck.sh
 

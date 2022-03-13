@@ -1,7 +1,8 @@
 ---
 layout: default
 title: "Domino Start Script"
-nav_order: 6
+nav_order: 3
+parent: "Reference"
 description: "Domino Start Script"
 has_children: false
 ---

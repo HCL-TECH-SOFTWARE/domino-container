@@ -1,10 +1,10 @@
 ---
 layout: default
 title: "Howto"
-nav_order: 8
-description: "Howto guides"
+nav_order: 4
+description: "Howto Guides"
 has_children: true
 ---
 
-# Howto guides
+# Howto Guides
 

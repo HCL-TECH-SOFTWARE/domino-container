@@ -1,9 +1,10 @@
 ---
 layout: default
-title: "Concepts"
-nav_order: 8
-description: "Conceptual details"
-has_children: true
+title: "Components"
+nav_order: 2
+description: "Startup and Configuration Flow"
+parent: "Architecture"
+has_children: false
 ---
 
 # Conceptual details

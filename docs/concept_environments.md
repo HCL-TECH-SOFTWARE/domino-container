@@ -1,7 +1,8 @@
 ---
 layout: default
 title: "Supported Environments"
-nav_order: 7
+nav_order: 2
+parent: "Concept & Overview"
 description: "Support environments to run and build the container"
 has_children: false
 ---
