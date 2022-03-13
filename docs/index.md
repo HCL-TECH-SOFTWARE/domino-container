@@ -18,7 +18,7 @@ The repository provides the utilities to build HCL Domino Server with the latest
 There are separate folders within this repository for Domino add-on HCL products like Traveler and HCL Domino Volt as well.
 
 All required HCL web-kits and fixes are downloaded from a software repository server instead of adding the source installation files to the image directly.
-If no remote server is referenced a temporary local NGINX server is started at build time to act as a **software repository server**.
+If no remote server is referenced a temporary local [NGINX container](https://hub.docker.com/_/nginx) is started at build time to act as a **software repository server**.
 
 ## Supported environments
 
@@ -28,9 +28,8 @@ See detailed information about [supported run-time and build environments](suppo
 ## Where to get HCL Domino software
 
 The project uses the official HCL web-kit installers to build container images download from the official HCL Flexnet repository.  
-All HCL customers should have a download account for [HCL Flexnet software portal](https://hclsoftware.flexnetoperations.com/flexnet/operationsportal).  
+All HCL customers with active maintenance should have a download account for [HCL Flexnet software portal](https://hclsoftware.flexnetoperations.com/flexnet/operationsportal).  
 HCL Business Partners with the [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) can download software in a similar way.
-
 
 ## How download this project
 

@@ -1,34 +1,36 @@
 ---
 layout: default
-title: "Runtime Variables"
+title: "Build Commands"
 nav_order: 3
-description: "Container environment variables"
+description: "Container build commands"
 has_children: false
 ---
 
 # Build Command Documentation
 
 The `build.sh` command is used as the main entry point for building Domino, Traveler and Volt images.
-In most of the cases default parameters should be fine. But the build command line and configuration file can be used to customize the build process.
+Using the the build command line and configuration file the build operation can be customized.
 
-Standard build example to build the latest Domino version from the configured source:
+The only required parameter is the product to install.
 
-``` 
-./build.sh domino 
+Example: Build the latest Domino container image:
+
+```
+./build.sh domino
 ```
 
 ## Build Configuration File
 
-
 The build configuration can be used to define the download location for HCL software.
 
 - `DOWNLOAD_FROM=http://192.168.96.170/software`  
-  Defines a remote location to download software from. This could be any type of HTTP/HTTPS resource for example a Nexus server
+  Defines a remote location to download software from.
+  This could be any type of HTTP/HTTPS resource for example a Nexus server.
   
 
 - `SOFTWARE_DIR=/local/software`  
   You can also copy all required software download to a directory and specify the download location.
-  The build process automatically starts a temporary Docker container leveraging NGINX to server the data for the Docker build process.
+  The build process automatically starts a temporary Docker container leveraging [NGINX container](https://hub.docker.com/_/nginx) the data for the Docker build process.
 
 - `LinuxYumUpdate=no`  
   Disable updating Linux in the build process
@@ -45,48 +47,68 @@ Note: If you specify an explicit version, the "latest" tag is not set automatica
 
 Example:
 ``` 
-./build.sh domino 12.0.1 IF1
+./build.sh domino 12.0.1 FP1
 ```
 
-Command line options can be used to modify the build process. 
+### Configuration Options
 
-- `cfg`  
+- **cfg**  
   Opens the build configuration
 
-- `cpcfg`  
+- **cpcfg**  
   Copies the configuration document to a standard location  
   (specified via DOMINO_DOCKER_CFG_DIR, default: /local/cfg)
 
-- `-checkonly`  
+
+### Build specific Options
+
+- **-checkonly**  
   Checks only if all software is available without starting the build process. This is helpful to prepare a build.
 
-- `-verifyonly`  
+- **-verifyonly**  
   Checks if all software is availabe and the checksum matches.
 
-- `-nocheck / -check`  
+- **-nocheck** / **-check**  
   Explicitly enables or disables checking if all software exists (default: yes)
 
-- `-noverify / -verify`  
+- **-noverify** / **-verify**  
   Explicitly enables verification of software (default: no)
 
-- `-nolinuxupd / -linuxpd`  
-  Overwrites default for updating the downloaded Linux image during build.The default setting is `yes` and can be modified in the cfg. 
+- **-nolinuxupd** / **-linuxpd**  
+  Overwrites default for updating the downloaded Linux image during build.  
+  By default updates are installed by any build operation and images are build without leveraging cache to ensure the image is up to date.
 
-- `-from=imagename`  
-  Use a specific base image for installation.
-  This can be a prebuild environment or an alternate Linux base image
+- **-from=imagename**  
+  Use a specific base image for installation.  
+  This can be a prebuild environment or an alternate Linux base image  
+  There are a couple of predfined images, which can be referenced by their short name
 
-- `latest...`  
-  Defines a custom latest Tag which is used to tag the image.  
-  For example latest_ubi8
+- **-tag=imagename**  
+  Tag image additionally with this tag after build
 
-- `_...`  
-  Custom version tag. This option is appended to the tag used
-  For example _V1201_custombuild
+- **-push=imagename**  
+  Tag image and push it after build
 
-### Build Usage
+### Software Options
 
-``` 
+- **-volt=version**  
+  Installs specified HCL Volt version.  
+  If invoked without version parameter, latest version will be installed
+
+- **-capi=version**  
+  Installs specified C-API SDK version.  
+  If invoked without version parameter, latest version will be installed
+
+- **-startscript=version**  
+  Installs specified Start Script version.  
+  By default the latest start script included in the project will be installed.  
+  Useful when switching to specific or custom start script version.
+  
+
+
+### Reference: Build Usage
+
+```
 Usage: build.sh { domino | traveler | volt } version fp hf
 
 -checkonly      checks without build
@@ -95,10 +117,24 @@ Usage: build.sh { domino | traveler | volt } version fp hf
 -(no)verify     checks downloaded file checksum (default: no)
 -(no)url        shows all download URLs, even if file is downloaded (default: no)
 -(no)linuxupd   updates container Linux  while building image (default: yes)
-cfg|config      edits config file (either in current directory or if created in /local/cfg)
-cpcfg           copies the config file to config directory (default: /local/cfg/build_config)
-``` 
+cfg|config      edits config file (either in current directory or if created in home dir)
+cpcfg           copies standard config file to config directory (default: /root/DominoDocker/build.cfg)
 
+-tag=<image>    additional image tag
+-push=<image>   tag and push image to registry
 
+Add-On options
 
+-from=<image>   builds from a specified build image. there are named images like 'ubi' predefined
+-openssl        adds OpenSSL to Domino image
+-borg           adds borg client and Domino Borg Backup integration to image
+-verse          adds the latest verse version to a Domino image
+-capi           adds the C-API sdk/toolkit to a Domino image
+-k8s-runas      adds K8s runas user support
+-startscript=x  installs specified start script version from software repository
 
+Examples:
+
+  build.sh domino 12.0.1 if1
+  build.sh traveler 12.0.1
+```

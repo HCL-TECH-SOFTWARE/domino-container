@@ -22,13 +22,14 @@ For details refer to the [HCL product documentation](https://help.hcltechsw.com/
 The following variables download files from remote files with http:// and https:// syntax.
 After download the variable is replaced with the password downloaded or read from file.
 
+```
 - SERVERSETUP_ADMIN_PASSWORD
 - SERVERSETUP_SERVER_PASSWORD
 - SERVERSETUP_ORG_CERTIFIERPASSWORD
 - SERVERSETUP_ORG_ORGUNITPASSWORD
 - SERVERSETUP_SECURITY_TLSSETUP_IMPORTFILEPASSWORD
 - SERVERSETUP_SECURITY_TLSSETUP_EXPORTPASSWORD
-
+```
 
 ### Remote password download
 
@@ -37,11 +38,13 @@ Files are downloaded and the name of the file will be used as the file name.
 The variable is replaced with the download file location on disk.
 
 
+```
 - SERVERSETUP_ORG_CERTIFIERIDFILEPATH
 - SERVERSETUP_ORG_ORGUNITIDFILEPATH
 - SERVERSETUP_SERVER_IDFILEPATH
 - SERVERSETUP_ADMIN_IDFILEPATH
 - SERVERSETUP_SECURITY_TLSSETUP_IMPORTFILEPATH
+```
 
 ## Additional parameters
 

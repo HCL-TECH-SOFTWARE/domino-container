@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Startup and Configuration Flow"
+title: "Startup/Config Flow"
 nav_order: 1
 description: "Startup and Configuration Flow"
 parent: "Concepts"
@@ -26,7 +26,7 @@ Main entry point to run the Domino server.
 The logic also takes care of server setup and updates the server without separate parameters specified.
 This logic is performed automatically based on the version variables in the container and the image.
 
-This project leverages the well know Nash!Com Domino on Linux/Unix start script, from which also the main entry-point logic is derived.
+This project leverages the Nash!Com Domino on Linux/Unix start script, from which also the `entrypoint-sh` logic is derived.
 The start script is not only useful for start/stop operations, but also provides additional functionality like
 generating NSDs, managing logs, creating NSDs, accessing the remote console and many more.
 Refer to the Nash!Com start script [documentation](https://nashcom.github.io/domino-startscript/) for details.
