@@ -3,7 +3,7 @@ layout: default
 title: "Components"
 nav_order: 2
 description: "Components involved"
-parent: "Concepts"
+parent: "Architecture"
 has_children: false
 ---
 
