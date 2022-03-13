@@ -1,8 +1,8 @@
 ---
 layout: default
-title: "Startup & Config Flow"
+title: "Conceptual details"
 nav_order: 3
-description: "Startup and Configuration Flow"
+description: "Conceptual details"
 parent: "Architecture"
 has_children: false
 ---
