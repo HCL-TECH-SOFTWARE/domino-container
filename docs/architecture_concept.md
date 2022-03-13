@@ -1,7 +1,7 @@
 ---
 layout: default
-title: "Components"
-nav_order: 2
+title: "Startup & Config Flow"
+nav_order: 3
 description: "Startup and Configuration Flow"
 parent: "Architecture"
 has_children: false

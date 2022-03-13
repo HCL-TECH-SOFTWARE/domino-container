@@ -1,7 +1,7 @@
 ---
 layout: default
 title: "Components"
-nav_order: 2
+nav_order: 1
 description: "Components involved"
 parent: "Architecture"
 has_children: false
