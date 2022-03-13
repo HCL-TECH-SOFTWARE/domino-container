@@ -1,8 +1,8 @@
 ---
 layout: default
-title: "Run Docker on Linux"
+title: "Docker on Linux"
 nav_order: 4
-description: "Run Docker on Linux"
+description: "Docker on Linux"
 parent: "Howto"
 has_children: false
 ---

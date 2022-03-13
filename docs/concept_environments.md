@@ -11,13 +11,13 @@ has_children: false
 
 The following environments have been tested and are the main environments the project works with.
 Other Kubernetes based environments might work as well. Please provide feedback if you are running in other environments.
-But be aware that we cannot look into all environments on our own.
+But be aware that we cannot look into all distributions and run-time environments.
 
 
 ## Supported run-time environments
 
-- Docker CE 18.09.0 and higher  
-  on Linux/Docker Desktop on Mac, Docker Desktop on Windows (classic and WSL2)  
+- Docker CE 18.09+
+  on Linux/Docker Desktop on Mac, Docker Desktop on Windows
   (Optional with Docker Compose V1.26+)
 
 - Podman 1.5.0+ *)
@@ -44,12 +44,15 @@ You can switch manually from Podman to Docker for the build and run-time environ
 
 ## Supported base images
 
-- CentOS Stream 8.x
 - RedHat Universal Base Image (UBI) 8
+- CentOS Stream 8.x
+- CentOS Stream 9.x
 - RockyLinux 8.x
 - AlmaLinux 8.x
 - VMware PhotonOS
 - SUSE Leap 15.3
+- Oracle Linux 8
+- Amazon Linux
 
 
 ## Recommended Linux Versions and Tips
@@ -84,6 +87,36 @@ You should not try to run with earlier Docker/Podman versions than stated above,
 - Current Rancher Desktop
 - Current version of Kubernetes
 - Current version of OpenShift
+
+
+### Tested base images
+
+The following Linux base images have been tested.  
+Current default base image is **CentOS Stream 8**.  
+Resulting image size differs by base image.  
+The smalles base images are based on PhotonOS
+
+**Note:**  
+Many base images use a kernel 5.x already.  
+The kernel is not yet supported by Domino.  
+Ensure the base operating systems is also running a comparable 5.x kernel.
+
+Short names below can be used with the `build.sh -from=image` option.  
+For example build based on **Redhat UBI8** : `./build.sh domino -from=ubi`
+
+
+| Short Name    | Name                  | Image Name                    | Kernel Ver |
+| ------------- | --------------------- | ----------------------------- | ---------- |
+| ubi           | RedHat UBI            | redhat/ubi8                   | 4.x        |
+| centos8       | CentOS Stream 8       | quay.io/centos/centos:stream8 | 4.x        |
+| rocky         | Rocky Linux 8         | rockylinux/rockylinux         | 4.x        |
+| alma          | Alma Linux 8          | almalinux/almalinux:8         | 4.x        |
+| amazon        | Amazon Linux          | amazonlinux                   | 4.x        |
+| oracle        | Oracle Linux 8        | oraclelinux:8                 | 4.x        |
+| centos9       | CentOS Stream 9       | quay.io/centos/centos:stream9 | 5.x        |
+| leap          | SUSE Leap 15.3        | opensuse/leap                 | 5.x        |
+| photon        | VMware Photon OS      | photon                        | 5.x        |
+
 
 ## References
 

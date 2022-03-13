@@ -14,12 +14,6 @@ The main entry point is called by the container platform and will remain active 
 It is controlling all setup and update operations if a new server is started or a server is running for the first time with a new/updated image.
 The following abstract is mainly intended for understanding the general flow. Please refer to other sections for details about environment variables in detail.
 
-
-`entrypoint.sh` calls the following two additional scripts, which are also described here.
-* `domino_install_data_copy.sh`
-* `domino_prestart.sh`
-
-
 ## /entrypoint.sh
 
 Main entry point to run the Domino server.

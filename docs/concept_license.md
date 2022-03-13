@@ -7,11 +7,11 @@ description: "Sofware Licenses"
 has_children: false
 ---
 
-# GitHub Project License
+## GitHub Project License
 
 The Dockerfiles and associated scripts are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). 
 
-# HCL Sofware License
+## HCL Sofware License
 
 License for the products that can be installed within the images is as follows:
 
