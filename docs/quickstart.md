@@ -6,8 +6,8 @@ description: "HCL Domino Quickstart"
 has_children: false
 ---
 
-The Quickstart configuration should work for many environments.
-For special requirements check the documentation sections for details.
+The default configuration should work for many environments.
+For special requirements check the documentation for details.
 
 ## Ensure you have a supported build environment
 
@@ -47,8 +47,7 @@ cd domino-docker
 
 ## Download software from Flexnet
 
-Before you can start the build process, you have to provide the right HCL web-kits to your server or specify a remote download location.
-
+Before you can start the build process, you have to provide the right HCL web-kits to your server or specify a remote download location.  
 Run the build script below provides you with detailed information and Flexnet download links for the required software.
 
 ## Build the image
@@ -94,3 +93,30 @@ The following commands opens the environment file, configured for your container
 ```
 domino_container env
 ```
+
+## Start Domino container
+
+After specifying the configuration and setup correctly, start the container with the Domino container script.
+
+```
+domino_container start
+```
+
+### Live Domino console
+
+To start a Domino live console, run the console command.
+The domino_container script leverages and `exec` command into the container.
+The long version of this command would be `domino_container domino console`.
+
+All console commands can be executed via `domino`.
+This command passes command line parameters to the `domino` start script.
+
+```
+domino_container console
+
+```
+
+## Domino Container Script Diagram
+
+
+![domino_container script diagram](assets/images/svg/containerstartscript.svg)
