@@ -1,7 +1,7 @@
 ---
 layout: default
 title: "Download Software"
-nav_order: 3
+nav_order: 2
 description: "Howto Download Software from Flexnet"
 parent: "Howto"
 has_children: false

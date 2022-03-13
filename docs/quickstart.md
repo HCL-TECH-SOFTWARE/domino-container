@@ -50,6 +50,8 @@ cd domino-docker
 Before you can start the build process, you have to provide the right HCL web-kits to your server or specify a remote download location.  
 Run the build script below provides you with detailed information and Flexnet download links for the required software.
 
+See howto [download software](howto_download-software.md) for details.
+
 ## Build the image
 
 ```
