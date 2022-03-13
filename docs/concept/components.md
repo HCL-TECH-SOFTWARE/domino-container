@@ -1,3 +1,12 @@
+---
+layout: default
+title: "Documentation of Components"
+nav_order: 2
+description: "Documentation of Components"
+parent: "Concepts"
+has_children: false
+---
+
 # Documentation of Components
 
 ## build.sh
@@ -24,7 +33,7 @@ The following three options are available
 
 Before you start you have to download the required software packages.
 
-## Directory "software" 
+## Directory "software"
 
 This directory is the default directory to provide Domino software, which are downloaded by the Docker installation script.
 The build script checks if your selected software is available on the defined software location and will prompt you which package to download if missing.
@@ -32,7 +41,7 @@ All HCL customers (and business partners with the [Partner Pack](https://www.hcl
 We try to point you to the right files on the Flexnet Download site where possible.
 
 
-## Directory "dockerfiles"  
+## Directory "dockerfiles"
 
 This directory contains a sub-directory for each product that can be installed.
 

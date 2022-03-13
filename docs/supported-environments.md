@@ -1,7 +1,16 @@
+---
+layout: default
+title: "Supported Environments"
+nav_order: 7
+description: "Support environments to run and build the container"
+has_children: false
+---
+
 # Supported Environments
 
 The following environments have been tested and are the main environments the project works with.
-Other Kubernetes based environments might work as well. Please provide feedback if you are running in other environments. But be aware that we cannot look into all environments on our own.
+Other Kubernetes based environments might work as well. Please provide feedback if you are running in other environments.
+But be aware that we cannot look into all environments on our own.
 
 
 ## Supported run-time environments
@@ -16,7 +25,9 @@ Other Kubernetes based environments might work as well. Please provide feedback 
 
 - RedHat OpenShift 4.x+
 
-*) Note: If Podman and Docker are installed on the same machine, Podman is used by default. You can switch manually from Podman to Docker for the build and run-time environment using `CONTAINER_CMD=docker` either in the configuration or exporting an environment variable in your shell.
+*) Note: If Podman and Docker are installed on the same machine, Podman is used by default.
+You can switch manually from Podman to Docker for the build and run-time environment using
+`CONTAINER_CMD=docker` either in the configuration or exporting an environment variable in your shell.
 
 ## Supported build environments
 
@@ -42,24 +53,26 @@ Other Kubernetes based environments might work as well. Please provide feedback 
 
 ## Recommended Linux Versions and Tips
 
-Docker CE and Podman are available in most distributions. Some distributions come with Docker CE or Podman included. Before you install Docker CE or Podman, please check if your platform provides the required versions.
+Docker CE and Podman are available in most distributions.
+Some distributions come with Docker CE or Podman included.
+Before you install Docker CE or Podman, please check if your platform provides the required versions.
 
 For example CentOS 7 comes with an old Docker version, which cannot be used.
 Older RedHat and SLES releases might also have older Podman versions.
-You should not try to run with earlier Docker/Podman versions than stated above, because those versions don't provided the needed feature set. 
+You should not try to run with earlier Docker/Podman versions than stated above, because those versions don't provided the needed feature set.
 
 - RHEL/CentOS 8 ship with a current version of Podman
 - SLES 15 SP2 shipps with a current Docker version
 - If your platform does not come with a current Docker version there is an official way to install Docker on most platforms https://docs.docker.com/engine/install/
 
-## Recommended combinations (2/2022)
+## Recommended combinations (3/2022)
 
 ### Build and run-time environments
 
 - RHEL 8/CentOS (Stream)8 with Docker 20.x installed from Docker website
 - SUSE SLES/Leap 15.3 with Docker 20.x included
 - RHEL/CentOS 8 with Podman
-- Current Rancher Desktop
+- Current Rancher Desktop (Docker environment)
 - Current version of Docker Desktop with WSL2 sub-system to build the image
 - Current version of Docker Desktop on Mac
 
@@ -67,34 +80,18 @@ You should not try to run with earlier Docker/Podman versions than stated above,
 
 - Current version of Docker Desktop on Windows
 - k3s Rancher
+- Current Rancher Desktop
 - Current version of Kubernetes
 - Current version of OpenShift
 
 ## References
 
-- Docker Engine for Linux
-  https://docs.docker.com/engine/install/
-
-- Docker Compose
-  https://docs.docker.com/engine/install/
-
-- Docker Desktop with WSL2
-  https://docs.docker.com/docker-for-windows/wsl/
-
-- Docker Desktop Mac
-  https://docs.docker.com/docker-for-mac/install/
-
-- Podman
-  https://podman.io/
-
-- K3S Lightweight Kubernetes
-  https://k3s.io/
-
-- Kubernetes (K8s)
-  https://kubernetes.io/
-
-- RedHat OpenShift
-  https://www.openshift.com/
-
-- Rancher Desktop
-  https://rancherdesktop.io/
+- [Docker Engine for Linux](https://docs.docker.com/engine/install/)
+- [Docker Compose](https://docs.docker.com/engine/install/)
+- [Docker Desktop with WSL2](https://docs.docker.com/docker-for-windows/wsl/)
+- [Docker Desktop Mac](https://docs.docker.com/docker-for-mac/install/)
+- [Podman](https://podman.io/)
+- [K3S Lightweight Kubernetes](https://k3s.io/)
+- [Kubernetes (K8s)](https://kubernetes.io/)
+- [RedHat OpenShift](https://www.openshift.com/)
+- [Rancher Desktop](https://rancherdesktop.io/)

@@ -1,3 +1,11 @@
+---
+layout: default
+title: "Concepts"
+nav_order: 8
+description: "Conceptual details"
+has_children: true
+---
+
 # Conceptual details
 
 ## Installation-Time
@@ -9,7 +17,7 @@ So all installers (FP, HF, add-on installer e.g. Traveler) can create and update
 
 ## Run-Time
 
-First startup :  image /local/notesdata --> volume /local/notesdata
+First startup : image /local/notesdata --> volume /local/notesdata
 
 Docker is designed to have static data in the image and changing data in separate data volumes which are assigned at run-time.
 

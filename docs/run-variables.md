@@ -1,13 +1,20 @@
+---
+layout: default
+title: "Runtime Variables"
+nav_order: 4
+description: "Container environment variables"
+has_children: false
+---
 
 # Introduction
 
 Starting with Domino 12 the Community image uses Domino One-Touch variables instead of the legacy PDS file configuration.  
 The variables used have been aligned with Domino One-Touch setup.
 
-For details refer to the HCL product documentation https://help.hcltechsw.com/domino/12.0.0/admin/inst_onetouch.html
+For details refer to the [HCL product documentation](https://help.hcltechsw.com/domino/12.0.0/admin/inst_onetouch.html)
 
 
-## One-Touch paramters with special functionality in the Community Image
+## One-Touch parameters with additional functionality
 
 
 ### Download files
@@ -44,15 +51,8 @@ The following variables are complementing the One-Touch functionality
 
 Download a JSON One-Touch file
 
-### SafeIDFile
-
-Download a Notes Safe.ID
-
-### DominoTrialKeyFile
-
-Download a Domino trial key
-
 ### CustomNotesdataZip
+
 Path and filename of a zip file containing files that will be extracted into the Domino Data directory.
 Values starting with 'http' will be handled as URL. The file will be downloaded from this URL.
 

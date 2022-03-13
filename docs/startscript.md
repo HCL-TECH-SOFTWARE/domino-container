@@ -1,34 +1,28 @@
-# Domino on Unix/Linux Start Script
-This start script was proudly donated to this project by [Daniel Nashed](http://blog.nashcom.de/) and is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
+---
+layout: default
+title: "Domino Start Script"
+nav_order: 6
+description: "Domino Start Script"
+has_children: false
+---
+
+# Domino Start Script for Docker Containers
 
 ## Introduction
-The Domino cross platform start/stop and diagnostic script has been written to unify and simplify running Domino on Linux and UNIX. The start script is designed to be "one-stop shopping" for all kind of operations done on the Linux/UNIX prompt. The script can start and stop the server, provides an interactive console and run NSD in different flavors. It ensures that the environment is always setup correct and supports multiple partitions.
 
-This script is designed to run with a dedicated user for each partition.
-Out of the box the script is configured to use the "notes" user and the standard directories for binaries (/opt/ibm/domino) and the data directory (/local/notesdata).
+The Domino start script has been around for many years supporting all Linux and UNIX environments.
+This project leverages the Nash!Com Domino starts script inside the container to run and maintain the container.
 
-You should setup all settings in the script configuration file.
+The start script is separate [GitHub project](https://github.com/nashcom/domino-startscript)
+with it's own [documentation](https://nashcom.github.io/domino-startscript/).
 
-## Usage
+## How the start script is used
 
-### Start Server
-```
-domino start live
-```
+The `entrypoint.sh` script is started when the container is launched.
+This script takes care of managing the lifetime of the container and invokes the start script to run the Domino server.
 
-### Stop Server
-From within the container, use the following command to stop the Domino server. Only the Domino server will shut down but the container itself will continue to run.
-```
-domino stop
-```
+Once the Domino server is started with the start script, you can leverage the `domino` command inside the container to interact with the Domino server.
 
-### Access the Domino server console
-```
-domino console
-```
+One very important and popular command is the `domino console` command, providing a live console to a Domino server.
 
-### Get Server Logs
-to be done
-
-## License
-The Dockerfiles and associated scripts are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). 
+For a complete reference check [Domino Start Script Commands](https://nashcom.github.io/domino-startscript/startscript/commands/)
