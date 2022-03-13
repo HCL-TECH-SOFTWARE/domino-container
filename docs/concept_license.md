@@ -3,7 +3,7 @@ layout: default
 title: "Sofware Licenses"
 nav_order: 9
 parent: "Concept & Overview"
-description: "Sofware Licenses"
+description: "Software Licenses"
 has_children: false
 ---
 

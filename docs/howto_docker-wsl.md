@@ -1,7 +1,7 @@
 ---
 layout: default
 title: "Docker on WSL2"
-nav_order: 5
+nav_order: 4
 description: "Docker on WSL2"
 parent: "Howto"
 has_children: false
