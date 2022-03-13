@@ -23,7 +23,7 @@ If no remote server is referenced a temporary local [NGINX container](https://hu
 ## Supported environments
 
 The project is supported on Docker Desktop, Docker Server, Podman, Rancher Desktop, Kubernetes (K8s) and OpenShift.
-See detailed information about [supported run-time and build environments](supported-environments.md)
+See detailed information about [supported run-time and build environments](concept_environments.md)
 
 ## Where to get HCL Domino software
 
@@ -59,4 +59,4 @@ Other options available:
 * ```./build traveler``` - Traveler on Domino
 * ```./build volt``` - Volt on Domino
 
-Refer to howto [Run Domino Container GitHub Repo](howto_docker-run.md) how to run a Domino Container on Docker.
+Refer to howto [Run Domino Container GitHub Repo](run_docker.md) how to run a Domino Container on Docker.

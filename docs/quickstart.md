@@ -13,7 +13,7 @@ For special requirements check the documentation for details.
 
 The project supports most Unix base environments including [Windows Subsystem for Linux 2 WSL2](https://docs.microsoft.com/en-us/windows/wsl/)
 
-For details check [supported run-time and build environments](supported-environments.md)
+For details check [supported run-time and build environments](concept_environments.md)
 
 ## Clone this project via Git
 

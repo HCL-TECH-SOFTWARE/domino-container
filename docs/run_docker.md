@@ -9,8 +9,8 @@ has_children: false
 
 ## How run this image on Docker
 
-When a new container is created from the HCL Domino Container image, it takes [environment variables](run-variables.md) into account for auto-configuring the Domino server.
-Details on how to use those variables can be found [here](run-variables.md)
+When a new container is created from the HCL Domino Container image, it takes [environment variables](reference_environment-vars.md) into account for auto-configuring the Domino server.
+Details on how to use those variables can be found [here](reference_environment-vars.md)
 
 The Domino data directory needs to be a persistent volume. On Docker it will be automatically created.
 You can also use an existing volume. All volume types your container infrastructure supports can be used.
