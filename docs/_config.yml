@@ -1,9 +1,9 @@
 
 # Site settings
-theme: "just-the-docs"
+theme: jekyll-theme-minimal
 remote_theme: pmarsceill/just-the-docs
 title: Domino for Docker Containers
-description: Dockerfiles for building HCL Domino server image for Docker
+description:Scripts to build HCL Domino container images
 version: 1.0
 logo: "/assets/images/svg/Domino.svg"
 git_url: "https://github.com/IBM/domino-docker"
