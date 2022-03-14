@@ -32,14 +32,14 @@ The project uses the official HCL web-kit installers to build container images d
 - All HCL customers with active maintenance should have a download account for [HCL Flexnet software portal](https://hclsoftware.flexnetoperations.com/flexnet/operationsportal)
 - HCL Business Partners with the [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) can download software in a similar way
 
-See howto [download software](howto_download-software.md) for details.
+See how to [download software](howto_download-software.md) for details.
 
-## How download this project
+## How to download this project
 
 We recommend to download the GitHub project directly via git.  
 An alternate way is to download the project via ZIP file from the respository page.
 
-See howto [Get Domino Container GitHub Repo](howto_github.md) for details.
+See Howto [Get Domino Container GitHub Repo](howto_github.md) for details.
 
 ## Building the image(s)
 
@@ -52,11 +52,16 @@ To build the latest available image
 ./build domino
 ```
 
-The process will perform all required actions to create the image in the version requested. Usually it takes 5 to 8 minutes to build the image (depending on your CPU & disk performance).
+The process will perform all required actions to create the image in the version requested. Usually it takes ~5 to ~8 minutes to build the image (depending on your CPU & disk performance).
 
-Other options available:
+Once you have built the Domino base image, you can build add-on images on top if it.  
+The add-on application is another layer on top of the Domino image.
+
+Add-on images always need to be derived from the Domino base image.
+
+There are currently two add-on images available:
 
 * ```./build traveler``` - Traveler on Domino
 * ```./build volt``` - Volt on Domino
 
-Refer to howto [Run Domino Container GitHub Repo](run_docker.md) how to run a Domino Container on Docker.
+Refer to Howto [Run Domino Container GitHub Repo](run_docker.md) how to run a Domino Container on Docker.

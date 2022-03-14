@@ -2,12 +2,12 @@
 layout: default
 title: "Get GitHub project"
 nav_order: 1
-description: "Howto Get Domino Container GitHub Project"
+description: "How to Get Domino Container GitHub Project"
 parent: "Howto"
 has_children: false
 ---
 
-## How download the Domino Container GitHub Project
+## How to download the Domino Container GitHub Project
 
 If you are directly connected to the GitHub server the recommended method to download this project is to use a git client, which is part of any Linux distribution.
 

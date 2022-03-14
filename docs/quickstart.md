@@ -20,7 +20,7 @@ For details check [supported run-time and build environments](concept_environmen
 ### Install Git software
 
 Git is a very simple and convenient way to download from GitHub.
-The install command vary per platform (SUSE: zypper, Ubuntu: apt).
+The install command depends on the platform (SUSE: zypper, Ubuntu: apt).
 "yum" works for any Redhat/CentOS based distribution.
 
 ```
@@ -47,10 +47,9 @@ cd domino-docker
 
 ## Download software from Flexnet
 
-Before you can start the build process, you have to provide the right HCL web-kits to your server or specify a remote download location.  
-Run the build script below provides you with detailed information and Flexnet download links for the required software.
+Before starting the build process, the required HCL web-kits have to be available on the build machine or a remote download location - if configured.  
 
-See howto [download software](howto_download-software.md) for details.
+See howto [download software](howto_download-software.md) for details downloading software from Flexnet.
 
 ## Build the image
 
@@ -70,7 +69,7 @@ The Nash!Com Domino container script allows you to operate your server. It suppo
 
 ### Configure your container
 
-The project provides with a default configuration.
+The project provides a default configuration.
 Usually the default configuration should work for your environment.
 You might want to change the container name and other detailed settings.
 
@@ -80,7 +79,7 @@ domino_container cfg
 ```
 
 **Note:** The container script by default uses `vi` for editing.
-In case you want to use a different editor like `nano` or `mcedit` export a variable with the editor of your choice.
+If you prefer a different editor like `nano` or `mcedit` export an environment variable specifying an installed editor of your choice.
 Tip: You can also add the variable to your bash profile.
 
 ```
@@ -104,7 +103,7 @@ After specifying the configuration and setup correctly, start the container with
 domino_container start
 ```
 
-### Live Domino console
+### Domino live console
 
 To start a Domino live console, run the console command.
 The domino_container script leverages and `exec` command into the container.

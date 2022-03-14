@@ -11,7 +11,6 @@ has_children: false
 
 ## Introduction
 
-The Domino start script has been around for many years supporting all Linux and UNIX environments.
 This project leverages the Nash!Com Domino starts script inside the container to run and maintain the container.
 
 The start script is separate [GitHub project](https://github.com/nashcom/domino-startscript)

@@ -32,14 +32,13 @@ You can switch manually from Podman to Docker for the build and run-time environ
 
 ## Supported build environments
 
-- Docker CE 18.09.0 and higher
-  on Linux/Docker Desktop on Mac, Docker Desktop on Windows building with a WSL sub-system
-
+- Docker CE 18.09 and higher on Linux
+- Docker Desktop on Mac
+- Docker Desktop on Windows building with a WSL2 sub-system
 - Podman 1.5.0+ on Linux *)
+- Rancher Desktop 1.0+ with Docker back-end
 
-- Rancher Desktop 1.0+
-
-*) Same Podman/Docker note applies
+*) Same Podman / Docker note applies
 
 
 ## Supported base images
@@ -59,23 +58,19 @@ You can switch manually from Podman to Docker for the build and run-time environ
 
 Docker CE and Podman are available in most distributions.
 Some distributions come with Docker CE or Podman included.
-Before you install Docker CE or Podman, please check if your platform provides the required versions.
+Before you install Docker CE or Podman, please check if your platform provides the required version.
 
-For example CentOS 7 comes with an old Docker version, which cannot be used.
-Older RedHat and SLES releases might also have older Podman versions.
-You should not try to run with earlier Docker/Podman versions than stated above, because those versions don't provided the needed feature set.
-
-- RHEL/CentOS 8 ship with a current version of Podman
-- SLES 15 SP2 shipps with a current Docker version
-- If your platform does not come with a current Docker version there is an official way to install Docker on most platforms https://docs.docker.com/engine/install/
+- RHEL 8 / CentOS Stream 8 ship with a current version of Podman
+- SUSE SLES / Leap 15.3 a shipps with a current Docker version
+- If your platform does not come with a current Docker version there is an official [Docker Linux setup documentation](https://docs.docker.com/engine/install/)
 
 ## Recommended combinations (3/2022)
 
 ### Build and run-time environments
 
-- RHEL 8/CentOS (Stream)8 with Docker 20.x installed from Docker website
-- SUSE SLES/Leap 15.3 with Docker 20.x included
-- RHEL/CentOS 8 with Podman
+- RHEL 8 /CentOS Stream 8 with Docker 20.x installed from Docker website
+- SUSE SLES / Leap 15.3 with Docker 20.x included
+- RHEL 8 / CentOS Stream 8 with Podman
 - Current Rancher Desktop (Docker environment)
 - Current version of Docker Desktop with WSL2 sub-system to build the image
 - Current version of Docker Desktop on Mac
