@@ -109,8 +109,8 @@ apt install jq
 ```
 mkdir -p /local/github
 cd /local/github
-git clone https://github.com/IBM/domino-docker.git
-cd domino-docker
+git clone https://github.com/HCL-TECH-SOFTWARE/domino-container.git 
+cd domino-container
 ```
 
 ## Install Nash!Com Domino Container Script
