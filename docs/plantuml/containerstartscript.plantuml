@@ -1,0 +1,47 @@
+@startuml
+state "**Admin**" as Admin
+Admin : bash
+
+state "**domino_container**" as DominoContainerScript
+
+DominoContainerScript: dir: /opt/nashcom/start_script
+
+state "**domino_container (cfg)**" as DominoContainerCfg
+DominoContainerCfg: /etc/sysconfig/
+
+state "**Docker Daemon**" as DockerDaemon
+DockerDaemon : ( or Podman etc. )
+
+state "**Docker Container**" as Container {
+
+  state "**entrypoint.sh**" as Entrypoint
+
+  state "**docker_prestart.sh**" as DockerPrestartSh
+  state "**domino_install_data_copy.sh**" as DominoInstallDataCopySh
+
+  state "**Bash**" as ContainerBash
+
+  state "**rc_domino_script**" as RcDominoScript
+  RcDominoScript : dir: /opt/nashcom/startscript
+
+  state "**rc_domino_config**" as RcDominoConfig
+  RcDominoConfig : dir: /etc/sysconfig
+
+  state "**Domino Server**" as DominoServer
+  DominoServer : /local/notesdata\nnotes.ini\nNSF...
+
+}
+
+Admin --> DominoContainerScript : Invoke
+DominoContainerScript --> DockerDaemon : Start/Stop/Cmd
+DominoContainerCfg -> DominoContainerScript : Read
+DockerDaemon --> Entrypoint : Start/Stop
+DockerDaemon --> ContainerBash : Exec
+
+Entrypoint --> RcDominoScript : Start/Stop
+Entrypoint --> DockerPrestartSh : Setup
+Entrypoint --> DominoInstallDataCopySh : Setup/Update(Run)
+RcDominoConfig -> RcDominoScript : Read
+RcDominoScript --> DominoServer : Start/Console
+ContainerBash --> RcDominoScript : Invoke
+@enduml

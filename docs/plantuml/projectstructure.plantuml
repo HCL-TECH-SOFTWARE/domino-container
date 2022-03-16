@@ -1,0 +1,18 @@
+@startwbs ProjectTree
+* **Domino Docker Container Project**
+** <&globe> **Root** directory\nMain entry scripts
+*** **build.sh**\nmain build script
+*** **build.cfg**\ntemplate for build configration
+** **dockerfiles**\nindiivdual docker files per product
+***< **install_dir_common**\nCode used by all flavours
+*** **install_dir_domino**\nDomino **Base** image
+*** **install_dir_traveler**\nTraveler **AddOn** image
+*** **install_dir_volt**\nDomino Volt **AddOn** image
+** **software**\nInventory of\navailable software
+** **docs**\nProject documentation\nin GitHub markdown
+** **lab**\nTutorials for practise
+***< **setup**\nLab install scripts
+*** **docker**\nDocker workshop
+*** **kubernetes**\nKubernes lab
+** **examples**\nSample configrations\nto get you going
+@endwbs
