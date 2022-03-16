@@ -41,8 +41,8 @@ cd /local/github
 ### Clone the repository and switch to the directory
 
 ```
-git clone https://github.com/IBM/domino-docker.git
-cd domino-docker
+git clone https://github.com/HCL-TECH-SOFTWARE/domino-container.git 
+cd domino-container
 ```
 
 ## Download software from Flexnet

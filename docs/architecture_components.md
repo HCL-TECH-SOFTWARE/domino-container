@@ -88,12 +88,12 @@ Contains the install logic and performs the actual install of all components aft
 
 ## domino_prestart.sh
 
-- Located in `/domino-docker/scripts` owned by root
+- Located in `/domino-container/scripts` owned by root
 - Invoked by `entrypoint.sh script` to check which additional configuration is needed before the server is started for the first time
 
 ## domino_install_data_copy.sh
 
-- Located in `/domino-docker/scripts` owned by root
+- Located in `/domino-container/scripts` owned by root
 - Invoked by `entrypoint.sh script` to check if templates and other files have been updated by an image update
 
 ## healthcheck.sh

@@ -6,9 +6,8 @@ title: Domino for Docker Containers
 description: Scripts to build HCL Domino container images
 version: 1.0
 logo: "/assets/images/svg/Domino.svg"
-git_url: "https://github.com/IBM/domino-docker"
-# url: https://volt.domino-lab.net
-baseurl: "/domino-docker"
+git_url: "https://github.com/HCL-TECH-SOFTWARE/domino-container"
+baseurl: "/domino-container"
 permalink: pretty
 exclude:
   [
@@ -86,7 +85,7 @@ footer_content: "HCL Domino Container"
 gh_edit_link: true # show or hide edit this page link
 gh_edit_link_text: "Edit this page on GitHub"
 # the github URL for your repo
-gh_edit_repository: "https://github.com/IBM/domino-docker"
+gh_edit_repository: "https://github.com/HCL-TECH-SOFTWARE/domino-container"
 gh_edit_branch: "master" # the branch that your docs is served from
 gh_edit_source: docs # the source that your files originate from
 gh_edit_view_mode: "tree" # "tree" or "edit" if you want the user to jump into the editor immediately

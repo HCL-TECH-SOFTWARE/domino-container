@@ -23,7 +23,7 @@ The most convenient way to download from Flexnet is the following approach.
 1. Log into the [HCL Flexnet software portal](https://hclsoftware.flexnetoperations.com/) with your account
 2. Use the links provided by the build script to navigate to the right download
 3. Copy the download URL with a right click action in your browser -- the link will not work when you login with this link directly.
-4. Change in your Linux bash prompt to the specified directory. In our example: `/local/github/domino-docker/software`
+4. Change in your Linux bash prompt to the specified directory. In our example: `/local/github/domino-container/software`
 5. Use the download URL in a curl command as shown below.
 
 Additional notes
@@ -54,7 +54,7 @@ The option `DOWNLOAD_FROM=https://mylocalsoftware.com` can be configured in buil
 ```
 ./build.sh domino
 
-Checking software via [/local/github/domino-docker/software/software.txt]
+Checking software via [/local/github/domino-container/software/software.txt]
 
 12.0.1              [NA] Domino_12.0.1_Linux_English.tar
 https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search=Domino_12.0.1_Linux_English.tar+&resultType=Files&sortBy=eff_date&listButton=Search
@@ -63,6 +63,6 @@ https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearc
 https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search=1201HF50-linux64.tar+&resultType=Files&sortBy=eff_date&listButton=Search
 
 Correct Software Download Error(s) before building image [2]
-Copy files to [/local/github/domino-docker/software]
+Copy files to [/local/github/domino-container/software]
 
 ```
