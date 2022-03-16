@@ -9,8 +9,7 @@ INSTALL_DIR=$(dirname $0)
 export LANG=C
 
 # Include helper functions & defines
-. /domino-container/scripts/script_lib.sh
-
+. $INSTALL_DIR/script_lib.sh
 
 if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
   TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino1201.properties

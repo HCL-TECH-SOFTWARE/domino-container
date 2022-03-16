@@ -212,6 +212,18 @@ download_file_ifpresent()
   fi
 }
 
+dump_download_error()
+{
+  echo "HASH         : [$HASH]"
+  echo "SOFTWARE_FILE: [$SOFTWARE_FILE]"
+  echo "CURRENT_FILE : [$CURRENT_FILE]"
+  echo
+  echo "--- $SOFTWARE_FILE ---"
+  cat $SOFTWARE_FILE
+  echo "--- $SOFTWARE_FILE ---"
+  echo
+}
+
 download_and_check_hash()
 {
   DOWNLOAD_SERVER=$1
@@ -277,6 +289,8 @@ download_and_check_hash()
       log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
     else
       log_error "File [$DOWNLOAD_FILE] not downloaded correctly [1]"
+      dump_download_error
+      exit 1
     fi
 
   else
@@ -290,14 +304,7 @@ download_and_check_hash()
         log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
       else
         log_error "File [$DOWNLOAD_FILE] not downloaded correctly [2]"
-        echo "HASH         : [$HASH]"
-        echo "SOFTWARE_FILE: [$SOFTWARE_FILE]"
-        echo "CURRENT_FILE : [$CURRENT_FILE]"
-        echo "--- software file ---"
-        cat $SOFTWARE_FILE
-        echo "--- software file ---"
-        curl -L $DOWNLOAD_FILE -o test.tar
-        sha256sum test.tar
+        dump_download_error
         exit 1
       fi
     else
