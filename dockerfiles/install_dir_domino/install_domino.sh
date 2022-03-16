@@ -316,36 +316,6 @@ container_set_timezone()
   return 0
 }
 
-yum_glibc_lang_update()
-{
-
-  local INSTALL_LOCALE=$(echo $DOMINO_LANG|cut -f1 -d"_")
-
-  if [ -z "$INSTALL_LOCALE" ]; then
-    return 0
-  fi
-
-  if [ -e /etc/photon-release ]; then
-
-    echo "Installing locale [$DOMINO_LANG] on Photon OS"
-    install_package glibc-i18n
-    echo "$DOMINO_LANG UTF-8" > /etc/locale-gen.conf
-    locale-gen.sh
-    remove_package glibc-i18n
-    return 0
-  fi
-
-  # Only needed for CentOS like platforms -> check if yum is installed
-
-  if [ ! -x /usr/bin/yum ]; then
-    return 0
-  fi
-
-  install_package glibc-langpack-$INSTALL_LOCALE
-
-  return 0
-}
-
 set_ini_var_if_not_set()
 {
   local file=$1
@@ -377,46 +347,6 @@ set_default_notes_ini_variables()
 
   # Use current ODS
   set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
-}
-
-install_linux_packages()
-{
-  header "Installing required and useful Linux packages"
-
-  # Common packages for all distributions
-  install_packages curl gdb lsof ncurses bc which file net-tools cpio diffutils file findutils gettext gzip tar unzip
-
-  # SUSE
-  if [ -x /usr/bin/zypper ]; then
-    install_packages glibc-locale libcap-progs vim
-
-  else
-
-    # SUSE does not require those packages
-
-    install_package procps-ng
-
-    # Installing the English local should always work
-    install_package glibc-langpack-en
-
-    # Installing the German locale might fail if UBI systems is running on machine without Redhat subscrption
-    install_package glibc-langpack-de
-
-  fi
-
-  # PhotonOS
-  if [ -e /etc/photon-release ]; then
-    install_packages shadow gawk rpm coreutils-selinux util-linux vim tzdata
-    return 0
-  fi
-
-  # On some platforms certain programs are in their iwn package not installed by default..
-  install_if_missing hostname
-  install_if_missing xargs
-
-  # jq the ultimate tool for JSON files...
-  install_if_missing jq
-
 }
 
 install_perl()
@@ -501,7 +431,6 @@ install_k8s_runas_user_support()
 
   install_packages gcc make
   make
-  remove_packages gcc make
 
   install_file nuid2pw "$DOMDOCK_SCRIPT_DIR/nuid2pw" root root 4550
 
@@ -536,16 +465,6 @@ echo "CAPI_VERSION          = [$CAPI_VERSION]"
 echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
 echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
 
-# Check for Linux updates if requested first
-check_linux_update
-
-# Needed by Astra Linux
-if [ -x /usr/bin/apt ]; then
-   apt install -y apt-utils
-fi
-
-# Check if all Linux packages are install. Even xargs could be missing..
-install_linux_packages
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
@@ -555,8 +474,6 @@ LINUX_ID=$(cat /etc/os-release | grep "^ID="| cut -d= -f2 | xargs)
 if [ -n "$LINUX_PRETTY_NAME" ]; then
   header "$LINUX_PRETTY_NAME"
 fi
-
-yum_glibc_lang_update
 
 # This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1)
 if [ -e $LOTUS ]; then
@@ -656,26 +573,8 @@ fi
 
 install_perl
 
-if [ "$BORG_INSTALL" = "yes" ]; then
-
-  if [ -e /etc/centos-release ]; then
-    header "Installing Borg Backup"
-    install_package epel-release
-
-    # Borg Backup needs a different perl version in powertools
-    if [ -x /usr/bin/yum ]; then
-      yum config-manager --set-enabled powertools
-    fi
-
-    install_packages borgbackup openssh-clients
-  fi
-fi
-
-if [ "$OPENSSL_INSTALL" = "yes" ]; then
-  if [ ! -e /usr/bin/openssl ]; then
-    header "Installing openssl"
-    install_package openssl
-  fi
+if [ "$CONTAINER_INSTALLER" = "hcl" ]; then
+  install_packages cpio
 fi
 
 cd "$INSTALL_DIR"
@@ -821,13 +720,20 @@ fi
 # gdb installs gcc on most platforms and gcc can be up to 100 MB
 
 if [ -z "$CAPI_VERSION" ]; then
-  remove_package gcc
+  remove_package gcc make
 fi
 
+# Remove installer only required packages
+
+if [ "$CONTAINER_INSTALLER" = "hcl" ]; then
+  remove_packages cpio
+fi
 
 # Cleanup repository cache to save space
 clean_linux_repo_cache
 
 header "Successfully completed installation!"
+
+rpm -qa > /tmp/packages_full_image.txt
 
 exit 0

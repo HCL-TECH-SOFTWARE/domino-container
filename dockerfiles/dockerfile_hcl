@@ -3,8 +3,7 @@
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-ARG BASE_IMAGE=
-FROM $BASE_IMAGE
+FROM redhat/ubi8 
 
 # External arguments with a default value
 ARG LinuxYumUpdate=
@@ -18,13 +17,12 @@ ARG LocalInstallDir=/tmp/install
 ARG DominoUserID=
 ARG DOMINO_LANG=
 ARG DOCKER_TZ=
-ARG OPENSSL_INSTALL=
-ARG BORG_INSTALL=
 ARG SPECIAL_CURL_ARGS=
 ARG VERSE_VERSION=
 ARG CAPI_VERSION=
 ARG STARTSCRIPT_VER=
 ARG K8S_RUNAS_USER_SUPPORT=
+ARG CONTAINER_INSTALLER=hcl
 
 USER root
 
@@ -32,11 +30,11 @@ USER root
 COPY install_dir_common $LocalInstallDir
 COPY install_dir_domino $LocalInstallDir
 
-# Run install script and cleanup. Linux packages installed in separate layer first.
+# Run install script and cleanup. Linux packages installed in separate layer first. 
 RUN $LocalInstallDir/install_linux.sh
 
 # Install Domino in a layer separate from Linux packages and updates
-RUN  $LocalInstallDir/install_domino.sh && \
+RUN $LocalInstallDir/install_domino.sh && \
   rm -rf $LocalInstallDir
 
 HEALTHCHECK --interval=60s --timeout=10s CMD /healthcheck.sh

@@ -24,6 +24,9 @@ export DOMINO_DATA_PATH=/local/notesdata
 export DOMINO_REQEST_FILE=/tmp/domino_request
 export DOMINO_STATUS_FILE=/tmp/domino_status
 
+# Explicitly set docker environment to ensure any Docker implementation works
+export DOCKER_ENV=yes
+
 DOMINO_CONTAINER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/domino_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 DOMDOCK_UPDATE_CHECK_STATUS_FILE=$DOMDOCK_LOG_DIR/domino_data_upd_checked.txt
