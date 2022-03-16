@@ -29,8 +29,8 @@ cd /local/github
 Clone the repository and switch to the directory
 
 ```bash
-git clone https://github.com/IBM/domino-docker.git
-cd domino-docker
+git clone https://github.com/HCL-TECH-SOFTWARE/domino-container.git 
+cd domino-container
 ```
 
 Note:  

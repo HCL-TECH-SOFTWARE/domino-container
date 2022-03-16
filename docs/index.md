@@ -6,8 +6,8 @@ description: "HCL Domino Container"
 has_children: true
 ---
 
-[Quickstart](https://ibm.github.io/domino-docker/quickstart){: .btn }
-[View it on GitHub](https://github.com/IBM/domino-docker){: .btn }
+[Quickstart](quickstart.md){: .btn }
+[View it on GitHub](https://github.com/HCL-TECH-SOFTWARE/domino-container){: .btn }
 
 ---
 
