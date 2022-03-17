@@ -11,14 +11,14 @@ has_children: false
 
 Docker installations depend on the platform your are running.
 
-Some platforms like Redhad have moved to [Podman](https://podman.io/) as their primary container build and run-time environment.  
+Some platforms like Redhat have moved to [Podman](https://podman.io/) as their primary container build and run-time environment.  
 The Domino Container project works with both platforms and auto detects, which container run-time is installed.
 
 Some platforms still have up to date Docker versions in their software repositories.
 
 The (Docker installation page)[https://docs.docker.com/engine/install/] lists how to install the Docker server on most popular distributions.
 
-Docker also provides a one touch convenience script to install Docker on Linux with one command.
+Docker provides a script to install Docker on Linux with one command.
 The following command, downloads the script and runs it in a bash.
 
 ```
