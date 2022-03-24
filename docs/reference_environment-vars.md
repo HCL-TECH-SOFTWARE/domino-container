@@ -17,10 +17,24 @@ For details refer to the [HCL product documentation](https://help.hcltechsw.com/
 
 ## One-Touch parameters with additional functionality
 
-
 ### Download files
 
-The following variables download files from remote files with http:// and https:// syntax.
+The following variables download files from remote files with http:// and https:// syntax.  
+Files are downloaded and the name of the file will be used as the file name.  
+The variable is replaced with the download file location on disk.  
+After download the variable is replaced with the password downloaded or read from file.
+
+```
+- SERVERSETUP_ORG_CERTIFIERIDFILEPATH
+- SERVERSETUP_ORG_ORGUNITIDFILEPATH
+- SERVERSETUP_SERVER_IDFILEPATH
+- SERVERSETUP_ADMIN_IDFILEPATH
+- SERVERSETUP_SECURITY_TLSSETUP_IMPORTFILEPATH
+```
+
+### Remote password download
+
+The following variables retrieve passwords from files or from remote http:// and https:// locations.  
 After download the variable is replaced with the password downloaded or read from file.
 
 ```
@@ -30,21 +44,6 @@ After download the variable is replaced with the password downloaded or read fro
 - SERVERSETUP_ORG_ORGUNITPASSWORD
 - SERVERSETUP_SECURITY_TLSSETUP_IMPORTFILEPASSWORD
 - SERVERSETUP_SECURITY_TLSSETUP_EXPORTPASSWORD
-```
-
-### Remote password download
-
-The following variables retrieve passwords from files or from remote http:// and https:// locations.  
-Files are downloaded and the name of the file will be used as the file name.  
-The variable is replaced with the download file location on disk.
-
-
-```
-- SERVERSETUP_ORG_CERTIFIERIDFILEPATH
-- SERVERSETUP_ORG_ORGUNITIDFILEPATH
-- SERVERSETUP_SERVER_IDFILEPATH
-- SERVERSETUP_ADMIN_IDFILEPATH
-- SERVERSETUP_SECURITY_TLSSETUP_IMPORTFILEPATH
 ```
 
 ## Additional parameters
