@@ -1038,7 +1038,6 @@ SOFTWARE_CONTAINER=hclsoftware
 CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 VERSION_FILE_NAME=current_version.txt
-VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
 # Use vi if no other editor specified in config
 
@@ -1077,12 +1076,13 @@ if [ -r "$CONFIG_FILE" ]; then
   . $CONFIG_FILE
 else
   if [ -r "$BUILD_CFG_FILE" ]; then
-    . build.cfg
+    . "$BUILD_CFG_FILE"
   fi
 fi
 
-# If version file isn't found check standard location (check might lead to the same directory if standard location already)
+VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
+# If version file isn't found check standard location (check might lead to the same directory if standard location already)
 if [ ! -e "$VERSION_FILE" ]; then
   VERSION_FILE=$PWD/software/$VERSION_FILE_NAME
 fi
