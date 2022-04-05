@@ -75,6 +75,10 @@ install_domino()
     download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_hf
   fi
 
+  # On Ubuntu and Debian the default shell for /bin/sh is /bin/dash
+  # Change the shell during installation to /bin/bash and remember the change
+  set_sh_shell bash
+
   if [ -n "$INST_VER" ]; then
     header "Installing $PROD_NAME $INST_VER"
     log_space "Running Domino Silent Install -- This takes a while ..."
@@ -182,6 +186,11 @@ install_domino()
 
     remove_directory domino_hf
 
+  fi
+
+  # Switch back sh shell if changed /bin/sh for Ubuntu/Debian from /bin/dash to /bin/bash
+  if [ -n "$ORIG_SHELL_LINK" ]; then
+    set_sh_shell "$ORIG_SHELL_LINK"
   fi
 
   return 0
@@ -733,7 +742,5 @@ fi
 clean_linux_repo_cache
 
 header "Successfully completed installation!"
-
-rpm -qa > /tmp/packages_full_image.txt
 
 exit 0

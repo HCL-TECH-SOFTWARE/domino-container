@@ -45,13 +45,18 @@ install_linux_packages()
 
   fi
 
+  # On Debian, Ubuntu and Astra Linux install setcap (required to set capability for gdb)
+  if [ -x /usr/bin/apt-get ]; then
+    install_package libcap2-bin
+  fi
+
   # PhotonOS
   if [ -e /etc/photon-release ]; then
     install_packages shadow gawk rpm coreutils-selinux util-linux vim tzdata
     return 0
   fi
 
-  # On some platforms certain programs are in their iwn package not installed by default..
+  # On some platforms certain programs are in their own package not installed by default..
   install_if_missing hostname
   install_if_missing xargs
 
@@ -105,14 +110,9 @@ yum_glibc_lang_update()
 
 # Main logic to update Linux and install Linux packages
 
-
 # Check for Linux updates if requested first
 
-rpm -qa > /tmp/packages_plain.txt
-
 check_linux_update
-
-rpm -qa > /tmp/packages_after_upd.txt
 
 header "Linux OS layer - Installating required software"
 
@@ -124,12 +124,12 @@ if [ "$CONTAINER_INSTALLER" = "hcl" ]; then
 
 else
 
-  install_linux_packages
-
-  # Needed by Astra Linux
+  # Needed by Astra Linux, Ubuntu and Debian. Might be already installed during update.
   if [ -x /usr/bin/apt ]; then
-     install_package -y apt-utils
+     install_package apt-utils
   fi
+
+  install_linux_packages
 
   yum_glibc_lang_update
 
@@ -160,6 +160,4 @@ fi
 
 # Cleanup repository cache to save space
 clean_linux_repo_cache
-
-rpm -qa > /tmp/packages_after_install.txt
 

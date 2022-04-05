@@ -881,8 +881,8 @@ install_package()
  elif [ -x /usr/bin/yum ]; then
    yum install -y "$@"
 
- elif [ -x /usr/bin/apt ]; then
-   apt install -y "$@"
+ elif [ -x /usr/bin/apt-get ]; then
+   apt-get install -y "$@"
 
  else
   echo "No package manager found!"
@@ -910,8 +910,8 @@ remove_package()
  elif [ -x /usr/bin/yum ]; then
    yum remove -y "$@"
 
- elif [ -x /usr/bin/apt ]; then
-   apt remove -y "$@"
+ elif [ -x /usr/bin/apt-get ]; then
+   apt-get remove -y "$@"
 
  fi
 }
@@ -969,10 +969,16 @@ check_linux_update()
     header "Updating Linux via yum"
     yum update -y
 
-  elif [ -x /usr/bin/apt ]; then
+  elif [ -x /usr/bin/apt-get ]; then
 
-    header "Updating Linux via apt"
+    header "Updating Linux via apt-get"
     apt-get update -y
+
+    # Needed by Astra Linux, Ubuntu and Debian. Should be installed before updating Linux but after updating the repo!
+    if [ -x /usr/bin/apt-get ]; then
+      install_package apt-utils
+    fi
+
     apt-get upgrade -y
 
   fi
@@ -997,7 +1003,7 @@ clean_linux_repo_cache()
     yum clean all >/dev/null
     rm -fr /var/cache/yum
 
-  elif [ -x /usr/bin/apt ]; then
+  elif [ -x /usr/bin/apt-get ]; then
 
     header "Cleaning apt cache"
     apt-get clean
@@ -1029,3 +1035,29 @@ debug_show_data_dir()
   log_ok "-----------------------------[$@]------------------------------"
   log_ok
 }
+
+set_sh_shell()
+{
+  ORIG_SHELL_LINK=$(readlink /bin/sh)
+
+  if [ -z "$1" ]; then
+     log_ok "Current sh: [$ORIG_SHELL_LINK]"
+     ORIG_SHELL_LINK=
+     return 0
+  fi
+
+  if [ "$ORIG_SHELL_LINK" = "$1" ]; then
+    ORIG_SHELL_LINK=
+    return 0
+  fi
+
+  log_ok "Switching sh shell from [$ORIG_SHELL_LINK] to [$1]"
+
+  local SAVED_DIR=$(pwd)
+  cd /bin
+  ln -sf "$1" sh
+  cd "$SAVED_DIR"
+
+  return 1
+}
+
