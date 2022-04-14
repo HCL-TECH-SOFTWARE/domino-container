@@ -826,7 +826,7 @@ check_software()
   fi
 
   case "$CURRENT_NAME" in
-    domino|traveler|volt)
+    domino|traveler|volt|verse|capi)
 
       if [ -z "$CURRENT_PARTNO" ]; then
         CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
