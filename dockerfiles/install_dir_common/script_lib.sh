@@ -198,7 +198,7 @@ download_file_ifpresent()
   fi
 
   if [ -e "$DOWNLOAD_FILE" ]; then
-  	echo
+    echo
     echo "Replacing existing file [$DOWNLOAD_FILE]"
     rm -f "$DOWNLOAD_FILE"
   fi
@@ -208,7 +208,7 @@ download_file_ifpresent()
   echo
 
   if [ "$?" = "0" ]; then
-    log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
+    log_ok "Successfully downloaded: [$DOWNLOAD_SERVER/$DOWNLOAD_FILE] "
     echo
     cd $CURRENT_DIR
     return 0
@@ -237,7 +237,7 @@ download_and_check_hash()
   DOWNLOAD_SERVER=$1
   DOWNLOAD_STR=$2
   TARGET_DIR=$3
-  DOWNLOAD_FILE=
+  TARGET_FILE=$4
 
   # check if file exists before downloading
 
@@ -290,15 +290,18 @@ download_and_check_hash()
     # download without extracting for none tar files
 
     echo
-    DOWNLOADED_FILE=$(basename $DOWNLOAD_FILE)
-    $CURL_CMD "$DOWNLOAD_FILE" -o "$DOWNLOADED_FILE"
+    if [ -z "$TARGET_FILE" ]; then
+      TARGET_FILE=$(basename $DOWNLOAD_FILE)
+    fi
 
-    if [ ! -e "$DOWNLOADED_FILE" ]; then
+    $CURL_CMD "$DOWNLOAD_FILE" -o "$TARGET_FILE"
+
+    if [ ! -e "$TARGET_FILE" ]; then
       log_error "File [$DOWNLOAD_FILE] not downloaded [1]"
       exit 1
     fi
 
-    HASH=$(sha256sum -b $DOWNLOADED_FILE | cut -f1 -d" ")
+    HASH=$(sha256sum -b $TARGET_FILE | cut -f1 -d" ")
     FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
 
     # Download file can be present more than once (e.g. IF/HF). Perfectly OK as long the hash matches.

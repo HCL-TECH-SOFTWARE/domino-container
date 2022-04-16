@@ -258,6 +258,7 @@ dump_config()
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
   echo "CAPI_VERSION       : [$CAPI_VERSION]"
+  echo "BORG_INSTALL       : [$BORG_INSTALL]"
   echo "STARTSCRIPT_VER    : [$STARTSCRIPT_VER]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
   echo "DOMINO_LANG        : [$DOMINO_LANG]"
@@ -879,7 +880,7 @@ check_software()
 
   case "$CURRENT_NAME" in
 
-    domino|traveler|volt|verse|capi)
+    domino|traveler|volt|verse|capi|borg)
 
       if [ -n "$DOWNLOAD_1ST_FILE" ]; then
         if [ -z "$CURRENT_PARTNO" ]; then
@@ -967,7 +968,7 @@ check_software_file()
         count=$((count+1));
       done;
 
-      echo "$CURRENT_VER [NA] Not found in software file!"
+      echo "$CURRENT_VER [NA] $PROD_NAME - Not found in software file!"
       DOWNLOAD_ERROR_COUNT=$((DOWNLOAD_ERROR_COUNT+1))
     fi
   fi
@@ -1013,6 +1014,10 @@ check_software_status()
       check_software_file "startscript" "$STARTSCRIPT_VER"
     fi
 
+    if [ -n "$BORG_INSTALL" ]; then
+      check_software_file "borg" "$BORG_INSTALL"
+    fi
+
   else
     echo
 
@@ -1040,6 +1045,10 @@ check_software_status()
 
     if [ -n "$STARTSCRIPT_VER" ]; then
       check_software_file "startscript" "$STARTSCRIPT_VER"
+    fi
+
+    if [ -n "$BORG_INSTALL" ]; then
+      check_software_file "borg" "$BORG_INSTALL"
     fi
 
     echo
@@ -1275,8 +1284,16 @@ for a in $@; do
       LinuxYumUpdate=no
       ;;
 
-    -borg)
-      BORG_INSTALL=yes
+    -borg|-borg=*)
+      BORG_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$BORG_INSTALL" ]; then
+        get_current_addon_version borg BORG_INSTALL
+      fi
+
+      if [ -z "$BORG_INSTALL" ]; then
+        BORG_INSTALL=yes
+      fi
       ;;
 
     -openssl)

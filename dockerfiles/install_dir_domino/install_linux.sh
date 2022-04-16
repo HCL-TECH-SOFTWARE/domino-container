@@ -133,11 +133,15 @@ else
 
   yum_glibc_lang_update
 
+  if [ -n "$BORG_INSTALL" ]; then
+    OPENSSL_INSTALL=yes
+    install_package fuse
+  fi
 
   if [ "$BORG_INSTALL" = "yes" ]; then
 
     if [ -e /etc/centos-release ]; then
-      header "Installing Borg Backup"
+      header "Installing Borg Backup from Linux repository"
       install_package epel-release
 
       # Borg Backup needs a different perl version in powertools
@@ -145,8 +149,24 @@ else
         yum config-manager --set-enabled powertools
       fi
 
-      install_packages borgbackup openssh-clients
+      install_package borgbackup
     fi
+
+  elif [ -n "$BORG_INSTALL" ]; then
+      header "Installing Borg Backup $BORG_INSTALL"
+
+      download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
+
+      cd "$INSTALL_DIR"
+      get_download_name borg $BORG_INSTALL
+      download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "/usr/bin" "borg"
+
+      if [ ! -e /usr/bin/borg ]; then
+        log_error "Borg Backup installation failed!"
+        exit 1
+      fi
+
+      chmod 755 /usr/bin/borg
   fi
 
   if [ "$OPENSSL_INSTALL" = "yes" ]; then

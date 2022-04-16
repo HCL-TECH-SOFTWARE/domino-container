@@ -560,7 +560,7 @@ create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/backup $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/restore $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
-if [ "$BORG_INSTALL" = "yes" ]; then
+if [ -n "$BORG_INSTALL" ]; then
   create_directory /local/borg $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 fi
 
@@ -638,9 +638,10 @@ fi
 
 # Install Setup Files and Docker Entrypoint
 
-if [ "$BORG_INSTALL" = "yes" ]; then
+if [ -n "$BORG_INSTALL" ]; then
+  header "Installing Domino Borg Backup integration"
   # Install Borg Backup scripts
-  $INSTALL_DIR/start_script/install_borg
+  $INSTALL_DIR/domino-startscript/install_borg
 fi
 
 header "Final Steps & Configuration"
