@@ -968,7 +968,7 @@ check_software_file()
         count=$((count+1));
       done;
 
-      echo "$CURRENT_VER [NA] $PROD_NAME - Not found in software file!"
+      echo "$CURRENT_VER [NA] $1 - Not found in software file!"
       DOWNLOAD_ERROR_COUNT=$((DOWNLOAD_ERROR_COUNT+1))
     fi
   fi
@@ -1015,7 +1015,9 @@ check_software_status()
     fi
 
     if [ -n "$BORG_INSTALL" ]; then
-      check_software_file "borg" "$BORG_INSTALL"
+      if [ ! "$BORG_INSTALL" = "yes" ]; then
+        check_software_file "borg" "$BORG_INSTALL"
+      fi
     fi
 
   else
@@ -1048,7 +1050,9 @@ check_software_status()
     fi
 
     if [ -n "$BORG_INSTALL" ]; then
-      check_software_file "borg" "$BORG_INSTALL"
+      if [ ! "$BORG_INSTALL" = "yes" ]; then
+        check_software_file "borg" "$BORG_INSTALL"
+      fi
     fi
 
     echo
