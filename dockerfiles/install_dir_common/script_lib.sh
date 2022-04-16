@@ -43,7 +43,7 @@ if [ -z "$DOMINO_INI_PATH" ]; then
 fi
 
 if [ -z "$CURL_CMD" ]; then
-  CURL_CMD="curl --fail --location --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
+  CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 fi
 
 if [ -z "$DOMINO_USER" ]; then
@@ -143,6 +143,17 @@ check_file_str()
   return 0
 }
 
+http_head_check()
+{
+  local CURL_RET=$($CURL_CMD -w 'RESP_CODE:%{response_code}\n' --silent --head "$1" | grep 'RESP_CODE:200')
+
+  if [ -z "$CURL_RET" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 get_download_name()
 {
   DOWNLOAD_NAME=""
@@ -173,10 +184,8 @@ download_file_ifpresent()
     exit 1
   fi
 
-  CURL_RET=$($CURL_CMD "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" --silent --head 2>&1)
-  STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
-  if [ -z "$STATUS_RET" ]; then
-
+  http_head_check "$DOWNLOAD_SERVER/$DOWNLOAD_FILE"
+  if [ "$?" = "0" ]; then
     echo "Info: Download file does not exist [$DOWNLOAD_FILE]"
     return 0
   fi
@@ -198,11 +207,10 @@ download_file_ifpresent()
   $CURL_CMD "$DOWNLOAD_SERVER/$DOWNLOAD_FILE" -o "$(basename $DOWNLOAD_FILE)" 2>/dev/null
   echo
 
-  cd $CURRENT_DIR
-
   if [ "$?" = "0" ]; then
     log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
     echo
+    cd $CURRENT_DIR
     return 0
 
   else
@@ -235,11 +243,19 @@ download_and_check_hash()
 
   for CHECK_FILE in $(echo "$DOWNLOAD_STR" | tr "," "\n" ) ; do
 
-    DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
-    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
-    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+    # Check for absolute download link
+    case "$CHECK_FILE" in
+      *://*)
+        DOWNLOAD_FILE=$CHECK_FILE
+        ;;
 
-    if [ -n "$STATUS_RET" ]; then
+      *)
+        DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
+        ;;
+    esac
+
+    http_head_check "$DOWNLOAD_FILE"
+    if [ "$?" = "1" ]; then
       CURRENT_FILE="$CHECK_FILE"
       FOUND=TRUE
       break
@@ -285,12 +301,13 @@ download_and_check_hash()
     HASH=$(sha256sum -b $DOWNLOADED_FILE | cut -f1 -d" ")
     FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
 
-    if [ "$FOUND" = "1" ]; then
-      log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
-    else
+    # Download file can be present more than once (e.g. IF/HF). Perfectly OK as long the hash matches.
+    if [ "$FOUND" = "0" ]; then
       log_error "File [$DOWNLOAD_FILE] not downloaded correctly [1]"
       dump_download_error
       exit 1
+    else
+      log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
     fi
 
   else
@@ -1060,4 +1077,3 @@ set_sh_shell()
 
   return 1
 }
-

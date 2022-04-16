@@ -322,15 +322,25 @@ print_runtime()
   else echo "Completed in $seconds second$s"; fi
 }
 
+http_head_check()
+{
+  local CURL_RET=$($CURL_CMD -w 'RESP_CODE:%{response_code}\n' --silent --head "$1" | grep 'RESP_CODE:200')
+
+  if [ -z "$CURL_RET" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 get_current_version()
 {
   if [ -n "$DOWNLOAD_FROM" ]; then
 
     DOWNLOAD_FILE=$DOWNLOAD_FROM/$VERSION_FILE_NAME
 
-    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
-    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
-    if [ -n "$STATUS_RET" ]; then
+    http_head_check "$DOWNLOAD_FILE"
+    if [ "$?" = "1" ]; then
       DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
     fi
   fi
@@ -364,9 +374,8 @@ get_current_addon_version()
     DOWNLOAD_FILE=$DOWNLOAD_FROM/$VERSION_FILE_NAME
     echo "getting current add-on version from: [$DOWNLOAD_FILE]"
 
-    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
-    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
-    if [ -n "$STATUS_RET" ]; then
+    http_head_check "$DOWNLOAD_FILE"
+    if [ "$?" = "1" ]; then
       DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
     fi
   fi
@@ -533,7 +542,7 @@ build_domino()
     -f $DOCKER_FILE \
     --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
     --label name="HCL Domino Community Image" \
-    --label vendor="Domino Docker Community Project" \
+    --label vendor="Domino Container Community Project" \
     --label description="$CONTAINER_DESCRIPTION" \
     --label summary="$CONTAINER_DESCRIPTION" \
     --label version="$DOCKER_IMAGE_VERSION" \
@@ -579,7 +588,7 @@ build_traveler()
     -f $DOCKER_FILE \
     --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
     --label name="HCL Traveler Community Image" \
-    --label vendor="Domino Docker Community Project" \
+    --label vendor="Domino Container Community Project" \
     --label description="HCL Traveler Mobile Sync Server" \
     --label summary="HCL Traveler Mobile Sync Server" \
     --label version="$DOCKER_IMAGE_VERSION" \
@@ -610,7 +619,7 @@ build_volt()
     -f $DOCKER_FILE \
     --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
     --label name="HCL Volt Community Image" \
-    --label vendor="Domino Docker Community Project" \
+    --label vendor="Domino Container Community Project" \
     --label description="HCL Volt - Low Code platform" \
     --label summary="HCL Volt - Low Code platform" \
     --label version="$DOCKER_IMAGE_VERSION" \
@@ -750,15 +759,35 @@ check_software()
     DOWNLOAD_1ST_FILE=
 
     for CHECK_FILE in $(echo "$CURRENT_FILES" | tr "," "\n"); do
-      if [ -z "$DOWNLOAD_1ST_FILE" ]; then
-        DOWNLOAD_1ST_FILE=$CHECK_FILE
-      fi
 
-      if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
-        CURRENT_FILE="$CHECK_FILE"
-        FOUND=TRUE
-        break
-      fi
+      # Check for absolute download link
+      case "$CHECK_FILE" in
+
+        *://*)
+          if [ -z "$DOWNLOAD_1ST_FILE" ]; then
+            DOWNLOAD_1ST_FILE=$(basename $CHECK_FILE)
+          fi
+
+          http_head_check "$CHECK_FILE"
+          if [ "$?" = "1" ]; then
+            CURRENT_FILE="$CHECK_FILE"
+            FOUND=TRUE
+            break
+          fi
+          ;;
+
+        *)
+          if [ -z "$DOWNLOAD_1ST_FILE" ]; then
+            DOWNLOAD_1ST_FILE=$CHECK_FILE
+          fi
+
+          if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
+            CURRENT_FILE="$CHECK_FILE"
+            FOUND=TRUE
+            break
+          fi
+          ;;
+      esac
     done
 
     if [ "$FOUND" = "TRUE" ]; then
@@ -768,7 +797,17 @@ check_software()
         if [ ! "$CHECK_HASH" = "yes" ]; then
           CURRENT_STATUS="OK"
         else
-          HASH=$(sha256sum $SOFTWARE_DIR/$CURRENT_FILE -b | cut -d" " -f1)
+
+          case "$CHECK_FILE" in
+
+            *://*)
+              HASH=$($CURL_CMD --silent $CHECK_FILE 2>/dev/null | sha256sum -b | cut -d" " -f1)
+              ;;
+
+            *)
+              HASH=$(sha256sum $SOFTWARE_DIR/$CURRENT_FILE -b | cut -d" " -f1)
+              ;;
+          esac
 
           if [ "$CURRENT_HASH" = "$HASH" ]; then
             CURRENT_STATUS="OK"
@@ -787,16 +826,28 @@ check_software()
 
     for CHECK_FILE in $(echo "$CURRENT_FILES" | tr "," "\n") ; do
 
-      if [ -z "$DOWNLOAD_1ST_FILE" ]; then
-        DOWNLOAD_1ST_FILE=$CHECK_FILE
-      fi
+      # Check for absolute download link
+      case "$CHECK_FILE" in
+        *://*)
+          DOWNLOAD_FILE=$CHECK_FILE
 
-      DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
+           if [ -z "$DOWNLOAD_1ST_FILE" ]; then
+             DOWNLOAD_1ST_FILE=$(basename $CHECK_FILE)
+           fi
 
-      CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
-      STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
+          ;;
 
-      if [ -n "$STATUS_RET" ]; then
+        *)
+          DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
+
+          if [ -z "$DOWNLOAD_1ST_FILE" ]; then
+            DOWNLOAD_1ST_FILE=$CHECK_FILE
+          fi
+          ;;
+      esac
+
+      http_head_check "$DOWNLOAD_FILE"
+      if [ "$?" = "1" ]; then
         CURRENT_FILE="$CHECK_FILE"
         FOUND=TRUE
         break
@@ -812,7 +863,6 @@ check_software()
         if [ ! "$CHECK_HASH" = "yes" ]; then
           CURRENT_STATUS="OK"
         else
-          DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
           HASH=$($CURL_CMD --silent $DOWNLOAD_FILE 2>/dev/null | sha256sum -b | cut -d" " -f1)
 
           if [ "$CURRENT_HASH" = "$HASH" ]; then
@@ -825,19 +875,25 @@ check_software()
     fi
   fi
 
+  CURRENT_DOWNLOAD_URL=""
+
   case "$CURRENT_NAME" in
+
     domino|traveler|volt|verse|capi)
 
-      if [ -z "$CURRENT_PARTNO" ]; then
-        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
-      elif [ "$CURRENT_PARTNO" = "-" ]; then
-        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
-      else
-        CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+      if [ -n "$DOWNLOAD_1ST_FILE" ]; then
+        if [ -z "$CURRENT_PARTNO" ]; then
+          CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+        elif [ "$CURRENT_PARTNO" = "-" ]; then
+          CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+        else
+          CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+        fi
       fi
       ;;
 
     startscript)
+
       STARTSCRIPT_FILE=domino-startscript_v${CURRENT_VER}.taz
       CURRENT_DOWNLOAD_URL=${STARTSCRIPT_GIT_URL}/releases/download/v${CURRENT_VER}/domino-startscript_v${CURRENT_VER}.taz
      ;;
@@ -923,10 +979,8 @@ check_software_status()
 
     DOWNLOAD_FILE=$DOWNLOAD_FROM/$SOFTWARE_FILE_NAME
 
-    CURL_RET=$($CURL_CMD "$DOWNLOAD_FILE" --silent --head 2>&1)
-    STATUS_RET=$(echo $CURL_RET | grep 'HTTP/1.1 200 OK')
-    if [ -n "$STATUS_RET" ]; then
-
+    http_head_check "$DOWNLOAD_FILE"
+    if [ "$?" = "1" ]; then
       DOWNLOAD_SOFTWARE_FILE=$DOWNLOAD_FILE
       echo "Checking software via [$DOWNLOAD_SOFTWARE_FILE]"
     fi
@@ -1035,7 +1089,7 @@ SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 SOFTWARE_PORT=7777
 SOFTWARE_FILE_NAME=software.txt
 SOFTWARE_CONTAINER=hclsoftware
-CURL_CMD="curl --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
+CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 VERSION_FILE_NAME=current_version.txt
 
