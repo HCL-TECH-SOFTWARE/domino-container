@@ -529,36 +529,70 @@ check_from_image()
 
   esac
 
-  header "Base Image - $LINUX_NAME"
+  HEADER "base Image - $LINUX_NAME"
 }
 
 
+set_standard_image_labels()
+{
+
+  if [ -z "$CONTAINER_MAINTAINER" ]; then
+    CONTAINER_MAINTAINER="thomas.hampel, daniel.nashed@nashcom.de"
+  fi
+
+  if [ -z "$CONTAINER_VENDOR" ]; then
+    CONTAINER_VENDOR="Domino Container Community Project"
+  fi
+
+  if [ -z "$CONTAINER_DOMINO_NAME" ]; then
+    CONTAINER_DOMINO_NAME="HCL Domino Community Image"
+  fi
+
+  if [ -z "$CONTAINER_DOMINO_DESCRIPTION" ]; then
+    CONTAINER_DOMINO_DESCRIPTION="HCL Domino Enterprise Server"
+  fi
+
+  if [ -z "$CONTAINER_TRAVELER_NAME" ]; then
+    CONTAINER_TRAVELER_NAME="HCL Traveler Community Image"
+  fi
+
+  if [ -z "$CONTAINER_TRAVELER_DESCRIPTION" ]; then
+    CONTAINER_TRAVELER_DESCRIPTION="HCL Traveler Mobile Sync Server"
+  fi
+
+  if [ -z "$CONTAINER_VOLT_NAME" ]; then
+    CONTAINER_VOLT_NAME="HCL Volt Community Image"
+  fi
+
+  if [ -z "$CONTAINER_VOLT_DESCRIPTION" ]; then
+    CONTAINER_VOLT_DESCRIPTION="HCL Volt - Low Code platform"
+  fi
+}
+
 build_domino()
 {
-  CONTAINER_DESCRIPTION="HCL Domino Enterprise Server"
-
   $CONTAINER_CMD build --no-cache \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
-    --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
-    --label name="HCL Domino Community Image" \
-    --label vendor="Domino Container Community Project" \
-    --label description="$CONTAINER_DESCRIPTION" \
-    --label summary="$CONTAINER_DESCRIPTION" \
+    --label maintainer="$CONTAINER_MAINTAINER" \
+    --label name="$CONTAINER_DOMINO_NAME" \
+    --label vendor="$CONTAINER_VENDOR" \
+    --label description="$CONTAINER_DOMINO_DESCRIPTION" \
+    --label summary="$CONTAINER_DOMINO_DESCRIPTION" \
     --label version="$DOCKER_IMAGE_VERSION" \
-    --label "buildtime"="$BUILDTIME" \
+    --label buildtime="$BUILDTIME" \
     --label release="$BUILDTIME" \
     --label architecture="x86_64" \
-    --label "io.k8s.description"="HCL Domino Community Image" \
-    --label "io.k8s.display-name"="HCL Domino Community Image" \
+    --label io.k8s.description="$CONTAINER_DOMINO_DESCRIPTION" \
+    --label io.k8s.display-name="$CONTAINER_DOMINO_NAME" \
     --label io.openshift.expose-services="1352:nrpc 80:http 110:pop3 143:imap 389:ldap 443:https 636:ldaps 993:imaps 995:pop3s" \
     --label io.openshift.tags="domino" \
     --label io.openshift.non-scalable=true \
     --label io.openshift.min-memory=2Gi \
     --label io.openshift.min-cpu=2 \
-    --label DominoDocker.maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
-    --label DominoDocker.description="$DOCKER_DESCRIPTION" \
+    --label DominoDocker.maintainer="$CONTAINER_MAINTAINER" \
+    --label DominoDocker.description="$CONTAINER_DOMINO_DESCRIPTION" \
     --label DominoDocker.version="$DOCKER_IMAGE_VERSION" \
     --label DominoDocker.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME=$PROD_NAME \
@@ -581,25 +615,23 @@ build_domino()
 
 build_traveler()
 {
-  CONTAINER_DESCRIPTION="HCL Traveler"
-
   $CONTAINER_CMD build --no-cache \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
-    --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
-    --label name="HCL Traveler Community Image" \
-    --label vendor="Domino Container Community Project" \
-    --label description="HCL Traveler Mobile Sync Server" \
-    --label summary="HCL Traveler Mobile Sync Server" \
+    --label maintainer="$CONTAINER_MAINTAINER" \
+    --label name="$CONTAINER_TRAVELER_NAME" \
+    --label vendor="$CONTAINER_VENDOR" \
+    --label description="$CONTAINER_TRAVELER_DESCRIPTION" \
+    --label summary="$CONTAINER_TRAVELER_NAME" \
     --label version="$DOCKER_IMAGE_VERSION" \
-    --label "buildtime"="$BUILDTIME" \
+    --label buildtime="$BUILDTIME" \
     --label release="$BUILDTIME" \
     --label architecture="x86_64" \
-    --label "io.k8s.description"="HCL Traveler Community Image" \
-    --label "io.k8s.display-name"="HCL Traveler Community Image" \
+    --label io.k8s.description="$CONTAINER_TRAVELER_DESCRIPTION" \
+    --label io.k8s.display-name="$CONTAINER_TRAVELER_NAME" \
     --label io.openshift.expose-services="1352:nrpc 25:smtp 80:http 389:ldap 443:https 636:ldaps" \
-    --label TravelerDocker.description="$CONTAINER_DESCRIPTION" \
+    --label TravelerDocker.description="$CONTAINER_TRAVELER_DESCRIPTION" \
     --label TravelerDocker.version="$DOCKER_IMAGE_VERSION" \
     --label TravelerDocker.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME="$PROD_NAME" \
@@ -612,25 +644,23 @@ build_traveler()
 
 build_volt()
 {
-  CONTAINER_DESCRIPTION="HCL Volt"
-
   $CONTAINER_CMD build --no-cache \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
-    --label maintainer="thomas.hampel, daniel.nashed@nashcom.de" \
-    --label name="HCL Volt Community Image" \
-    --label vendor="Domino Container Community Project" \
-    --label description="HCL Volt - Low Code platform" \
-    --label summary="HCL Volt - Low Code platform" \
+    --label maintainer="$CONTAINER_MAINTAINER" \
+    --label name="$CONTAINER_VOLT_NAME" \
+    --label vendor="$CONTAINER_VENDOR" \
+    --label description="$CONTAINER_VOLT_DESCRIPTION" \
+    --label summary="$CONTAINER_VOLT_DESCRIPTION" \
     --label version="$DOCKER_IMAGE_VERSION" \
-    --label "buildtime"="$BUILDTIME" \
+    --label buildtime="$BUILDTIME" \
     --label release="$BUILDTIME" \
     --label architecture="x86_64" \
-    --label "io.k8s.description"="HCL Volt Community Image" \
-    --label "io.k8s.display-name"="HCL Volt Community Image" \
+    --label io.k8s.description="$CONTAINER_VOLT_DESCRIPTION" \
+    --label io.k8s.display-name="$CONTAINER_VOLT_NAME" \
     --label io.openshift.expose-services="1352:nrpc 25:smtp 80:http 389:ldap 443:https 636:ldaps" \
-    --label VoltDocker.description="$CONTAINER_DESCRIPTION" \
+    --label VoltDocker.description="$CONTAINER_VOLT_DESCRIPTION" \
     --label VoltDocker.version="$DOCKER_IMAGE_VERSION" \
     --label VoltDocker.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME="$PROD_NAME" \
@@ -689,6 +719,8 @@ docker_build()
   DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
 
   export BUILDAH_FORMAT
+
+  set_standard_image_labels
 
   case "$PROD_NAME" in
 
