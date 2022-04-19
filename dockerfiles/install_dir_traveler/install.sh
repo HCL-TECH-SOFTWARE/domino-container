@@ -120,6 +120,7 @@ install_file "$INSTALL_DIR/healthcheck.sh" "/healthcheck.sh" root root 755
 
 # Remove uninstaller --> we never uninstall but rebuild from scratch
 remove_directory $Notes_ExecDirectory/_uninst
+remove_directory $Notes_ExecDirectory/_HCL_Traveler_installation
 
 # Ensure permissons are set correctly for data directory
 chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
