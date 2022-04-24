@@ -13,7 +13,7 @@ export LANG=C
 
 if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
   TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino1201.properties
-elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "12*")" ]; then
+elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120000*")" ]; then
   TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
 else
   # Assume latest version (No version check and no version specified)
