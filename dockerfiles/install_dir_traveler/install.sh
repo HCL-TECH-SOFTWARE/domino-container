@@ -16,8 +16,8 @@ if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
 elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "12*")" ]; then
   TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
 else
-  # Assume Domino 12 properties
-  TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
+  # Assume latest version (No version check and no version specified)
+  TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_hcl.properties
 fi
 
 # Traveler specific installer defines to check for successful installation
