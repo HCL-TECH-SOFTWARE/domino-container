@@ -1162,8 +1162,12 @@ if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
     DOMINO_DOCKER_CFG_DIR=~/DominoDocker
     CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/build.cfg
 
-  else
+  elif [ -r ~/.DominoDocker/build.cfg ]; then
     DOMINO_DOCKER_CFG_DIR=~/.DominoDocker
+    CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/build.cfg
+
+  else
+    DOMINO_DOCKER_CFG_DIR=~/.DominoContainer
     CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_CFG_FILE
   fi
 fi
