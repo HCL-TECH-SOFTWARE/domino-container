@@ -18,21 +18,23 @@ You can also use an existing volume. All volume types your container infrastruct
 ### Creating a new container from an image manually
 
 Run a new Domino server with the configuration details of your choice.
-Make sure to specify the base image name at the very end of this command
+Make sure to specify the base image name at the very end of this command.
+
+Note: For values containing blanks use quotes around the whole env parameter!
 
 ```bash
 docker run -it \
-     -e "SetupAutoConfigure: 1 \
-     -e "SERVERSETUP_SERVER_TYPE: first \
-     -e "SERVERSETUP_ADMIN_FIRSTNAME: John \
-     -e "SERVERSETUP_ADMIN_LASTNAME: Doe \
-     -e "SERVERSETUP_ADMIN_PASSWORD: domino4ever \
-     -e "SERVERSETUP_ADMIN_IDFILEPATH: admin.id \
-     -e "SERVERSETUP_ORG_CERTIFIERPASSWORD: domino4ever \
-     -e "SERVERSETUP_SERVER_DOMAINNAME: DominoDemo \
-     -e "SERVERSETUP_ORG_ORGNAME: Domino-Demo \
-     -e "SERVERSETUP_SERVER_NAME: domino-demo-v12 \
-     -e "SERVERSETUP_NETWORK_HOSTNAME: domino.acme.com \
+     -e SetupAutoConfigure=1 \
+     -e SERVERSETUP_SERVER_TYPE=first \
+     -e SERVERSETUP_ADMIN_FIRSTNAME=John \
+     -e SERVERSETUP_ADMIN_LASTNAME=Doe \
+     -e SERVERSETUP_ADMIN_PASSWORD=domino4ever \
+     -e SERVERSETUP_ADMIN_IDFILEPATH=admin.id \
+     -e SERVERSETUP_ORG_CERTIFIERPASSWORD=domino4ever \
+     -e SERVERSETUP_SERVER_DOMAINNAME=DominoDemo \
+     -e SERVERSETUP_ORG_ORGNAME=Domino-Demo \
+     -e SERVERSETUP_SERVER_NAME=domino-demo-v12 \
+     -e SERVERSETUP_NETWORK_HOSTNAME=domino.acme.com \
     -h domino.acme.com \
     -p 80:80 \
     -p 1352:1352 \

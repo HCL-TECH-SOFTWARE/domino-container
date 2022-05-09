@@ -529,7 +529,7 @@ check_from_image()
 
   esac
 
-  HEADER "base Image - $LINUX_NAME"
+  echo "base Image - $LINUX_NAME"
 }
 
 
