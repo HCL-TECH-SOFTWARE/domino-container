@@ -20,6 +20,8 @@ traveler|12.0.0|Traveler_12.0_Linux_ML.tar.gz|-|16d60a80f103dca6b0618cf45bc33ebb
 traveler|12.0.0FP1|Traveler_12.0.0FP1_Linux_ML.tar.gz|-|a4f80923173098aecc604d5116b935e044350185bb01d79b171af1b31d950897
 traveler|12.0.0FP2|Traveler_12.0.0FP2_Linux_ML.tar.gz|-|30a0297dbdba9fc7e5dfd9fc262020e6f1e8cd6120fb56739b84ac627f515be7
 traveler|12.0.1|Traveler_12.0.1_Linux_ML.tar.gz|-|d8e5ed96e4d58c9e8d4ebc0b2c91b18371b4c4db3423672ac07baeb56880faaa
+traveler|12.0.1FP1|Traveler_12.0.1FP1_Linux_ML.tar.gz|-|f8106fcf5a480880e61fca778d6aef5f775dcc402f6ca4a32d3c7e1a7cdd0d96
+traveler|12.0.2|Traveler_12.0.2_Linux_ML_EAP1.tar.gz|.|c71f75357698b97aa0f0d152c78a66b2a49ba3fe486d4f3f21a523516cbfdfcd
 volt|1.0.4.10|hcl.domino.volt-1.0.4.10.zip|-|0890b7314e0398d37d82a76de48b52a95723ea91d4c01cb1080ad0583a5420f8
 volt|1.0.5.15|hcl.domino.volt-1.0.5.15.zip|-|0efb0a18deb690d1e2b31790bab6628565aae88815ed2c8d69f1f7ff820f26db
 verse|2.0.1|HCL_Verse_2.0.1.zip|-|ce358d16d338e9a81b3402bb081ea3a2b39e6915e0f4670107df7144f1004ea8
