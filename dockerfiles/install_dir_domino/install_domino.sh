@@ -484,7 +484,7 @@ if [ -n "$LINUX_PRETTY_NAME" ]; then
   header "$LINUX_PRETTY_NAME"
 fi
 
-# This logic allows incremental installs for images based on each other (e.g. 10.0.1 -> 10.0.1FP1)
+# This logic allows incremental installs for images based on each other (e.g. 12.0.1 -> 12.0.1FP1)
 if [ -e $LOTUS ]; then
   FIRST_TIME_SETUP=0
   header "!! Incremantal install based on exiting Domino image !!"
