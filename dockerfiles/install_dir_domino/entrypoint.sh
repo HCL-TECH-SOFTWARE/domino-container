@@ -392,8 +392,9 @@ done
 # For debug purposes we want to keep the container alive if requested
 if [ "$DOMDOCK_NOEXIT" = "yes" ]; then
   while true
-    sleep 1
   do
+    sleep 1
+  done
 fi
 
 # Exit terminates the calling script cleanly

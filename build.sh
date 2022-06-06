@@ -188,7 +188,7 @@ check_container_environment()
 usage()
 {
   echo
-  echo "Usage: $(basename $SCRIPT_NAME) { domino | traveler | volt } version fp hf"
+  echo "Usage: $(basename $SCRIPT_NAME) { domino | traveler | volt | safelinx } version fp hf"
   echo
   echo "-checkonly      checks without build"
   echo "-verifyonly     checks download file checksum without build"
@@ -207,8 +207,9 @@ usage()
   echo "-from=<image>   builds from a specified build image. there are named images like 'ubi' predefined"
   echo "-openssl        adds OpenSSL to Domino image"
   echo "-borg           adds borg client and Domino Borg Backup integration to image"
-  echo "-verse          adds the latest verse version to a Domino image"
+  echo "-verse          adds the latest Verse version to a Domino image"
   echo "-capi           adds the C-API sdk/toolkit to a Domino image"
+  echo "-nomadweb       adds the latest Nomad Web version to a SafeLinx image"
   echo "-k8s-runas      adds K8s runas user support"
   echo "-startscript=x  installs specified start script version from software repository"
   echo
@@ -258,6 +259,8 @@ dump_config()
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
   echo "CAPI_VERSION       : [$CAPI_VERSION]"
+  echo "SAFELINX_VERSION   : [$SAFELINX_VERSION]"
+  echo "NOMADWEB_VERSION   : [$NOMADWEB_VERSION]"
   echo "BORG_INSTALL       : [$BORG_INSTALL]"
   echo "STARTSCRIPT_VER    : [$STARTSCRIPT_VER]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
@@ -462,6 +465,10 @@ check_from_image()
     if [ "$PROD_NAME" = "domino" ]; then
       LINUX_NAME="CentOS Stream"
       BASE_IMAGE=quay.io/centos/centos:stream8
+    elif [ "$PROD_NAME" = "safelinx" ]; then
+      LINUX_NAME="CentOS Stream"
+      BASE_IMAGE=quay.io/centos/centos:stream8
+
     else
       BASE_IMAGE=hclcom/domino:latest
     fi
@@ -671,6 +678,36 @@ build_volt()
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 }
 
+build_safelinx()
+{
+  $CONTAINER_CMD build --no-cache \
+    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    -t $DOCKER_IMAGE \
+    -f $DOCKER_FILE \
+    --label maintainer="$CONTAINER_MAINTAINER" \
+    --label name="$CONTAINER_SAFELINX_NAME" \
+    --label vendor="$CONTAINER_VENDOR" \
+    --label description="$CONTAINER_SAFELINX_DESCRIPTION" \
+    --label summary="$CONTAINER_SAFELINX_DESCRIPTION" \
+    --label version="$DOCKER_IMAGE_VERSION" \
+    --label buildtime="$BUILDTIME" \
+    --label release="$BUILDTIME" \
+    --label architecture="x86_64" \
+    --label io.k8s.description="$CONTAINER_SAFELINX_DESCRIPTION" \
+    --label io.k8s.display-name="$CONTAINER_SAFELINX_NAME" \
+    --label io.openshift.expose-services="80:http 443:https" \
+    --label SafeLinxContainer.description="$CONTAINER_SAFELINX_DESCRIPTION" \
+    --label SafeLinxContainer.version="$DOCKER_IMAGE_VERSION" \
+    --label SafeLinxContainer.buildtime="$BUILDTIME" \
+    --build-arg PROD_NAME="$PROD_NAME" \
+    --build-arg PROD_VER="$PROD_VER" \
+    --build-arg NOMADWEB_VERSION="$NOMADWEB_VERSION" \
+    --build-arg DownloadFrom="$DOWNLOAD_FROM" \
+    --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
+    --build-arg BASE_IMAGE=$BASE_IMAGE \
+    --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
+}
+
 docker_build()
 {
   # Get product name from file name
@@ -745,6 +782,13 @@ docker_build()
       DOCKER_FILE=dockerfile_volt
 
       build_volt
+      ;;
+
+    safelinx)
+
+      DOCKER_FILE=dockerfile_safelinx
+
+      build_safelinx
       ;;
 
     *)
@@ -912,7 +956,7 @@ check_software()
 
   case "$CURRENT_NAME" in
 
-    domino|traveler|volt|verse|capi|borg)
+    domino|traveler|volt|verse|capi|borg|safelinx|nomadweb)
 
       if [ -n "$DOWNLOAD_1ST_FILE" ]; then
         if [ -z "$CURRENT_PARTNO" ]; then
@@ -1033,9 +1077,14 @@ check_software_status()
     check_software_file "domino"
     check_software_file "traveler"
     check_software_file "volt"
+    check_software_file "safelinx"
 
     if [ -n "$VERSE_VERSION" ]; then
       check_software_file "verse" "$VERSE_VERSION"
+    fi
+
+    if [ -n "$NOMADWEB_VERSION" ]; then
+      check_software_file "nomadweb" "$NOMADWEB_VERSION"
     fi
 
     if [ -n "$CAPI_VERSION" ]; then
@@ -1071,6 +1120,10 @@ check_software_status()
 
     if [ -n "$VERSE_VERSION" ]; then
       check_software_file "verse" "$VERSE_VERSION"
+    fi
+
+    if [ -n "$NOMADWEB_VERSION" ]; then
+      check_software_file "nomadweb" "$NOMADWEB_VERSION"
     fi
 
     if [ -n "$CAPI_VERSION" ]; then
@@ -1199,15 +1252,23 @@ for a in $@; do
 
   p=$(echo "$a" | awk '{print tolower($0)}')
   case "$p" in
-    domino|traveler|volt)
+    domino|traveler|volt|safelinx)
       PROD_NAME=$p
       ;;
 
-    -verse*|verse*)
+    -verse*)
       VERSE_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$VERSE_VERSION" ]; then
         get_current_addon_version verse VERSE_VERSION
+      fi
+      ;;
+
+   -nomadweb*)
+      NOMADWEB_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$NOMADWEB_VERSION" ]; then
+        get_current_addon_version nomadweb NOMADWEB_VERSION
       fi
       ;;
 

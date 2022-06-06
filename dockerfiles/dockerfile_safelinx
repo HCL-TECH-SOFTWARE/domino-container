@@ -1,0 +1,36 @@
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2022 - APACHE 2.0 see LICENSE
+############################################################################
+
+ARG BASE_IMAGE=
+FROM $BASE_IMAGE
+
+# External arguments with a default value
+ARG LinuxYumUpdate=
+ARG DownloadFrom=
+ARG PROD_NAME=
+ARG PROD_VER=
+ARG NOMADWEB_VERSION=
+ARG LocalInstallDir=/tmp/install
+ARG SPECIAL_CURL_ARGS=
+
+USER root
+
+# Copy Install Files to container
+COPY install_dir_common $LocalInstallDir 
+COPY install_dir_safelinx $LocalInstallDir
+
+# Prepare environment for Domino
+# Update, Install required packages and run separate install script
+
+RUN $LocalInstallDir/install_linux.sh && \
+  $LocalInstallDir/install.sh && \
+  rm -rf $LocalInstallDir
+
+HEALTHCHECK --interval=60s --timeout=10s CMD /healthcheck.sh
+
+# Expose Ports HTTP HTTPS SafeLinx Admin/Monitoring?
+EXPOSE 80 443 9551 9553 9557
+
+ENTRYPOINT ["/entrypoint.sh"]
+

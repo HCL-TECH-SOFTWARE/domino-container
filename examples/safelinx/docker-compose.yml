@@ -1,0 +1,31 @@
+version: '3.6'
+services:
+
+  safelinx:
+
+    image: hclcom/safelinx:latest 
+    container_name: ${CONTAINER_NAME}
+    hostname: ${CONTAINER_HOSTNAME} 
+    stop_grace_period: 30s
+
+    environment:
+      NOMAD_HOST: ${NOMAD_HOST}
+      DOMINO_SERVER: ${DOMINO_SERVER}
+      DOMINO_HOST: ${DOMINO_HOST}
+      DOMINO_ORG: ${DOMINO_ORG}
+
+    cap_add:
+      - SYS_PTRACE
+
+    ports:
+      - ${CONTAINER_HTTPS_PORT}:443
+
+    volumes:
+      - safelinx_vol:/opt/hcl/SafeLinx/datastore
+
+volumes:
+
+  safelinx_vol:
+    name: ${CONTAINER_VOLUME} 
+    external: false
+
