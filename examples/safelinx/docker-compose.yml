@@ -6,13 +6,13 @@ services:
     image: hclcom/safelinx:latest 
     container_name: ${CONTAINER_NAME}
     hostname: ${CONTAINER_HOSTNAME} 
-    stop_grace_period: 30s
+    stop_grace_period: 60s
 
     environment:
       NOMAD_HOST: ${NOMAD_HOST}
-      DOMINO_SERVER: ${DOMINO_SERVER}
-      DOMINO_HOST: ${DOMINO_HOST}
       DOMINO_ORG: ${DOMINO_ORG}
+      LDAP_HOST: ${LDAP_HOST}
+      NOMAD_DOMINO_CFG: ${NOMAD_DOMINO_CFG}
 
     cap_add:
       - SYS_PTRACE
