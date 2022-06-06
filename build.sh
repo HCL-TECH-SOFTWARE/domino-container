@@ -574,6 +574,16 @@ set_standard_image_labels()
   if [ -z "$CONTAINER_VOLT_DESCRIPTION" ]; then
     CONTAINER_VOLT_DESCRIPTION="HCL Volt - Low Code platform"
   fi
+
+
+  if [ -z "$CONTAINER_SAFELINX_NAME" ]; then
+    CONTAINER_SAFELINX_NAME="HCL SafeLinx Community Image"
+  fi
+
+  if [ -z "$CONTAINER_SAFELINX_DESCRIPTION" ]; then
+    CONTAINER_SAFELINX_DESCRIPTION="HCL SafeLinx - Secure reverse proxy & VPN"
+  fi
+
 }
 
 build_domino()

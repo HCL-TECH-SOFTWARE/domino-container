@@ -56,11 +56,11 @@ fi
 
 # LDAP configuration (by default use Domino server and organization)
 
-if [ -z "$LDAP_HOST ]; then
+if [ -z "$LDAP_HOST" ]; then
   LDAP_HOST=$DOMINO_HOST
 fi
 
-if [ -z "$LDAP_BASEDN ]; then
+if [ -z "$LDAP_BASEDN" ]; then
   LDAP_BASEDN=$DOMINO_ORG
 fi
 
@@ -115,7 +115,6 @@ ConfigureSafeLinx()
     -a onlysecureconns=0         \
     -a dbmstype=0                \
     -a wpsstoretype=0            \
-    #-a logfile="/log/wg.log"    \
     -a wgmgrdlog="err,log,warn"
 
   # Create a SafeLinx server resource
