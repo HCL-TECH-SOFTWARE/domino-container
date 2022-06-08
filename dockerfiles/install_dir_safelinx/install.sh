@@ -91,6 +91,8 @@ setcap 'cap_net_bind_service=+ep' /opt/hcl/SafeLinx/bin/wgated
 cd $CURRENT_DIR
 remove_directory $PROD_NAME
 
+mkdir /cert-mount
+
 echo "Installed SafeLinx"
 
 # Install Nomad Web if requested

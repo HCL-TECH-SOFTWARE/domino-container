@@ -3,16 +3,15 @@ services:
 
   safelinx:
 
-    image: hclcom/safelinx:latest 
+    #image: hclcom/safelinx:latest 
+    image: safelinx:test 
     container_name: ${CONTAINER_NAME}
     hostname: ${CONTAINER_HOSTNAME} 
     stop_grace_period: 60s
 
     environment:
-      NOMAD_HOST: ${NOMAD_HOST}
       DOMINO_ORG: ${DOMINO_ORG}
       LDAP_HOST: ${LDAP_HOST}
-      NOMAD_DOMINO_CFG: ${NOMAD_DOMINO_CFG}
 
     cap_add:
       - SYS_PTRACE
@@ -23,9 +22,11 @@ services:
     volumes:
       - safelinx_vol:/opt/hcl/SafeLinx/datastore
 
+      - ./cert-mount:/cert-mount:ro
+
 volumes:
 
   safelinx_vol:
-    name: ${CONTAINER_VOLUME} 
+    name: ${CONTAINER_VOLUME}
     external: false
 

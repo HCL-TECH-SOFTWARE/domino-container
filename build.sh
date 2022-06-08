@@ -1266,7 +1266,7 @@ for a in $@; do
       PROD_NAME=$p
       ;;
 
-    -verse*)
+    -verse*|+verse*)
       VERSE_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$VERSE_VERSION" ]; then
@@ -1274,7 +1274,7 @@ for a in $@; do
       fi
       ;;
 
-   -nomadweb*)
+   -nomadweb*|+nomadweb*)
       NOMADWEB_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$NOMADWEB_VERSION" ]; then
@@ -1282,7 +1282,7 @@ for a in $@; do
       fi
       ;;
 
-   -capi*)
+   -capi*|+capi*)
       CAPI_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$CAPI_VERSION" ]; then
@@ -1290,7 +1290,7 @@ for a in $@; do
       fi
       ;;
 
-    -startscript=*)
+    -startscript=*|+startscript=*)
       STARTSCRIPT_VER=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
