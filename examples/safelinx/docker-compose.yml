@@ -3,8 +3,7 @@ services:
 
   safelinx:
 
-    #image: hclcom/safelinx:latest 
-    image: safelinx:test 
+    image: hclcom/safelinx:latest 
     container_name: ${CONTAINER_NAME}
     hostname: ${CONTAINER_HOSTNAME} 
     stop_grace_period: 60s
