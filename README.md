@@ -13,7 +13,7 @@ HCL Business Partners with the [Partner Pack](https://www.hcltechsw.com/resource
 ## Supported environments
 
 The project is supported on Docker Desktop, Docker Server, Podman, Rancher Desktop, Kubernetes (K8s) and OpenShift.
-See detailed information about [supported run-time and build environments](docs/supported-environments.md).
+See detailed information about [supported run-time and build environments](docs/concept_environments.md).
 
 ## Documentation & Quickstart
 
