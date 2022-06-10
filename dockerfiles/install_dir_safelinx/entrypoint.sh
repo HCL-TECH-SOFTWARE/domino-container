@@ -31,7 +31,15 @@ log_error()
   echo
   echo "ERROR - $@"
   echo
-  exit 1
+}
+
+log_debug()
+{
+  if [ -z "$DEBUG" ]; then
+    return 0
+  fi
+
+  echo "$@"
 }
 
 remove_file()
@@ -51,6 +59,39 @@ remove_file()
   fi
 
   return 0
+}
+
+nsh_cmp()
+{
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ -z "$2" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$2" ]; then
+    return 1
+  fi
+
+  if [ -x /usr/bin/cmp ]; then
+    cmp -s "$1" "$2"
+    return $?
+  fi
+
+  HASH1=$(sha256sum "$1" | cut -d" " -f1)
+  HASH2=$(sha256sum "$2" | cut -d" " -f1)
+
+  if [ "$HASH1" = "$HASH2" ]; then
+    return 0
+  fi
+
+  return 1
 }
 
 
@@ -74,8 +115,9 @@ if [ -z "$SAFELINX_HOST" ]; then
   SAFELINX_HOST=$NOMAD_HOST
 fi
 
-if [ -z "$CERTMGR_HOST" ]; then
-  CERTMGR_HOST=$NOMAD_HOST
+# Default certificate check interval is 5 minutes
+if [ -z "$CERTMGR_CHECK_INTERVAL" ]; then
+  CERTMGR_CHECK_INTERVAL=300
 fi
 
 # LDAP configuration (by default use Domino server and organization)
@@ -104,16 +146,17 @@ fi
 SAFELINX_DATASTORE=/opt/hcl/SafeLinx/datastore
 CONFIG_BASE="o=local"
 
-# Temporary or to import certs & keys
-
-CERT_DIR=/tmp
+# Certificates and key need to be persistent for updates
+CERT_DIR=$SAFELINX_DATASTORE
 SERVER_KEY=$CERT_DIR/server.key
 SERVER_CERT=$CERT_DIR/server.pem
 SERVER_CSR=$CERT_DIR/server.csr
-UPD_PEM_FILE=/tmp/upd_chain.pem
-UPD_CERT=/cert-mount/server.pem
-UPD_KEY=/cert-mount/server.key
 
+UPD_MOUNT_CERT=/cert-mount/server.pem
+UPD_MOUNT_KEY=/cert-mount/server.key
+
+UPD_PEM_FILE=$CERT_DIR/upd_chain.pem
+UPD_P12_FILE=$CERT_DIR/upd_server.p12
 
 # Store CA and P12 in datastore (it's a simple CA and cannot be protected). But if we get a real PEM, set a strong password
 
@@ -146,7 +189,6 @@ if [ -n "$NOMAD_DOMINO_CFG" ]; then
   echo "NOMAD_DOMINO_CFG : [$NOMAD_DOMINO_CFG]"
 fi
 
-echo
 echo "LDAP_HOST        : [$LDAP_HOST]"
 echo "LDAP_USER        : [$LDAP_USER]"
 echo "LDAP_BASEDN      : [$LDAP_BASEDN]"
@@ -236,6 +278,7 @@ ConfigureSafeLinx()
   cp -f /opt/hcl/SafeLinx/wgated.conf $SAFELINX_DATASTORE
 }
 
+
 create_local_ca_cert_p12()
 {
   log_space "Creating new certificate for $NOMAD_HOST"
@@ -257,82 +300,234 @@ create_local_ca_cert_p12()
 
   openssl pkcs12 -export -out "$1" -inkey "$SERVER_KEY" -in "$SERVER_CERT" -certfile "$CA_CERT" -password "pass:$P12_PASSWORD"
 
-  # Remove PEM files to not import it again next time. Keep the CA key & cert.
-
-  remove_file "$SERVER_KEY"
-  remove_file "$SERVER_CERT"
   remove_file "$SERVER_CSR"
 }
 
-
-check_cert_update()
+convert_pem_to_p12()
 {
-  # Check for new certificate
-  openssl s_client -servername $NOMAD_HOST -showcerts $CERTMGR_HOST:443 </dev/null 2>/dev/null | sed -ne '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > $UPD_PEM_FILE
+  # $1 = key in PEM format
+  # $2 = cert cain in PEM format
+  # $3 = P12 file
+
+  log_debug "Converting certificate from PEM to PKCS12"
+
+  openssl pkcs12 -export -out "$UPD_P12_FILE" -inkey "$1" -in "$2" -password "pass:$P12_PASSWORD"
 
   if [ ! "$?" = "0" ]; then
-    log_error "Cannot retrieve certificate from CertMgr server"
+    remove_file "$UPD_P12_FILE"
     return 1
+  fi
+
+  # Update P12 if successful
+  cp -f "$UPD_P12_FILE" "$3"
+  remove_file "$UPD_P12_FILE"
+
+  # LATER: update the password if random password
+  # chwg -s hcl-wlNomad -l "cn=nomad-web-proxy0,cn=NomadServer,$CONFIG_BASE" -a hcl-wlkeypwd="$P12_PASSWORD"
+
+  return 0
+}
+
+show_cert()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 0
+  fi
+
+  local SAN=$(openssl x509 -in "$1" -noout -ext subjectAltName | grep "DNS:" | xargs )
+  local SUBJECT=$(openssl x509 -in "$1" -noout -subject | cut -d '=' -f 2- )
+  local ISSUER=$(openssl x509 -in "$1" -noout -issuer | cut -d '=' -f 2- )
+  local EXPIRATION=$(openssl x509 -in "$1" -noout -enddate | cut -d '=' -f 2- )
+  local FINGERPRINT=$(openssl x509 -in "$1" -noout -fingerprint | cut -d '=' -f 2- )
+  local SERIAL=$(openssl x509 -in "$1" -noout -serial | cut -d '=' -f 2- )
+
+  echo
+  echo "SAN         : $SAN"
+  echo "Subject     : $SUBJECT"
+  echo "Issuer      : $ISSUER"
+  echo "Expiration  : $EXPIRATION"
+  echo "Fingerprint : $FINGERPRINT"
+  echo "Serial      : $SERIAL"
+  echo
+}
+
+cert_update()
+{
+  local NEW_PEM="$1"
+  local CURRENT_PEM="$2"
+  local CURRENT_KEY="$3"
+
+  if [ -z "$NEW_PEM" ]; then
+    log_error "No new PEM specified"
+     return 1
+  fi
+
+  if [ ! -e "$NEW_PEM" ]; then
+    log_error "New PEM does not exist [$NEW_PEM]"
+    return 1
+  fi
+
+  if [ -z "$CURRENT_PEM" ]; then
+    log_error "No curren PEM specified"
+    remove_file "$NEW_PEM"
+    return 1
+  fi
+
+  if [ -z "$CURRENT_KEY" ]; then
+    log_error "No new current key specified"
+    remove_file "$NEW_PEM"
+    return 1
+  fi
+
+  # Compare if there is an existing cert, else update in any case
+  if [ -e "$CURRENT_PEM" ]; then
+
+    # Get Fingerprints
+    local FINGER_PRINT_UPD=$(openssl x509 -in "$NEW_PEM" -noout -fingerprint -sha256 | cut -d '=' -f 2)
+    local FINGER_PRINT=$(openssl x509 -in "$CURRENT_PEM" -noout -fingerprint -sha256 | cut -d '=' -f 2)
+
+    if [ "$FINGER_PRINT" = "$FINGER_PRINT_UPD" ]; then
+      remove_file "$NEW_PEM"
+      return 1
+    fi
+  fi
+
+  # Get public key hash of updated cert and current key
+  local PUB_KEY_HASH=$(openssl x509 -in "$NEW_PEM" -noout -pubkey | openssl sha1 | cut -d ' ' -f 2)
+  local PUB_PKEY_HASH=$(openssl pkey -in "$CURRENT_KEY" -pubout | openssl sha1 | cut -d ' ' -f 2)
+
+  echo
+
+  # Both keys must be the same when matching certificate for existing key
+  if [ "$PUB_KEY_HASH" = "$PUB_PKEY_HASH" ]; then
+
+    echo
+    echo "Certificate Update"
+    echo "------------------"
+    show_cert "$NEW_PEM"
+
+  else
+
+    log_error "Certificate does not match key --> Not updating certificate"
+
+    echo "NEW"
+    show_cert "$NEW_PEM"
+    echo "OLD"
+    show_cert "$CURRENT_PEM"
+
+    remove_file "$NEW_PEM"
+    return 2
+  fi
+
+  # Keep updated cert for comparing at next update 
+  cp -f "$NEW_PEM" "$CURRENT_PEM"
+  remove_file "$NEW_PEM"
+
+  log_debug "Copying updated certificate [$NEW_PEM] -> [$CURRENT_PEM]"
+
+  convert_pem_to_p12 "$CURRENT_KEY" "$CURRENT_PEM" "$SERVER_P12"
+
+  return 0
+}
+
+check_cert_download()
+{
+  # Downloads certificate from server (usually a CertMgr server)
+  # Returns 0 if updated
+  # All other cases return an error
+
+  if [ -z "$CERTMGR_HOST" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$SERVER_KEY" ]; then
+    log_debug "No key found when checking CertMgr server"
+    return 2
+  fi
+
+  log_debug "Checking for certificate update on [$CERTMGR_HOST] for [$NOMAD_HOST]"
+
+  # Check for new certificate
+  openssl s_client -servername $NOMAD_HOST -showcerts $CERTMGR_HOST:443 </dev/null 2>/dev/null | sed -ne '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > "$UPD_PEM_FILE"
+
+  if [ ! "$?" = "0" ]; then
+    log_error "Cannot retrieve certificate from CertMgr server [$CERTMGR_HOST]"
+    return 3
   fi
 
   if [ ! -s "$UPD_PEM_FILE" ]; then
     log_error "No certificate returned by CertMgr server"
+    remove_file "$UPD_PEM_FILE"
+    return 4
+  fi
+
+  cert_update "$UPD_PEM_FILE" "$SERVER_CERT" "$SERVER_KEY" 
+  
+  return 0
+}
+
+
+check_cert_file_update()
+{
+  # Updates cert & key from mount
+
+  if [ ! -e "$UPD_MOUNT_CERT" ]; then
     return 1
   fi
 
-  # Get Fingerprint for certificate from server
-  FINGER_PRINT_UPD=$(openssl x509 -in $UPD_PEM_FILE -noout -fingerprint -sha256 | cut -d '=' -f 2)
-  FINGER_PRINT=$(openssl x509 -in $SERVER_CERT -noout -fingerprint -sha256 | cut -d '=' -f 2)
+  # File content modified?
+  nsh_cmp "$UPD_MOUNT_CERT" "$SERVER_CERT"
+  if [ $? -eq 0 ]; then
+    remove_file "$UPD_MOUNT_CERT"
+    remove_file "$UPD_MOUNT_KEY"
+    return 2
+  fi
 
-  if [ "$FINGER_PRINT" = "$FINGER_PRINT_UPD" ]; then
+  # Copy key if present (might have been passed once only)
+  if [ -e "$UPD_MOUNT_KEY" ]; then
+    cp -f "$UPD_MOUNT_KEY" "$SERVER_KEY"
+    remove_file "$UPD_MOUNT_KEY"
+  fi
+
+  # If there is no new or existing key, exporting to P12 makes no sence
+  if [ ! -e "$SERVER_KEY" ]; then
+    log_debug "No key found"
+    return 2
+  fi
+
+  cert_update "$UPD_MOUNT_CERT" "$SERVER_CERT" "$SERVER_KEY" 
+
+  return 0
+}
+
+wait_for_inital_cert()
+{
+  local seconds=0
+
+  if [ -e "$SERVER_P12" ]; then
+    log_debug "Startup: Server P12 already exists"
     return 0
   fi
 
-  # Get public key hash of updated cert
-  PUB_KEY_HASH=$(openssl x509 -in $UPD_PEM_FILE -noout -pubkey | openssl sha1 | cut -d ' ' -f 2)
+  while true; do
 
-  # Get public key hash of pkey on disk
-  PUB_PKEY_HASH=$(openssl pkey -in $SERVER_KEY -pubout | openssl sha1 | cut -d ' ' -f 2)
+    if [ -e "$UPD_MOUNT_CERT" ]; then
+      log_debug "Startup: Certficate to import found on mount after $seconds second(s)"
+      return 0
+    fi
 
-  # Both keys must be the same to have matching certificate for existing key
-  echo
+    if [ "$seconds" -ge 10 ]; then
+      log_space "Startup: Timeout waiting for initial certificate"
+      return 1
+    fi
 
-  if [ "$PUB_KEY_HASH" = "$PUB_PKEY_HASH" ]; then
-    echo "OK - Certificate is matching key --> Updating certificate"
-
-  else
-    log_error  "Certificate does not match key --> Not updating certificate"
-
-    UPD_SUBJECT=$(openssl x509 -in $UPD_PEM_FILE -noout -subject)
-    UPD_ISSUER=$(openssl x509 -in $UPD_PEM_FILE -noout -issuer)
-
-    CERT_SUBJECT=$(openssl x509 -in $SERVER_CERT -noout -subject)
-    CERT_ISSUER=$(openssl x509 -in $SERVER_CERT -noout -issuer)
-
-    echo
-    echo "Cert: $CERT_SUBJECT  [$CERT_ISSUER]"
-    echo "New:  $UPD_SUBJECT  [$UPD_ISSUER]"
-    echo
-
-    return 1
-  fi
-
-  remove_file "$UPD_PEM_FILE"
-
-}
-
-convert_pem_to_p12()
-{ 
-  log_space "Converting certificate from PEM to PKCS12"
-
-  openssl pkcs12 -export -out "$3" -inkey "$1" -in "$2" -password "pass:$P12_PASSWORD"
-
-  # Update password in config
-  # LATER: update the password if random password 
-  # chwg -s hcl-wlNomad -l "cn=nomad-web-proxy0,cn=NomadServer,$CONFIG_BASE" -a hcl-wlkeypwd="$P12_PASSWORD"
-
-  # Try to remove the PEM after creating P12. If they are mounted, this might fail
-  remove_file "$UPD_CERT"
+    sleep 1
+    seconds=$(expr $seconds + 1)
+  done
 }
 
 myterm()
@@ -351,7 +546,7 @@ trap myterm SIGTERM SIGHUP SIGQUIT SIGINT SIGKILL
 
 if [ -e "$SAFELINX_DATASTORE/wgated.conf" ]; then
 
-  log_space "SafeLinx/Nomad already configured"
+  log_space "SafeLinx already configured"
 
   # Copy saved config from datastore on startup
 
@@ -359,25 +554,27 @@ if [ -e "$SAFELINX_DATASTORE/wgated.conf" ]; then
 
 else
 
-  log_space "Configuring SafeLinx/Nomad"
+  log_space "Configuring SafeLinx"
   ConfigureSafeLinx
 fi
 
+wait_for_inital_cert
 
 # If there is a PEM update the P12
 
-if [ -e "$UPD_CERT" ]; then
-  convert_pem_to_p12 "$UPD_KEY" "$UPD_CERT" "$SERVER_P12"
+if [ -e "$UPD_MOUNT_CERT" ]; then
+  check_cert_file_update
+else
+  check_cert_download
+fi
 
 # If no P12 is there, create a new cert and convert it to P12
 
-elif [ ! -e "$SERVER_P12" ]; then
+if [ ! -e "$SERVER_P12" ]; then
   create_local_ca_cert_p12 "$SERVER_P12"
 fi
 
-
 #Clear password
-
 P12_PASSWORD=zzz
 
 
@@ -387,14 +584,43 @@ log_space "Starting SafeLinx server .."
 
 wgstart
 
+echo
+echo
+echo "Certificate"
+echo "-----------"
+
+if [ -e "$SERVER_CERT" ]; then
+  show_cert "$SERVER_CERT"
+else
+  echo "ERROR - No certificate found!"
+fi
+
+echo
+
 # Run in a loop and wait for termination
 
-while true
-do
+seconds=0
+
+while true; do
+
+  # Check for local cert update every second
+  if [ -e "$UPD_MOUNT_CERT" ]; then
+    check_cert_file_update
+
+  # Only check remote update in specified interval
+  else
+    sec_mod=$(expr $seconds "%" $CERTMGR_CHECK_INTERVAL)
+
+    if [ "$sec_mod" = "0" ]; then
+      check_cert_download
+    fi
+  fi
+
   sleep 1
+  seconds=$(expr $seconds + 1)
 done
 
-# Exit terminates the calling script cleanly
 
+# Exit terminates the calling script cleanly
 exit 0
 

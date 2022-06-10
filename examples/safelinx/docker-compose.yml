@@ -3,7 +3,7 @@ services:
 
   safelinx:
 
-    image: hclcom/safelinx:latest 
+    image: ${CONTAINER_IMAGE}
     container_name: ${CONTAINER_NAME}
     hostname: ${CONTAINER_HOSTNAME} 
     stop_grace_period: 60s
@@ -11,6 +11,8 @@ services:
     environment:
       DOMINO_ORG: ${DOMINO_ORG}
       LDAP_HOST: ${LDAP_HOST}
+      CERTMGR_HOST: pluto.csi-domino.com
+      CERTMGR_CHECK_INTERVAL: 5
 
     cap_add:
       - SYS_PTRACE
@@ -21,7 +23,7 @@ services:
     volumes:
       - safelinx_vol:/opt/hcl/SafeLinx/datastore
 
-      - ./cert-mount:/cert-mount:ro
+      - ./cert-mount:/cert-mount
 
 volumes:
 
