@@ -128,35 +128,77 @@ fi
 
 # LDAP authentication is optional, when allowing two additional LDAP attributes
 
-#LDAP_USER=ldap-user
-#LDAP_PASSWORD=password
-
-# ------------------------------------------------------------ 
+# ------------------------------------------------------------
 #
-#  When using anonymous LDAP add the following two fields 
+#  When using anonymous LDAP add the following two fields
 #  to LDAP anonymous queries in default config doc:
 #
 #  - mailserver
 #  - smtpfullhostdomain
 #
-# ------------------------------------------------------------ 
+# ------------------------------------------------------------
+
+#LDAP_USER=ldap-user
+#LDAP_PASSWORD=password
+
+# If LDAP port is not specified, authenticated LDAP requires always secure LDAP
+
+if [ -z "$LDAP_PORT" ]; then
+  if [ -z "$LDAP_USER" ]; then
+    LDAP_PORT=389
+  else
+    LDAP_PORT=636
+  fi
+fi
+
+# Determine LDAP SSL from port, if not specified
+
+if [ -z "$LDAP_SSL" ]; then
+  LDAP_SSL=auto
+fi
+
+if [ "$LDAP_SSL" = "auto" ]; then
+  if [ "$LDAP_PORT" = "389" ]; then
+    LDAP_SSL=0
+  else
+    LDAP_SSL=1
+  fi
+fi
+
+if [ -z "$LDAP_UNTRUSTED" ]; then
+  LDAP_UNTRUSTED=TRUE
+fi
+
 
 # Internal configuration
 
 SAFELINX_DATASTORE=/opt/hcl/SafeLinx/datastore
+
 CONFIG_BASE="o=local"
 
-# Certificates and key need to be persistent for updates
+# Certificates and key need to be persistent between container updates
 CERT_DIR=$SAFELINX_DATASTORE
+
+if [ -z "$TRUSTED_ROOT_FILE" ]; then
+  TRUSTED_ROOT_FILE=$CERT_DIR/trusted_roots.pem
+
+  # Create it just in case to avoid errors
+  touch "$TRUSTED_ROOT_FILE"
+fi
+
 SERVER_KEY=$CERT_DIR/server.key
 SERVER_CERT=$CERT_DIR/server.pem
 SERVER_CSR=$CERT_DIR/server.csr
 
-UPD_MOUNT_CERT=/cert-mount/server.pem
-UPD_MOUNT_KEY=/cert-mount/server.key
-
 UPD_PEM_FILE=$CERT_DIR/upd_chain.pem
 UPD_P12_FILE=$CERT_DIR/upd_server.p12
+
+CERT_MOUNT=/cert-mount
+
+UPD_MOUNT_CERT=$CERT_MOUNT/server.pem
+UPD_MOUNT_KEY=$CERT_MOUNT/server.key
+EXPORT_SECURE_PEM=$CERT_MOUNT/certstore_export.pem
+LAST_FINGERPRINT_ERROR=/tmp/last_fingerprint_error.txt
 
 # Store CA and P12 in datastore (it's a simple CA and cannot be protected). But if we get a real PEM, set a strong password
 
@@ -189,7 +231,10 @@ if [ -n "$NOMAD_DOMINO_CFG" ]; then
   echo "NOMAD_DOMINO_CFG : [$NOMAD_DOMINO_CFG]"
 fi
 
+echo "TRUSTED_ROOTS    : [$TRUSTED_ROOT_FILE]"
 echo "LDAP_HOST        : [$LDAP_HOST]"
+echo "LDAP_PORT        : [$LDAP_PORT]"
+echo "LDAP_SSL         : [$LDAP_SSL]"
 echo "LDAP_USER        : [$LDAP_USER]"
 echo "LDAP_BASEDN      : [$LDAP_BASEDN]"
 echo  ------------------------------------------------------------
@@ -228,17 +273,21 @@ ConfigureSafeLinx()
       -a cn="LDAP-Server"           \
       -a primaryou="$CONFIG_BASE"   \
       -a host="$LDAP_HOST"          \
-      -a ipServicePort=389          \
-      -a ibm-requiressl=0
+      -a ipServicePort="$LDAP_PORT" \
+      -a ibm-requiressl="$LDAP_SSL" \
+      -a ibm-wlkeyfile="$TRUSTED_ROOT_FILE" \
+      -a ibm-wlUntrusted="$LDAP_UNTRUSTED"
   else
 
     mkwg -s ibm-ldapServerPtr -g mk \
       -a cn="LDAP-Server"           \
       -a primaryou="$CONFIG_BASE"   \
       -a host="$LDAP_HOST"          \
-      -a ipServicePort=636          \
-      -a ibm-requiressl=1           \
+      -a ipServicePort="$LDAP_PORT" \
+      -a ibm-requiressl="$LDAP_SSL" \
       -a uid="$LDAP_USER"           \
+      -a ibm-wlkeyfile="$TRUSTED_ROOT_FILE" \
+      -a ibm-wlUntrusted="$LDAP_UNTRUSTED"  \
       -a ibm-ldapPassword="$LDAP_PASSWORD"
   fi
  
@@ -301,6 +350,16 @@ create_local_ca_cert_p12()
   openssl pkcs12 -export -out "$1" -inkey "$SERVER_KEY" -in "$SERVER_CERT" -certfile "$CA_CERT" -password "pass:$P12_PASSWORD"
 
   remove_file "$SERVER_CSR"
+
+  # Export new key and chain in one file with encrypted private key and show the password once on console
+
+  local EXPORT_PASSWORD=$(openssl rand -base64 32)
+
+  openssl pkey -in "$SERVER_KEY" -out "$EXPORT_SECURE_PEM" -aes256 -passout pass:"$EXPORT_PASSWORD"
+  cat "$SERVER_CERT" >> "$EXPORT_SECURE_PEM"
+  cat "$CA_CERT" >> "$EXPORT_SECURE_PEM"
+
+  log_space "Export Password: $EXPORT_PASSWORD"
 }
 
 convert_pem_to_p12()
@@ -400,8 +459,6 @@ cert_update()
   local PUB_KEY_HASH=$(openssl x509 -in "$NEW_PEM" -noout -pubkey | openssl sha1 | cut -d ' ' -f 2)
   local PUB_PKEY_HASH=$(openssl pkey -in "$CURRENT_KEY" -pubout | openssl sha1 | cut -d ' ' -f 2)
 
-  echo
-
   # Both keys must be the same when matching certificate for existing key
   if [ "$PUB_KEY_HASH" = "$PUB_PKEY_HASH" ]; then
 
@@ -412,14 +469,31 @@ cert_update()
 
   else
 
-    log_error "Certificate does not match key --> Not updating certificate"
+    if [ -e "$LAST_FINGERPRINT_ERROR" ]; then
+      CHECK_FINGERPRINT=$(cat "$LAST_FINGERPRINT_ERROR")
+    else
+      CHECK_FINGERPRINT=
+    fi
 
-    echo "NEW"
-    show_cert "$NEW_PEM"
-    echo "OLD"
-    show_cert "$CURRENT_PEM"
+    if [ "$CHECK_FINGERPRINT" = "$FINGER_PRINT_UPD" ]; then
+      log_debug "key and cert did not match again"
+
+    else
+      log_error "Certificate does not match key --> Not updating certificate"
+
+      echo "NEW"
+      echo "---"
+      show_cert "$NEW_PEM"
+
+      echo "OLD"
+      echo "---"
+      show_cert "$CURRENT_PEM"
+    fi
 
     remove_file "$NEW_PEM"
+
+    # Remember hash of last cert that did not match
+    echo "$FINGER_PRINT_UPD" > "$LAST_FINGERPRINT_ERROR"
     return 2
   fi
 
@@ -506,12 +580,17 @@ check_cert_file_update()
 
 wait_for_inital_cert()
 {
+
+  remove_file "$LAST_FINGERPRINT_ERROR"
+
   local seconds=0
 
   if [ -e "$SERVER_P12" ]; then
     log_debug "Startup: Server P12 already exists"
     return 0
   fi
+
+  log_space "Waiting for mounted cert ..."
 
   while true; do
 
@@ -521,7 +600,7 @@ wait_for_inital_cert()
     fi
 
     if [ "$seconds" -ge 10 ]; then
-      log_space "Startup: Timeout waiting for initial certificate"
+      echo "Startup: Timeout waiting for initial certificate"
       return 1
     fi
 
@@ -583,6 +662,12 @@ P12_PASSWORD=zzz
 log_space "Starting SafeLinx server .."
 
 wgstart
+
+# Print product and version
+echo
+echo
+lswg -V | head -1
+echo
 
 echo
 echo
