@@ -189,6 +189,9 @@ fi
 SERVER_KEY=$CERT_DIR/server.key
 SERVER_CERT=$CERT_DIR/server.pem
 SERVER_CSR=$CERT_DIR/server.csr
+SERVER_PWD=$CERT_DIR/server.pwd
+IMPORT_PWD=$CERT_DIR/import.pwd
+IMPORT_TMP_FILE=$CERT_DIR/import.pem
 
 UPD_PEM_FILE=$CERT_DIR/upd_chain.pem
 UPD_P12_FILE=$CERT_DIR/upd_server.p12
@@ -197,6 +200,8 @@ CERT_MOUNT=/cert-mount
 
 UPD_MOUNT_CERT=$CERT_MOUNT/server.pem
 UPD_MOUNT_KEY=$CERT_MOUNT/server.key
+UPD_MOUNT_TRUSTED_ROOT_FILE=$CERT_MOUNT/trusted_roots.pem
+
 EXPORT_SECURE_PEM=$CERT_MOUNT/certstore_export.pem
 LAST_FINGERPRINT_ERROR=/tmp/last_fingerprint_error.txt
 
@@ -207,9 +212,6 @@ CA_KEY=$SAFELINX_DATASTORE/ca.key
 CA_CERT=$SAFELINX_DATASTORE/ca.pem
 CA_SEQ=$SAFELINX_DATASTORE/ca.seq
 
-# LATER: Generate a random password
-#P12_PASSWORD=$(openssl rand -base64 32)
-P12_PASSWORD=secret
 
 # ------------------------------------------------------------
 
@@ -231,6 +233,9 @@ if [ -n "$NOMAD_DOMINO_CFG" ]; then
   echo "NOMAD_DOMINO_CFG : [$NOMAD_DOMINO_CFG]"
 fi
 
+echo "CERTMGR_HOST     : [$CERTMGR_HOST]"
+echo "(CHECK_INTERVAL) : [$CERTMGR_CHECK_INTERVAL]"
+
 echo "TRUSTED_ROOTS    : [$TRUSTED_ROOT_FILE]"
 echo "LDAP_HOST        : [$LDAP_HOST]"
 echo "LDAP_PORT        : [$LDAP_PORT]"
@@ -241,10 +246,26 @@ echo  ------------------------------------------------------------
 echo
 
 
+start_safelinx_server()
+{
+  wgstart >> /tmp/safelinx.log 2>&1
+}
+
+restart_safelinx_server()
+{
+  wgstop
+  start_safelinx_server
+}
+
+
 # SafeLinx configuration setup via command-line interface
 
 ConfigureSafeLinx()
 {
+
+  # Generate passwords on first start
+  openssl rand -base64 32 > "$SERVER_PWD"
+  openssl rand -base64 32 > "$IMPORT_PWD"
 
   # Initial config & setup db
 
@@ -311,13 +332,14 @@ ConfigureSafeLinx()
     -a parent="cn=NomadServer,$CONFIG_BASE"      \
     -a ibm-wlUrl="https://$NOMAD_HOST"           \
     -a ibm-wlkeyfile="$SERVER_P12"               \
-    -a hcl-wlkeypwd="$P12_PASSWORD"              \
+    -a hcl-wlkeypwd=$(cat "$SERVER_PWD")         \
     -a listenport=443                            \
     -a state=0                                   \
     -a ibm-wlMaxThreads=8                        \
     -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE" \
     -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src"
 
+  # LATER: Maybe allow explicit NOMAD settings
   if [ -n "$NOMAD_DOMINO_CFG" ]; then
       echo -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src, $NOMAD_DOMINO_CFG" 
   fi
@@ -325,6 +347,12 @@ ConfigureSafeLinx()
   # Keep the config in the volume and copy later on start
 
   cp -f /opt/hcl/SafeLinx/wgated.conf $SAFELINX_DATASTORE
+
+  echo
+  echo "Generated PEM import password: $(cat "$IMPORT_PWD")"
+  echo
+  echo "Write down the password, if you plan to import password protected PEM files (e.g. from HCL Domino CertMgr)"
+  echo
 }
 
 
@@ -347,11 +375,19 @@ create_local_ca_cert_p12()
   # LATER: OpenSSL 3.0 supports new flags
   #openssl x509 -req -days 3650 -in $SERVER_CSR -CA $CA_CERT -CAkey $CA_KEY -out $SERVER_CERT -CAcreateserial -CAserial $CA_SEQ -copy_extensions copy # Copying extensions can be dangerous! Requests should be checked
 
-  openssl pkcs12 -export -out "$1" -inkey "$SERVER_KEY" -in "$SERVER_CERT" -certfile "$CA_CERT" -password "pass:$P12_PASSWORD"
+  openssl pkcs12 -export -out "$1" -inkey "$SERVER_KEY" -in "$SERVER_CERT" -certfile "$CA_CERT" -password "pass:$(cat "$SERVER_PWD")"
 
   remove_file "$SERVER_CSR"
 
-  # Export new key and chain in one file with encrypted private key and show the password once on console
+  # Export new key and chain in one file with encrypted private key and show the password once on console if a CertMgr server is configured
+
+  if [ -n "$EXPORT_DISABLED" ]; then
+    return 0
+  fi
+
+  if [ -z "$CERTMGR_HOST" ]; then
+    return 0
+  fi
 
   local EXPORT_PASSWORD=$(openssl rand -base64 32)
 
@@ -370,7 +406,7 @@ convert_pem_to_p12()
 
   log_debug "Converting certificate from PEM to PKCS12"
 
-  openssl pkcs12 -export -out "$UPD_P12_FILE" -inkey "$1" -in "$2" -password "pass:$P12_PASSWORD"
+  openssl pkcs12 -export -out "$UPD_P12_FILE" -inkey "$1" -in "$2" -password "pass:$(cat "$SERVER_PWD")"
 
   if [ ! "$?" = "0" ]; then
     remove_file "$UPD_P12_FILE"
@@ -382,7 +418,7 @@ convert_pem_to_p12()
   remove_file "$UPD_P12_FILE"
 
   # LATER: update the password if random password
-  # chwg -s hcl-wlNomad -l "cn=nomad-web-proxy0,cn=NomadServer,$CONFIG_BASE" -a hcl-wlkeypwd="$P12_PASSWORD"
+  # chwg -s hcl-wlNomad -l "cn=nomad-web-proxy0,cn=NomadServer,$CONFIG_BASE" -a hcl-wlkeypwd="$(cat "$SERVER_PWD")"
 
   return 0
 }
@@ -544,10 +580,21 @@ check_cert_download()
   return 0
 }
 
+check_trusted_root_update()
+{
+  if [ -e "$UPD_MOUNT_TRUSTED_ROOT_FILE" ]; then
+    cp -f "$UPD_MOUNT_TRUSTED_ROOT_FILE" "$TRUSTED_ROOT_FILE"
+    remove_file "$UPD_MOUNT_TRUSTED_ROOT_FILE"
+    log_space "Trusted roots PEM updated! ($TRUSTED_ROOT_FILE)"
+  fi
+}
 
 check_cert_file_update()
 {
-  # Updates cert & key from mount
+  # Updates cert & key and trusted roots from cert-mount
+
+  # server.pem        : can contain the cert+chain and also the private key
+  # server.key        : can be a separate file for the key
 
   if [ ! -e "$UPD_MOUNT_CERT" ]; then
     return 1
@@ -561,15 +608,36 @@ check_cert_file_update()
     return 2
   fi
 
-  # Copy key if present (might have been passed once only)
+  remove_file "$IMPORT_TMP_FILE"
+
   if [ -e "$UPD_MOUNT_KEY" ]; then
-    cp -f "$UPD_MOUNT_KEY" "$SERVER_KEY"
+
+    # Check key if present (might have been passed once only)
+    openssl pkey -in "$UPD_MOUNT_KEY" -passin pass:$(cat "$IMPORT_PWD") -out "$IMPORT_TMP_FILE"
     remove_file "$UPD_MOUNT_KEY"
+
+  else
+
+    # If there is no separate key, check if there is a key in server.pem
+    openssl pkey -in "$UPD_MOUNT_CERT" -passin pass:$(cat "$IMPORT_PWD") -out "$IMPORT_TMP_FILE"
   fi
+
+  # Now check if there is a new key to import or if the file is empty
+
+  if [ ! -s "$IMPORT_TMP_FILE" ]; then
+    log_debug "No updated key found"
+
+  else
+    log_debug "New key imported"
+    cp -f "$IMPORT_TMP_FILE" "$SERVER_KEY"
+  fi
+
+  remove_file "$IMPORT_TMP_FILE"
 
   # If there is no new or existing key, exporting to P12 makes no sence
   if [ ! -e "$SERVER_KEY" ]; then
-    log_debug "No key found"
+    remove_file "$UPD_MOUNT_CERT"
+    log_error "FATAL ERROR: No existing key found! Check your SafeLinx datastore ($SERVER_KEY)!"
     return 2
   fi
 
@@ -616,6 +684,7 @@ myterm()
    exit
 }
 
+
 # --- Main logic ---
 
 trap myterm SIGTERM SIGHUP SIGQUIT SIGINT SIGKILL
@@ -647,21 +716,18 @@ else
   check_cert_download
 fi
 
+check_trusted_root_update
+
 # If no P12 is there, create a new cert and convert it to P12
 
 if [ ! -e "$SERVER_P12" ]; then
   create_local_ca_cert_p12 "$SERVER_P12"
 fi
 
-#Clear password
-P12_PASSWORD=zzz
-
 
 # Start SafeLinx
 
-log_space "Starting SafeLinx server .."
-
-wgstart
+start_safelinx_server
 
 # Print product and version
 echo
@@ -687,6 +753,8 @@ echo
 seconds=0
 
 while true; do
+
+  check_trusted_root_update
 
   # Check for local cert update every second
   if [ -e "$UPD_MOUNT_CERT" ]; then
