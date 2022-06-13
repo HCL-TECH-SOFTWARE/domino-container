@@ -360,15 +360,22 @@ create_local_ca_cert_p12()
 {
   log_space "Creating new certificate for $NOMAD_HOST"
 
-  # Create CA key and cert
+  # Create CA key and cert if not present
 
-  openssl ecparam -name prime256v1 -genkey -noout -out $CA_KEY
-  openssl req -new -x509 -days 3650 -key $CA_KEY -out $CA_CERT -subj "/O=$DOMINO_ORG/CN=SafeLinxCA"
+  if [ ! -e "$CA_KEY" ]; then
+    openssl ecparam -name prime256v1 -genkey -noout -out $CA_KEY
+  fi
 
-  # Create server key and cert
+  if [ ! -e "$CA_CERT" ]; then
+    openssl req -new -x509 -days 3650 -key $CA_KEY -out $CA_CERT -subj "/O=$DOMINO_ORG/CN=SafeLinxCA"
+  fi
 
-  openssl ecparam -name prime256v1 -genkey -noout -out $SERVER_KEY
+  # Create server key
+  if [ ! -e "$SERVER_KEY" ]; then
+    openssl ecparam -name prime256v1 -genkey -noout -out $SERVER_KEY
+  fi
 
+  # Create server cert
   openssl req -new -key $SERVER_KEY -out $SERVER_CSR -subj "/O=$DOMINO_ORG/CN=$NOMAD_HOST" -addext "subjectAltName = DNS:$NOMAD_HOST" -addext extendedKeyUsage=serverAuth
   openssl x509 -req -days 3650 -in $SERVER_CSR -CA $CA_CERT -CAkey $CA_KEY -out $SERVER_CERT -CAcreateserial -CAserial $CA_SEQ -extfile <(printf "extendedKeyUsage = serverAuth \n subjectAltName=DNS:$NOMAD_HOST")
 
@@ -380,6 +387,10 @@ create_local_ca_cert_p12()
   remove_file "$SERVER_CSR"
 
   # Export new key and chain in one file with encrypted private key and show the password once on console if a CertMgr server is configured
+
+  if [ -e "$CERT_MOUNT" ]; then
+    cp -f "$CA_CERT" "$CERT_MOUNT/root_cert_safelinx_ca.pem"
+  fi
 
   if [ -n "$EXPORT_DISABLED" ]; then
     return 0
@@ -651,29 +662,34 @@ wait_for_inital_cert()
 
   remove_file "$LAST_FINGERPRINT_ERROR"
 
-  local seconds=0
+  local seconds=
 
   if [ -e "$SERVER_P12" ]; then
     log_debug "Startup: Server P12 already exists"
     return 0
   fi
 
+  if [ -z "$CERT_MOUNT_WAIT_TIMEOUT" ]; then
+    return 0
+  fi
+
+  local seconds=$CERT_MOUNT_WAIT_TIMEOUT
   log_space "Waiting for mounted cert ..."
 
   while true; do
 
     if [ -e "$UPD_MOUNT_CERT" ]; then
-      log_debug "Startup: Certficate to import found on mount after $seconds second(s)"
+      log_space "Certficate found"
       return 0
     fi
 
-    if [ "$seconds" -ge 10 ]; then
-      echo "Startup: Timeout waiting for initial certificate"
+    if [ $seconds -le 0 ]; then
+      log_space "Startup: Timeout waiting for initial certificate"
       return 1
     fi
 
     sleep 1
-    seconds=$(expr $seconds + 1)
+    seconds=$(expr $seconds - 1)
   done
 }
 
