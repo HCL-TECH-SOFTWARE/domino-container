@@ -504,7 +504,7 @@ check_from_image()
       ;;
 
     oracle)
-      LINUX_NAME="Oracle Linux"
+      LINUX_NAME="Oracle Linux 8"
       BASE_IMAGE=oraclelinux:8
       ;;
 
@@ -516,6 +516,16 @@ check_from_image()
     ubi)
       LINUX_NAME="RedHat UBI"
       BASE_IMAGE=redhat/ubi8
+      ;;
+
+    ubi8)
+      LINUX_NAME="RedHat UBI 8"
+      BASE_IMAGE=redhat/ubi8
+      ;;
+
+    ubi9)
+      LINUX_NAME="RedHat UBI 9"
+      BASE_IMAGE=redhat/ubi9
       ;;
 
     leap)
