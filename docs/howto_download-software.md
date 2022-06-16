@@ -7,7 +7,7 @@ parent: "Howto"
 has_children: false
 ---
 
-# Donwload software from Flexnet
+# Download software from Flexnet
 
 
 The Container project is a build script leveraging HCL web-kits. Those web-kits cannot be re-distributed and all customers and partners have to download the software from HCL Flexnet.  
