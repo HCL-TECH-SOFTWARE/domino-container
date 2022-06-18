@@ -209,10 +209,14 @@ usage()
   echo "-borg           adds borg client and Domino Borg Backup integration to image"
   echo "-verse          adds the latest Verse version to a Domino image"
   echo "-capi           adds the C-API sdk/toolkit to a Domino image"
-  echo "-nomadweb       adds the latest Nomad Web version to a SafeLinx image"
   echo "-k8s-runas      adds K8s runas user support"
   echo "-startscript=x  installs specified start script version from software repository"
   echo
+  echo SafeLinx options
+  echo
+  echo "-nomadweb       adds the latest Nomad Web version to a SafeLinx image"
+  echo "-mysql          adds the MySQL client to the SafeLinx image"
+  echo "-mssql          adds the Mircosoft SQL Server client to the SafeLinx image"
   echo
   echo "Examples:"
   echo
@@ -259,8 +263,9 @@ dump_config()
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
   echo "CAPI_VERSION       : [$CAPI_VERSION]"
-  echo "SAFELINX_VERSION   : [$SAFELINX_VERSION]"
   echo "NOMADWEB_VERSION   : [$NOMADWEB_VERSION]"
+  echo "MYSQL_INSTALL      : [$MYSQL_INSTALL]"
+  echo "MSSQL_INSTALL      : [$MSSQL_INSTALL]"
   echo "BORG_INSTALL       : [$BORG_INSTALL]"
   echo "STARTSCRIPT_VER    : [$STARTSCRIPT_VER]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
@@ -533,6 +538,16 @@ check_from_image()
       BASE_IMAGE=opensuse/leap
       ;;
 
+    leap5.3)
+      LINUX_NAME="SUSE Leap 15.3"
+      BASE_IMAGE=opensuse/leap:15.3
+      ;;
+
+    leap15.4)
+      LINUX_NAME="SUSE Leap 15.4"
+      BASE_IMAGE=opensuse/leap:15.4
+      ;;
+
     astra)
       LINUX_NAME="Astra Linux"
       BASE_IMAGE=orel:latest
@@ -722,6 +737,8 @@ build_safelinx()
     --build-arg PROD_NAME="$PROD_NAME" \
     --build-arg PROD_VER="$PROD_VER" \
     --build-arg NOMADWEB_VERSION="$NOMADWEB_VERSION" \
+    --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
+    --build-arg MSSQL_INSTALL="$MSSQL_INSTALL" \
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
@@ -1290,6 +1307,14 @@ for a in $@; do
       if [ -z "$NOMADWEB_VERSION" ]; then
         get_current_addon_version nomadweb NOMADWEB_VERSION
       fi
+      ;;
+
+   -mysql*|+mysql*)
+      MYSQL_INSTALL=yes
+      ;;
+
+   -mssql*|+mssql*)
+      MSSQL_INSTALL=yes
       ;;
 
    -capi*|+capi*)

@@ -81,6 +81,12 @@ fi
 CURRENT_DIR=$(pwd)
 cd $PROD_NAME
 
+# If MS SQL client exists ensure it is in the part for installtion - even it is set in the profile
+if [ -e /opt/mssql-tools18/bin ]; then
+  echo "current path: $PATH"
+  export PATH="$PATH:/opt/mssql-tools18/bin"
+fi
+
 cd inst.images
 export SILENT_INSTALL=y
 

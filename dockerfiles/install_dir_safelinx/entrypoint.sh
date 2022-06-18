@@ -17,7 +17,7 @@
 
 # ------------------------------------------------------------ 
 
-# Helper functioncs
+# Helper functions
 
 log_space()
 {
@@ -39,7 +39,7 @@ log_debug()
     return 0
   fi
 
-  echo "$@"
+  echo "DEBUG - $@"
 }
 
 remove_file()
@@ -52,7 +52,7 @@ remove_file()
     return 2
   fi
 
-  ERR_TXT=$(rm -f "$1" 2>&1 >/dev/null)
+  ERR_TXT=$(rm -f "$1" >/dev/null 2>/dev/null)
   
   if [ -e "$1" ]; then
     echo "Info: File not deleted [$1]"
@@ -466,6 +466,7 @@ cert_update()
   local NEW_PEM="$1"
   local CURRENT_PEM="$2"
   local CURRENT_KEY="$3"
+  local CHECK_FINGERPRINT=
 
   if [ -z "$NEW_PEM" ]; then
     log_error "No new PEM specified"
