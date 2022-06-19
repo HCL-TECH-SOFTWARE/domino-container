@@ -17,6 +17,7 @@
 
 # ------------------------------------------------------------ 
 
+
 # Helper functions
 
 log_space()
@@ -622,22 +623,30 @@ check_cert_file_update()
 
   remove_file "$IMPORT_TMP_FILE"
 
+  # Read private key and try to detect read errors. openssl should return 'Expecting: ANY PRIVATE KEY' if no private key is found.
+  # All other cases are probably indicating a wrong password
+
+  local RET='Expecting: ANY PRIVATE KEY'
+
   if [ -e "$UPD_MOUNT_KEY" ]; then
 
     # Check key if present (might have been passed once only)
-    openssl pkey -in "$UPD_MOUNT_KEY" -passin pass:$(cat "$IMPORT_PWD") -out "$IMPORT_TMP_FILE"
+    RET=$(openssl pkey -in "$UPD_MOUNT_KEY" -passin pass:$(cat "$IMPORT_PWD") -out "$IMPORT_TMP_FILE" 2>&1 | grep 'Expecting: ANY PRIVATE KEY')
     remove_file "$UPD_MOUNT_KEY"
 
   else
 
     # If there is no separate key, check if there is a key in server.pem
-    openssl pkey -in "$UPD_MOUNT_CERT" -passin pass:$(cat "$IMPORT_PWD") -out "$IMPORT_TMP_FILE"
+    RET=$(openssl pkey -in "$UPD_MOUNT_CERT" -passin pass:$(cat "$IMPORT_PWD") -out "$IMPORT_TMP_FILE" 2>&1 | grep 'Expecting: ANY PRIVATE KEY')
   fi
 
   # Now check if there is a new key to import or if the file is empty
 
-  if [ ! -s "$IMPORT_TMP_FILE" ]; then
+  if [ -n "$RET" ]; then
     log_debug "No updated key found"
+
+  elif [ ! -s "$IMPORT_TMP_FILE" ]; then
+    log_error "!!! Cannot read private key !!! (Probably due to wrong password)"
 
   else
     log_debug "New key imported"
