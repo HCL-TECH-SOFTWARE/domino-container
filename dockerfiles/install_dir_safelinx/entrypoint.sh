@@ -258,6 +258,47 @@ restart_safelinx_server()
   start_safelinx_server
 }
 
+WaitMySQLAvailable()
+{
+  local TIMEOUT=60
+  local STATUS=
+  local seconds=0
+  local sec_mod=0
+
+  # Ensure we are running a MySQL supported image
+  if [ ! -e /usr/bin/mysql ]; then
+    log_error "No MySQL driver found - Please build SafeLinx image with 'mysql' option!"
+    exit 1
+  fi
+
+  log_space "Waiting until MySQL server is up..."
+
+  while [ $seconds -lt $TIMEOUT ]; do
+
+    STATUS=$(mysqladmin -u wgdb -h mysql-sl -ppassword status 2> /dev/null)
+
+    if [ -n "$STATUS" ]; then
+      log_space "MySQL Server available after $seconds seconds"
+      sleep 1
+      return 0
+    fi
+
+    sleep 1
+    seconds=$(expr $seconds + 1)
+    sec_mod=$(expr $seconds "%" 10)
+    if [ "$sec_mod" = "0" ]; then
+      echo " ... waiting $seconds seconds"
+    fi
+
+  done
+
+  log_error "Cannot connect to MySQL server!"
+
+  # Try to connect one final time without error redirection for admin info
+  mysqladmin -u wgdb -h mysql-sl -ppassword status 2
+  exit 1
+
+}
 
 # SafeLinx configuration setup via command-line interface
 
@@ -270,13 +311,38 @@ ConfigureSafeLinx()
 
   # Initial config & setup db
 
-  mkwg -s wlCfg -g mk               \
-    -a basedn="$CONFIG_BASE"        \
-    -a hostname="$SAFELINX_HOST"    \
-    -a onlysecureconns=0            \
-    -a dbmstype=0                   \
-    -a wpsstoretype=0               \
-    -a wgmgrdlog=err,log,warn
+  if [ -n "$MYSQL_PASSWORD" ]; then
+
+    log_space "SafeLinx MySQL configuration"
+
+    WaitMySQLAvailable
+
+    mkwg -s wlCfg -g mk               \
+      -a basedn="$CONFIG_BASE"        \
+      -a hostname="$SAFELINX_HOST"    \
+      -a onlysecureconns=0            \
+      -a dbmstype=3                   \
+      -a dbmstype2=3                  \
+      -a wpsstoredbname="$MYSQL_DATABASE"    \
+      -a wpsstoredbadminid="$MYSQL_USER"     \
+      -a wpsstoredbadminpw="$MYSQL_PASSWORD" \
+      -a wpsstoredbclean=0            \
+      -a wpsstoretype=1               \
+      -a hcl-wlSessMySQLServer="$MYSQL_HOST" \
+      -a wgmgrdlog=err,log,warn
+
+  else
+
+    log_space "SafeLinx local datastore configuration"
+
+    mkwg -s wlCfg -g mk               \
+      -a basedn="$CONFIG_BASE"        \
+      -a hostname="$SAFELINX_HOST"    \
+      -a onlysecureconns=0            \
+      -a dbmstype=0                   \
+      -a wpsstoretype=0               \
+      -a wgmgrdlog=err,log,warn
+  fi
 
   # Create a SafeLinx server resource
 
@@ -725,6 +791,14 @@ if [ -e "$SAFELINX_DATASTORE/wgated.conf" ]; then
   # Copy saved config from datastore on startup
 
   cp $SAFELINX_DATASTORE/wgated.conf /opt/hcl/SafeLinx/wgated.conf
+
+  if [ -e "$SAFELINX_DATASTORE/wgdbms.conf" ]; then
+    cp $SAFELINX_DATASTORE/wgdbms.conf /opt/hcl/SafeLinx/wgdbms.conf
+  fi
+
+  if [ -n "$MYSQL_PASSWORD" ]; then
+    WaitMySQLAvailable
+  fi
 
 else
 

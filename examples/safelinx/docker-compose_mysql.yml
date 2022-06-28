@@ -1,0 +1,78 @@
+version: '3.6'
+services:
+
+  safelinx:
+
+    image:             ${CONTAINER_IMAGE}
+    container_name:    ${CONTAINER_NAME}
+    hostname:          ${CONTAINER_HOSTNAME}
+    stop_grace_period: 60s
+
+    environment:
+      DOMINO_ORG:      ${DOMINO_ORG}
+      LDAP_HOST:       ${LDAP_HOST}
+      LDAP_PORT:       ${LDAP_PORT}
+      LDAP_SSL:        ${LDAP_SSL}
+      LDAP_USER:       ${LDAP_USER}
+      LDAP_PASSWORD:   ${LDAP_PASSWORD}
+      MYSQL_HOST:      mysql-sl 
+      MYSQL_DATABASE:  wgdata
+      MYSQL_USER:      wgdb 
+      MYSQL_PASSWORD:  ${MYSQL_PASSWORD}
+      CERTMGR_HOST:    ${CERTMGR_HOST}
+      CERTMGR_CHECK_INTERVAL: ${CERTMGR_CHECK_INTERVAL}
+
+    cap_add:
+      - SYS_PTRACE
+
+    networks:
+      safelinx_net:
+        ipv4_address: 172.30.0.2
+
+    ports:
+      - ${CONTAINER_HTTPS_PORT}:443
+
+    volumes:
+      - safelinx_vol:/opt/hcl/SafeLinx/datastore
+      - ./cert-mount:/cert-mount
+
+
+  mysql:
+
+    image:             mysql 
+    container_name:    mysql-sl
+    hostname:          mysql-sl.local 
+    stop_grace_period: 60s
+
+    environment:
+      MYSQL_DATABASE:             wgdata 
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_USER:                 wgdb 
+      MYSQL_PASSWORD:             ${MYSQL_PASSWORD}
+
+    networks:
+      safelinx_net:
+        ipv4_address: 172.30.0.3
+
+    volumes:
+      - mysql_vol:/var/lib/mysql
+
+volumes:
+
+  safelinx_vol:
+    name: ${CONTAINER_VOLUME}
+    external: false
+
+  mysql_vol:
+    name: mysql_safelinx
+    external: false
+
+networks:
+
+  safelinx_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/24
+
