@@ -613,7 +613,7 @@ set_standard_image_labels()
 
 build_domino()
 {
-  $CONTAINER_CMD build --no-cache \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -657,7 +657,7 @@ build_domino()
 
 build_traveler()
 {
-  $CONTAINER_CMD build --no-cache \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -686,7 +686,7 @@ build_traveler()
 
 build_volt()
 {
-  $CONTAINER_CMD build --no-cache \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -715,7 +715,7 @@ build_volt()
 
 build_safelinx()
 {
-  $CONTAINER_CMD build --no-cache \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -1481,6 +1481,10 @@ fi
 
 if [ -z "$PROD_VER" ]; then
   PROD_VER="latest"
+fi
+
+if [ -z "$BUILD_OPTIONS" ]; then
+  BUILD_OPTIONS="--platform linux/amd64"
 fi
 
 check_for_hcl_image
