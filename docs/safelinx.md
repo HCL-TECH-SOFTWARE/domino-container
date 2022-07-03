@@ -17,11 +17,12 @@ Setting up a SafeLinx server in a classical way requires to use of a complicated
 This project allows you to build a SafeLinx container including HCL Nomad Web components in one step.
 The container allows you to configure the container including NomadWeb components simply by specifying environment variables.
 
+
 ## Build the container image
 
 Download the SafeLinx WebKit and also the NomadWeb server components to your software directory.
 
-The build command either builds to the container or shows missing software files:
+The build command either builds the container or shows missing software files and the download target directory:
 
 ```
 ./build.sh safelinx -nomadweb
@@ -61,6 +62,7 @@ Review and edit the configuration file with your favourite editor
 ```
 vi .env
 ```
+
 
 ### Requird configuration
 
@@ -122,8 +124,10 @@ LDAP_SSL=auto
 
 #### Trusted Roots for LDAPS connections
 
-LDAP connections need to be verified. Trusted roots can be added to the container automatically.
-You should need to drop a PEM file `trusted_roots.pem` with trusted roots into the `cert-mount` directory.
+Connecting to LDAPS servers require the servers's certificat's trusted root to verify the connection. 
+To add trusted roots generate a PEM file `trusted_roots.pem` and store it into the `cert-mount`.
+
+Import files are automatically moved into the datastore.
 
 
 ### Run the container
@@ -165,10 +169,12 @@ The import is only performed if the certificate marches the private key.
 To import an encrypted PEM-based private key, the container generates an import password at the first startup. 
 This password can be used to import a CertMgr exportable key, which is always exported encrypted.
 
+
 ### Export private key to Domino CertMgr
 
 In case you instead want to export your private key to your CertMgr server for certificate update flows, the container generates an export password printed once on startup. 
 The password can be used to import `certstore_export.pem` stored in `cert-mount`.
+
 
 ### Automagical Certificate update
 
@@ -184,10 +190,12 @@ CERTMGR_HOST=certmgr.acme.com
 - **CERTMGR_CHECK_INTERVAL**  
   Interval in seconds to check CertMgr for certificate updates (Default 300 seconds).
 
+
 ## MySQL Server Support
 
 Running the HCL Nomad Web Safelinx container with the internal flat-file configuration works well for up to 200 users.
 In case you require more scalability, the Safelinx container can be built and configured with MySQL server support.
+
 
 ### Building the container with MySQL Support
 
