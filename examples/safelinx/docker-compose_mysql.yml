@@ -15,6 +15,7 @@ services:
       LDAP_SSL:        ${LDAP_SSL}
       LDAP_USER:       ${LDAP_USER}
       LDAP_PASSWORD:   ${LDAP_PASSWORD}
+      LDAP_UNTRUSTED:  ${LDAP_UNTRUSTED}
       MYSQL_HOST:      mysql-sl 
       MYSQL_DATABASE:  wgdata
       MYSQL_USER:      wgdb 

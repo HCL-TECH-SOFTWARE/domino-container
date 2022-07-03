@@ -9,12 +9,13 @@ services:
     stop_grace_period: 60s
 
     environment:
-      DOMINO_ORG:    ${DOMINO_ORG}
-      LDAP_HOST:     ${LDAP_HOST}
-      LDAP_PORT:     ${LDAP_PORT}
-      LDAP_SSL:      ${LDAP_SSL}
-      LDAP_USER:     ${LDAP_USER}
-      LDAP_PASSWORD: ${LDAP_PASSWORD}
+      DOMINO_ORG:     ${DOMINO_ORG}
+      LDAP_HOST:      ${LDAP_HOST}
+      LDAP_PORT:      ${LDAP_PORT}
+      LDAP_SSL:       ${LDAP_SSL}
+      LDAP_USER:      ${LDAP_USER}
+      LDAP_PASSWORD:  ${LDAP_PASSWORD}
+      LDAP_UNTRUSTED: ${LDAP_UNTRUSTED}
       CERTMGR_HOST:  ${CERTMGR_HOST}
       CERTMGR_CHECK_INTERVAL: ${CERTMGR_CHECK_INTERVAL}
 

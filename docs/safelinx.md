@@ -105,6 +105,7 @@ LDAP_USER=
 LDAP_PASSWORD=
 LDAP_PORT=389
 LDAP_SSL=auto
+LDAP_UNTRUSTED=FALSE
 ```
 
 - **LDAP_USER**  
@@ -121,10 +122,14 @@ LDAP_SSL=auto
 - **LDAP_SSL**  
   Secure LDAP. It can be `0` or `1`. The `auto` option automatically selects SSL based on the port number.
 
+- **LDAP_UNTRUSTED**  
+  If set to 'TRUE' allow untrusted certificates and not verify the connection.
+  If set to 'FALSE' verify TLS certificate for the LDAPS connection.
+
 
 #### Trusted Roots for LDAPS connections
 
-Connecting to LDAPS servers require the servers's certificat's trusted root to verify the connection. 
+Connecting to LDAPS servers require the servers's certificat's trusted root to verify the connection unless LDAP_UNTRUSTED=TRUE is specified.  
 To add trusted roots generate a PEM file `trusted_roots.pem` and store it into the `cert-mount`.
 
 Import files are automatically moved into the datastore.
