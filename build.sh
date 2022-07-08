@@ -538,7 +538,7 @@ check_from_image()
       BASE_IMAGE=opensuse/leap
       ;;
 
-    leap5.3)
+    leap15.3)
       LINUX_NAME="SUSE Leap 15.3"
       BASE_IMAGE=opensuse/leap:15.3
       ;;
