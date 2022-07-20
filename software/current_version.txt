@@ -1,7 +1,7 @@
 domino|12.0.1|FP1|
 traveler|12.0.1FP1
 volt|1.0.5.15
-verse|2.2.0a
+verse|3.0.0
 capi|12.0.0
 borg|1.2.0
 safelinx|1.3.0.0
