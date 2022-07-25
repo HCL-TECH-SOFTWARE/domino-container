@@ -148,6 +148,8 @@ check_container_environment()
 # Check & setup container environment
 check_container_environment
 
+header "Container environment: $CONTAINER_ENV_NAME"
+
 # Get all the parameters
 
 for a in $@; do
@@ -228,8 +230,6 @@ if [ -z "$CONTAINER_IMAGE" ]; then
   CONTAINER_IMAGE=hclcom/domino:latest
 fi
 
-reset_results
-
 IMAGE_ID=$($CONTAINER_CMD images $CONTAINER_IMAGE -q)
 if [ -z "$IMAGE_ID" ]; then
   log_error "Image not found [$CONTAINER_IMAGE]"
@@ -252,10 +252,12 @@ if [ -n "$CONTAINER_ID" ]; then
 fi
 
 remove_dir "$DOMINO_VOLUME"
-remove_file "$LOG_TAR"
 
 # Create empty local Domino server data with full permissions
 create_dir "$DOMINO_VOLUME" 777
+
+# Reset results, which are written to the root of the data directory
+reset_results
 
 header "Bring up server environment"
 
@@ -528,6 +530,10 @@ print_runtime
 log
 
 show_results
+
+# Cleanup test data directory and keep logs
+remove_dir "$DOMINO_VOLUME/notesdata"
+remove_dir "$DOMINO_VOLUME/translog"
 
 exit 0
 
