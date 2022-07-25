@@ -1,0 +1,274 @@
+{
+  "serverSetup": {
+    "server": {
+      "type": "first",
+      "name": "domino-lab-admin-srv",
+      "domainName": "AutoTestLab",
+      "title": "Domino Autotest Lab Server",
+      "password": null,
+      "minPasswordLength": 0,
+      "serverTasks": "replica,router,update,amgr,adminp,http"
+    },
+
+    "network": {
+      "hostName": "automation.notes.lab",
+      "enablePortEncryption": true,
+      "enablePortCompression": true
+    },
+
+    "org": {
+      "orgName": "AutoTestLab",
+      "certifierPassword": "domino4ever"
+    },
+
+    "admin": {
+      "firstName": "Full",
+      "lastName": "Admin",
+      "password": "domino4ever",
+      "IDFilePath": "/local/notesdata/admin.id"
+    },
+
+    "notesINI": {
+      "Create_R12_databases": "1",
+      "Create_R85_log": "1",
+      "LOG_REPLICATION": "0",
+      "LOG_SESSIONS": "0",
+      "HTTPPublicURLs": "/iwaredir.nsf/*:/.well-known*",
+      "ENABLE_SNI": "1",
+      "ADMIN_CLIENT_SKIP_DOMINO": "1",
+      "EVENT_POOL_SIZE": "41943040",
+      "SETUPLEAVESERVERTASKS": "1",
+      "NSF_BUFFER_POOL_SIZE_MB": "256",
+      "FT_FLY_INDEX_OFF": "1",
+      "UPDATE_FULLTEXT_THREAD": "1",
+      "FTG_USE_SYS_MEMORY": "1",
+      "CERTSTORE_CACHELOG": "1"
+    },
+
+    "security": {
+      "ACL": {
+        "prohibitAnonymousAccess": true,
+        "addLocalDomainAdmins": true
+      },
+
+      "TLSSetup": {
+        "method": "dominoMicroCA",
+        "CAKeyType": "ES384",
+        "orgName": "Automation MicroCA Certificate",
+        "CAExpirationDays": 987,
+        "TLSKeyType": "ES384",
+        "certExpirationDays": 365
+      }
+    }
+  },
+
+  "IDVault": {
+    "name": "O=dominolab_vault",
+    "description": "Domino Lab Vault",
+    "IDFile": "vault.id",
+    "IDPassword": "domino4ever8",
+    "path": "IBM_ID_VAULT/dominolab_vault.nsf",
+    "passwordReset": {
+      "helpText": "See Roy or Moss for a password reset. Good luck!"
+    },
+
+    "securitySettingsPolicy": {
+      "name": "DominoLab Vault Security Settings Policy",
+      "description": "DominoLab Vault Security Settings"
+    },
+
+    "masterPolicy": {
+      "description": "DominoLab Vault Master Policy Description"
+    }
+  },
+
+  "appConfiguration": {
+
+    "databases": [
+      {
+        "filePath": "names.nsf",
+        "action": "update",
+        "documents": [
+          {
+            "action": "update",
+            "findDocument": {
+              "Type": "Server",
+              "ServerName": "CN=domino-lab-admin-srv/O=AutoTestLab"
+            },
+            "items": {
+              "AutomationComment": "ServerAutoConfigured",
+              "LdISite": "1",
+              "HTTP_SSLKeyFile": "keydirfile.kyr",
+              "HTTP_HomeURL": "homepage.nsf",
+              "FullAdmin": "LocalDomainAdmins",
+              "CreateAccess": "LocalDomainAdmins",
+              "ReplicaAccess": "LocalDomainAdmins",
+              "UnrestrictedList": "LocalDomainAdmins",
+              "OnBehalfOfLst": "LocalDomainAdmins",
+              "RestrictedList": "LocalDomainAdmins",
+
+              "TRANSLOG_AutoFixup": "",
+              "TRANSLOG_MaxSize": 512,
+              "TRANSLOG_Path": "/local/translog",
+              "TRANSLOG_Performance": "2",
+              "TRANSLOG_Status": "1",
+              "TRANSLOG_Style": "0",
+              "TRANSLOG_UseAll": "0",
+
+              "HTTP_EnableSessionAuth": "1",
+              "HTTP_TCPNP": "1",
+              "HTTP_AllowAnonymous": "1",
+              "HTTP_NormalMode": "1",
+              "HTTP_SSLMode": "1",
+              "HTTP_SSLAnonymous": "1",
+
+              "NSDEnbld": "1",
+              "FREnbld": "1",
+              "FltRcvryNot": "LocalDomainAdmins",
+
+              "ServerBuildNumber": "12.0",
+              "MajVer": 12,
+              "SSLCipherList": [
+                "C030",
+                "9F",
+                "C02F",
+                "9E",
+                "C028",
+                "6B",
+                "C027",
+                "67"
+                ],
+              "SSLCipherSupportedList": [
+                "C030",
+                "9F",
+                "C02F",
+                "9E",
+                "C028",
+                "6B",
+                "C027",
+                "67"
+                ]
+            }
+          },
+
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "ServerConfig",
+              "UseAsDefault": "1",
+              "ServerName": "*",
+
+              "ILEnforce": "1",
+              "ILLockIP": "0",
+              "ILCountAgainstIP": "0",
+              "ILLogLockouts": "1",
+              "ILLogFailures": "1",
+              "ILMaxTries": 7,
+              "ILExpMinutes": 10,
+              "ILExpNum": 10,
+              "ILTimeFormat": ",minutes",
+              "ILClearNum": 10,
+              "ILClearMinutes": 10,
+              "ILTimeFormat2": ",minutes",
+              "PwdCheckInVault": "2",
+
+              "DCLoc": "CN=HCL Notes/O=Domino Fault Reports",
+              "DCMsgSize": 50,
+              "DCNSDSize": 40,
+              "DCDO": 10000,
+              "FAEnabled": "1",
+              "FADBs": "1"
+            }
+          },
+
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "WebSite",
+              "AutomationComment" : "Default Website",
+              "WSIsDflt"          : "1",
+              "ISiteAdrs"         : "automation.notes.lab",
+              "ISiteName"         : "AutomationTestDefaultSite",
+              "ISiteOrg"          : "AutoTestLab",
+              "WSHostingSrvrs"    : "*",
+              "TCPAnonymous"      : "0",
+              "TCPNameAndPwd"     : "1",
+              "SSLAnonymous"      : "0",
+              "SSLNameAndPwd"     : "1",
+              "SSLKeyFile"        : "keyfile.kyr",
+              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
+              "HTTP_EnableSessionAuth" : "1"
+            }
+          }
+        ]
+      },
+
+      {
+        "action": "create",
+        "filePath": "domcfg.nsf",
+        "title": "Domino Web Server Configuration",
+        "templatePath": "domcfg5.ntf",
+        "signUsingAdminp": true,
+
+        "documents": [
+          {
+            "action": "create",
+            "items": {
+              "Form": "LoginMap",
+              "LF_LoginForm": "DWALoginForm",
+              "LF_LoginFormDB": "iwaredir.nsf",
+              "LF_ServerType": "0",
+              "LF_IP": "",
+              "$PublicAccess": "1"
+            }
+          }
+        ]
+      },
+
+      {
+        "action": "create",
+        "filePath": "iwaredir.nsf",
+        "title": "Redirect",
+        "templatePath": "iwaredir.ntf",
+        "signUsingAdminp": true,
+
+        "documents": [
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "AutoLogin",
+              "ServerNameSelect": "1",
+              "RedirectMessageWebView": "Redirecting...",
+              "$LANGUAGE": "en",
+              "$ServerSettingsTable": "Select",
+              "EnableUltraliteRadioButton": "0",
+              "MobileAgentKeywords": "ipod,iphone,android,ipad",
+              "SSLPort": "443",
+              "RedirectionTime": "1",
+              "RedirectionMessageText": "Redirecting...",
+              "WMRGlobalProfileURL": "/",
+              "ServerNameChange": "0",
+              "ForceSSL": "1",
+              "OmitProtocol": "0",
+              "UseHomeMailServer": "0",
+              "LoginOptions": "0",
+              "EncryptPassword": "0",
+              "WebMailRedirectEnableDebug": "0",
+              "WebMailRedirectProfileEnable": "0",
+              "WMRVersion": "650",
+              "WMRAttachmentNames": "BLANK",
+              "MailServerDomainName": "",
+              "RevProxyServerName": "",
+              "ForcePath": ""
+            }
+          }
+        ]
+      }
+
+    ]
+  }
+}
+
