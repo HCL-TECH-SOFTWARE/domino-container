@@ -171,7 +171,7 @@ for a in $@; do
       ;;
 
     bash)
-      $CONTAINER_CMD exec -it $CONTAINER_NAME bash
+      $CONTAINER_CMD exec -it -w /local/notesdata $CONTAINER_NAME bash
       exit 0
       ;;
 
@@ -532,8 +532,13 @@ log
 show_results
 
 # Cleanup test data directory and keep logs
-remove_dir "$DOMINO_VOLUME/notesdata"
-remove_dir "$DOMINO_VOLUME/translog"
+
+if [ "$NO_CONTAINER_STOP" = "yes" ]; then
+  log "Keeping Domino server running on request"
+else
+  remove_dir "$DOMINO_VOLUME/notesdata"
+  remove_dir "$DOMINO_VOLUME/translog"
+fi
 
 exit 0
 

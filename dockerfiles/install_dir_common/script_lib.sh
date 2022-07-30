@@ -277,6 +277,8 @@ download_and_check_hash()
 
   if [[ "$DOWNLOAD_FILE" =~ ".tar.gz" ]]; then
     TAR_OPTIONS=xz
+  elif [[ "$DOWNLOAD_FILE" =~ ".tgz" ]]; then
+    TAR_OPTIONS=xz
   elif [[ "$DOWNLOAD_FILE" =~ ".taz" ]]; then
     TAR_OPTIONS=xz
   elif [[ "$DOWNLOAD_FILE" =~ ".tar" ]]; then

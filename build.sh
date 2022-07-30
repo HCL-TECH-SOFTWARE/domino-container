@@ -1,11 +1,11 @@
-#!/bin/bash
+    #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
-# Copyright IBM Corporation 2015, 2022 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.0
+# Version 2.0.1
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -207,7 +207,8 @@ usage()
   echo "-from=<image>   builds from a specified build image. there are named images like 'ubi' predefined"
   echo "-openssl        adds OpenSSL to Domino image"
   echo "-borg           adds borg client and Domino Borg Backup integration to image"
-  echo "-verse          adds the latest Verse version to a Domino image"
+  echo "-verse          adds Verse to a Domino image"
+  echo "-nomad          adds the Nomad server to a Domino image"
   echo "-capi           adds the C-API sdk/toolkit to a Domino image"
   echo "-k8s-runas      adds K8s runas user support"
   echo "-startscript=x  installs specified start script version from software repository"
@@ -262,12 +263,14 @@ dump_config()
   echo "PUSH_IMAGE         : [$PUSH_IMAGE]"
   echo "DOCKER_FILE        : [$DOCKER_FILE]"
   echo "VERSE_VERSION      : [$VERSE_VERSION]"
+  echo "NOMAD_VERSION      : [$NOMAD_VERSION]"
   echo "CAPI_VERSION       : [$CAPI_VERSION]"
   echo "NOMADWEB_VERSION   : [$NOMADWEB_VERSION]"
   echo "MYSQL_INSTALL      : [$MYSQL_INSTALL]"
   echo "MSSQL_INSTALL      : [$MSSQL_INSTALL]"
   echo "BORG_INSTALL       : [$BORG_INSTALL]"
   echo "STARTSCRIPT_VER    : [$STARTSCRIPT_VER]"
+  echo "EXPOSED_PORTS      : [$EXPOSED_PORTS]"
   echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
   echo "DOMINO_LANG        : [$DOMINO_LANG]"
   echo "NAMESPACE          : [$CONTAINER_NAMESPACE]"
@@ -611,6 +614,23 @@ set_standard_image_labels()
 
 }
 
+check_exposed_ports()
+{
+
+  # Allow custom exposed ports
+  if [ -n "$EXPOSED_PORTS" ]; then
+    return 0
+  fi
+
+  EXPOSED_PORTS="1352 25 80 110 143 389 443 636 993 995 63148 63149"
+
+  if [ -n "$NOMAD_VERSION" ]; then
+    EXPOSED_PORTS="1352 25 80 110 143 389 443 636 993 995 9443 63148 63149"
+  fi
+
+  return 0
+}
+
 build_domino()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS \
@@ -648,10 +668,12 @@ build_domino()
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
+    --build-arg NOMAD_VERSION="$NOMAD_VERSION" \
     --build-arg CAPI_VERSION="$CAPI_VERSION" \
     --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
     --build-arg K8S_RUNAS_USER_SUPPORT="$K8S_RUNAS_USER_SUPPORT" \
+    --build-arg EXPOSED_PORTS="$EXPOSED_PORTS" \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 }
 
@@ -993,7 +1015,7 @@ check_software()
 
   case "$CURRENT_NAME" in
 
-    domino|traveler|volt|verse|capi|borg|safelinx|nomadweb)
+    domino|traveler|volt|verse|nomad|capi|borg|safelinx|nomadweb)
 
       if [ -n "$DOWNLOAD_1ST_FILE" ]; then
         if [ -z "$CURRENT_PARTNO" ]; then
@@ -1120,6 +1142,10 @@ check_software_status()
       check_software_file "verse" "$VERSE_VERSION"
     fi
 
+    if [ -n "$NOMAD_VERSION" ]; then
+      check_software_file "nomad" "$NOMAD_VERSION"
+    fi
+
     if [ -n "$NOMADWEB_VERSION" ]; then
       check_software_file "nomadweb" "$NOMADWEB_VERSION"
     fi
@@ -1157,6 +1183,10 @@ check_software_status()
 
     if [ -n "$VERSE_VERSION" ]; then
       check_software_file "verse" "$VERSE_VERSION"
+    fi
+
+    if [ -n "$NOMAD_VERSION" ]; then
+      check_software_file "nomad" "$NOMAD_VERSION"
     fi
 
     if [ -n "$NOMADWEB_VERSION" ]; then
@@ -1288,6 +1318,7 @@ fi
 for a in $@; do
 
   p=$(echo "$a" | awk '{print tolower($0)}')
+
   case "$p" in
     domino|traveler|volt|safelinx)
       PROD_NAME=$p
@@ -1308,6 +1339,15 @@ for a in $@; do
         get_current_addon_version nomadweb NOMADWEB_VERSION
       fi
       ;;
+
+    -nomad*|+nomad*)
+      NOMAD_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$NOMAD_VERSION" ]; then
+        get_current_addon_version nomad NOMAD_VERSION
+      fi
+      ;;
+
 
    -mysql*|+mysql*)
       MYSQL_INSTALL=yes
@@ -1498,7 +1538,10 @@ if [ "$PROD_VER" = "latest" ]; then
   fi
 fi
 
+check_exposed_ports
+
 # Ensure product versions are always uppercase
+PROD_VER=$(echo "$PROD_VER" | awk '{print toupper($0)}')
 PROD_FP=$(echo "$PROD_FP" | awk '{print toupper($0)}')
 PROD_HF=$(echo "$PROD_HF" | awk '{print toupper($0)}')
 

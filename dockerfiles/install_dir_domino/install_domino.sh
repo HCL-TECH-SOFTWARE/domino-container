@@ -247,6 +247,25 @@ install_verse()
   cd $CURRENT_DIR
 }
 
+install_nomad()
+{
+  local ADDON_NAME=nomad
+  local ADDON_VER=$1
+
+  if [ -z "$ADDON_VER" ]; then
+    return 0
+  fi
+
+  header "$ADDON_NAME Installation"
+
+  get_download_name $ADDON_NAME $ADDON_VER
+
+  header "Installing $ADDON_NAME $ADDON_VER"
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory"
+
+  log_space Installed $ADDON_NAME
+}
 
 install_capi()
 {
@@ -470,6 +489,7 @@ echo "DominoUserID          = [$DominoUserID]"
 echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 echo "DOMINO_LANG           = [$DOMINO_LANG]"
 echo "VERSE_VERSION         = [$VERSE_VERSION]"
+echo "NOMAD_VERSION         = [$NOMAD_VERSION]"
 echo "CAPI_VERSION          = [$CAPI_VERSION]"
 echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
 echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
@@ -606,6 +626,9 @@ fi
 
 # Install Verse if requested
 install_verse "$VERSE_VERSION"
+
+# Install Nomad Server if requested
+install_nomad "$NOMAD_VERSION"
 
 # Install C-API if requested
 install_capi "$CAPI_VERSION"
