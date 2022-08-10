@@ -12,7 +12,7 @@ SOFTWARE_CONTAINER=hclsoftware
 usage ()
 {
   echo
-  echo "Usage: $(basename $SCRIPT_NAME) { start | stop | ip | stopremove }"
+  echo "Usage: $(basename $SCRIPT_NAME) { start | stop | ip | rm | stopremove }"
 
   return 0
 }
@@ -81,6 +81,13 @@ repo_stop ()
   return 0
 }
 
+repo_rm ()
+{
+  # Remove SW repository
+  $CONTAINER_CMD rm $SOFTWARE_CONTAINER
+  return 0
+}
+
 repo_getIP ()
 {
   # get IP address of repository
@@ -106,6 +113,10 @@ case "$PARAM1" in
 
   stop)
     repo_stop
+    ;;
+
+  rm)
+    repo_rm
     ;;
 
  bash)

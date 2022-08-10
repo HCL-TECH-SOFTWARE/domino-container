@@ -1,4 +1,4 @@
-    #!/bin/bash
+#!/bin/bash
 
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE

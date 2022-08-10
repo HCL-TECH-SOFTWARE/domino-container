@@ -286,11 +286,12 @@ wait_for_string()
     FOUND=`grep -e "$2" "$1" 2>/dev/null | wc -l`
 
     if [ "$FOUND" -ge "$COUNT" ]; then
+      log "Done after $seconds seconds"
       return 1
     fi
   
-    sleep 2 
-    seconds=`expr $seconds + 2`
+    sleep 1
+    seconds=`expr $seconds + 1`
     if [ `expr $seconds % 10` -eq 0 ]; then
       echo " ... waiting $seconds seconds"
     fi

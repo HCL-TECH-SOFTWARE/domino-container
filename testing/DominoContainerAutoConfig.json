@@ -29,6 +29,7 @@
     },
 
     "notesINI": {
+      "iNotesDisableXPageCmd": "0",
       "Create_R12_databases": "1",
       "Create_R85_log": "1",
       "LOG_REPLICATION": "0",
@@ -99,6 +100,7 @@
               "AutomationComment": "ServerAutoConfigured",
               "LdISite": "1",
               "HTTP_SSLKeyFile": "keydirfile.kyr",
+              "HTTP_MaxActiveThreads": 40,
               "HTTP_HomeURL": "homepage.nsf",
               "FullAdmin": "LocalDomainAdmins",
               "CreateAccess": "LocalDomainAdmins",

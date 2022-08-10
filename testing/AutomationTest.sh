@@ -488,6 +488,8 @@ test_result "startscript.server.restart" "Start Script restart server" "" "$ERRO
 
 # Test: Check if transaction logs have been created
 
+ERROR_MSG=
+
 count_txn=$(find $DOMINO_VOLUME/translog -name "*.TXN" | wc -l)
 
 if [ "$count_txn" = "0" ]; then
