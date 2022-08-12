@@ -152,10 +152,9 @@ check_container_environment()
 
     if [ $(uname) = "Linux" ]; then
       if [ ! "$EUID" = "0" ]; then
-        if [ "$DOCKER_USE_SUDO" = "no" ]; then
-          log_error_exit "Docker needs root permissions on Linux!"
+        if [ "$DOCKER_USE_SUDO" = "yes" ]; then
+          CONTAINER_CMD="sudo $CONTAINER_CMD"
         fi
-        CONTAINER_CMD="sudo $CONTAINER_CMD"
       fi
     fi
 
