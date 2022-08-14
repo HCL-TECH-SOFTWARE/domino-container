@@ -3,12 +3,15 @@
 This helper tool is intended to validate Domino OneToch setup JSON files against the schema provided by Domino.
 It can be used to validate a JSON file, in case  no Domino is installed on the Docker host.
 
+To ensure compatibility with the HCL validjson, the command-line tool also supports `-default` to find the default schema file in Domino binary directory.
+
 ## Syntax
 
 
 ```
 ./checkjson file.json [schema.json]
 ```
+
 
 ## Example
 

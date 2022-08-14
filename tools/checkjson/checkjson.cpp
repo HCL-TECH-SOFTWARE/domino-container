@@ -3,10 +3,14 @@
    ---------------------------
    Copyright Nash!Com, Daniel Nashed 2022 - APACHE 2.0 see LICENSE
 
-   Syntax: %s file.json [schema.json]
+   Syntax: %s file.json [schema.json] -default uses the standard HCL OneTouch setup JSON schema located in Domino binary directory
  */
 
 #include "stdio.h"
+#include "stdlib.h"
+#include "sys/types.h"
+#include "sys/stat.h"
+#include "fcntl.h"
 
 #define RAPIDJSON_ASSERT /* Override assertions to ensure we don't terminate for logical errors */
 #include "rapidjson/document.h"
@@ -17,18 +21,53 @@
 
 using namespace rapidjson;
 
+
+#define DOMINO_EXEC_DIR_ENV                  "Notes_ExecDirectory"
+#define DOMINO_EXEC_DIR_PATH                 "/opt/hcl/domino/notes/latest/linux"
+#define DOMINO_ONE_TOUCH_SCHMEA_NAME         "dominoOneTouchSetup.schema.json"
+#define DEFAULT_DOMINO_ONE_TOUCH_SCHMEA_TAG  "-default"
+
+
 int validate_json (char *pszFile, char *pszSchema)
 {
     /* required: pszFile, returns: 0=OK, 1=JSON invalid, 2=JSON not validated according to schmea, 3=file error */
 
     int   ret   = 1; /* Assume error until OK */
     FILE  *fp   = NULL;
+    struct stat fStat = {0};
 
-    char  szBuffer[0xFFFF] = {0};
-    const char *pStr = NULL;
+    char  szBuffer[0xFFFF]    = {0};
+    char  szSchemaFile[1024]  = {0};
+
+    const char *pSchema   = pszSchema;
+    const char *pBinDir   = NULL;
+    const char *pStr      = NULL;
 
     Document jDoc;
     Document jSchemaDoc;
+
+    /* If -default is specified, try to find schema JSON file in Domino binary directory */
+
+    if ((pSchema) && (0 == strcmp (pSchema, DEFAULT_DOMINO_ONE_TOUCH_SCHMEA_TAG)))
+    {
+        pBinDir = (getenv (DOMINO_EXEC_DIR_ENV));
+
+        if (pBinDir)
+        {
+            snprintf (szSchemaFile, sizeof (szSchemaFile), "%s/%s", pBinDir, DOMINO_ONE_TOUCH_SCHMEA_NAME);
+        }
+        else
+            snprintf (szSchemaFile, sizeof (szSchemaFile), "%s/%s", DOMINO_EXEC_DIR_PATH, DOMINO_ONE_TOUCH_SCHMEA_NAME);
+
+       if (0 == stat (szSchemaFile, &fStat))
+       {
+           if (S_ISREG (fStat.st_mode))
+               pSchema = szSchemaFile;
+       }
+    }
+
+    if (pSchema)
+      printf ("schema: [%s]\n", pSchema);
 
     /* Read and check JSON file first */
     if ( (!pszFile) || (!*pszFile) )
@@ -70,11 +109,11 @@ int validate_json (char *pszFile, char *pszSchema)
         goto Done;
     }
 
-    fp = fopen (pszSchema, "r");
+    fp = fopen (pSchema, "r");
 
     if (NULL == fp)
     {
-        printf ("\nCannot open JSON schema file [%s]\n\n", pszSchema);
+        printf ("\nCannot open JSON schema file [%s]\n\n", pSchema);
         ret = 2;
         goto Done;
     }
@@ -117,7 +156,7 @@ int validate_json (char *pszFile, char *pszSchema)
 
     if (jValidator.IsValid())
     {
-        printf ("\nJSON file [%s] validated according to schema [%s]!\n\n", pszFile, pszSchema);
+        printf ("\nJSON file [%s] validated according to schema [%s]!\n\n", pszFile, pSchema);
         ret = 0; /* Return JSON is valid against schema */
     }
 
