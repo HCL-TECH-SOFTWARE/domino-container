@@ -31,4 +31,5 @@ borg|1.2.0|https://github.com/borgbackup/borg/releases/download/1.2.0/borg-linux
 safelinx|1.3.0.0|HCL-SafeLinx-1300-x86_64.tar.gz|-|ea78531287ea3573b8d008cb0f4aa951d94855dcf9807bb745bd631d8ba32edf
 nomadweb|1.0.3|20220325-2893-nomad_web_deploy.zip|-|1b133a30ec49dd4a4a071e76d3ece94889ba73b201d82e2dcd57c57eae00b364
 nomadweb|1.0.4|HCL_Nomad_web_1.0.4_20220708-3269.zip|-|12ec274643f8fa9aa7f1b4e6263aa346b739ab9a7452c1a67ce6c665d4a3b5c2
-nomad|1.0.5|nomad-server-105-beta-domino-linux-1202.tgz|-|496e67b5ecf4ddfb15abfc62b09f16a93432a15789f149a1e09b22c78db7f962
+nomad|1.0.5beta2-12.0.2EA4|nomad-server-1.0.5-450-for-domino-1202-linux.tgz|-|6008387f7fc420df5a410b4a157b349b2116b4a87c41ac88fc35f9b5357b38c2
+nomad|1.0.5beta2-12.0.1|nomad-server-1.0.5-450-for-domino-1201-linux.tgz|-|32b07722402f072e4a8ea624087dac4817c382a4d563113e00841b887b0bb36b
