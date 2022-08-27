@@ -108,7 +108,7 @@ spec:
       periodSeconds: 20
 
 
-  # this init container is a work-around to change file-system permissions for some local stoarge providers
+  # this init container is a work-around to change file-system permissions for some local storage providers
   initContainers:
   - name: domino-startup
     image: busybox:latest
@@ -116,7 +116,6 @@ spec:
     command: [ 'sh', '-c', 'chmod 777 /local' ]
 
     securityContext:
-      privileged: true
       runAsNonRoot: false
       runAsUser: 0
 

@@ -304,12 +304,14 @@ while [ $count -gt 0 ]; do
   fi
 done
 
+LINUX_PRETTY_NAME=$($CONTAINER_CMD exec $CONTAINER_NAME cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+
+header $LINUX_PRETTY_NAME
 
 # Start testing ..
 
 log_json_begin
 log_json_begin testResults
-
 
 # Write test meta data
 
@@ -317,7 +319,7 @@ log_json "harness" "DominoCommunityImage"
 log_json "suite" "Regression"
 log_json "testClient" "testing.notes.lab"
 log_json "testServer" "testing.notes.lab"
-log_json "platform" "Linux-Docker"
+log_json "platform" "$LINUX_PRETTY_NAME"
 log_json "testBuild" "$IMAGE_VERSION"
 
 log_json_begin_array testcase

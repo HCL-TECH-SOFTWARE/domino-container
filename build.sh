@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.0.1
+# Version 2.0.2
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -17,7 +17,7 @@ SCRIPT_NAME=$0
 # Standard configuration overwritten by build.cfg
 # (Default) NGINX is used hosting software from the local "software" directory.
 
-# Default: Update CentOS while building the image
+# Default: Update Linux base image while building the image
 LinuxYumUpdate=yes
 
 # Default: Check if software exits
@@ -189,38 +189,45 @@ usage()
   echo
   echo "Usage: $(basename $SCRIPT_NAME) { domino | traveler | volt | safelinx } version fp hf"
   echo
-  echo "-checkonly      checks without build"
-  echo "-verifyonly     checks download file checksum without build"
-  echo "-(no)check      checks if files exist (default: yes)"
-  echo "-(no)verify     checks downloaded file checksum (default: no)"
-  echo "-(no)url        shows all download URLs, even if file is downloaded (default: no)"
-  echo "-(no)linuxupd   updates container Linux  while building image (default: yes)"
-  echo "cfg|config      edits config file (either in current directory or if created in home dir)"
-  echo "cpcfg           copies standard config file to config directory (default: $CONFIG_FILE)"
+  echo "-checkonly       checks without build"
+  echo "-verifyonly      checks download file checksum without build"
+  echo "-(no)check       checks if files exist (default: yes)"
+  echo "-(no)verify      checks downloaded file checksum (default: no)"
+  echo "-(no)url         shows all download URLs, even if file is downloaded (default: no)"
+  echo "-(no)linuxupd    updates container Linux  while building image (default: yes)"
+  echo "cfg|config       edits config file (either in current directory or if created in home dir)"
+  echo "cpcfg            copies standard config file to config directory (default: $CONFIG_FILE)"
   echo
-  echo "-tag=<image>    additional image tag"
-  echo "-push=<image>   tag and push image to registry"
+  echo "-tag=<image>     additional image tag"
+  echo "-push=<image>    tag and push image to registry"
   echo
-  echo Add-On options
+  echo Options
   echo
-  echo "-from=<image>   builds from a specified build image. there are named images like 'ubi' predefined"
-  echo "-openssl        adds OpenSSL to Domino image"
-  echo "-borg           adds borg client and Domino Borg Backup integration to image"
-  echo "-verse          adds Verse to a Domino image"
-  echo "-nomad          adds the Nomad server to a Domino image"
-  echo "-capi           adds the C-API sdk/toolkit to a Domino image"
-  echo "-k8s-runas      adds K8s runas user support"
-  echo "-startscript=x  installs specified start script version from software repository"
+  echo "-from=<image>    builds from a specified build image. there are named images like 'ubi' predefined"
+  echo "-imagename=<img> defines the target image name"
+  echo "-save=<img>      exports the image after build. e.g. -save=domino-container.tgz"
+  echo "-pull            always try to pull a newer base image version"
+  echo "-openssl         adds OpenSSL to Domino image"
+  echo "-borg            adds borg client and Domino Borg Backup integration to image"
+  echo "-verse           adds Verse to a Domino image"
+  echo "-nomad           adds the Nomad server to a Domino image"
+  echo "-capi            adds the C-API sdk/toolkit to a Domino image"
+  echo "-k8s-runas       adds K8s runas user support"
+  echo "-startscript=x   installs specified start script version from software repository"
   echo
   echo SafeLinx options
   echo
-  echo "-nomadweb       adds the latest Nomad Web version to a SafeLinx image"
-  echo "-mysql          adds the MySQL client to the SafeLinx image"
-  echo "-mssql          adds the Mircosoft SQL Server client to the SafeLinx image"
+  echo "-nomadweb        adds the latest Nomad Web version to a SafeLinx image"
+  echo "-mysql           adds the MySQL client to the SafeLinx image"
+  echo "-mssql           adds the Mircosoft SQL Server client to the SafeLinx image"
+  echo
+  echo "Special commands:"
+  echo
+  echo "save <img> <my.tgz>   exports the specified image to tgz format (e.g. save hclcom/domino:latest domino.tgz)"
   echo
   echo "Examples:"
   echo
-  echo "  $(basename $SCRIPT_NAME) domino 12.0.1 if1"
+  echo "  $(basename $SCRIPT_NAME) domino 12.0.1 fp1"
   echo "  $(basename $SCRIPT_NAME) traveler 12.0.1"
   echo
 
@@ -632,7 +639,7 @@ check_exposed_ports()
 
 build_domino()
 {
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -678,7 +685,7 @@ build_domino()
 
 build_traveler()
 {
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -707,7 +714,7 @@ build_traveler()
 
 build_volt()
 {
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -736,7 +743,7 @@ build_volt()
 
 build_safelinx()
 {
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -787,7 +794,10 @@ docker_build()
     PROD_HF=$CUSTOM_HF
   fi
 
-  DOCKER_IMAGE_NAME="hclcom/$PROD_NAME"
+  if [ -z "$DOCKER_IMAGE_NAME" ]; then
+    DOCKER_IMAGE_NAME="hclcom/$PROD_NAME"
+  fi
+
   DOCKER_IMAGE_VERSION=$PROD_VER$PROD_FP$PROD_HF$PROD_EXT
 
   # Set default or custom LATEST tag
@@ -1247,6 +1257,19 @@ check_all_software()
   CHECK_SOFTWARE_STATUS=$DOWNLOAD_ERROR_COUNT
 }
 
+docker_save()
+{
+  if [ -z "$DOCKER_IMAGE_EXPORT_NAME" ]; then
+    return 0
+  fi
+
+  header "Exporting $DOCKER_IMAGE -> $DOCKER_IMAGE_EXPORT_NAME"
+
+  $CONTAINER_CMD save $DOCKER_IMAGE | gzip > $DOCKER_IMAGE_EXPORT_NAME
+
+  return 0
+}
+
 # --- Main script logic ---
 
 SCRIPT_DIR=$(dirname $SCRIPT_NAME)
@@ -1314,6 +1337,21 @@ if [ -z "$1" ]; then
   exit 0
 fi
 
+# Special commands
+if [ "$1" = "save" ]; then
+  if [ -z "$3" ]; then
+    log_error_exit "Invalid syntax! Usage: $0 save <image name> <export name>"
+  fi
+
+  # get and check container environment (usually initialized after getting all the options)
+  get_container_environment
+  check_container_environment
+
+  header "Exporting $2 -> $3 - Don't panic! It takes some time ..."
+  $CONTAINER_CMD save "$2" | gzip > "$3"
+  exit 0
+fi
+
 for a in $@; do
 
   p=$(echo "$a" | awk '{print tolower($0)}')
@@ -1370,6 +1408,18 @@ for a in $@; do
 
     -from=*)
       FROM_IMAGE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -imagename=*)
+      DOCKER_IMAGE_NAME=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -save=*)
+      DOCKER_IMAGE_EXPORT_NAME=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -pull)
+      DOCKER_PULL_OPTION="--pull" 
       ;;
 
    -tag=*)
@@ -1601,6 +1651,8 @@ cd "$CURRENT_DIR"
 if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
   nginx_stop
 fi
+
+docker_save
 
 print_runtime
 
