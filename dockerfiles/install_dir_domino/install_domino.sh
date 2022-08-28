@@ -470,6 +470,36 @@ install_k8s_runas_user_support()
   log_space "K8s runAsUser support installed"
 }
 
+
+harden_binary_dir()
+{
+  header "Hardening binary directory"
+
+  chmod 555 $Notes_ExecDirectory/bindsock
+  setcap 'cap_net_bind_service=+ep' $Notes_ExecDirectory/bindsock
+}
+
+check_build_options()
+{
+
+  for b in $BUILD_SCRIPT_OPTIONS; do
+
+    case "$b" in
+      -HardenBinDir)
+        harden_binary_dir
+        ;;
+
+      *)
+        log_error "Invalid build option [$b] specified!"
+        exit 1
+        ;;
+    esac
+
+  done
+
+  return 0
+}
+
 # --- Main Install Logic ---
 
 export DOMINO_USER=notes
@@ -493,6 +523,8 @@ echo "NOMAD_VERSION         = [$NOMAD_VERSION]"
 echo "CAPI_VERSION          = [$CAPI_VERSION]"
 echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
 echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
+echo "SPECIAL_CURL_ARGS"    = [$SPECIAL_CURL_ARGS]"
+echo "BUILD_SCRIPT_OPTIONS" = [$BUILD_SCRIPT_OPTIONS]"
 
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
@@ -638,8 +670,8 @@ remove_perl
 # Install Domino start script
 install_startscript
 
-# Explicitly set docker environment to ensure any Docker implementation works
-export DOCKER_ENV=yes
+# Explicitly set container environment to ensure any container implementation works
+export CONTAINER_ENV=any
 
 # Allow gdb to use sys ptrace --> Needs to be granted explicitly on some container platforms
 
@@ -724,6 +756,8 @@ remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 
 # In some versions the Tika file is also in the data directory.
 remove_file $DOMINO_DATA_PATH/tika-server.jar
+
+check_build_options
 
 # Ensure permissons are set correctly for data directory
 chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH

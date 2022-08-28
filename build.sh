@@ -252,35 +252,37 @@ header()
 dump_config()
 {
   header "Build Configuration"
-  echo "Build Environment  : [$CONTAINER_CMD]"
-  echo "BASE_IMAGE         : [$BASE_IMAGE]"
-  echo "DOWNLOAD_FROM      : [$DOWNLOAD_FROM]"
-  echo "SOFTWARE_DIR       : [$SOFTWARE_DIR]"
-  echo "PROD_NAME          : [$PROD_NAME]"
-  echo "PROD_VER           : [$PROD_VER]"
-  echo "PROD_FP            : [$PROD_FP]"
-  echo "PROD_HF            : [$PROD_HF]"
-  echo "PROD_EXT           : [$PROD_EXT]"
-  echo "CHECK_SOFTWARE     : [$CHECK_SOFTWARE]"
-  echo "CHECK_HASH         : [$CHECK_HASH]"
-  echo "DOWNLOAD_URLS_SHOW : [$DOWNLOAD_URLS_SHOW]"
-  echo "TAG_LATEST         : [$TAG_LATEST]"
-  echo "TAG_IMAGE          : [$TAG_IMAGE]"
-  echo "PUSH_IMAGE         : [$PUSH_IMAGE]"
-  echo "DOCKER_FILE        : [$DOCKER_FILE]"
-  echo "VERSE_VERSION      : [$VERSE_VERSION]"
-  echo "NOMAD_VERSION      : [$NOMAD_VERSION]"
-  echo "CAPI_VERSION       : [$CAPI_VERSION]"
-  echo "NOMADWEB_VERSION   : [$NOMADWEB_VERSION]"
-  echo "MYSQL_INSTALL      : [$MYSQL_INSTALL]"
-  echo "MSSQL_INSTALL      : [$MSSQL_INSTALL]"
-  echo "BORG_INSTALL       : [$BORG_INSTALL]"
-  echo "STARTSCRIPT_VER    : [$STARTSCRIPT_VER]"
-  echo "EXPOSED_PORTS      : [$EXPOSED_PORTS]"
-  echo "LinuxYumUpdate     : [$LinuxYumUpdate]"
-  echo "DOMINO_LANG        : [$DOMINO_LANG]"
-  echo "NAMESPACE          : [$CONTAINER_NAMESPACE]"
-  echo "K8S_RUNAS_USER     : [$K8S_RUNAS_USER_SUPPORT]"
+  echo "Build Environment    : [$CONTAINER_CMD]"
+  echo "BASE_IMAGE           : [$BASE_IMAGE]"
+  echo "DOWNLOAD_FROM        : [$DOWNLOAD_FROM]"
+  echo "SOFTWARE_DIR         : [$SOFTWARE_DIR]"
+  echo "PROD_NAME            : [$PROD_NAME]"
+  echo "PROD_VER             : [$PROD_VER]"
+  echo "PROD_FP              : [$PROD_FP]"
+  echo "PROD_HF              : [$PROD_HF]"
+  echo "PROD_EXT             : [$PROD_EXT]"
+  echo "CHECK_SOFTWARE       : [$CHECK_SOFTWARE]"
+  echo "CHECK_HASH           : [$CHECK_HASH]"
+  echo "DOWNLOAD_URLS_SHOW   : [$DOWNLOAD_URLS_SHOW]"
+  echo "TAG_LATEST           : [$TAG_LATEST]"
+  echo "TAG_IMAGE            : [$TAG_IMAGE]"
+  echo "PUSH_IMAGE           : [$PUSH_IMAGE]"
+  echo "DOCKER_FILE          : [$DOCKER_FILE]"
+  echo "VERSE_VERSION        : [$VERSE_VERSION]"
+  echo "NOMAD_VERSION        : [$NOMAD_VERSION]"
+  echo "CAPI_VERSION         : [$CAPI_VERSION]"
+  echo "NOMADWEB_VERSION     : [$NOMADWEB_VERSION]"
+  echo "MYSQL_INSTALL        : [$MYSQL_INSTALL]"
+  echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
+  echo "BORG_INSTALL         : [$BORG_INSTALL]"
+  echo "STARTSCRIPT_VER      : [$STARTSCRIPT_VER]"
+  echo "EXPOSED_PORTS        : [$EXPOSED_PORTS]"
+  echo "LinuxYumUpdate       : [$LinuxYumUpdate]"
+  echo "DOMINO_LANG          : [$DOMINO_LANG]"
+  echo "NAMESPACE            : [$CONTAINER_NAMESPACE]"
+  echo "K8S_RUNAS_USER       : [$K8S_RUNAS_USER_SUPPORT]"
+  echo "SPECIAL_CURL_ARGS    : [$SPECIAL_CURL_ARGS]"
+  echo "BUILD_SCRIPT_OPTIONS : [$BUILD_SCRIPT_OPTIONS]"
   echo
   return 0
 }
@@ -680,7 +682,8 @@ build_domino()
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
     --build-arg K8S_RUNAS_USER_SUPPORT="$K8S_RUNAS_USER_SUPPORT" \
     --build-arg EXPOSED_PORTS="$EXPOSED_PORTS" \
-    --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
+    --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" \
+    --build-arg BUILD_SCRIPT_OPTIONS="$BUILD_SCRIPT_OPTIONS" .
 }
 
 build_traveler()

@@ -24,12 +24,17 @@ export DOMINO_DATA_PATH=/local/notesdata
 export DOMINO_REQEST_FILE=/tmp/domino_request
 export DOMINO_STATUS_FILE=/tmp/domino_status
 
-# Explicitly set docker environment to ensure any Docker implementation works
-export DOCKER_ENV=yes
+# Explicitly set container environment to ensure any container implementation works
+export CONTAINER_ENV=any
 
 DOMINO_CONTAINER_CFG_SCRIPT=$DOMDOCK_SCRIPT_DIR/domino_prestart.sh
 DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
 DOMDOCK_UPDATE_CHECK_STATUS_FILE=$DOMDOCK_LOG_DIR/domino_data_upd_checked.txt
+
+# If log dir does not exist, create it. Important for environments assigning a new /tmp
+if [ ! -e "$DOMDOCK_LOG_DIR" ]; then
+  mkdir -p "$DOMDOCK_LOG_DIR"
+fi
 
 # Get Linux version and platform
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
