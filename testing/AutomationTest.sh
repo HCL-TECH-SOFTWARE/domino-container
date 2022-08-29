@@ -385,7 +385,7 @@ if [ "$curl_count" = "0" ]; then
   ERROR_MSG="No HTTPS certificate response from Domino"
 fi
 
-test_result "domino.server.onetouch.microca-cert" "Domino One Touch create MicroCA " "" "$ERROR_MSG"
+test_result "domino.server.onetouch.microca-cert" "Domino One Touch create MicroCA" "" "$ERROR_MSG"
 
 
 # Test OneTouch database create

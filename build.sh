@@ -187,7 +187,7 @@ check_container_environment()
 usage()
 {
   echo
-  echo "Usage: $(basename $SCRIPT_NAME) { domino | traveler | volt | safelinx } version fp hf"
+  echo "Usage: $(basename $SCRIPT_NAME) { domino | traveler | volt | leap | safelinx } version fp hf"
   echo
   echo "-checkonly       checks without build"
   echo "-verifyonly      checks download file checksum without build"
@@ -611,6 +611,14 @@ set_standard_image_labels()
     CONTAINER_VOLT_DESCRIPTION="HCL Volt - Low Code platform"
   fi
 
+  if [ -z "$CONTAINER_LEAP_NAME" ]; then
+    CONTAINER_LEAP_NAME="HCL Leap Community Image"
+  fi
+
+  if [ -z "$CONTAINER_LEAP_DESCRIPTION" ]; then
+    CONTAINER_LEAP_DESCRIPTION="HCL Leap - Low Code platform"
+  fi
+
 
   if [ -z "$CONTAINER_SAFELINX_NAME" ]; then
     CONTAINER_SAFELINX_NAME="HCL SafeLinx Community Image"
@@ -744,6 +752,35 @@ build_volt()
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
 }
 
+build_leap()
+{
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
+    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    -t $DOCKER_IMAGE \
+    -f $DOCKER_FILE \
+    --label maintainer="$CONTAINER_MAINTAINER" \
+    --label name="$CONTAINER_LEAP_NAME" \
+    --label vendor="$CONTAINER_VENDOR" \
+    --label description="$CONTAINER_LEAP_DESCRIPTION" \
+    --label summary="$CONTAINER_LEAP_DESCRIPTION" \
+    --label version="$DOCKER_IMAGE_VERSION" \
+    --label buildtime="$BUILDTIME" \
+    --label release="$BUILDTIME" \
+    --label architecture="x86_64" \
+    --label io.k8s.description="$CONTAINER_LEAP_DESCRIPTION" \
+    --label io.k8s.display-name="$CONTAINER_LEAP_NAME" \
+    --label io.openshift.expose-services="1352:nrpc 25:smtp 80:http 389:ldap 443:https 636:ldaps" \
+    --label VoltDocker.description="$CONTAINER_LEAP_DESCRIPTION" \
+    --label VoltDocker.version="$DOCKER_IMAGE_VERSION" \
+    --label VoltDocker.buildtime="$BUILDTIME" \
+    --build-arg PROD_NAME="$PROD_NAME" \
+    --build-arg PROD_VER="$PROD_VER" \
+    --build-arg DownloadFrom="$DOWNLOAD_FROM" \
+    --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
+    --build-arg BASE_IMAGE=$BASE_IMAGE \
+    --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
+}
+
 build_safelinx()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
@@ -851,8 +888,13 @@ docker_build()
     volt)
 
       DOCKER_FILE=dockerfile_volt
-
       build_volt
+      ;;
+
+    leap)
+
+      DOCKER_FILE=dockerfile_leap
+      build_leap
       ;;
 
     safelinx)
@@ -1027,7 +1069,7 @@ check_software()
 
   case "$CURRENT_NAME" in
 
-    domino|traveler|volt|verse|nomad|capi|borg|safelinx|nomadweb)
+    domino|traveler|volt|leap|verse|nomad|capi|borg|safelinx|nomadweb)
 
       if [ -n "$DOWNLOAD_1ST_FILE" ]; then
         if [ -z "$CURRENT_PARTNO" ]; then
@@ -1148,6 +1190,7 @@ check_software_status()
     check_software_file "domino"
     check_software_file "traveler"
     check_software_file "volt"
+    check_software_file "leap"
     check_software_file "safelinx"
 
     if [ -n "$VERSE_VERSION" ]; then
@@ -1360,7 +1403,7 @@ for a in $@; do
   p=$(echo "$a" | awk '{print tolower($0)}')
 
   case "$p" in
-    domino|traveler|volt|safelinx)
+    domino|traveler|volt|leap|safelinx)
       PROD_NAME=$p
       ;;
 
