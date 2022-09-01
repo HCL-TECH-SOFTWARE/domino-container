@@ -420,6 +420,16 @@ remove_perl()
   remove_package perl-libs perl
 }
 
+install_domino_installer_only_packages()
+{
+  install_packages cpio
+}
+
+remove_domino_installer_only_packages()
+{
+  remove_packages cpio
+}
+
 install_startscript()
 {
 
@@ -633,10 +643,7 @@ if [ -e "/tmp/notesdata.tbz2" ]; then
 fi
 
 install_perl
-
-if [ "$CONTAINER_INSTALLER" = "hcl" ]; then
-  install_packages cpio
-fi
+install_domino_installer_only_packages
 
 cd "$INSTALL_DIR"
 
@@ -742,8 +749,15 @@ find $DOMINO_DATA_PATH/domino/html -name "*.msi" -exec rm -rf {} \; 2>/dev/null
 remove_directory "$DOMINO_DATA_PATH/domino/html/download/filesets"
 remove_directory "$DOMINO_DATA_PATH/domino/html/help"
 
-# Remove Domino 12 and  higher uninstaller --> we never uninstall but rebuild from scratch
+# Remove Domino 12 and higher uninstaller --> we never uninstall but rebuild from scratch
 remove_directory "$Notes_ExecDirectory/_HCL Domino_installation"
+
+# Remove InstallAnywhere uninstaller JVMs (name differs depending on version)
+remove_directory "$Notes_ExecDirectory/IA_jre"
+remove_directory "$Notes_ExecDirectory/jre"
+
+# Remove Verse add-on installer ZIP
+remove_directory "$Notes_ExecDirectory/addons/verse"
 
 # Create missing links
 
@@ -791,10 +805,7 @@ if [ -z "$CAPI_VERSION" ]; then
 fi
 
 # Remove installer only required packages
-
-if [ "$CONTAINER_INSTALLER" = "hcl" ]; then
-  remove_packages cpio
-fi
+remove_domino_installer_only_packages
 
 # Cleanup repository cache to save space
 clean_linux_repo_cache

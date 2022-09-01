@@ -170,7 +170,13 @@ test_result()
 show_results()
 {
   header "Test Results JSON"
-  cat $RESULT_FILE_JSON | jq
+
+  if [ -x /usr/bin/jq ]; then
+    cat $RESULT_FILE_JSON | jq
+  else
+    log "Please install 'jq' for formatted test output"
+    cat $RESULT_FILE_JSON
+  fi
 
   header "Test Results"
 

@@ -26,7 +26,7 @@ install_linux_packages()
   fi
 
   # Common packages for all distributions
-  install_packages curl gdb lsof ncurses bc which file net-tools cpio diffutils file findutils gettext gzip tar unzip
+  install_packages curl gdb lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip
 
   # SUSE
   if [ -x /usr/bin/zypper ]; then
@@ -70,10 +70,8 @@ install_linux_packages_hcl()
   # Only install minimum required packages for redistributable UBI image
 
   install_packages hostname unzip lsof gdb file net-tools procps-ng diffutils 
-  #glibc-langpack-en 
 
   # gdb installs also the C compiler, which is not required and increases image size
-
   remove_packages gcc make
 }
 

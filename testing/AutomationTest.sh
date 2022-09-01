@@ -3,7 +3,7 @@
 ###########################################################################
 # Automation Test Script                                                  #
 # ----------------------                                                  #
-# Version 1.0.0 25.07.2022                                                #
+# Version 1.0.1 01.09.2022                                                #
 #                                                                         #
 # This script implements automation testing the Domino Community image    #
 #                                                                         #
@@ -48,7 +48,8 @@ if [ -z "$DOMINO_VOLUME" ]; then
   DOMINO_VOLUME=/tmp/domino_automation_test_local
 fi
 
-CONTAINER_VOLUMES="-v $DOMINO_VOLUME:/local"
+# For SELinux always add :Z to any volume mounts
+CONTAINER_VOLUMES="-v $DOMINO_VOLUME:/local:Z"
 
 if [ -z "$RESULT_FILE_JSON" ]; then
   RESULT_FILE_JSON=$DOMINO_VOLUME/result_autotest.json
@@ -148,7 +149,7 @@ check_container_environment()
 # Check & setup container environment
 check_container_environment
 
-header "Container environment: $CONTAINER_ENV_NAME"
+header "Container environment: $CONTAINER_ENV_NAME $CONTAINER_RUNTIME_VERSION"
 
 # Get all the parameters
 
@@ -348,7 +349,7 @@ header "Starting HTTP"
 
 #server_console_cmd "load http"
 
-wait_for_string $CONSOLE_LOG "HTTP Server: Started" 30 1
+wait_for_string $CONSOLE_LOG "HTTP Server: Started" 70 1
 HTTPS_STATUS=$?
 
 if [ "$HTTP_STATUS" = "0" ];then
@@ -383,6 +384,11 @@ curl_count=$($CONTAINER_CMD exec $CONTAINER_NAME curl -k -vvI https://automation
 
 if [ "$curl_count" = "0" ]; then
   ERROR_MSG="No HTTPS certificate response from Domino"
+  echo
+  print_delim
+  $CONTAINER_CMD exec $CONTAINER_NAME curl -k -vvI https://automation.notes.lab
+  print_delim
+  echo
 fi
 
 test_result "domino.server.onetouch.microca-cert" "Domino One Touch create MicroCA" "" "$ERROR_MSG"
@@ -426,7 +432,7 @@ server_console_cmd "load backup log.nsf"
 count=10
 while [ $count -gt 0 ]; do
   sleep 1
-  count_backup=$(find $DOMINO_VOLUME/backup -name "log.nsf" | wc -l)
+  count_backup=$(find $DOMINO_VOLUME/backup -name "log.nsf" | wc -l 2>/dev/null)
 
   if [ "$count_backup" = "0" ];then
     count=$(expr $count - 1)
@@ -464,6 +470,13 @@ CONTAINER_HEALTH="$($CONTAINER_CMD inspect --format "{{ .State.Health.Status }}"
 
 if [ "$CONTAINER_HEALTH" != "healthy" ];then
   ERROR_MSG="Container not healthy"
+  echo
+  print_delim
+  $CONTAINER_CMD inspect --format "{{ .State.Health.Status }}" $CONTAINER_NAME
+  print_delim
+  $CONTAINER_CMD ps
+  print_delim
+  echo
 fi
 
 test_result "container.health" "Container health" "" "$ERROR_MSG"

@@ -34,6 +34,13 @@ log_error_exit()
   exit 1
 }
 
+log()
+{
+  echo
+  echo $@
+  echo
+}
+
 check_version()
 {
   count=1
@@ -531,17 +538,22 @@ check_from_image()
 
     ubi)
       LINUX_NAME="RedHat UBI"
-      BASE_IMAGE=redhat/ubi8
+      BASE_IMAGE=registry.access.redhat.com/ubi8
       ;;
 
     ubi8)
       LINUX_NAME="RedHat UBI 8"
-      BASE_IMAGE=redhat/ubi8
+      BASE_IMAGE=registry.access.redhat.com/ubi8
       ;;
 
     ubi9)
       LINUX_NAME="RedHat UBI 9"
-      BASE_IMAGE=redhat/ubi9
+      BASE_IMAGE=registry.access.redhat.com/ubi9
+      ;;
+
+    ubi9-minimal)
+      LINUX_NAME="RedHat UBI 9 minimal"
+      BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
       ;;
 
     leap)
@@ -1313,6 +1325,13 @@ docker_save()
 
   $CONTAINER_CMD save $DOCKER_IMAGE | gzip > $DOCKER_IMAGE_EXPORT_NAME
 
+  if [ "$?" = "0" ]; then
+    IMAGE_SIZE=$(du -h $DOCKER_IMAGE_EXPORT_NAME)
+    log "Exported container image: $IMAGE_SIZE"
+  else
+    log "Error exporting container image!"
+  fi
+
   return 0
 }
 
@@ -1393,8 +1412,16 @@ if [ "$1" = "save" ]; then
   get_container_environment
   check_container_environment
 
-  header "Exporting $2 -> $3 - Don't panic! It takes some time ..."
+  header "Exporting $2 -> $3 - This takes some time ..."
   $CONTAINER_CMD save "$2" | gzip > "$3"
+
+  if [ "$?" = "0" ]; then
+    IMAGE_SIZE=$(du -h $3)
+    log "Exported container image: $IMAGE_SIZE"
+  else
+    log_error_exit "Error exporting container image!"
+  fi
+
   exit 0
 fi
 

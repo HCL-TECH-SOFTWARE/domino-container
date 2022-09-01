@@ -900,6 +900,9 @@ install_package()
  elif [ -x /usr/bin/dnf ]; then
    dnf install -y "$@"
 
+ elif [ -x /usr/bin/microdnf ]; then
+   microdnf install -y "$@"
+
  elif [ -x /usr/bin/yum ]; then
    yum install -y "$@"
 
