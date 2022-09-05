@@ -13,6 +13,7 @@ ARG PROD_NAME=
 ARG PROD_VER=
 ARG PROD_FP=
 ARG PROD_HF=
+ARG PROD_DOWNLOAD_FILE=
 ARG DominoResponseFile=
 ARG LocalInstallDir=/tmp/install
 ARG DominoUserID=

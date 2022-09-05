@@ -11,6 +11,7 @@ ARG LinuxYumUpdate=
 ARG DownloadFrom=
 ARG PROD_NAME=
 ARG PROD_VER=
+ARG PROD_DOWNLOAD_FILE=
 ARG LocalInstallDir=/tmp/install
 ARG SPECIAL_CURL_ARGS=
 

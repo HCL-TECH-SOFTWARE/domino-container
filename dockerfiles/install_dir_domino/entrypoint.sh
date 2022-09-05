@@ -340,8 +340,20 @@ log "--- Starting Domino Server ---"
 # Inside the container we can always safely start as "notes" user
 $DOMINO_START_SCRIPT start
 
-# Now check and wait if a post config restart is requested
+# Check post setup operations after configuration
 if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
+
+  if [ -n "$DominoConfigPostSetupConsoleCmd" ]; then
+
+    log "Waiting 30 seconds before running post setup server command"
+    sleep 30
+
+    log "Running post setup server command"
+    $DOMINO_START_SCRIPT cmd "$DominoConfigPostSetupConsoleCmd"
+    sleep 10
+  fi
+
+  # Now check and wait if a post config restart is requested
   if [ -n "$DominoConfigRestartWaitTime" ] || [ -n "$DominoConfigRestartWaitString" ]; then
 
     sleep 2

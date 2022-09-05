@@ -269,10 +269,13 @@ if [ -z "$CONTAINER_NETWORK" ]; then
   fi
 fi
 
-if [ -n "$CONTAINER_FULL_ENV_FILE" ]; then
-  CONTAINER_ENV_FILE_OPTION="--env-file $CONTAINER_FULL_ENV_FILE"
+CONTAINER_FULL_ENV_FILE=.env
 
-  if [ ! -r "$CONTAINER_FULL_ENV_FILE" ]; then
+if [ -n "$CONTAINER_FULL_ENV_FILE" ]; then
+
+  if [ -r "$CONTAINER_FULL_ENV_FILE" ]; then
+    CONTAINER_ENV_FILE_OPTION="--env-file $CONTAINER_FULL_ENV_FILE"
+  else
     log_and_error "Error - Cannot read environment file [$CONTAINER_FULL_ENV_FILE]"
   fi
 fi
@@ -553,8 +556,13 @@ show_results
 if [ "$NO_CONTAINER_STOP" = "yes" ]; then
   log "Keeping Domino server running on request"
 else
+  mv "$DOMINO_VOLUME/notesdata/IBM_TECHNICAL_SUPPORT" "$DOMINO_VOLUME"
   remove_dir "$DOMINO_VOLUME/notesdata"
   remove_dir "$DOMINO_VOLUME/translog"
+  remove_dir "$DOMINO_VOLUME/daos"
+  remove_dir "$DOMINO_VOLUME/ft"
+  remove_dir "$DOMINO_VOLUME/nif"
+  remove_dir "$DOMINO_VOLUME/backup"
 fi
 
 exit 0

@@ -43,6 +43,7 @@
       "FT_FLY_INDEX_OFF": "1",
       "UPDATE_FULLTEXT_THREAD": "1",
       "FTG_USE_SYS_MEMORY": "1",
+      "iNotesDisableXPageCmd": "1",
       "CERTSTORE_CACHELOG": "1"
     },
 

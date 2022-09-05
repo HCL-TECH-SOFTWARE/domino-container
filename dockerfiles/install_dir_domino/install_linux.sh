@@ -59,6 +59,7 @@ install_linux_packages()
   # On some platforms certain programs are in their own package not installed by default..
   install_if_missing hostname
   install_if_missing xargs
+  install_if_missing vi
 
   # jq the ultimate tool for JSON files...
   install_if_missing jq

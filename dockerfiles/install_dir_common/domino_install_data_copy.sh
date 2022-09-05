@@ -57,7 +57,7 @@ update_traveler_ini()
     update_traveler_ini_var "$file" "$var" "$val"
   done
 
-  # restore seperator
+  # restore separator
   IFS=$BAK_IFS
   BAK_IFS=
 }
@@ -105,7 +105,7 @@ copy_files_for_major_version()
     return 0
   fi
 
-  # Set NotesProgram notes.ini (required for Traveler, but should always point to the binary directoy)
+  # Set NotesProgram notes.ini (required for Traveler, but should always point to the binary directory)
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "NotesProgram" "$Notes_ExecDirectory"
 
   # Avoid Domino Directory Design Update Prompt

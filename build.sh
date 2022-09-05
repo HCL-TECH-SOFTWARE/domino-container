@@ -267,6 +267,7 @@ dump_config()
   echo "PROD_VER             : [$PROD_VER]"
   echo "PROD_FP              : [$PROD_FP]"
   echo "PROD_HF              : [$PROD_HF]"
+  echo "PROD_DOWNLOAD_FILE   : [$PROD_DOWNLOAD_FILE]"
   echo "PROD_EXT             : [$PROD_EXT]"
   echo "CHECK_SOFTWARE       : [$CHECK_SOFTWARE]"
   echo "CHECK_HASH           : [$CHECK_HASH]"
@@ -689,6 +690,7 @@ build_domino()
     --build-arg PROD_VER=$PROD_VER \
     --build-arg PROD_FP=$PROD_FP \
     --build-arg PROD_HF=$PROD_HF \
+    --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
     --build-arg DOCKER_TZ=$DOCKER_TZ \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
@@ -729,6 +731,7 @@ build_traveler()
     --label TravelerDocker.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME="$PROD_NAME" \
     --build-arg PROD_VER="$PROD_VER" \
+    --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
@@ -758,6 +761,7 @@ build_volt()
     --label VoltDocker.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME="$PROD_NAME" \
     --build-arg PROD_VER="$PROD_VER" \
+    --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
@@ -787,6 +791,7 @@ build_leap()
     --label VoltDocker.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME="$PROD_NAME" \
     --build-arg PROD_VER="$PROD_VER" \
+    --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
@@ -816,6 +821,7 @@ build_safelinx()
     --label SafeLinxContainer.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME="$PROD_NAME" \
     --build-arg PROD_VER="$PROD_VER" \
+    --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
     --build-arg NOMADWEB_VERSION="$NOMADWEB_VERSION" \
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
     --build-arg MSSQL_INSTALL="$MSSQL_INSTALL" \
@@ -1237,13 +1243,38 @@ check_software_status()
     if [ -z "$PROD_VER" ]; then
       check_software_file "$PROD_NAME"
     else
-      check_software_file "$PROD_NAME" "$PROD_VER"
 
-      if [ ! -z "$PROD_FP" ]; then
+      if [ -z "$PROD_DOWNLOAD_FILE" ]; then
+        check_software_file "$PROD_NAME" "$PROD_VER"
+      else
+
+        if [ -z "$DOWNLOAD_FROM" ]; then
+
+          if [ -e "$SOFTWARE_DIR/$PROD_DOWNLOAD_FILE" ]; then
+            echo "Info: Not checking download file [$SOFTWARE_DIR/$PROD_DOWNLOAD_FILE]"
+          else
+            echo "Download file not found [$SOFTWARE_DIR/$PROD_DOWNLOAD_FILE]"
+            exit 1
+          fi
+
+        else
+
+          http_head_check "$DOWNLOAD_FROM/$PROD_DOWNLOAD_FILE"
+          if [ "$?" = "1" ]; then
+            echo "Info: Not checking download file [$DOWNLOAD_FROM/$PROD_DOWNLOAD_FILE]"
+          else
+            echo "Download file not found [$DOWNLOAD_FROM/$PROD_DOWNLOAD_FILE]"
+            exit 1
+          fi
+        fi
+
+      fi
+
+      if [ -n "$PROD_FP" ]; then
         check_software_file "$PROD_NAME" "$PROD_VER$PROD_FP"
       fi
 
-      if [ ! -z "$PROD_HF" ]; then
+      if [ -n "$PROD_HF" ]; then
         check_software_file "$PROD_NAME" "$PROD_VER$PROD_FP$PROD_HF"
       fi
     fi
@@ -1501,6 +1532,10 @@ for a in $@; do
 
    -push=*)
       PUSH_IMAGE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+   -prod_download=*)
+      PROD_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     9*|10*|11*|12*)

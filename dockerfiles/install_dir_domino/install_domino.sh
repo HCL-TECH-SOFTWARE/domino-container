@@ -61,8 +61,16 @@ install_domino()
   header "Downloading Domino Installation files ..."
 
   if [ -n "$INST_VER" ]; then
-    get_download_name $PROD_NAME $INST_VER
-    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_server
+
+    # If explicitly specified just download and skip calculating hash
+    if [ -n "$PROD_DOWNLOAD_FILE" ]; then
+      echo "Info: Not checking download hash for [$PROD_DOWNLOAD_FILE]"
+      DOWNLOAD_NAME="$PROD_DOWNLOAD_FILE"
+      download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_server . nohash
+    else
+      get_download_name $PROD_NAME $INST_VER
+      download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_server
+    fi
   fi
 
   if [ -n "$INST_FP" ]; then
@@ -549,7 +557,7 @@ fi
 # This logic allows incremental installs for images based on each other (e.g. 12.0.1 -> 12.0.1FP1)
 if [ -e $LOTUS ]; then
   FIRST_TIME_SETUP=0
-  header "!! Incremantal install based on exiting Domino image !!"
+  header "!! Incremental install based on exiting Domino image !!"
 else
   FIRST_TIME_SETUP=1
 fi
@@ -787,14 +795,16 @@ if [ "$SkipDominoMoveInstallData" = "yes" ]; then
 else
   DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
-  header "Moving install data $DOMINO_DATA_PATH -> [$DOMDOCK_INSTALL_DATA_TAR]"
+  if [ "$FIRST_TIME_SETUP" = "1" ]; then
+    header "Moving install data $DOMINO_DATA_PATH -> [$DOMDOCK_INSTALL_DATA_TAR]"
 
-  cd $DOMINO_DATA_PATH
-  remove_file "$DOMDOCK_INSTALL_DATA_TAR"
-  tar -czf "$DOMDOCK_INSTALL_DATA_TAR" .
+    cd $DOMINO_DATA_PATH
+    remove_file "$DOMDOCK_INSTALL_DATA_TAR"
+    tar -czf "$DOMDOCK_INSTALL_DATA_TAR" .
 
-  remove_directory "$DOMINO_DATA_PATH"
-  create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+    remove_directory "$DOMINO_DATA_PATH"
+    create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  fi
 fi
 
 # Remove gcc compiler if no C-API toolkit is installed

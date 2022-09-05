@@ -234,12 +234,18 @@ dump_download_error()
 
 download_and_check_hash()
 {
-  DOWNLOAD_SERVER=$1
-  DOWNLOAD_STR=$2
-  TARGET_DIR=$3
-  TARGET_FILE=$4
+  local DOWNLOAD_SERVER=$1
+  local DOWNLOAD_STR=$2
+  local TARGET_DIR=$3
+  local TARGET_FILE=$4
 
-  # check if file exists before downloading
+  # If "nohash" option is specified, don't check for hash
+  if [ "$5" = "nohash" ]; then
+    local NOHASH=1
+    echo "Downloading file without hash [$DOWNLOAD_STR]"
+  fi
+
+  # Check if file exists before downloading
 
   for CHECK_FILE in $(echo "$DOWNLOAD_STR" | tr "," "\n" ) ; do
 
@@ -275,24 +281,32 @@ download_and_check_hash()
     cd "$TARGET_DIR"
   fi
 
-  if [[ "$DOWNLOAD_FILE" =~ ".tar.gz" ]]; then
-    TAR_OPTIONS=xz
-  elif [[ "$DOWNLOAD_FILE" =~ ".tgz" ]]; then
-    TAR_OPTIONS=xz
-  elif [[ "$DOWNLOAD_FILE" =~ ".taz" ]]; then
-    TAR_OPTIONS=xz
-  elif [[ "$DOWNLOAD_FILE" =~ ".tar" ]]; then
-    TAR_OPTIONS=x
-  else
-    TAR_OPTIONS=""
-  fi
+  case "$DOWNLOAD_FILE" in
+    *.tar.gz)
+      TAR_OPTIONS=xz
+      ;;
+
+    *.tgz)
+      TAR_OPTIONS=xz
+      ;;
+
+    *.taz)
+      TAR_OPTIONS=xz
+      ;;
+
+    *.tar)
+      TAR_OPTIONS=x
+      ;;
+
+    *)
+      TAR_OPTIONS=""
+      ;;
+  esac
 
   if [ -z "$TAR_OPTIONS" ]; then
 
-    # download without extracting for none tar files
-
-    echo
-    if [ -z "$TARGET_FILE" ]; then
+    # Download without extracting for none tar files
+    if [ -z "$TARGET_FILE" ] || [ "." = "$TARGET_FILE" ]; then
       TARGET_FILE=$(basename $DOWNLOAD_FILE)
     fi
 
@@ -303,8 +317,12 @@ download_and_check_hash()
       exit 1
     fi
 
-    HASH=$(sha256sum -b $TARGET_FILE | cut -f1 -d" ")
-    FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
+    if [ "$NOHASH" = "1" ]; then
+      FOUND=1
+    else
+      HASH=$(sha256sum -b $TARGET_FILE | cut -f1 -d" ")
+      FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
+    fi
 
     # Download file can be present more than once (e.g. IF/HF). Perfectly OK as long the hash matches.
     if [ "$FOUND" = "0" ]; then
@@ -317,10 +335,18 @@ download_and_check_hash()
 
   else
     if [ -e $SOFTWARE_FILE ]; then
-      echo
-      HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1)
-      echo
-      FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
+
+      if [ "$NOHASH" = "1" ]; then
+        echo
+        $CURL_CMD $DOWNLOAD_FILE | tar $TAR_OPTIONS 2>/dev/null
+        echo
+        FOUND=1
+      else
+        echo
+        HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+        echo
+        FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
+      fi
 
       if [ "$FOUND" = "1" ]; then
         log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
@@ -1085,3 +1111,85 @@ set_sh_shell()
 
   return 1
 }
+
+download_and_decrypt()
+{
+  # Download and decrypt file
+  # $1 = Output File (fails when file already exists)
+  # $2 = Download URL
+  # $3 = Password or password URL (if empty decode base64 only)
+  # $4 = Verification hash SHA256 (lower case)
+  # Returns: 0 = Success, else error status
+
+  local OUTFILE="$1"
+  local URL="$2"
+  local PW_IN="$3"
+  local HASH_IN="$4"
+
+  if [ -z "$URL" ] || [ -z "$OUTFILE" ]; then
+    return 1
+  fi
+
+  if [ -e "$OUTFILE" ]; then
+    log_error "Download file already exists [$OUTFILE]"
+    return 2
+  fi
+
+  if [ -z "$PW_IN" ] || [ "." = "$PW_IN" ] ; then
+    # Only download and decode base64 if password is empty
+    curl -s "$URL" | openssl enc -d -base64 -d -out "$OUTFILE"
+
+  else
+    case "$PW_IN" in
+
+      http:*|https:*)
+        export PW=$(curl -s "$PW_IN")
+        ;;
+
+      *)
+        export PW="$PW_IN"
+        ;;
+    esac
+
+    if [ -z "$PW" ]; then
+      log_error "No download password returned for download file [$OUTFILE]!"
+      return 3
+    fi
+
+    # Download and decrypt
+    curl -s "$URL" | openssl enc -d -a -aes-256-cbc -pbkdf2 -pass env:PW -out "$OUTFILE"
+  fi
+
+  # Save return code first and nuke password
+  local ret=$?
+  export PW=
+
+  if [ "0" != "$ret" ]; then
+    log_error "Cannot decrypt download file [$OUTFILE]"
+
+    if [ -e "$OUTFILE" ]; then
+      rm -f "$OUTFILE"
+    fi
+    return 4
+  fi
+
+  if [ ! -e "$OUTFILE" ]; then
+    log_error "No decrypted download file found [$OUTFILE]"
+    rm -f "$OUTFILE"
+    return 5
+  fi
+
+  # Optionally verify the file hash
+  if [ -n "$HASH_IN" ]; then
+    local HASH=$(sha256sum -b $OUTFILE | cut -f1 -d" ")
+
+    if [ "$HASH_IN" != "$HASH" ]; then
+      log_error "Download hash does not match for [$OUTFILE] - Current Hash: [$HASH], Hash expected: [$HASH_IN]"
+      rm -f "$OUTFILE"
+      return 5
+    fi
+  fi
+
+  return 0
+}
+

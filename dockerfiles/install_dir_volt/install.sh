@@ -38,8 +38,17 @@ header "$PROD_NAME Installation"
 INST_VER=$PROD_VER
 
 if [ -n "$INST_VER" ]; then
-  get_download_name $PROD_NAME $INST_VER
-  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" $PROD_NAME
+
+ # If explicitly specified just download and skip calculating hash
+  if [ -n "$PROD_DOWNLOAD_FILE" ]; then
+    echo "Info: Not checking download hash for [$PROD_DOWNLOAD_FILE]"
+    DOWNLOAD_NAME="$PROD_DOWNLOAD_FILE"
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" $PROD_NAME . nohash
+  else
+    get_download_name $PROD_NAME $INST_VER
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" $PROD_NAME
+  fi
+
 else
   log_error "No Target Version specified"
   exit 1

@@ -156,9 +156,23 @@ check_download_file_links()
   # Additional Community image paramters
   download_file_link SafeIDFile
 
+  # Start Script template Domino One Touch setup download
+  if [ -n "$SetupAutoConfigureTemplateDownload" ]; then
+    download_file "$SetupAutoConfigureTemplateDownload" "$DOMINO_DATA_PATH/DominoAutoConfigTemplate.json"
+  fi
+
   return 0
 }
 
+check_download_and_decrypt()
+{
+  # Download remote server.id and decrypt it
+
+  download_and_decrypt $DOMINO_DATA_PATH/server.id $SetupSecureDownloadServerID
+  echo "SetupSecureDownloadServerID Status: [$?]"
+
+  return 0
+}
 
 # --- Main Logic ---
 
@@ -190,6 +204,9 @@ replace_secret_vars
 
 # Download ID files if http download specified
 check_download_file_links
+
+# Download and decrypt files if specified
+check_download_and_decrypt
 
 # Ensure server.id name is always default name and rename if needed
 if [ -e "$ServerIDFile" ]; then

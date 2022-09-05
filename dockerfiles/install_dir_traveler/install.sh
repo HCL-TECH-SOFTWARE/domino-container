@@ -32,9 +32,18 @@ install_traveler()
 
   INST_VER=$PROD_VER
 
-  if [ ! -z "$INST_VER" ]; then
-    get_download_name $PROD_NAME $INST_VER
-    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" traveler
+  if [ -n "$INST_VER" ]; then
+
+    # If explicitly specified just download and skip calculating hash
+    if [ -n "$PROD_DOWNLOAD_FILE" ]; then
+      echo "Info: Not checking download hash for [$PROD_DOWNLOAD_FILE]"
+      DOWNLOAD_NAME="$PROD_DOWNLOAD_FILE"
+      download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" traveler . nohash
+    else
+      get_download_name $PROD_NAME $INST_VER
+      download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" traveler
+    fi
+
   else
     log_error "No Target Version specified"
     exit 1
