@@ -700,6 +700,8 @@ build_domino()
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
     --build-arg NOMAD_VERSION="$NOMAD_VERSION" \
     --build-arg CAPI_VERSION="$CAPI_VERSION" \
+    --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
+    --build-arg MSSQL_INSTALL="$MSSQL_INSTALL" \
     --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
     --build-arg K8S_RUNAS_USER_SUPPORT="$K8S_RUNAS_USER_SUPPORT" \
@@ -1538,7 +1540,7 @@ for a in $@; do
       PROD_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
-    9*|10*|11*|12*)
+    9*|10*|11*|12*|v12*)
       PROD_VER=$p
       ;;
 
@@ -1546,7 +1548,7 @@ for a in $@; do
       PROD_FP=$p
       ;;
 
-   beta*)
+    beta*)
       PROD_FP=$p
       ;;
 

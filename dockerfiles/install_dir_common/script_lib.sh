@@ -1193,3 +1193,36 @@ download_and_decrypt()
   return 0
 }
 
+install_mysql_client()
+{
+
+  local ADDON_NAME="MySQL Client"
+  header "$ADDON_NAME Installation"
+
+  curl -LO https://repo.mysql.com/mysql80-community-release-el7-1.noarch.rpm
+  rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+
+  install_package mysql80-community-release-el7-1.noarch.rpm
+  install_package mysql
+  install_package mysql-connector-odbc.x86_64
+
+  log_space Installed $ADDON_NAME
+}
+
+install_mssql_client()
+{
+
+  local ADDON_NAME="Microsoft SQL Server Client"
+  header "$ADDON_NAME Installation"
+
+  curl https://packages.microsoft.com/config/rhel/8/prod.repo > /etc/yum.repos.d/mssql-release.repo
+
+  ACCEPT_EULA=Y install_package msodbcsql18
+  ACCEPT_EULA=Y install_package mssql-tools18
+
+  echo >> /etc/bashrc
+  echo 'PATH="$PATH:/opt/mssql-tools18/bin"' >> /etc/bashrc
+
+  log_space Installed $ADDON_NAME
+}
+

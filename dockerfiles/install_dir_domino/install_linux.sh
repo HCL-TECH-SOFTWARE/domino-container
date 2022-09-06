@@ -107,6 +107,7 @@ yum_glibc_lang_update()
   return 0
 }
 
+
 # Main logic to update Linux and install Linux packages
 
 # Check for Linux updates if requested first
@@ -173,6 +174,17 @@ else
       header "Installing openssl"
       install_package openssl
     fi
+  fi
+
+
+  # Install database client if requested
+
+  if [ "$MYSQL_INSTALL" = "yes" ]; then
+    install_mysql_client
+  fi
+
+  if [ "$MSSQL_INSTALL" = "yes" ]; then
+    install_mssql_client
   fi
 
 fi
