@@ -3,7 +3,7 @@
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-FROM redhat/ubi8 
+FROM registry.access.redhat.com/ubi8 
 
 # External arguments with a default value
 ARG LinuxYumUpdate=
