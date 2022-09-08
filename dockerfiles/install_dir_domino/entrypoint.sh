@@ -324,7 +324,12 @@ else
   log "--- Configuring Domino Server ---"
 
   cd $DOMINO_DATA_PATH
-  $LOTUS/bin/server -listen 1352
+
+  if [ -z "$DOMINO_REMOTE_SETUP_PORT" ]; then
+    DOMINO_REMOTE_SETUP_PORT=1352
+  fi
+
+  $LOTUS/bin/server -listen $DOMINO_REMOTE_SETUP_PORT
 
   log "--- Configuration ended ---"
 fi
