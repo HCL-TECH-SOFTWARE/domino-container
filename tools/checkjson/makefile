@@ -13,7 +13,7 @@ PROGRAM=checkjson
 all: $(PROGRAM)
 
 $(PROGRAM): $(PROGRAM).o
-	 $(CC) -o $(PROGRAM) $(PROGRAM).o $(LIBS) -o $(PROGRAM)
+	 $(CC) -o $(PROGRAM) $(PROGRAM).o $(LIBS)
 
 $(PROGRAM).o: $(PROGRAM).cpp
 	$(CC)  $(CFLAGS) $(PROGRAM).cpp -DLINUX -DUNIX

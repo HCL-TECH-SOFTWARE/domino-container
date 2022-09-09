@@ -121,12 +121,13 @@ int validate_json (char *pszFile, char *pszSchema)
     FileReadStream jSchemaStream (fp, szBuffer, sizeof (szBuffer));
     jSchemaDoc.ParseStream (jSchemaStream);
 
-    if (jDoc.HasParseError())
+    if (jSchemaDoc.HasParseError())
     {
-        pStr = GetParseError_En (jDoc.GetParseError());
+        pStr = GetParseError_En (jSchemaDoc.GetParseError());
         if (pStr)
-          printf ("\nJSON schema file parsing error, offset: %lu: %s\n\n", jDoc.GetErrorOffset(), pStr);
+          printf ("\nJSON schema file parsing error, offset: %lu: %s\n\n", jSchemaDoc.GetErrorOffset(), pStr);
 
+        ret = 1;
         goto Done;
     }
 
@@ -170,18 +171,11 @@ Done:
 int main(int argc, char *argv[])
 {
     int ret = 9;
-    char *pszFile = NULL;
+    char *pszFile   = NULL;
     char *pszSchema = NULL;
 
-    if (argc < 1)
-        goto Done;
-
     if (argc < 2)
-    {
-        printf ("\nSyntax: %s file.json [schema.json]\n\n", argv[0]);
-        ret = 0;
-        goto Done;
-    }
+        goto InvalidSyntax;
 
     pszFile = argv[1];
 
@@ -191,6 +185,12 @@ int main(int argc, char *argv[])
     ret = validate_json (pszFile, pszSchema);
 
 Done:
+
+    return ret;
+
+InvalidSyntax:
+
+    printf ("\nSyntax: %s file.json [schema.json]\n\n", argv[0]);
     return ret;
 }
 

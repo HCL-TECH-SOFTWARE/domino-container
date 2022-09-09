@@ -1186,7 +1186,7 @@ download_and_decrypt()
     if [ "$HASH_IN" != "$HASH" ]; then
       log_error "Download hash does not match for [$OUTFILE] - Current Hash: [$HASH], Hash expected: [$HASH_IN]"
       rm -f "$OUTFILE"
-      return 5
+      return 6
     fi
   fi
 
