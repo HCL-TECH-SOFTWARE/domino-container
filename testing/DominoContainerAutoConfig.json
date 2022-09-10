@@ -7,7 +7,7 @@
       "title": "Domino Autotest Lab Server",
       "password": null,
       "minPasswordLength": 0,
-      "serverTasks": "replica,router,update,amgr,adminp,http"
+      "serverTasks": "replica,router,update,amgr,adminp,http,pop3"
     },
 
     "network": {
@@ -30,7 +30,6 @@
 
     "notesINI": {
       "iNotesDisableXPageCmd": "0",
-      "Create_R12_databases": "1",
       "Create_R85_log": "1",
       "LOG_REPLICATION": "0",
       "LOG_SESSIONS": "0",
@@ -124,6 +123,19 @@
               "HTTP_NormalMode": "1",
               "HTTP_SSLMode": "1",
               "HTTP_SSLAnonymous": "1",
+              "HTTP_SSLCert": "1",
+              "HTTP_SSLBearerToken": "1",
+
+              "SMTPListenerEnabled": "1",
+              "Router_PortStatus": "2",
+              "LDAP_SSLStatus": "1",
+              "IMAP_SSLStatus": "1",
+              "POP3_SSLStatus": "1",
+
+              "HTTP_EnforceAccess": "1",
+              "LDAP_EnforceAccess": "1",
+              "IMAP_EnforceAccess": "1",
+              "POP3_EnforceAccess": "1",
 
               "NSDEnbld": "1",
               "FREnbld": "1",
@@ -162,6 +174,8 @@
               "UseAsDefault": "1",
               "ServerName": "*",
 
+              "SMTP_NegotiatedSSL": "1",
+
               "ILEnforce": "1",
               "ILLockIP": "0",
               "ILCountAgainstIP": "0",
@@ -192,7 +206,7 @@
               "Form": "WebSite",
               "AutomationComment" : "Default Website",
               "WSIsDflt"          : "1",
-              "ISiteAdrs"         : "automation.notes.lab",
+              "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
               "ISiteName"         : "AutomationTestDefaultSite",
               "ISiteOrg"          : "AutoTestLab",
               "WSHostingSrvrs"    : "*",
@@ -203,6 +217,100 @@
               "SSLKeyFile"        : "keyfile.kyr",
               "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
               "HTTP_EnableSessionAuth" : "1"
+            }
+          },
+
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "SMTPInboundSite",
+              "AutomationComment" : "Default SMTP",
+              "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
+              "ISiteName"         : "AutomationTestDefaultSite",
+              "ISiteOrg"          : "AutoTestLab",
+              "WSHostingSrvrs"    : "*",
+              "TCPAnonymous"      : "1",
+              "TCPNameAndPwd"     : "1",
+              "SSLAnonymous"      : "1",
+              "SSLNameAndPwd"     : "1",
+              "SSLKeyFile"        : "keyfile.kyr",
+              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
+              "HTTP_EnableSessionAuth" : "1"
+            }
+          },
+
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "DirectorySite",
+              "AutomationComment" : "Default LDAP",
+              "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
+              "ISiteName"         : "AutomationTestDefaultSite",
+              "ISiteOrg"          : "AutoTestLab",
+              "WSHostingSrvrs"    : "*",
+              "TCPAnonymous"      : "0",
+              "TCPNameAndPwd"     : "1",
+              "SSLAnonymous"      : "0",
+              "SSLNameAndPwd"     : "1",
+              "SSLKeyFile"        : "keyfile.kyr",
+              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
+              "HTTP_EnableSessionAuth" : "1"
+            }
+          },
+
+          {
+           "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "IMAPSite",
+              "AutomationComment" : "Default IMAP",
+              "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
+              "ISiteName"         : "AutomationTestDefaultSite",
+              "ISiteOrg"          : "AutoTestLab",
+              "WSHostingSrvrs"    : "*",
+              "TCPAnonymous"      : "0",
+              "TCPNameAndPwd"     : "1",
+              "SSLAnonymous"      : "0",
+              "SSLNameAndPwd"     : "1",
+              "SSLKeyFile"        : "keyfile.kyr",
+              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
+              "HTTP_EnableSessionAuth" : "1"
+            }
+          },
+
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "POP3Site",
+              "AutomationComment" : "Default POP3",
+              "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
+              "ISiteName"         : "AutomationTestDefaultSite",
+              "ISiteOrg"          : "AutoTestLab",
+              "WSHostingSrvrs"    : "*",
+              "TCPAnonymous"      : "0",
+              "TCPNameAndPwd"     : "1",
+              "SSLAnonymous"      : "0",
+              "SSLNameAndPwd"     : "1",
+              "SSLKeyFile"        : "keyfile.kyr",
+              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
+              "HTTP_EnableSessionAuth" : "1"
+            }
+          },
+
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "Domain",
+              "DomainType"        : "GlobalDomain",
+              "GlobalDomainTasks" : "SMTP",
+              "DomainName"        : "AutoTestingGlobalDomain",
+              "NotesDomainList"   : "NotesLab",
+              "LocalPrimaryInternetDomain" : "notes.lab",
+              "LocalInternetDomainAliases" : "notes.alias"
             }
           }
         ]

@@ -29,7 +29,7 @@ CONTAINER_HOSTNAME=automation.notes.lab
 CONTAINER_ENV_FILE=
 DOMINO_SHUTDOWN_TIMEOUT=120
 
-# CONTAINER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
+CONTAINER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 # CONTAINER_NETWORK_NAME=host
 # CONTAINER_SPECIAL_OPTIONS="--ip 172.17.0.1"
 
@@ -43,29 +43,6 @@ else
   SCRIPT_NAME=$0
   SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 fi
-
-if [ -z "$DOMINO_VOLUME" ]; then
-  DOMINO_VOLUME=/tmp/domino_automation_test_local
-fi
-
-# For SELinux always add :Z to any volume mounts
-CONTAINER_VOLUMES="-v $DOMINO_VOLUME:/local:Z"
-
-if [ -z "$RESULT_FILE_JSON" ]; then
-  RESULT_FILE_JSON=$DOMINO_VOLUME/result_autotest.json
-fi
-
-if [ -z "$RESULT_FILE_CSV" ]; then
-  RESULT_FILE_CSV=$DOMINO_VOLUME/result_autotest.csv
-fi
-
-if [ -z "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
-  DOMINO_AUTO_CONFIG_JSON_FILE=$SCRIPT_DIR/DominoContainerAutoConfig.json
-fi
-
-TECHNICAL_SUPPORT=$DOMINO_VOLUME/notesdata/IBM_TECHNICAL_SUPPORT
-CONSOLE_LOG=$TECHNICAL_SUPPORT/console.log
-NOTES_LOG=$DOMINO_VOLUME/notes.log
 
 # Include helper script functions
 SCRIPT_DIR=$(dirname $0)
@@ -215,6 +192,22 @@ for a in $@; do
       CONTAINER_IMAGE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
+    -json=*)
+      RESULT_FILE_JSON=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -csv=*)
+      RESULT_FILE_CSV=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -autocfg=*)
+      DOMINO_AUTO_CONFIG_JSON_FILE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -volume=*)
+      DOMINO_VOLUME=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
     -?|-h|-help|help)
       print_help "$0"
       exit 0
@@ -226,6 +219,31 @@ for a in $@; do
       ;;
   esac
 done
+
+# Use defaults if not specified in options/environment vars
+
+if [ -z "$DOMINO_VOLUME" ]; then
+  DOMINO_VOLUME=/tmp/domino_automation_test_local
+fi
+
+# For SELinux always add :Z to any volume mounts
+CONTAINER_VOLUMES="-v $DOMINO_VOLUME:/local:Z"
+
+if [ -z "$RESULT_FILE_JSON" ]; then
+  RESULT_FILE_JSON=$DOMINO_VOLUME/result_autotest.json
+fi
+
+if [ -z "$RESULT_FILE_CSV" ]; then
+  RESULT_FILE_CSV=$DOMINO_VOLUME/result_autotest.csv
+fi
+
+if [ -z "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
+  DOMINO_AUTO_CONFIG_JSON_FILE=$SCRIPT_DIR/DominoContainerAutoConfig.json
+fi
+
+TECHNICAL_SUPPORT=$DOMINO_VOLUME/notesdata/IBM_TECHNICAL_SUPPORT
+CONSOLE_LOG=$TECHNICAL_SUPPORT/console.log
+NOTES_LOG=$DOMINO_VOLUME/notes.log
 
 if [ -z "$CONTAINER_IMAGE" ]; then
   CONTAINER_IMAGE=hclcom/domino:latest
@@ -257,7 +275,7 @@ remove_dir "$DOMINO_VOLUME"
 # Create empty local Domino server data with full permissions
 create_dir "$DOMINO_VOLUME" 777
 
-# Reset results, which are written to the root of the data directory
+# Reset results, by default written to the root of the data directory
 reset_results
 
 header "Bring up server environment"
@@ -465,6 +483,7 @@ fi
 
 test_result "startscript.archivelog" "Start Script archivelog" "" "$ERROR_MSG"
 
+
 # Test Start Script: restart
 
 ERROR_MSG=
@@ -516,6 +535,82 @@ fi
 
 test_result "domino.translog.create" "Translog create" "" "$ERROR_MSG"
 
+
+# Wait until SMTP started
+wait_for_string $CONSOLE_LOG "SMTP Server: Started" 30
+
+# SMTP takes some time to be fully available
+sleep 10 
+
+MAIL_TXT=$DOMINO_VOLUME/notesdata/email.txt
+MAIL_FROM=john.doe@acme.com
+MAIL_TO=fadmin@notes.lab
+SUBJECT="Hello via CURL"
+RANDOM_TXT=$(echo $RANDOM | sha256sum | head -c 64)
+USER="full admin"
+PASSWORD="domino4ever"
+SMTP_SERVER="smtp://127.0.0.1"
+POP3_SERVER="pop3s://127.0.0.1"
+
+# Create mail txt file
+echo > $MAIL_TXT
+echo "From: <$MAIL_FROM>" >> $MAIL_TXT
+echo "To: <$MAIL_TO>" >> $MAIL_TXT
+echo "Subject: $SUBJECT" >> $MAIL_TXT
+echo "Date: $(date)" >> $MAIL_TXT
+
+# Add the random text to the body to identify the message
+echo "$RANDOM_TXT" >> $MAIL_TXT
+
+# Send message
+
+$CONTAINER_CMD exec $CONTAINER_NAME curl -vsk --ssl-reqd --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file /local/notesdata/email.txt "$SMTP_SERVER"
+
+if  [ "$?" != "0" ]; then
+  ERROR_MSG="Mail send failed"
+fi
+
+
+check_pop3()
+{
+  local MESSAGES=$($CONTAINER_CMD exec $CONTAINER_NAME curl -sk -u "$USER:$PASSWORD" "$POP3_SERVER" | wc -l)
+  local RESULT=
+  local COUNT=$MESSAGES
+  local TEXT2FIND="$1"
+
+  echo "Pop3 Messages: [$MESSAGES]"
+
+  if [ -z "$MESSAGES" ]; then
+    return 0
+  fi
+
+  while [ $COUNT -gt 0 ]; do
+    RESULT=$($CONTAINER_CMD exec $CONTAINER_NAME curl -sk -u "$USER:$PASSWORD" "$POP3_SERVER/$COUNT" | grep "$TEXT2FIND")
+
+    if [ -n "$RESULT" ]; then
+       return $COUNT
+    fi
+
+    COUNT=$(expr $COUNT-1)
+  done
+
+  return 0
+}
+
+# Wait until POP3 started
+wait_for_string $CONSOLE_LOG "POP3 Server: Started" 30
+
+check_pop3 "$RANDOM_TXT"
+
+if [ "$?" = "0" ]; then
+  if [ -z "$ERROR_MSG" ]; then
+    ERROR_MSG="Mail receive failed"
+  fi
+fi
+
+test_result "domino.smtp_pop3.mail" "Mail sent/received" "" "$ERROR_MSG"
+
+
 # Run custom commands 
 
 if [ -n "$CUSTOM_AUTOMATION_CHECK_SCRIPT" ]; then
@@ -534,6 +629,19 @@ fi
 if [ "$NO_CONTAINER_STOP" = "yes" ]; then
   log "Skipping shutdown"
 else
+
+  # Compressing logs and keep them, when a test failed
+  if [ "$count_error" != "0" ]; then
+    $CONTAINER_CMD exec $CONTAINER_NAME tar -czf local/ibm_technical_support.taz /local/notesdata/IBM_TECHNICAL_SUPPORT >/dev/null 2>&1
+  fi
+
+  # Delete created directories created during load test
+  $CONTAINER_CMD exec $CONTAINER_NAME find /local -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
+  $CONTAINER_CMD exec $CONTAINER_NAME find /local -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
+
+  # Change permissions to provide access for all remaining files to world
+  $CONTAINER_CMD exec $CONTAINER_NAME chmod -R u+rw,g+rw,o+rw /local >/dev/null 2>&1
+
   header "Shutting down server environment"
   $CONTAINER_CMD stop $CONTAINER_NAME
   $CONTAINER_CMD rm $CONTAINER_NAME
@@ -555,14 +663,6 @@ show_results
 
 if [ "$NO_CONTAINER_STOP" = "yes" ]; then
   log "Keeping Domino server running on request"
-else
-  mv "$DOMINO_VOLUME/notesdata/IBM_TECHNICAL_SUPPORT" "$DOMINO_VOLUME"
-  remove_dir "$DOMINO_VOLUME/notesdata"
-  remove_dir "$DOMINO_VOLUME/translog"
-  remove_dir "$DOMINO_VOLUME/daos"
-  remove_dir "$DOMINO_VOLUME/ft"
-  remove_dir "$DOMINO_VOLUME/nif"
-  remove_dir "$DOMINO_VOLUME/backup"
 fi
 
 exit 0
