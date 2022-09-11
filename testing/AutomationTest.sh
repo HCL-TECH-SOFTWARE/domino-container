@@ -29,7 +29,7 @@ CONTAINER_HOSTNAME=automation.notes.lab
 CONTAINER_ENV_FILE=
 DOMINO_SHUTDOWN_TIMEOUT=120
 
-CONTAINER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
+# CONTAINER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 # CONTAINER_NETWORK_NAME=host
 # CONTAINER_SPECIAL_OPTIONS="--ip 172.17.0.1"
 
@@ -328,6 +328,11 @@ done
 
 LINUX_PRETTY_NAME=$($CONTAINER_CMD exec $CONTAINER_NAME cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 
+kernelVersion="$($CONTAINER_CMD exec $CONTAINER_NAME uname -r)"
+kernelBuildTime="$($CONTAINER_CMD exec $CONTAINER_NAME uname -v)"
+glibcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "glibc-[0-9]+*")
+libstdcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "libstdc++-[0-9]+*")
+
 header $LINUX_PRETTY_NAME
 
 # Start testing ..
@@ -343,6 +348,14 @@ log_json "testClient" "testing.notes.lab"
 log_json "testServer" "testing.notes.lab"
 log_json "platform" "$LINUX_PRETTY_NAME"
 log_json "testBuild" "$IMAGE_VERSION"
+
+log_json "containerPlatform" "$CONTAINER_ENV_NAME"
+log_json "containerPlatformVersion" "$CONTAINER_RUNTIME_VERSION"
+
+log_json "kernelVersion" "$kernelVersion"
+log_json "kernelBuildTime" "$kernelBuildTime"
+log_json "glibcVersion" "$glibcVersion"
+log_json "libstdcVersion" "$libstdcVersion"
 
 log_json_begin_array testcase
 
@@ -396,18 +409,38 @@ fi
 
 test_result "domino.jvm.available" "Domino JVM available" "" "$ERROR_MSG"
 
+# Test Download certificate chain
+
+ERROR_MSG=
+
+header "Download certificate chain"
+
+$CONTAINER_CMD exec $CONTAINER_NAME /opt/hcl/domino/notes/latest/linux/jvm/bin/keytool -printcert -rfc -sslserver automation.notes.lab > "$DOMINO_VOLUME/notesdata/cert.pem" 
+CURL_OPTIONS="--cacert /local/notesdata/cert.pem"
+
+if [ ! -e "$DOMINO_VOLUME/notesdata/cert.pem" ];then
+  ERROR_MSG="No certificate chain downloaded"
+fi
+
+CERTIFCATE_COUNT=$(grep -e "-----END CERTIFICATE-----" "$DOMINO_VOLUME/notesdata/cert.pem" | wc -l) 
+
+if [ "$CERTIFCATE_COUNT" != "2" ];then
+  ERROR_MSG="Wrong number of certificates found: $CERTIFCATE_COUNT, expected: 2"
+fi
+
+test_result "domino.certificate.available" "Certificate chain downloaded" "" "$ERROR_MSG"
 
 # Test One Touch MicroCA create
 
 ERROR_MSG=
 
-curl_count=$($CONTAINER_CMD exec $CONTAINER_NAME curl -k -vvI https://automation.notes.lab 2>&1 | grep "subject: O=Automation MicroCA Certificate" | wc -l)
+curl_count=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs -I https://automation.notes.lab 2>&1 | grep "subject: O=Automation MicroCA Certificate" | wc -l)
 
 if [ "$curl_count" = "0" ]; then
   ERROR_MSG="No HTTPS certificate response from Domino"
   echo
   print_delim
-  $CONTAINER_CMD exec $CONTAINER_NAME curl -k -vvI https://automation.notes.lab
+  $CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs -I https://automation.notes.lab
   print_delim
   echo
 fi
@@ -549,8 +582,8 @@ SUBJECT="Hello via CURL"
 RANDOM_TXT=$(echo $RANDOM | sha256sum | head -c 64)
 USER="full admin"
 PASSWORD="domino4ever"
-SMTP_SERVER="smtp://127.0.0.1"
-POP3_SERVER="pop3s://127.0.0.1"
+SMTP_SERVER="smtp://automation.notes.lab"
+POP3_SERVER="pop3s://automation.notes.lab"
 
 # Create mail txt file
 echo > $MAIL_TXT
@@ -564,7 +597,7 @@ echo "$RANDOM_TXT" >> $MAIL_TXT
 
 # Send message
 
-$CONTAINER_CMD exec $CONTAINER_NAME curl -vsk --ssl-reqd --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file /local/notesdata/email.txt "$SMTP_SERVER"
+$CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs --ssl-reqd --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file /local/notesdata/email.txt "$SMTP_SERVER"
 
 if  [ "$?" != "0" ]; then
   ERROR_MSG="Mail send failed"
@@ -573,7 +606,7 @@ fi
 
 check_pop3()
 {
-  local MESSAGES=$($CONTAINER_CMD exec $CONTAINER_NAME curl -sk -u "$USER:$PASSWORD" "$POP3_SERVER" | wc -l)
+  local MESSAGES=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs -u "$USER:$PASSWORD" "$POP3_SERVER" | wc -l)
   local RESULT=
   local COUNT=$MESSAGES
   local TEXT2FIND="$1"
@@ -585,7 +618,7 @@ check_pop3()
   fi
 
   while [ $COUNT -gt 0 ]; do
-    RESULT=$($CONTAINER_CMD exec $CONTAINER_NAME curl -sk -u "$USER:$PASSWORD" "$POP3_SERVER/$COUNT" | grep "$TEXT2FIND")
+    RESULT=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs -u "$USER:$PASSWORD" "$POP3_SERVER/$COUNT" | grep "$TEXT2FIND")
 
     if [ -n "$RESULT" ]; then
        return $COUNT
