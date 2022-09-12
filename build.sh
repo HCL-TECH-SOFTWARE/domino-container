@@ -844,7 +844,7 @@ docker_build()
     log_error_exit "No download location specified!"
   fi
 
-  CUSTOM_VER=$(echo "$CUSTOM_VER" | awk '{print toupper($0)}')
+  #CUSTOM_VER=$(echo "$CUSTOM_VER" | awk '{print toupper($0)}')
   CUSTOM_FP=$(echo "$CUSTOM_FP" | awk '{print toupper($0)}')
   CUSTOM_HF=$(echo "$CUSTOM_HF" | awk '{print toupper($0)}')
 
@@ -1541,7 +1541,7 @@ for a in $@; do
       ;;
 
     9*|10*|11*|12*|v12*)
-      PROD_VER=$p
+      PROD_VER=$a
       ;;
 
     fp*)
@@ -1700,7 +1700,7 @@ fi
 check_exposed_ports
 
 # Ensure product versions are always uppercase
-PROD_VER=$(echo "$PROD_VER" | awk '{print toupper($0)}')
+#PROD_VER=$(echo "$PROD_VER" | awk '{print toupper($0)}')
 PROD_FP=$(echo "$PROD_FP" | awk '{print toupper($0)}')
 PROD_HF=$(echo "$PROD_HF" | awk '{print toupper($0)}')
 
