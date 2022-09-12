@@ -7,7 +7,7 @@
       "title": "Domino Autotest Lab Server",
       "password": null,
       "minPasswordLength": 0,
-      "serverTasks": "replica,router,update,amgr,adminp,http,pop3"
+      "serverTasks": "replica,router,update,amgr,adminp,pop3"
     },
 
     "network": {
@@ -29,7 +29,6 @@
     },
 
     "notesINI": {
-      "iNotesDisableXPageCmd": "0",
       "Create_R85_log": "1",
       "LOG_REPLICATION": "0",
       "LOG_SESSIONS": "0",
@@ -42,7 +41,6 @@
       "FT_FLY_INDEX_OFF": "1",
       "UPDATE_FULLTEXT_THREAD": "1",
       "FTG_USE_SYS_MEMORY": "1",
-      "iNotesDisableXPageCmd": "1",
       "CERTSTORE_CACHELOG": "1"
     },
 

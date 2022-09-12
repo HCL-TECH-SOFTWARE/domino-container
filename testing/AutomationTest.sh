@@ -28,6 +28,8 @@ CONTAINER_NAME=domino-autotesting
 CONTAINER_HOSTNAME=automation.notes.lab
 CONTAINER_ENV_FILE=
 DOMINO_SHUTDOWN_TIMEOUT=120
+USER="full admin"
+PASSWORD="domino4ever"
 
 # CONTAINER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 # CONTAINER_NETWORK_NAME=host
@@ -359,38 +361,10 @@ log_json "libstdcVersion" "$libstdcVersion"
 
 log_json_begin_array testcase
 
-# Wait until server is started
 
-ERROR_MSG=
-wait_for_string $CONSOLE_LOG "Server started on physical node" 100
-SERVER_STATUS=$?
-
-if [ "$SERVER_STATUS" = "0" ];then
-  ERROR_MSG="Domino server failed to start"
-fi
-
-
-# Test Server start
-
-test_result "domino.server.running" "Domino Server startup" "" "$ERROR_MSG"
-
-
-# Test if HTTP is running
-
-ERROR_MSG=
-
-header "Starting HTTP"
-
-#server_console_cmd "load http"
-
-wait_for_string $CONSOLE_LOG "HTTP Server: Started" 70 1
-HTTPS_STATUS=$?
-
-if [ "$HTTP_STATUS" = "0" ];then
-  ERROR_MSG="Domino server failed to start"
-fi
-
-test_result "domino.http.running" "Domino HTTP Server running" "" "$ERROR_MSG"
+# Check if Traveler binary exits
+traveler_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/traveler 2>/dev/null)
+echo "Traveler binary: [$traveler_binary]"
 
 
 # Test Java Version
@@ -408,6 +382,54 @@ if [ -z "$java_version" ];then
 fi
 
 test_result "domino.jvm.available" "Domino JVM available" "" "$ERROR_MSG"
+
+
+# Test server running
+
+ERROR_MSG=
+wait_for_string $CONSOLE_LOG "Server started on physical node" 100
+SERVER_STATUS=$?
+
+if [ "$SERVER_STATUS" = "0" ];then
+  ERROR_MSG="Domino server failed to start"
+fi
+
+test_result "domino.server.running" "Domino Server startup" "" "$ERROR_MSG"
+
+
+# Check if OSGI is needed, else disable to reduce HTTP start/stop time
+
+if [ -n "$traveler_binary" ]; then
+  osgi_needed=1
+fi
+
+if [ -z "$osgi_needed" ]; then
+  server_console_cmd "set config iNotesDisableXPageCmd=1"
+fi
+
+
+# Start HTTP or Traveler task
+
+if [ -z "$traveler_binary" ]; then
+  header "Starting HTTP"
+  server_console_cmd "load http"
+else
+  header "Starting Traveler"
+  server_console_cmd "load traveler"
+fi
+
+# Test if HTTP is running
+
+ERROR_MSG=
+
+wait_for_string $CONSOLE_LOG "HTTP Server: Started" 70 1
+HTTPS_STATUS=$?
+
+if [ "$HTTP_STATUS" = "0" ];then
+  ERROR_MSG="Domino server failed to start"
+fi
+
+test_result "domino.http.running" "Domino HTTP Server running" "" "$ERROR_MSG"
 
 # Test Download certificate chain
 
@@ -446,6 +468,24 @@ if [ "$curl_count" = "0" ]; then
 fi
 
 test_result "domino.server.onetouch.microca-cert" "Domino One Touch create MicroCA" "" "$ERROR_MSG"
+
+# Test Traveler server available
+
+if [ -n "$traveler_binary" ]; then
+
+  wait_for_string $CONSOLE_LOG "Traveler: Server started." 50 
+  sleep 2
+
+  traveler_status=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -u "$USER:$PASSWORD" -s 'https://automation.notes.lab/traveler?action=getStatus' 2>&1)
+
+  if [ "$traveler_status" = "Traveler server is available." ]; then
+    ERROR_MSG=
+  else
+    ERROR_MSG="Invalid response to status command: [$traveler_status]"
+  fi
+
+  test_result "traveler.server.available" "Traveler server available" "" "$ERROR_MSG"
+fi
 
 
 # Test OneTouch database create
@@ -486,7 +526,7 @@ server_console_cmd "load backup log.nsf"
 count=10
 while [ $count -gt 0 ]; do
   sleep 1
-  count_backup=$(find $DOMINO_VOLUME/backup -name "log.nsf" | wc -l 2>/dev/null)
+  count_backup=$(find $DOMINO_VOLUME/backup -name "log.nsf" 2>/dev/null | wc -l)
 
   if [ "$count_backup" = "0" ];then
     count=$(expr $count - 1)
@@ -580,8 +620,6 @@ MAIL_FROM=john.doe@acme.com
 MAIL_TO=fadmin@notes.lab
 SUBJECT="Hello via CURL"
 RANDOM_TXT=$(echo $RANDOM | sha256sum | head -c 64)
-USER="full admin"
-PASSWORD="domino4ever"
 SMTP_SERVER="smtp://automation.notes.lab"
 POP3_SERVER="pop3s://automation.notes.lab"
 
@@ -597,7 +635,7 @@ echo "$RANDOM_TXT" >> $MAIL_TXT
 
 # Send message
 
-$CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs --ssl-reqd --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file /local/notesdata/email.txt "$SMTP_SERVER"
+$CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -s --ssl-reqd --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file /local/notesdata/email.txt "$SMTP_SERVER"
 
 if  [ "$?" != "0" ]; then
   ERROR_MSG="Mail send failed"
@@ -606,7 +644,7 @@ fi
 
 check_pop3()
 {
-  local MESSAGES=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs -u "$USER:$PASSWORD" "$POP3_SERVER" | wc -l)
+  local MESSAGES=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -s -u "$USER:$PASSWORD" "$POP3_SERVER" | wc -l)
   local RESULT=
   local COUNT=$MESSAGES
   local TEXT2FIND="$1"
@@ -618,7 +656,7 @@ check_pop3()
   fi
 
   while [ $COUNT -gt 0 ]; do
-    RESULT=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs -u "$USER:$PASSWORD" "$POP3_SERVER/$COUNT" | grep "$TEXT2FIND")
+    RESULT=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -s -u "$USER:$PASSWORD" "$POP3_SERVER/$COUNT" | grep "$TEXT2FIND")
 
     if [ -n "$RESULT" ]; then
        return $COUNT
