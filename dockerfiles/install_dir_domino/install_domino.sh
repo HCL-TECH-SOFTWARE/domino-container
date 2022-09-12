@@ -121,6 +121,11 @@ install_domino()
 
     remove_directory domino_server
 
+    # Copy HCL container license file
+    if [ "$CONTAINER_INSTALLER" = "hcl" ]; then
+      cp $INSTALL_DIR/Notices.txt $Notes_ExecDirectory/license
+    fi
+
     # Copy license files
     mkdir -p /licenses
     cp $Notes_ExecDirectory/license/*.txt /licenses

@@ -708,6 +708,7 @@ else
 
   # Delete created directories created during load test
   $CONTAINER_CMD exec $CONTAINER_NAME find /local -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
+  # Sometimes the first delete does not remove all files. A second delete always cleaned the remaining files.
   $CONTAINER_CMD exec $CONTAINER_NAME find /local -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
 
   # Change permissions to provide access for all remaining files to world
