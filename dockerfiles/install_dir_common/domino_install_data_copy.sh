@@ -114,9 +114,6 @@ copy_files_for_major_version()
   # Allow server names with dots and undercores
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION" "1"
 
-  # Ensure current ODS is used for V12 -> does not harm on earlier releases
-  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
-
   log_file_header "Copying new data files for Version $DOMINO_VERSION"
 
   # Extracting new data files
@@ -223,9 +220,6 @@ copy_data_directory()
 
   # Allow server names with dots and undercores
   set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION" "1"
-
-  # Ensure current ODS is used for V12 -> does not harm on earlier releases
-  set_notes_ini_var $DOMINO_DATA_PATH/notes.ini "Create_R12_Databases" "1"
 
   # Ensure directory can be read by group -> OpenShift has some issues with copying permissions
   log_file "Running chmod [$DIR_PERM] [$DOMINO_DATA_PATH] "
