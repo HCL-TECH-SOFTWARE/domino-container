@@ -751,6 +751,7 @@ set_default_notes_ini_variables
 
 # Remove Fixpack/Hotfix backup files
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "120**" -exec rm -rf {} \; 2>/dev/null
+find $Notes_ExecDirectory -maxdepth 1 -type d -name "110**" -exec rm -rf {} \; 2>/dev/null
 
 # Remove not needed domino/html data to keep image smaller
 find $DOMINO_DATA_PATH/domino/html -name "*.dll" -exec rm -rf {} \; 2>/dev/null
