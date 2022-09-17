@@ -42,7 +42,7 @@ yum install -y git
 
 mkdir -p /local/github
 cd /local/github
-git clone https://github.com/IBM/domino-docker.git
+git clone https://github.com/HCL-TECH-SOFTWARE/domino-container.git
 
 cd domino-docker
 git checkout develop

@@ -847,6 +847,8 @@ get_domino_version()
     if [ -n "$find_str" ]; then
       DOMINO_VERSION=$find_str
 
+      # Fix Domino version for older releases. Current releases have proper "rev" entries
+
       if [ "$DOMINO_VERSION" = "11000000" ]; then
         DOMINO_VERSION=1100
       fi
@@ -958,6 +960,9 @@ remove_package()
  elif [ -x /usr/bin/dnf ]; then
    dnf remove -y "$@"
 
+ elif [ -x /usr/bin/microdnf ]; then
+   microdnf remove -y "$@"
+
  elif [ -x /usr/bin/yum ]; then
    yum remove -y "$@"
 
@@ -1014,6 +1019,11 @@ check_linux_update()
 
     header "Updating Linux via dnf"
     dnf update -y
+
+  elif [ -x /usr/bin/microdnf ]; then
+
+    header "Updating Linux via microdnf"
+    microdnf update -y
 
   elif [ -x /usr/bin/yum ]; then
 

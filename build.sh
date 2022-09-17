@@ -123,8 +123,8 @@ get_container_environment()
 
 check_container_environment()
 {
-  DOCKER_MINIMUM_VERSION="18.09.0"
-  PODMAN_MINIMUM_VERSION="1.5.0"
+  DOCKER_MINIMUM_VERSION="20.10.0"
+  PODMAN_MINIMUM_VERSION="3.3.0"
 
   if [ "$CONTAINER_CMD" = "podman" ]; then
     DOCKER_ENV_NAME=Podman
@@ -517,7 +517,22 @@ check_from_image()
       BASE_IMAGE=rockylinux/rockylinux
       ;;
 
+    rocky8)
+      LINUX_NAME="Rocky Linux 8"
+      BASE_IMAGE=rockylinux/rockylinux:8
+      ;;
+
+    rocky9)
+      LINUX_NAME="Rocky Linux 9"
+      BASE_IMAGE=rockylinux/rockylinux:9
+      ;;
+
     alma)
+      LINUX_NAME="Alma Linux"
+      BASE_IMAGE=almalinux/almalinux
+      ;;
+
+    alma8)
       LINUX_NAME="Alma Linux"
       BASE_IMAGE=almalinux/almalinux:8
       ;;
@@ -539,7 +554,7 @@ check_from_image()
 
     ubi)
       LINUX_NAME="RedHat UBI"
-      BASE_IMAGE=registry.access.redhat.com/ubi8
+      BASE_IMAGE=registry.access.redhat.com/ubi
       ;;
 
     ubi8)
@@ -570,6 +585,21 @@ check_from_image()
     leap15.4)
       LINUX_NAME="SUSE Leap 15.4"
       BASE_IMAGE=opensuse/leap:15.4
+      ;;
+
+    bci)
+      LINUX_NAME="SUSE Enterprise"
+      BASE_IMAGE=registry.suse.com/bci/bci-base
+      ;;
+
+    bci15.3)
+      LINUX_NAME="SUSE Enterprise 15.3"
+      BASE_IMAGE=registry.suse.com/bci/bci-base:15.3
+      ;;
+
+    bci15.4)
+      LINUX_NAME="SUSE Enterprise 15.4"
+      BASE_IMAGE=registry.suse.com/bci/bci-base:15.4
       ;;
 
     astra)
