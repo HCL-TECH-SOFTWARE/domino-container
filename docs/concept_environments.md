@@ -14,7 +14,7 @@ Other Kubernetes based environments might work as well. Please provide feedback 
 But be aware that we cannot look into all distributions and run-time environments.
 
 
-## Supported run-time environments
+# Supported run-time environments
 
 - Docker CE 20.10+
   on Linux/Docker Desktop on Mac, Docker Desktop on Windows
@@ -30,7 +30,7 @@ But be aware that we cannot look into all distributions and run-time environment
 You can switch manually from Podman to Docker for the build and run-time environment using
 `CONTAINER_CMD=docker` either in the configuration or exporting an environment variable in your shell.
 
-## Supported build environments
+# Supported build environments
 
 - Docker CE 20.10 and higher on Linux
 - Docker Desktop on Mac
@@ -41,7 +41,7 @@ You can switch manually from Podman to Docker for the build and run-time environ
 *) Same Podman / Docker note applies
 
 
-## Supported base images
+# Supported base images
 
 - RedHat Universal Base Image (UBI) 8.6 + 9.x
 - CentOS Stream 8.x + 9.x
@@ -53,13 +53,13 @@ You can switch manually from Podman to Docker for the build and run-time environ
 - Oracle Linux 8
 - Amazon Linux
 
-## Experimental base images
+# Experimental base images
 
 - Ubuntu 22.x
 - Debian 11.x
 
 
-## Recommended Linux Versions and Tips
+# Recommended Linux Versions and Tips
 
 Docker CE and Podman are available in most distributions.
 Some distributions come with Docker CE or Podman included.
@@ -69,9 +69,9 @@ Before you install Docker CE or Podman, please check if your platform provides t
 - SUSE SLES / Leap 15.3+ a shipps with a current Docker version
 - If your platform does not come with a current Docker version there is an official [Docker Linux setup documentation](https://docs.docker.com/engine/install/)
 
-## Recommended combinations (9/2022)
+# Recommended combinations (9/2022)
 
-### Build and run-time environments
+## Build and run-time environments
 
 - RHEL/CentOS Stream 8/9 with Docker 20.x or Podman 3.3.0+
 - SUSE SLES / Leap 15.3+ with Docker 20.x or Podman 3.3.0+
@@ -79,7 +79,7 @@ Before you install Docker CE or Podman, please check if your platform provides t
 - Current version of Docker Desktop with WSL2 sub-system to build the image
 - Current version of Docker Desktop on Mac
 
-### Run-time environments
+## Run-time environments
 
 - Current version of Docker Desktop on Windows
 - k3s Rancher
@@ -88,7 +88,7 @@ Before you install Docker CE or Podman, please check if your platform provides t
 - Current versions of OpenShift
 
 
-### Tested base images
+# Tested base images
 
 The following Linux base images have been tested.  
 Current default base image is **CentOS Stream 8**.  
@@ -129,10 +129,10 @@ Note: When not specifying a major version, the major version default could chang
 | photon        | VMware Photon OS 4.0    | photon                              | 5.x        |
 
 
-## References
+# References
 
 - [Docker Engine for Linux](https://docs.docker.com/engine/install/)
-- [Docker Compose](https://docs.docker.com/engine/install/)
+- [Docker Compose](https://docs.docker.com/compose/)
 - [Docker Desktop with WSL2](https://docs.docker.com/docker-for-windows/wsl/)
 - [Docker Desktop Mac](https://docs.docker.com/docker-for-mac/install/)
 - [Podman](https://podman.io/)
