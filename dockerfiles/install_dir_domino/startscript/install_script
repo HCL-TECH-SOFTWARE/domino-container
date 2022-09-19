@@ -1,0 +1,99 @@
+#!/bin/bash
+
+###########################################################################
+# Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
+# Version 3.7.2 30.08.2022                                                #
+#                                                                         #
+# (C) Copyright Daniel Nashed/NashCom 2005-2022                           #
+# Feedback domino_unix@nashcom.de                                         #
+#                                                                         #
+# Licensed under the Apache License, Version 2.0 (the "License");         #
+# you may not use this file except in compliance with the License.        #
+# You may obtain a copy of the License at                                 #
+#                                                                         #
+#      http://www.apache.org/licenses/LICENSE-2.0                         #
+#                                                                         #
+# Unless required by applicable law or agreed to in writing, software     #
+# distributed under the License is distributed on an "AS IS" BASIS,       #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
+# See the License for the specific language governing permissions and     #
+# limitations under the License.                                          #
+###########################################################################
+
+SCRIPT_NAME=$0
+START_SCRIPT_DIR=$(dirname $0)
+
+DOMINO_INSTALL_CONFIG_FILE=$START_SCRIPT_DIR/sysconfig/rc_domino_config
+DOMINO_INSTALL_CONFIG_TARGET=/etc/sysconfig/rc_domino_config
+
+DOMINO_START_SCRIPT_DIR=/opt/nashcom/startscript
+DOMINO_USER=notes
+DOMINO_GROUP=notes
+
+ROOT_USER=root
+ROOT_GROUP=root
+
+DOMINO_DATA_PATH=/local/notesdata
+DOMINO_SCRIPT_BIN=/usr/bin/domino
+
+
+install_file()
+{
+  SOURCE_FILE=$1
+  TARGET_FILE=$2
+  OWNER=$3
+  GROUP=$4
+  PERMS=$5
+
+  if [ ! -r "$SOURCE_FILE" ]; then
+    echo "[$SOURCE_FILE] Can not read source file"
+    return 1
+  fi
+
+  cp -f "$SOURCE_FILE" "$TARGET_FILE"
+ 
+  if [ ! -z "$OWNER" ]; then
+    chown $OWNER:$GROUP "$TARGET_FILE"
+  fi
+
+  if [ ! -z "$PERMS" ]; then
+    chmod "$PERMS" "$TARGET_FILE"
+  fi
+
+  echo "[$TARGET_FILE] installed"
+
+  return 2
+}
+
+copy_one_touch_templates()
+{
+  local TARGET_DIR=$DOMINO_START_SCRIPT_DIR/OneTouchSetup
+  local SOURCE_DIR=$START_SCRIPT_DIR/OneTouchSetup
+  mkdir -p -m 755 $TARGET_DIR
+  cp -f $SOURCE_DIR/* $TARGET_DIR
+  chown -R "$DOMINO_USER":"$DOMINO_GROUP" $TARGET_DIR
+  chmod -R 644 $TARGET_DIR/*
+  return 0
+}
+
+# Main logic
+
+if [ ! -e "$DOMINO_START_SCRIPT_DIR" ]; then
+  mkdir -p -m 755 "$DOMINO_START_SCRIPT_DIR"
+  # Depending on the umask the directory might have still the wrong permissions
+  chmod 755 /opt/nashcom
+fi
+
+install_file "$START_SCRIPT_DIR/rc_domino" "$DOMINO_SCRIPT_BIN" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/rc_domino_script" "$DOMINO_START_SCRIPT_DIR/rc_domino_script" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/nshinfo.sh" "$DOMINO_START_SCRIPT_DIR/nshinfo.sh" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/DominoOneTouchSetup.sh" "$DOMINO_START_SCRIPT_DIR/DominoOneTouchSetup.sh" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/nshcfg.sh" "$DOMINO_START_SCRIPT_DIR/nshcfg.sh" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/domino.cfg" "$DOMINO_START_SCRIPT_DIR/domino-example.cfg" $ROOT_USER $ROOT_GROUP 755
+
+install_file "$DOMINO_INSTALL_CONFIG_FILE" "$DOMINO_INSTALL_CONFIG_TARGET" "$DOMINO_USER" "$DOMINO_GROUP" 644
+install_file "$START_SCRIPT_DIR/systemdbs.ind" "$DOMINO_DATA_PATH/systemdbs.ind" "$DOMINO_USER" "$DOMINO_GROUP" 644
+install_file "$START_SCRIPT_DIR/domino.cfg" "/etc/sysconfig/domino.cfg" "$DOMINO_USER" "$DOMINO_GROUP" 644
+
+copy_one_touch_templates
+

@@ -1,0 +1,263 @@
+#!/bin/bash
+# change this to #!/bin/ksh for AIX
+###########################################################################
+# RC RunLevel Entry Point
+###########################################################################
+# Start/Stop Script for Domino on xLinux/zLinux/AIX
+# 2005-2022 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
+# You may use and distribute the unmodified version of this script.
+# Use at your own risk. No implied or specific warranties are given.
+# You may change it for your own usage only
+# Version 3.7.2 30.08.2022
+###########################################################################
+# chkconfig: 345 66 19
+# description: HCL Domino Server (notes)
+
+### BEGIN INIT INFO
+# Provides: rc_domino
+# Required-Start: $remote_fs $syslog $network sshd
+# Required-Stop:  $remote_fs $syslog 
+# Default-Start:  3 5
+# Default-Stop:   0 1 2 6
+# Short-Description: HCL Domino Server (notes)
+# Description:       HCL Domino Server (notes)
+#       Start/Stop Script V3.7.2 for xLinux/zLinux/AIX
+#       2005-2022 Copyright by Daniel Nashed (domino_unix@nashcom.de)
+### END INIT INFO
+
+# Specify username for this Domino instance.
+# Set default user to "notes" if no user is specified
+if [ -z "$DOMINO_USER" ]; then
+  DOMINO_USER=notes
+fi
+
+# The following configuration could be read from config file
+# But from security point of view this config belowns into a root owned file
+DOMINO_START_SCRIPT=/opt/nashcom/startscript/rc_domino_script
+DOMINO_SYSTEMD_NAME=domino.service
+
+# Read configuration for service from central config file
+# for multiple partions use separate file:
+# . /etc/sysconfig/rc_domino_config_$DOMINO_USER
+# . /etc/sysconfig/rc_domino_config
+
+# Optional get the name from script name e.g. 'domino_myuser1"
+# DOMINO_USER=`basename $0 | cut -f 2 -d _`
+
+# VERBOSE_INFO="yes"
+
+
+# Determine architecture and platform
+if [ `uname` = AIX ]; then
+  LARCH=ibmpow
+  PLATFORM_NAME=AIX
+elif [ `uname` = Linux ]; then
+  LARCH=linux
+  PLATFORM_NAME=xLinux
+fi
+
+if [ ${LARCH} = "linux" ]; then
+  # Determine script name. for symbolic link check real name
+  DOMINO_SERVICE_NAME=$(readlink $0)
+  if [ -z "$DOMINO_SERVICE_NAME" ]; then
+    DOMINO_SERVICE_NAME=$0
+  fi
+  DOMINO_SERVICE_NAME=$(basename $DOMINO_SERVICE_NAME)
+fi
+
+if [ -z "$LOGNAME" ]; then
+  LOGNAME=$(whoami 2>/dev/null)
+
+  if [ -z "$LOGNAME" ]; then
+    LOGNAME=$(id -u)
+  fi
+
+  export LOGNAME
+fi
+
+if [ -z "$DOMINO_USER" ]; then
+  export DOMINO_USER=$LOGNAME
+fi
+
+# If no systemd is running start server directy (Docker, Podman, K8s, WSL)
+
+if [ -z "$( ps -p 1 -o cmd= | grep systemd)" ]; then
+
+  if [ "$LOGNAME" = "$DOMINO_USER" ]; then
+    $DOMINO_START_SCRIPT "$1" "$2" "$3" "$4" "$5" "$6"
+  else
+    su - $DOMINO_USER -c "$DOMINO_START_SCRIPT '$1' '$2' '$3' '$4' '$5' '$6'"
+  fi
+
+  exit 0
+fi
+
+# systemd operations for start/stop
+if [ -e /etc/systemd/system ]; then
+  if [ ! -z "$DOMINO_SYSTEMD_NAME" ]; then
+
+    if [ "$LOGNAME" = "$DOMINO_USER" ]; then
+      SWITCH_MONITOR_COMMAND=""
+    else
+      SWITCH_MONITOR_COMMAND="su - $DOMINO_USER  -c"
+    fi
+
+    if [ "$1" = "start" ]; then
+      echo Starting systemd "$DOMINO_SYSTEMD_NAME"
+      systemctl start "$DOMINO_SYSTEMD_NAME"
+
+      if [ "$2" = "live" ]; then
+        echo starting live console
+        $SWITCH_MONITOR_COMMAND "$DOMINO_START_SCRIPT monitor"
+      fi
+      exit 0
+
+    elif [ "$1" = "stop" ]; then
+      echo
+      echo Stopping systemd "$DOMINO_SYSTEMD_NAME"
+      echo
+ 
+      if [ "$2" = "live" ]; then
+        systemctl stop "$DOMINO_SYSTEMD_NAME" &
+        echo starting live console
+        $SWITCH_MONITOR_COMMAND "$DOMINO_START_SCRIPT monitor"
+      else
+        systemctl stop "$DOMINO_SYSTEMD_NAME"
+      fi
+      echo
+      exit 0
+
+    elif [ "$1" = "restart" ]; then
+      if [ "$2" = "live" ]; then
+        echo Cannot invoke live console in combination with systemd. run 'monitor' separately
+      fi
+      echo
+      echo Stopping systemd "$DOMINO_SYSTEMD_NAME"
+      systemctl stop "$DOMINO_SYSTEMD_NAME"
+
+      echo
+      echo Starting systemd "$DOMINO_SYSTEMD_NAME"
+      systemctl start "$DOMINO_SYSTEMD_NAME"
+      echo
+      exit 0
+
+    elif [ "$1" = "restartcompact" ]; then
+      echo
+      echo Stopping systemd "$DOMINO_SYSTEMD_NAME"
+      systemctl stop "$DOMINO_SYSTEMD_NAME"
+
+      if [ "$LOGNAME" = "$DOMINO_USER" ]; then
+        $DOMINO_START_SCRIPT compact
+      else
+        su - $DOMINO_USER -c "$DOMINO_START_SCRIPT compact"
+      fi
+
+      echo
+      echo Starting systemd "$DOMINO_SYSTEMD_NAME"
+      systemctl start "$DOMINO_SYSTEMD_NAME"
+      echo
+      exit 0
+
+    elif [ "$1" = "restartfixup" ]; then
+      echo
+      echo Stopping systemd "$DOMINO_SYSTEMD_NAME"
+      systemctl stop "$DOMINO_SYSTEMD_NAME"
+
+      if [ "$LOGNAME" = "$DOMINO_USER" ]; then
+      $DOMINO_START_SCRIPT fixup
+      else
+        su - $DOMINO_USER -c "$DOMINO_START_SCRIPT fixup"
+      fi
+
+      echo
+      echo Starting systemd "$DOMINO_SYSTEMD_NAME"
+      systemctl start "$DOMINO_SYSTEMD_NAME"
+      echo
+      exit 0
+
+    elif [ "$1" = "statusd" ]; then
+      echo
+      systemctl status "$DOMINO_SYSTEMD_NAME"
+      echo
+      exit 0
+
+    elif [ "$1" = "systemlog" ]; then
+      if [ -z "$2" ]; then
+        LAST_LOG_LINES=100
+      else
+        LAST_LOG_LINES="$2"
+      fi
+
+      echo 
+      echo "--- Last System Log Output ($LAST_LOG_LINES) ---"
+
+      journalctl -u $DOMINO_SYSTEMD_NAME | tail -$LAST_LOG_LINES
+      echo
+      exit 0
+
+    elif [ "$1" = "service" ]; then
+      echo
+      if [ -z "$2" ]; then
+        echo "Status"
+        systemctl status "$DOMINO_SYSTEMD_NAME"
+      elif [ "$2" = "status" ]; then
+        echo "Status"
+        systemctl status "$DOMINO_SYSTEMD_NAME"
+      elif [ "$2" = "on" ]; then
+        echo "Enabling Service"
+        systemctl enable "$DOMINO_SYSTEMD_NAME"
+      elif [ "$2" = "off" ]; then
+        echo "Disabling Service"
+        systemctl disable "$DOMINO_SYSTEMD_NAME"
+      elif [ "$2" = "add" ]; then
+        echo "Enabling Service"
+        systemctl enable "$DOMINO_SYSTEMD_NAME"
+      elif [ "$2" = "del" ]; then
+        echo "Disabling Service"
+        systemctl disable "$DOMINO_SYSTEMD_NAME"
+      else
+        systemctl "$2" "$DOMINO_SYSTEMD_NAME"
+      fi
+    
+      echo
+      exit 0
+    fi
+  fi
+fi
+
+SWITCH_USER=0
+
+# Starting a server always needs a switch to the right run-time environment
+if [ "$LOGNAME" = "$DOMINO_USER" ]; then
+
+  if [ "$1" = "start" ]; then
+    SWITCH_USER=1
+  elif [ "$1" = "restart" ]; then
+    SWITCH_USER=1
+  elif [ "$1" = "restartcompact" ]; then
+    SWITCH_USER=1
+  elif [ "$1" = "restartfixup" ]; then
+    SWITCH_USER=1
+  fi
+else
+  SWITCH_USER=1
+fi
+
+if [ "$1" = "setenv" ]; then
+  echo "'setenv' can be only used directly from 'rc_domino_script' invoked with the right user"
+  exit 1
+fi
+
+# Run the main startup script
+if [ "$SWITCH_USER" = "0" ]; then
+   $DOMINO_START_SCRIPT "$1" "$2" "$3" "$4" "$5" "$6"
+else
+  if [ "$VERBOSE_INFO" = "yes" ]; then
+    echo Switching to $DOMINO_USER
+  fi
+  su - $DOMINO_USER -c "$DOMINO_START_SCRIPT '$1' '$2' '$3' '$4' '$5' '$6'"
+fi
+
+RETVAL=$?
+
+exit $RETVAL

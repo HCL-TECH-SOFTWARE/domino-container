@@ -1,0 +1,1378 @@
+{
+	"definitions": {},
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Domino One-touch Setup",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+
+		"autoConfigPreferences": {
+			"$id": "#root/autoConfigPreferences",
+			"title": "Domino One-touch Setup preferences",
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"deleteInputFileAfterProcessing": {
+					"$id": "#root/autoConfigPreferences/deleteInputFileAfterProcessing",
+					"title": "Delete input file after processing",
+					"type": "boolean",
+					"default": false
+				},
+				"startServerAfterConfiguration": {
+					"$id": "#root/autoConfigPreferences/startServerAfterConfiguration",
+					"title": "Start server after successful configuration",
+					"type": "boolean",
+					"default": true
+				},
+				"consoleLogOutput": {
+					"$id": "#root/autoConfigPreferences/consoleLogOutput",
+					"title": "Options for writing One-touch Setup output to Domino console log",
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"show": {
+							"$id": "#root/autoConfigPreferences/consoleLogOutput/show",
+							"title": "Specifies which One-touch Setup output to write to console log",
+							"type": "string",
+							"enum": [ "none", "errors", "all" ],
+							"default": "errors"
+						},
+						"pauseOnErrorSeconds": {
+							"$id": "#root/autoConfigPreferences/consoleLogOutput/log",
+							"title": "Time to pause (sec) before quit when One-touch Setup completes with error",
+							"type": "number",
+							"default": 15,
+							"minValue": 0
+						}
+					}
+				}
+			}
+		},
+
+		"serverSetup": {
+			"$id": "#root/serverSetup",
+			"title": "Server setup properties",
+			"type": "object",
+			"required": [ "server", "network", "org", "admin" ],
+			"additionalProperties": false,
+			"properties": {
+
+				"server": {
+					"$id": "#root/serverSetup/server",
+					"title": "Server properties",
+					"type": "object",
+					"required": [ "type", "name", "domainName" ],
+					"additionalProperties": false,
+					"properties": {
+						"type": {
+							"$id": "#root/serverSetup/server/type",
+							"title": "Server type",
+							"type": "string",
+							"enum": [ "first", "additional" ]
+						},
+						"name": {
+							"$id": "#root/serverSetup/server/name",
+							"title": "Server name",
+							"type": "string",
+							"examples": [
+								"adminserver"
+							],
+							"pattern": "^.*$"
+						},
+						"domainName": {
+							"$id": "#root/serverSetup/server/domainName",
+							"title": "Domino domain name",
+							"type": "string",
+							"examples": [
+								"ACME"
+							],
+							"pattern": "^.*$"
+						},
+						"title": {
+							"$id": "#root/serverSetup/server/title",
+							"title": "Server title",
+							"type": [ "string", "null" ],
+							"examples": [
+								"ACME Administration Server"
+							],
+							"pattern": "^.*$",
+							"default": null
+						},
+						"password": {
+							"$id": "#root/serverSetup/server/password",
+							"title": "Server password",
+							"type": [ "string", "null" ],
+							"pattern": "^.*$",
+							"default": null
+						},
+						"minPasswordLength": {
+							"$id": "#root/serverSetup/server/minPasswordLength",
+							"title": "Minimum password length",
+							"type": "integer",
+							"minimum": 0,
+							"examples": [
+								8
+							],
+							"default": 5
+						},
+						"IDFilePath": {
+							"$id": "#root/serverSetup/server/IDFilePath",
+							"title": "Server ID filepath",
+							"type": [ "string", "null" ],
+							"examples": [
+								"/local/ids/baskerville1.id"
+							],
+							"default": 5
+						},
+						"useExistingServerID": {
+							"$id": "#root/serverSetup/server/useExistingServerID",
+							"title": "Use existing server ID",
+							"type": "boolean",
+							"default": false
+						},
+						"serverTasks": {
+							"$id": "#root/serverSetup/server/serverTasks",
+							"title": "Server tasks",
+							"type": "string",
+							"examples": [
+								"Replica,Router,Update,AMgr,Adminp,Sched,CalConn,RnRMgr"
+							],
+							"pattern": "^.*$"
+						},
+						"additionalServerTasks": {
+							"$id": "#root/serverSetup/server/additionalServerTasks",
+							"title": "Additional server tasks",
+							"type": "string",
+							"examples": [
+								"Traveler"
+							],
+							"pattern": "^.*$"
+						}
+					},
+					"if": {
+						"required": [ "useExistingServerID" ],
+						"properties": {
+							"useExistingServerID": {
+								"enum": [ true ]
+							}
+						}
+					},
+					"then": {
+						"required": [ "IDFilePath" ]
+					}
+				},
+
+				"network": {
+					"$id": "#root/serverSetup/network",
+					"title": "Network settings",
+					"type": "object",
+					"required": [ "hostName" ],
+					"additionalProperties": false,
+					"properties": {
+						"hostName": {
+							"$id": "#root/serverSetup/network/hostName",
+							"title": "Host name",
+							"type": "string",
+							"examples": [
+								"adminserver.acme.com"
+							],
+							"pattern": "^.*$"
+						},
+						"enablePortEncryption": {
+							"$id": "#root/serverSetup/network/enablePortEncryption",
+							"title": "Enable port encryption",
+							"type": "boolean",
+							"examples": [
+								true
+							],
+							"default": true
+						},
+						"enablePortCompression": {
+							"$id": "#root/serverSetup/network/enablePortCompression",
+							"title": "Enable port compression",
+							"type": "boolean",
+							"examples": [
+								true
+							],
+							"default": true
+						},
+						"IPLookupPath": {
+							"$id": "#root/serverSetup/network/IPLookupPath",
+							"title": "IP lookup path",
+							"type": [ "string", "null" ],
+							"examples": [
+								"/local/iplookup"
+							],
+							"pattern": "^.*$"
+						}
+					}
+				},
+
+				"org": {
+					"$id": "#root/serverSetup/org",
+					"title": "Organization settings",
+					"type": "object",
+					"required": [ "orgName" ],
+					"additionalProperties": false,
+					"properties": {
+						"countryCode": {
+							"$id": "#root/serverSetup/org/countryCode",
+							"title": "Country code",
+							"type": [ "string", "null" ],
+							"default": null
+						},
+						"orgName": {
+							"$id": "#root/serverSetup/org/orgName",
+							"title": "Organization name",
+							"type": "string",
+							"examples": [
+								"sherlock"
+							],
+							"pattern": "^.*$"
+						},
+						"certifierPassword": {
+							"$id": "#root/serverSetup/org/certifierPassword",
+							"title": "Certifier password",
+							"type": [ "string", "null" ],
+							"default": null,
+							"examples": [
+								"passw0rd"
+							],
+							"pattern": "^.*$"
+						},
+						"orgUnitName": {
+							"$id": "#root/serverSetup/org/orgUnitName",
+							"title": "Organization unit name",
+							"type": [ "string", "null" ],
+							"default": null
+						},
+						"orgUnitPassword": {
+							"$id": "#root/serverSetup/org/orgUnitPassword",
+							"title": "Organization unit password",
+							"type": [ "string", "null" ],
+							"default": null
+						},
+						"useExistingCertifierID": {
+							"$id": "#root/serverSetup/org/useExistingCertifierID",
+							"title": "Use existing certifier ID",
+							"type": "boolean",
+							"default": false
+						},
+						"certifierIDFilePath": {
+							"$id": "#root/serverSetup/org/certifierIDFilePath",
+							"title": "Certifier ID file path",
+							"type": "string",
+							"pattern": "^.*$"
+						},
+						"useExistingOrgUnitID": {
+							"$id": "#root/serverSetup/org/useExistingOrgUnitID",
+							"title": "Use existing organization unit ID",
+							"type": "boolean",
+							"default": false
+						},
+						"orgUnitIDFilePath": {
+							"$id": "#root/serverSetup/org/orgUnitIDFilePath",
+							"title": "Organization unit ID file path",
+							"type": "string",
+							"pattern": "^.*$"
+						}
+					},
+					"if": {
+						"required": [ "useExistingCertifierID" ],
+						"properties": {
+							"useExistingCertifierID": {
+								"enum": [ true ]
+							}
+						}
+					},
+					"then": {
+						"required": [ "certifierIDFilePath" ]
+					},
+					"if": {
+						"required": [ "useExistingOrgUnitID" ],
+						"properties": {
+							"useExistingOrgUnitID": {
+								"enum": [ true ]
+							}
+						}
+					},
+					"then": {
+						"required": [ "orgUnitIDFilePath" ]
+					}
+				},
+
+				"admin": {
+					"$id": "#root/serverSetup/admin",
+					"title": "Administrator settings",
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"firstName": {
+							"$id": "#root/serverSetup/admin/firstName",
+							"title": "Administrator first name",
+							"type": [ "string", "null" ],
+							"default": null,
+							"examples": [
+								"Sherlock"
+							],
+							"pattern": "^.*$"
+						},
+						"middleName": {
+							"$id": "#root/serverSetup/admin/middleName",
+							"title": "Administrator middle name",
+							"type": [ "string", "null" ],
+							"default": null
+						},
+						"lastName": {
+							"$id": "#root/serverSetup/admin/lastName",
+							"title": "Administrator last name",
+							"type": [ "string", "null" ],
+							"default": null,
+							"examples": [
+								"Holmes"
+							],
+							"pattern": "^.*$"
+						},
+						"password": {
+							"$id": "#root/serverSetup/admin/password",
+							"title": "Administrator password",
+							"type": [ "string", "null" ],
+							"default": null,
+							"examples": [
+								"passw0rd"
+							],
+							"pattern": "^.*$"
+						},
+						"IDFilePath": {
+							"$id": "#root/serverSetup/admin/IDFilePath",
+							"title": "Administrator ID file path",
+							"type": [ "string", "null" ],
+							"default": null,
+							"examples": [
+								"admin.id"
+							],
+							"pattern": "^.*$"
+						},
+						"CN": {
+							"$id": "#root/serverSetup/admin/CN",
+							"title": "Administrator common name",
+							"type": [ "string", "null" ],
+							"default": null,
+							"examples": [
+								"Sherlock Holmes"
+							],
+							"pattern": "^.*$"
+						},
+						"useExistingAdminID": {
+							"$id": "#root/serverSetup/admin/useExistingAdminID",
+							"title": "Use existing administrator ID",
+							"type": "boolean",
+							"default": false
+						}
+					},
+					"if": {
+						"required": [ "useExistingAdminID" ],
+						"properties": {
+							"useExistingAdminID": {
+								"enum": [ true ]
+							}
+						}
+					},
+					"then": {
+						"required": [ "IDFilePath" ]
+					}
+				},
+
+				"notesINI": {
+					"$id": "#root/serverSetup/notesINI",
+					"title": "notes.ini settings",
+					"type": "object",
+					"properties": {},
+					"additionalProperties": {
+						"type": [ "string", "null" ]
+					}
+				},
+
+				"security": {
+					"$id": "#root/serverSetup/security",
+					"title": "Security settings",
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"ACL": {
+							"$id": "#root/serverSetup/security/ACL",
+							"title": "ACL settings",
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"prohibitAnonymousAccess": {
+									"$id": "#root/serverSetup/security/ACL/prohibitAnonymousAccess",
+									"title": "Prohibit anonymous access",
+									"type": "boolean",
+									"examples": [
+										true
+									],
+									"default": true
+								},
+								"addLocalDomainAdmins": {
+									"$id": "#root/serverSetup/security/ACL/addLocalDomainAdmins",
+									"title": "Add local domain administrators",
+									"type": "boolean",
+									"examples": [
+										true
+									],
+									"default": true
+								}
+							}
+						},
+						"TLSSetup": {
+							"$id": "#root/serverSetup/security/TLSSetup",
+							"title": "TLS setup",
+							"type": "object",
+							"required": [ "method" ],
+							"additionalProperties": false,
+							"properties": {
+								"method": {
+									"$id": "#root/serverSetup/security/TLSSetup/method",
+									"title": "TLS setup method",
+									"type": "string",
+									"enum": [ "dominoMicroCA", "import" ]
+								},
+								"CADisplayName": {
+									"$id": "#root/serverSetup/security/TLSSetup/CADisplayName",
+									"title": "Certificate Authority display name in certstore.nsf",
+									"type": "string",
+									"default": "DominoMicroCA"
+								},
+								"CAOrgName": {
+									"$id": "#root/serverSetup/security/TLSSetup/CAOrgName",
+									"title": "Certificate Authority organization name",
+									"type": "string"
+								},
+								"CAKeyType": {
+									"$id": "#root/serverSetup/security/TLSSetup/CAKeyType",
+									"title": "CA key type",
+									"type": "string",
+									"enum": [ "RSA", "ECDSA", "RSA2048", "RSA4096", "ES256", "ES384" ],
+									"default": "RSA"
+								},
+								"CAExpirationDays": {
+									"$id": "#root/serverSetup/security/TLSSetup/CAExpirationDays",
+									"title": "Number of days until Certificate Authority certificate expires",
+									"type": "integer",
+									"minimum": 1
+								},
+								"orgName": {
+									"$id": "#root/serverSetup/security/TLSSetup/orgName",
+									"title": "TLS certificate organization name",
+									"type": "string"
+								},
+								"TLSKeyType": {
+									"$id": "#root/serverSetup/security/TLSSetup/TLSKeyType",
+									"title": "TLS key type",
+									"type": "string",
+									"enum": [ "RSA", "ECDSA", "RSA2048", "RSA4096", "ES256", "ES384" ],
+									"default": "RSA"
+								},
+								"certExpirationDays": {
+									"$id": "#root/serverSetup/security/TLSSetup/certExpirationDays",
+									"title": "Number of days until TLS certificate expires",
+									"type": "integer",
+									"minimum": 1,
+									"maximum": 398
+								},
+								"importFilePath": {
+									"$id": "#root/serverSetup/security/TLSSetup/importFilePath",
+									"title": "Path of .pem, .p12, .pfx, or .kyr file to import",
+									"type": "string"
+								},
+								"importFilePassword": {
+									"$id": "#root/serverSetup/security/TLSSetup/importFilePassword",
+									"title": "Password to decrypt import file contents",
+									"type": "string"
+								},
+								"retainImportFile": {
+									"$id": "#root/serverSetup/security/TLSSetup/retainImportFile",
+									"title": "Retain import file after successful import (by default it is deleted)",
+									"type": "boolean",
+									"default": false
+								},
+								"exportPassword": {
+									"$id": "#root/serverSetup/security/TLSSetup/exportPassword",
+									"title": "Password for storing imported data encrypted, if data is exportable",
+									"type": "string"
+								}
+							},
+							"if": {
+								"required": [ "method" ],
+								"properties": {
+									"method": {
+										"enum": [ "import" ]
+									}
+								}
+							},
+							"then": {
+								"required": [ "importFilePath" ]
+							}
+						}
+					}
+				},
+
+				"directoryAssistance": {
+					"$id": "#root/serverSetup/directoryAssistance",
+					"title": "Directory Assistance setup",
+					"type": "object",
+					"required": [ "LDAP" ],
+					"additionalProperties": false,
+					"properties": {
+						"databasePath": {
+							"$id": "#root/serverSetup/directoryAssistance/databasePath",
+							"title": "Directory Assistance database path",
+							"type": "string"
+						},
+						"domainName": {
+							"$id": "#root/serverSetup/directoryAssistance/domainName",
+							"title": "Directory Assistance domain name",
+							"type": "string"
+						},
+						"companyName": {
+							"$id": "#root/serverSetup/directoryAssistance/companyName",
+							"title": "Directory Assistance company name",
+							"type": "string"
+						},
+						"LDAP": {
+							"$id": "#root/serverSetup/directoryAssistance/LDAP",
+							"title": "Directory Assistance LDAP settings",
+							"type": "object",
+							"required": [ "hostName" ],
+							"additionalProperties": false,
+							"properties": {
+								"hostName": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/hostName",
+									"title": "Directory Assistance LDAP host name",
+									"type": "string"
+								},
+								"vendor": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/vendor",
+									"title": "Directory Assistance LDAP vendor",
+									"type": "string",
+									"enum": [ "activeDirectory", "openLDAP", "dominoLDAP" ]
+								},
+								"userDN": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/userDN",
+									"title": "Directory Assistance LDAP user distinguished name",
+									"type": "string"
+								},
+								"password": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/password",
+									"title": "Directory Assistance LDAP user password",
+									"type": "string"
+								},
+								"baseSearchDN": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/baseSearchDN",
+									"title": "Directory Assistance LDAP base search distinguished name",
+									"type": "string"
+								},
+								"channelEncryption": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/channelEncryption",
+									"title": "Directory Assistance LDAP channel encryption",
+									"type": "string",
+									"enum": [ "TLS", "none" ]
+								},
+								"port": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/port",
+									"title": "Directory Assistance LDAP port",
+									"type": "integer",
+									"examples": [ 389, 636 ],
+									"minimum": 0
+								},
+								"acceptExpiredCertificates": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/acceptExpiredCertificates",
+									"title": "Directory Assistance LDAP - accept expired certificates",
+									"type": "boolean",
+									"default": false
+								},
+								"verifyRemoteServerCertificate": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/verifyRemoteServerCertificate",
+									"title": "Directory Assistance LDAP - verify remote server certificate",
+									"type": "boolean",
+									"default": true
+								},
+								"timeout": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/timeout",
+									"title": "Directory Assistance LDAP timeout",
+									"type": "integer",
+									"examples": [ 60 ],
+									"minimum": 0
+								},
+								"maximumEntriesReturned": {
+									"$id": "#root/serverSetup/directoryAssistance/LDAP/maximumEntriesReturned",
+									"title": "Directory Assistance LDAP maximum entries returned",
+									"type": "integer",
+									"examples": [ 100 ],
+									"minimum": 0
+								}
+							}
+						}
+					}
+				},
+
+				"autoRegister": {
+					"$id": "#root/serverSetup/autoRegister",
+					"title": "Auto-register additional servers",
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"count": {
+							"$id": "#root/serverSetup/autoRegister/count",
+							"title": "Count of servers to register",
+							"type": "integer",
+							"examples": [
+								7
+							],
+							"default": 0,
+							"minimum": 0
+						},
+						"IDPath": {
+							"$id": "#root/serverSetup/autoRegister/IDPath",
+							"title": "ID files path",
+							"type": [ "string", "null" ],
+							"default": null,
+							"examples": [
+								"/local/ids"
+							],
+							"pattern": "^.*$"
+						},
+						"pattern": {
+							"$id": "#root/serverSetup/autoRegister/pattern",
+							"title": "Pattern for server names",
+							"type": [ "string", "null" ],
+							"default": null,
+							"examples": [
+								"baskerville#"
+							],
+							"pattern": "^.*$"
+						}
+					}
+				},
+
+				"existingServer": {
+					"$id": "#root/serverSetup/existingServer",
+					"title": "Existing Domino server",
+					"type": "object",
+					"required": [ "CN" ],
+					"additionalProperties": false,
+					"properties": {
+						"CN": {
+							"$id": "#root/serverSetup/existingServer/CN",
+							"title": "Existing server common name",
+							"type": "string",
+							"examples": [
+								"adminserver"
+							],
+							"pattern": "^.*$"
+						},
+						"hostNameOrIP": {
+							"$id": "#root/serverSetup/existingServer/hostNameOrIP",
+							"title": "Existing server DNS host name or IP address",
+							"type": "string",
+							"pattern": "^.*$"
+						}
+					}
+				},
+
+				"registerUsers": {
+					"$id": "#root/serverSetup/registerUsers",
+					"title": "Register Users",
+					"type": "object",
+					"required": [ "users" ],
+					"additionalProperties": false,
+					"properties": {
+						"defaults": {
+							"$id": "#root/serverSetup/registerUsers/defaults",
+							"title": "registerUsers defaults",
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"saveIDToPersonDocument": {
+									"$id": "#root/serverSetup/registerUsers/defaults/saveIDToPersonDocument",
+									"title": "Default for Save ID file to user's Person document",
+									"type": "boolean",
+									"default": false
+								},
+								"mailTemplatePath": {
+									"$id": "#root/serverSetup/registerUsers/defaults/mailTemplatePath",
+									"title": "Default mail template path",
+									"type": "string"
+								},
+								"password": {
+									"$id": "#root/serverSetup/registerUsers/defaults/password",
+									"title": "Default User ID file password, can be an actual password or @Prompt:",
+									"type": "string"
+								},
+								"enableFullTextIndex": {
+									"$id": "#root/serverSetup/registerUsers/defaults/enableFullTextIndex",
+									"title": "Default for enable mail file full text index",
+									"type": "boolean",
+									"default": false
+								},
+								"certificateExpirationMonths": {
+									"$id": "#root/serverSetup/registerUsers/defaults/certificateExpirationMonths",
+									"title": "Default for user certificate expiration",
+									"type": "number",
+									"default": 24,
+									"minValue": 1
+								},
+								"setInternetPassword": {
+									"$id": "#root/serverSetup/registerUsers/defaults/setInternetPassword",
+									"title": "Default for setting the user's Internet password to their User ID password",
+									"type": "boolean",
+									"default": false
+								}
+							}
+						},
+						"users": {
+							"$id": "#root/serverSetup/registerUsers/users",
+							"title": "Array of users to register",
+							"type": "array",
+							"default": [],
+							"items": {
+								"$id": "#root/serverSetup/registerUsers/users/items",
+								"title": "registerUsers array items",
+								"type": "object",
+								"required": [ "lastName" ],
+								"additionalProperties": false,
+								"properties": {
+									"firstName": {
+										"$id": "#root/serverSetup/registerUsers/users/items/firstName",
+										"title": "User first name",
+										"type": "string"
+									},
+									"middleName": {
+										"$id": "#root/serverSetup/registerUsers/users/items/middleName",
+										"title": "User middle name",
+										"type": "string"
+									},
+									"lastName": {
+										"$id": "#root/serverSetup/registerUsers/users/items/lastName",
+										"title": "User last name",
+										"type": "string"
+									},
+									"shortName": {
+										"$id": "#root/serverSetup/registerUsers/users/items/shortName",
+										"title": "User short name",
+										"type": "string"
+									},
+									"password": {
+										"$id": "#root/serverSetup/registerUsers/users/items/password",
+										"title": "User ID file password",
+										"type": "string"
+									},
+									"mailFilePath": {
+										"$id": "#root/serverSetup/registerUsers/users/items/mailFilePath",
+										"title": "User mail file path",
+										"type": "string"
+									},
+									"mailTemplatePath": {
+										"$id": "#root/serverSetup/registerUsers/users/items/mailTemplatePath",
+										"title": "Mail template path",
+										"type": "string"
+									},
+									"IDFilePath": {
+										"$id": "#root/serverSetup/registerUsers/users/items/IDFilePath",
+										"title": "User ID file path",
+										"type": "string"
+									},
+									"saveIDToPersonDocument": {
+										"$id": "#root/serverSetup/registerUsers/users/items/saveIDToPersonDocument",
+										"title": "Save ID file to user's Person document",
+										"type": "boolean"
+									},
+									"enableFullTextIndex": {
+										"$id": "#root/serverSetup/registerUsers/users/items/enableFullTextIndex",
+										"title": "Enable mail file full text index",
+										"type": "boolean"
+									},
+									"internetAddress": {
+										"$id": "#root/serverSetup/registerUsers/users/items/internetAddress",
+										"title": "User internet address",
+										"type": "string"
+									},
+									"certificateExpirationMonths": {
+										"$id": "#root/serverSetup/registerUsers/users/items/certificateExpirationMonths",
+										"title": "User certificate expiration",
+										"type": "number"
+									},
+									"setInternetPassword": {
+										"$id": "#root/serverSetup/registerUsers/users/items/setInternetPassword",
+										"title": "Set the user's Internet password to their User ID password",
+										"type": "boolean"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+
+		"IDVault": {
+			"$id": "#root/IDVault",
+			"title": "ID Vault settings",
+			"type": "object",
+			"required": [ "name", "description", "IDFile", "IDPassword", "passwordReset", "securitySettingsPolicy", "masterPolicy" ],
+			"additionalProperties": false,
+			"properties": {
+				"name": {
+					"$id": "#root/IDVault/name",
+					"title": "ID Vault Name",
+					"type": "string",
+					"examples": [
+						"O=VikingVault"
+					],
+					"pattern": "^.*$"
+				},
+				"description": {
+					"$id": "#root/IDVault/description",
+					"title": "Description",
+					"type": "string",
+					"examples": [
+						"Viking Vault"
+					],
+					"pattern": "^.*$"
+				},
+				"IDFile": {
+					"$id": "#root/IDVault/IDFile",
+					"title": "Idfile",
+					"type": "string",
+					"examples": [
+						"VikingVault.id"
+					],
+					"pattern": "^.*$"
+				},
+				"IDPassword": {
+					"$id": "#root/IDVault/IDPassword",
+					"title": "Idpassword",
+					"type": "string",
+					"examples": [
+						"VaultPassword"
+					],
+					"pattern": "^.*$"
+				},
+				"path": {
+					"$id": "#root/IDVault/path",
+					"title": "Path",
+					"type": "string",
+					"examples": [
+						"IBM_ID_VAULT/VikingVault.nsf"
+					],
+					"pattern": "^.*$"
+				},
+				"passwordReset": {
+					"$id": "#root/IDVault/passwordReset",
+					"title": "Passwordreset",
+					"type": "object",
+					"required": [ "helpText" ],
+					"additionalProperties": false,
+					"properties": {
+						"helpText": {
+							"$id": "#root/IDVault/passwordReset/helpText",
+							"title": "Helptext",
+							"type": "string",
+							"examples": [
+								"Call so and so for help resetting password"
+							],
+							"pattern": "^.*$"
+						}
+					}
+				},
+				"securitySettingsPolicy": {
+					"$id": "#root/IDVault/securitySettingsPolicy",
+					"title": "Securitysettingspolicy",
+					"type": "object",
+					"required": [ "name", "description" ],
+					"additionalProperties": false,
+					"properties": {
+						"name": {
+							"$id": "#root/IDVault/securitySettingsPolicy/name",
+							"title": "Name",
+							"type": "string",
+							"examples": [
+								"Viking Vault Security Settings Policy"
+							],
+							"pattern": "^.*$"
+						},
+						"description": {
+							"$id": "#root/IDVault/securitySettingsPolicy/description",
+							"title": "Description",
+							"type": "string",
+							"examples": [
+								"Viking Vault Security Settings"
+							],
+							"pattern": "^.*$"
+						}
+					}
+				},
+				"masterPolicy": {
+					"$id": "#root/IDVault/masterPolicy",
+					"title": "Masterpolicy",
+					"type": "object",
+					"required": [ "description" ],
+					"additionalProperties": false,
+					"properties": {
+						"description": {
+							"$id": "#root/IDVault/masterPolicy/description",
+							"title": "Description",
+							"type": "string",
+							"default": "",
+							"examples": [
+								"Viking Vault Master Policy Description"
+							],
+							"pattern": "^.*$"
+						}
+					}
+				}
+			}
+		},
+
+		"appConfiguration": {
+			"$id": "#root/appConfiguration",
+			"title": "Application configuration",
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+
+				"notesINI": {
+					"$id": "#root/appConfiguration/notesINI",
+					"title": "notes.ini settings",
+					"type": "object",
+					"properties": {},
+					"additionalProperties": {
+						"type": [ "string", "null" ]
+					}
+				},
+
+				"databases": {
+					"$id": "#root/appConfiguration/databases",
+					"title": "Databases",
+					"type": "array",
+					"default": [],
+					"items": {
+						"$id": "#root/appConfiguration/databases/items",
+						"title": "Items",
+						"type": "object",
+						"required": [ "action", "filePath" ],
+						"additionalProperties": false,
+						"properties": {
+
+							"action": {
+								"$id": "#root/appConfiguration/databases/items/action",
+								"title": "Database action",
+								"type": "string",
+								"enum": [ "create", "update" ]
+							},
+							"filePath": {
+								"$id": "#root/appConfiguration/databases/items/filePath",
+								"title": "Database filepath",
+								"type": "string",
+								"pattern": "^.*$"
+							},
+							"title": {
+								"$id": "#root/appConfiguration/databases/items/title",
+								"title": "Database Title",
+								"type": [ "string", "null" ],
+								"pattern": "^.*$"
+							},
+							"templatePath": {
+								"$id": "#root/appConfiguration/databases/items/templatePath",
+								"title": "Templatepath",
+								"type": [ "string", "null" ],
+								"pattern": "^.*$"
+							},
+							"signUsingAdminp": {
+								"$id": "#root/appConfiguration/databases/items/signUsingAdminp",
+								"title": "Sign database using adminp",
+								"type": "boolean",
+								"default": false
+							},
+
+							"ACL": {
+								"$id": "#root/appConfiguration/databases/items/ACL",
+								"title": "Database ACL",
+								"type": "object",
+								"additionalProperties": false,
+								"properties": {
+									"roles": {
+										"$id": "#root/appConfiguration/databases/items/ACL/roles",
+										"title": "ACL roles",
+										"type": "array",
+										"default": [],
+										"items": {
+											"$id": "#root/appConfiguration/databases/items/ACL/roles/items",
+											"title": "Items",
+											"type": "string",
+											"pattern": "^.*$"
+										}
+									},
+
+									"ACLEntries": {
+										"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries",
+										"title": "ACL entries",
+										"type": "array",
+										"default": [],
+										"items": {
+											"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items",
+											"title": "Items",
+											"type": "object",
+											"required": [ "name", "level" ],
+											"additionalProperties": false,
+											"properties": {
+												"name": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/name",
+													"title": "ACL entry name",
+													"type": "string",
+													"pattern": "^.*$"
+												},
+												"level": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/level",
+													"title": "ACL entry level",
+													"type": "string",
+													"enum": [ "noAccess", "depositor", "reader", "author", "editor", "designer", "manager" ]
+												},
+												"type": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/type",
+													"title": "ACL entry type",
+													"type": "string",
+													"enum": [ "unspecified", "person", "server", "personGroup", "serverGroup", "mixedGroup" ]
+												},
+												"canCreateDocuments": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/canCreateDocuments",
+													"title": "Can create documents",
+													"type": "boolean",
+													"default": false
+												},
+												"canDeleteDocuments": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/canDeleteDocuments",
+													"title": "Can delete documents",
+													"type": "boolean",
+													"default": false
+												},
+												"canCreatePersonalAgent": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/canCreatePersonalAgent",
+													"title": "Can create private agents",
+													"type": "boolean",
+													"default": false
+												},
+												"canCreatePersonalFolder": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/canCreatePersonalFolder",
+													"title": "Can create personal folders/views",
+													"type": "boolean",
+													"default": false
+												},
+												"canCreateSharedFolder": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/canCreateSharedFolder",
+													"title": "Can create shared folders/views",
+													"type": "boolean",
+													"default": false
+												},
+												"canCreateLSOrJavaAgent": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/canCreateLSOrJavaAgent",
+													"title": "Can create LotusScript/Java agents",
+													"type": "boolean",
+													"default": false
+												},
+												"isPublicReader": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/isPublicReader",
+													"title": "Is public reader",
+													"type": "boolean",
+													"default": false
+												},
+												"isPublicWriter": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/isPublicWriter",
+													"title": "Is public writer",
+													"type": "boolean",
+													"default": false
+												},
+												"canReplicateOrCopyDocuments": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/canReplicateOrCopyDocuments",
+													"title": "Can replicate or copy documents",
+													"type": "boolean",
+													"default": false
+												},
+												"roles": {
+													"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/roles",
+													"title": "ACL entry roles",
+													"type": "array",
+													"default": [],
+													"items": {
+														"$id": "#root/appConfiguration/databases/items/ACL/ACLEntries/items/roles/items",
+														"title": "Items",
+														"type": "string",
+														"pattern": "^.*$"
+													}
+												}
+											}
+										}
+									}
+								}
+							},
+
+							"documents": {
+								"$id": "#root/appConfiguration/databases/items/documents",
+								"title": "Documents",
+								"type": "array",
+								"default": [],
+								"items": {
+									"$id": "#root/appConfiguration/databases/items/documents/items",
+									"title": "Document items",
+									"type": "object",
+									"required": [ "action" ],
+									"additionalProperties": false,
+									"properties": {
+										"action": {
+											"$id": "#root/appConfiguration/databases/items/documents/items/action",
+											"title": "Document action",
+											"type": "string",
+											"enum": [ "create", "update" ]
+										},
+										"findDocument": {
+											"$id": "#root/appConfiguration/databases/items/documents/items/findDocument",
+											"title": "Find document items",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": {
+												"type": [ "string" ]
+											}
+										},
+										"computeWithForm": {
+											"$id": "#root/appConfiguration/databases/items/documents/items/computeWithForm",
+											"title": "Compute/Validate the document against its form",
+											"type": "boolean",
+											"default": false
+										},
+										"items": {
+											"$id": "#root/appConfiguration/databases/items/documents/items/items",
+											"title": "Items",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": {
+												"type": [ "string", "number", "array", "object" ],
+												"if": {
+													"type": "object"
+												},
+												"then": {
+													"required": [ "value" ],
+													"additionalProperties": false,
+													"properties": {
+														"type": {
+															"$id": "#root/appConfiguration/databases/items/documents/items/items/name",
+															"title": "Item type",
+															"type": "string",
+															"enum": [ "text", "number", "datetime" ]
+														},
+														"value": {
+															"$id": "#root/appConfiguration/databases/items/documents/items/items/value",
+															"title": "Item value",
+															"type": [ "string", "number", "array" ]
+														},
+														"names": {
+															"$id": "#root/appConfiguration/databases/items/documents/items/items/names",
+															"type": "boolean",
+															"default": false
+														},
+														"readers": {
+															"$id": "#root/appConfiguration/databases/items/documents/items/items/readers",
+															"type": "boolean",
+															"default": false
+														},
+														"authors": {
+															"$id": "#root/appConfiguration/databases/items/documents/items/items/authors",
+															"type": "boolean",
+															"default": false
+														},
+														"protected": {
+															"$id": "#root/appConfiguration/databases/items/documents/items/items/protected",
+															"type": "boolean",
+															"default": false
+														},
+														"sign": {
+															"$id": "#root/appConfiguration/databases/items/documents/items/items/sign",
+															"type": "boolean",
+															"default": false
+														},
+														"encrypt": {
+															"$id": "#root/appConfiguration/databases/items/documents/items/items/encrypt",
+															"type": "boolean",
+															"default": false
+														},
+														"nonSummary": {
+															"$id": "#root/appConfiguration/databases/items/documents/items/items/nonSummary",
+															"type": "boolean",
+															"default": false
+														}
+													},
+													"if": {
+														"required": [ "type" ],
+														"properties": {
+															"type": {
+																"enum": [ "number" ]
+															}
+														}
+													},
+													"then": {
+														"properties": {
+															"value": {
+																"type": [ "number", "array" ],
+																"if": {
+																	"type": "array"
+																},
+																"then": {
+																	"items": {
+																		"type": "number"
+																	}
+																}
+															}
+														}
+													},
+													"if": {
+														"required": [ "type" ],
+														"properties": {
+															"type": {
+																"enum": [ "text" ]
+															}
+														}
+													},
+													"then": {
+														"properties": {
+															"value": {
+																"type": [ "string", "array" ],
+																"if": {
+																	"type": "array"
+																},
+																"then": {
+																	"items": {
+																		"type": "string"
+																	}
+																}
+															}
+														}
+													}
+												},
+												"else": {
+													"if": {
+														"type": "array"
+													},
+													"then": {
+														"items": {
+															"title": "Item value array items",
+															"type": [ "string", "number" ]
+														}
+													}
+												}
+											}
+										}
+									},
+									"if": {
+										"required": [ "action" ],
+										"properties": {
+											"action": {
+												"enum": [ "update" ]
+											}
+										}
+									},
+									"then": {
+										"required": [ "findDocument" ]
+									},
+									"if": {
+										"required": [ "findDocument" ]
+									},
+									"then": {
+										"properties": {
+											"findDocument": {
+												"minProperties": 1
+											}
+										}
+									}
+								}
+							},
+
+							"agents": {
+								"$id": "#root/appConfiguration/databases/items/agents",
+								"title": "Agents",
+								"type": "array",
+								"default": [],
+								"items": {
+									"$id": "#root/appConfiguration/databases/items/agents/items",
+									"title": "Agent properties",
+									"type": "object",
+									"required": [ "name", "action" ],
+									"additionalProperties": false,
+									"properties": {
+										"name": {
+											"$id": "#root/appConfiguration/databases/items/agents/items/name",
+											"title": "Agent name",
+											"type": "string"
+										},
+										"action": {
+											"$id": "#root/appConfiguration/databases/items/agents/items/action",
+											"title": "Agent action",
+											"type": [ "string", "array" ]
+										}
+									},
+									"if": {
+										"required": [ "action" ],
+										"properties": {
+											"action": {
+												"type": "string"
+											}
+										}
+									},
+									"then": {
+										"properties": {
+											"action": {
+												"type": "string",
+												"enum": [ "enable", "disable", "sign", "run" ]
+											}
+										}
+									},
+									"else": {
+										"if": {
+											"required": [ "action" ],
+											"properties": {
+												"action": {
+													"type": "array"
+												}
+											}
+										},
+										"then": {
+											"properties": {
+												"action": {
+													"minItems": 1,
+													"items": {
+														"type": "string",
+														"enum": [ "enable", "disable", "sign", "run" ]
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"if": {
+							"required": [ "action" ],
+							"properties": {
+								"action": {
+									"enum": [ "create" ]
+								}
+							}
+						},
+						"then": {
+							"required": [ "templatePath" ]
+						}
+					}
+				}
+			}
+		}
+	}
+}

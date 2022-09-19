@@ -451,11 +451,8 @@ install_startscript()
 
     header "Installing Start Script"
 
-    cd $INSTALL_DIR
-    tar -xf domino-startscript.taz
-
     # Run start script installer
-    $INSTALL_DIR/domino-startscript/install_script
+    $INSTALL_DIR/startscript/install_script
 
     return 0
   fi
@@ -467,6 +464,8 @@ install_startscript()
   download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" 
   cd domino-startscript
   ./install_script
+  cd $INSTALL_DIR
+  rm -rf domino-startscript
 
 }
 
