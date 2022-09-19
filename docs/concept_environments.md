@@ -132,7 +132,7 @@ Note: When not specifying a major version, the major version default could chang
 ## References
 
 - [Docker Engine for Linux](https://docs.docker.com/engine/install/)
-- [Docker Compose](https://docs.docker.com/engine/install/)
+- [Docker Compose](https://docs.docker.com/compose/)
 - [Docker Desktop with WSL2](https://docs.docker.com/docker-for-windows/wsl/)
 - [Docker Desktop Mac](https://docs.docker.com/docker-for-mac/install/)
 - [Podman](https://podman.io/)

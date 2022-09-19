@@ -12,7 +12,13 @@
 # The script checks if software is available at configured location (download location or local directory).
 # In case of a local software directory it hosts the software on a local NGINX container.
 
-SCRIPT_NAME=$0
+if [ -x /usr/bin/realpath ]; then
+  SCRIPT_NAME=$(realpath $0)
+  SCRIPT_DIR=$(dirname $SCRIPT_NAME)
+else
+  SCRIPT_NAME=$0
+  SCRIPT_DIR=$(dirname $SCRIPT_NAME)
+fi
 
 # Standard configuration overwritten by build.cfg
 # (Default) NGINX is used hosting software from the local "software" directory.
@@ -348,6 +354,7 @@ print_runtime()
   if [ ! $hours = 0 ] ; then echo "Completed in $hours hour$h, $minutes minute$m and $seconds second$s"
   elif [ ! $minutes = 0 ] ; then echo "Completed in $minutes minute$m and $seconds second$s"
   else echo "Completed in $seconds second$s"; fi
+  echo
 }
 
 http_head_check()
@@ -963,6 +970,11 @@ docker_build()
     log_error_exit "Image build failed!"
   fi
 
+  cd $CURRENT_DIR
+
+  # Test image via automation testing before tagging and uploading it
+  auto_test
+
   if [ -n "$DOCKER_TAG_LATEST" ]; then
     $CONTAINER_CMD tag $DOCKER_IMAGE $DOCKER_TAG_LATEST
     echo
@@ -980,6 +992,9 @@ docker_build()
     $CONTAINER_CMD push $PUSH_IMAGE
     echo
   fi
+
+  # Save/Export image if requested
+  docker_save
 
   echo
   return 0
@@ -1398,9 +1413,26 @@ docker_save()
   return 0
 }
 
+auto_test()
+{
+  if [ "$AutoTestImage" != "yes" ]; then
+    return 0
+  fi
+
+  $SCRIPT_DIR/testing/AutomationTest.sh -image="$DOCKER_IMAGE"
+
+  local ret=$?
+
+  if [ "$ret" != "0" ]; then
+    log_error_exit "Automation testing for image [$DOCKER_IMAGE failed] with $ret automation test errors!" 
+  fi
+
+  log "Automation testing for new image [$DOCKER_IMAGE] successful!"
+}
+
+
 # --- Main script logic ---
 
-SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 SOFTWARE_PORT=7777
 SOFTWARE_FILE_NAME=software.txt
 SOFTWARE_CONTAINER=hclsoftware
@@ -1659,6 +1691,10 @@ for a in $@; do
       LinuxYumUpdate=no
       ;;
 
+    -autotest)
+      AutoTestImage=yes
+      ;;
+
     -borg|-borg=*)
       BORG_INSTALL=$(echo "$a" | cut -f2 -d= -s)
 
@@ -1791,8 +1827,6 @@ cd "$CURRENT_DIR"
 if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
   nginx_stop
 fi
-
-docker_save
 
 print_runtime
 

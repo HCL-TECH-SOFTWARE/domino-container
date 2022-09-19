@@ -24,9 +24,6 @@ spec:
     - name: LANG
       value: "en_US.UTF-8"
 
-    - name: DOMINO_DOCKER_STDOUT
-      value: "yes"
-
     - name: SetupAutoConfigure
       value: "1"
 
@@ -46,7 +43,7 @@ spec:
       value: "/local/notesdata/domino/html/admin.id"
 
     - name: SERVERSETUP_NETWORK_HOSTNAME
-      value: "master.domino-lab.net"
+      value: "main.domino.lab"
 
     - name: SERVERSETUP_ORG_CERTIFIERPASSWORD
       value: "2manysecrets"
@@ -58,10 +55,10 @@ spec:
       value: "DominoLab"
 
     - name: SERVERSETUP_SERVER_NAME
-      value: "master.domino.lab"
+      value: "main.domino.lab"
 
     - name: SERVERSETUP_SERVER_SERVERTASKS
-      value: "replica,router,update,amgr,adminp,http,certmgr -ACCEPT_TOU_AUTO_CONFIG"
+      value: "replica,router,update,amgr,adminp,http"
 
     - name: SERVERSETUP_SECURITY_ACL_PROHIBITANONYMOUSACCESS
       value: "true"
@@ -70,7 +67,7 @@ spec:
       value: "true"
 
     name: domino12
-    image: registry.domino-lab.net:5000/hclcom/domino:latest
+    image: registry.domino.lab/hclcom/domino:latest
 
     securityContext:
       capabilities:
@@ -93,7 +90,7 @@ spec:
     livenessProbe:
       exec:
         command:
-        - /domino_docker_healthcheck.sh
+        - /healthcheck.sh
 
       initialDelaySeconds: 60
       periodSeconds: 20
@@ -101,7 +98,7 @@ spec:
     readinessProbe:
       exec:
         command:
-        - /domino_docker_healthcheck.sh
+        - /healthcheck.sh
         - ready
 
       initialDelaySeconds: 60

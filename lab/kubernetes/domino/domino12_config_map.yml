@@ -11,16 +11,16 @@ data:
       "serverSetup": {
         "server": {
           "type": "first",
-          "name": "master.domino-lab.net",
+          "name": "main.domino.lab",
           "domainName": "DominoLab",
           "title": "Domino Lab Server",
           "password": null,
           "minPasswordLength": 0,
-          "serverTasks": "replica,router,update,amgr,adminp,http,certmgr -ACCEPT_TOU_AUTO_CONFIG"
+          "serverTasks": "replica,router,update,amgr,adminp,http"
         },
 
         "network": {
-          "hostName": "master.domino-lab.net",
+          "hostName": "main.domino.lab",
           "enablePortEncryption": true,
           "enablePortCompression": true
         },
@@ -108,10 +108,10 @@ data:
                 "action": "update",
                 "findDocument": {
                   "Type": "Server",
-                  "ServerName": "CN=master.domino-lab.net/O=DominoLab"
+                  "ServerName": "CN=main.domino.lab/O=DominoLab"
                 },
                 "items": {
-                  "HTTP_SSLKeyFile": "master.domino-lab.net",
+                  "HTTP_SSLKeyFile": "main.domino.lab",
                   "TRANSLOG_AutoFixup": "",
                   "TRANSLOG_MaxSize": 1024,
                   "TRANSLOG_Path": "/local/translog",

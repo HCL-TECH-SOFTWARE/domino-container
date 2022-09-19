@@ -24,9 +24,6 @@ spec:
     - name: LANG
       value: "en_US.UTF-8"
 
-    - name: DOMINO_DOCKER_STDOUT
-      value: "yes"
-
     - name: SetupAutoConfigure
       value: "1"
 
@@ -40,7 +37,7 @@ spec:
       value: "Server started on physical node"
 
     name: domino12
-    image: registry.domino-lab.net:5000/hclcom/domino:latest
+    image: registry.domino.lab/hclcom/domino:latest
 
     securityContext:
       capabilities:
@@ -66,7 +63,7 @@ spec:
     livenessProbe:
       exec:
         command:
-        - /domino_docker_healthcheck.sh
+        - /healthcheck.sh
 
       initialDelaySeconds: 60
       periodSeconds: 20
@@ -74,7 +71,7 @@ spec:
     readinessProbe:
       exec:
         command:
-        - /domino_docker_healthcheck.sh
+        - /healthcheck.sh
         - ready
 
       initialDelaySeconds: 60

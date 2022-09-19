@@ -210,6 +210,10 @@ for a in $@; do
       DOMINO_VOLUME=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
+    -env=*)
+      CONTAINER_FULL_ENV_FILE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
     -?|-h|-help|help)
       print_help "$0"
       exit 0
@@ -289,14 +293,16 @@ if [ -z "$CONTAINER_NETWORK" ]; then
   fi
 fi
 
-CONTAINER_FULL_ENV_FILE=.env
+if [ -z "$CONTAINER_FULL_ENV_FILE" ]; then
+  CONTAINER_FULL_ENV_FILE="$SCRIPT_DIR/.env"
+fi
 
 if [ -n "$CONTAINER_FULL_ENV_FILE" ]; then
 
   if [ -r "$CONTAINER_FULL_ENV_FILE" ]; then
     CONTAINER_ENV_FILE_OPTION="--env-file $CONTAINER_FULL_ENV_FILE"
   else
-    log_and_error "Error - Cannot read environment file [$CONTAINER_FULL_ENV_FILE]"
+    log_error "Error - Cannot read environment file [$CONTAINER_FULL_ENV_FILE]"
   fi
 fi
 
@@ -737,5 +743,6 @@ if [ "$NO_CONTAINER_STOP" = "yes" ]; then
   log "Keeping Domino server running on request"
 fi
 
-exit 0
+# Return number of errors (0 = success)
+exit $count_error
 

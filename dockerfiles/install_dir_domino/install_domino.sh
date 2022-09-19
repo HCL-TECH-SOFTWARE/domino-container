@@ -385,6 +385,9 @@ set_default_notes_ini_variables()
 
   # Allow server names with dots and undercores
   set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION" "1"
+
+  # Enable remote disk stats for container by default
+  set_ini_var_if_not_set $DOMINO_DATA_PATH/notes.ini "EnableRemoteDiskStats" "1"
 }
 
 install_perl()
@@ -543,8 +546,8 @@ echo "NOMAD_VERSION         = [$NOMAD_VERSION]"
 echo "CAPI_VERSION          = [$CAPI_VERSION]"
 echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
 echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
-echo "SPECIAL_CURL_ARGS"    = [$SPECIAL_CURL_ARGS]"
-echo "BUILD_SCRIPT_OPTIONS" = [$BUILD_SCRIPT_OPTIONS]"
+echo "SPECIAL_CURL_ARGS     = [$SPECIAL_CURL_ARGS]"
+echo "BUILD_SCRIPT_OPTIONS  = [$BUILD_SCRIPT_OPTIONS]"
 
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)

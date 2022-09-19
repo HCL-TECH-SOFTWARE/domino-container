@@ -40,6 +40,8 @@ docker run -it \
     -p 1352:1352 \
     -v dominodata_demo:/local/notesdata \
     --stop-timeout=60 \
+    --cap-add=SYS_PTRACE \
+    --cap-add=NET_BIND_SERVICE \
     --name domino12 \
     hclcom/domino:latest
 ```

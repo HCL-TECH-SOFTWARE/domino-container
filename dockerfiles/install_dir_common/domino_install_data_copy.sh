@@ -100,6 +100,11 @@ copy_files_for_major_version()
   log_file "DOMINO_VERSION: [$DOMINO_VERSION]"
   log_file "INSTALLED_VERSION: [$INSTALLED_VERSION]"
 
+  # Check at every run: Enable HCL password extension manager if password set
+  if [ -n "$secretpwfile" ]; then
+    add_list_ini $DOMINO_DATA_PATH/notes.ini "EXTMGR_ADDINS" "libextpw.so"
+  fi
+
   if [ "$DOMINO_VERSION" = "$INSTALLED_VERSION" ]; then
     log_file "Data already installed for $DOMINO_VERSION"
     return 0
