@@ -7,7 +7,7 @@ domino|11.0.1FP6|Domino_1101FP6_Linux.tar|-|9c9d85495f55ffe434321bfc42ec2cc3924f
 domino|12.0.0|Domino_12.0_Linux_English.tar|-|f8a8618c20717a04826344ca4fec808351c523d754737a688d86edd4f445ff40
 domino|12.0.1|Domino_12.0.1_Linux_English.tar|-|a9d561b05f7b6850ed1230efa68ea1931cfdbb44685aad159613c29fa15e5eea
 domino|12.0.1FP1|Domino_1201FP1_Linux.tar|-|7aad22da2dfaa43ff3766d0894014da8d522b19aa5dacaf7a7a0bf6f34ad6d1d
-domino|12.0.2EAP4|Domino_12.0.2_Linux_English_EAP4.tar|-|53234414a5a1f23906d6f4527a22426d47cc3ee8e06c1356eb8aa44438219d2b
+domino|12.0.2EAP5|Domino_12.0.2_Linux_English_EAP5.tar|-|a284b3a5ff0ab41815b93324e64e7a0b428208d83266a05a7406ef740ae2bc9e
 traveler|11.0.0|Traveler_11.0_Linux_ML.tar.gz|-|381bfae133eb7288f37c531a636a8ec049d1d7bbb16318b40254e0ed08a294d8
 traveler|11.0.1|Traveler_11.0.1_Linux_ML.tar.gz|-|b3ef80877ad4892e2c8d78b12f4086118baf7c4377af4c459f4455e4898d80ff
 traveler|11.0.1FP1|Traveler_11.0.1FP1_Linux_ML.tar.gz|-|72b77c1aca83bdb5f3d5fd2af6e8c7201108b9d67ea3290bdafb6c215e452966
@@ -18,7 +18,7 @@ traveler|12.0.0FP2|Traveler_12.0.0FP2_Linux_ML.tar.gz|-|30a0297dbdba9fc7e5dfd9fc
 traveler|12.0.1|Traveler_12.0.1_Linux_ML.tar.gz|-|d8e5ed96e4d58c9e8d4ebc0b2c91b18371b4c4db3423672ac07baeb56880faaa
 traveler|12.0.1FP1|Traveler_12.0.1FP1_Linux_ML.tar.gz|-|f8106fcf5a480880e61fca778d6aef5f775dcc402f6ca4a32d3c7e1a7cdd0d96
 traveler|12.0.1FP2|Traveler_12.0.1FP2_Linux_ML.tar.gz|-|9555122d6cae0605ad482f1bd67af8d143a7026c3c2abaa3d0350c787d695527
-traveler|12.0.2EAP4|Traveler_12.0.2_Linux_ML_EAP4.tar.gz|-|c54b538ad4a8b57089e03b3cf346dad12440c3a4989b00ee8f398b139a2a92de
+traveler|12.0.2EAP5|Traveler_12.0.2_Linux_ML_EAP5.tar.gz|-|0809fa5a483a4282ab0192ab4b0cb8d45cf16262583314770549dd4c03300ced
 volt|1.0.4.10|hcl.domino.volt-1.0.4.10.zip|-|0890b7314e0398d37d82a76de48b52a95723ea91d4c01cb1080ad0583a5420f8
 volt|1.0.5.15|hcl.domino.volt-1.0.5.15.zip|-|0efb0a18deb690d1e2b31790bab6628565aae88815ed2c8d69f1f7ff820f26db
 leap|1.0.5.15|hcl.domino.volt-1.0.5.15.zip|-|0efb0a18deb690d1e2b31790bab6628565aae88815ed2c8d69f1f7ff820f26db
