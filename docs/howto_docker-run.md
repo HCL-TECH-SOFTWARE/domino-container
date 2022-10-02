@@ -23,7 +23,7 @@ Make sure to specify the base image name at the very end of this command.
 Note: For values containing blanks use quotes around the whole env parameter!
 
 ```bash
-docker run -it \
+docker run -it -d \
      -e SetupAutoConfigure=1 \
      -e SERVERSETUP_SERVER_TYPE=first \
      -e SERVERSETUP_ADMIN_FIRSTNAME=John \

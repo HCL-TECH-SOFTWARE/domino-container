@@ -29,31 +29,9 @@ limitation URLs or references to any third party websites.
 
 This notices file contains information specific to the container image for Domino.  See Domino notices file for details specific to Domino.
 
-
-
-bzip2
-, libbzip2
-copyright (C) 1996-2019 Julian R Seward.  All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-2. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.  If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-3. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-4. The name of the author may not be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-Julian Seward, jseward@acm.org
-bzip2/libbzip2 version 1.0.8 of 13 July 2019
-
-
-
-
-
 file
 
-
 Copyright (c) Ian F. Darwin 1986, 1987, 1989, 1990, 1991, 1992, 1994, 1995.
-
 
 Software written by Ian F. Darwin and others; maintained 1994- Christos Zoulas.
 
@@ -67,32 +45,85 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+Unzip
 
+Copyright (c) 1990-2009 Info-ZIP.  All rights reserved.
+
+For the purposes of this copyright and license, "Info-ZIP" is defined as
+the following set of individuals:
+
+   Mark Adler, John Bush, Karl Davis, Harald Denker, Jean-Michel Dubois,
+   Jean-loup Gailly, Hunter Goatley, Ed Gordon, Ian Gorman, Chris Herborth,
+   Dirk Haase, Greg Hartwig, Robert Heath, Jonathan Hudson, Paul Kienitz,
+   David Kirschbaum, Johnny Lee, Onno van der Linden, Igor Mandrichenko,
+   Steve P. Miller, Sergio Monesi, Keith Owens, George Petrov, Greg Roelofs,
+   Kai Uwe Rommel, Steve Salisbury, Dave Smith, Steven M. Schweda,
+   Christian Spieler, Cosmin Truta, Antoine Verheijen, Paul von Behren,
+   Rich Wales, Mike White.
+
+This software is provided "as is," without warranty of any kind, express
+or implied.  In no event shall Info-ZIP or its contributors be held liable
+for any direct, indirect, incidental, special or consequential damages
+arising out of the use of or inability to use this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the above disclaimer and the following restrictions:
+
+    1. Redistributions of source code (in whole or in part) must retain
+       the above copyright notice, definition, disclaimer, and this list
+       of conditions.
+
+    2. Redistributions in binary form (compiled executables and libraries)
+       must reproduce the above copyright notice, definition, disclaimer,
+       and this list of conditions in documentation and/or other materials
+       provided with the distribution.  Additional documentation is not needed
+       for executables where a command line license option provides these and
+       a note regarding this option is in the executable's startup banner.  The
+       sole exception to this condition is redistribution of a standard
+       UnZipSFX binary (including SFXWiz) as part of a self-extracting archive;
+       that is permitted without inclusion of this license, as long as the
+       normal SFX banner has not been removed from the binary or disabled.
+
+    3. Altered versions--including, but not limited to, ports to new operating
+       systems, existing ports with new graphical interfaces, versions with
+       modified or added functionality, and dynamic, shared, or static library
+       versions not from Info-ZIP--must be plainly marked as such and must not
+       be misrepresented as being the original source or, if binaries,
+       compiled from the original source.  Such altered versions also must not
+       be misrepresented as being Info-ZIP releases--including, but not
+       limited to, labeling of the altered versions with the names "Info-ZIP"
+       (or any variation thereof, including, but not limited to, different
+       capitalizations), "Pocket UnZip," "WiZ" or "MacZip" without the
+       explicit permission of Info-ZIP.  Such altered versions are further
+       prohibited from misrepresentative use of the Zip-Bugs or Info-ZIP
+       e-mail addresses or the Info-ZIP URL(s), such as to imply Info-ZIP
+       will provide support for the altered versions.
+
+    4. Info-ZIP retains the right to use the names "Info-ZIP," "Zip," "UnZip,"
+       "UnZipSFX," "WiZ," "Pocket UnZip," "Pocket Zip," and "MacZip" for its
+       own source and binary releases.
 
 
 LSOF
+
 This product is distributed with the above content (the "LGPL Software"), which is governed by the following terms:
 
-The LGPL Software is open source software that is used with this HCL software program (the �HCL Product�). The LGPL Software is not owned by HCL Technologies ("HCL"). Use, copying, distribution and modification of the LGPL Software are governed by the GNU Lesser General Public License ("LGPL") version 2.1, February 1999. A copy of the LGPL license can be found
+The LGPL Software is open source software that is used with this HCL software program (the “HCL Product”). The LGPL Software is not owned by HCL Technologies ("HCL"). Use, copying, distribution and modification of the LGPL Software are governed by the GNU Lesser General Public License ("LGPL") version 2.1, February 1999. A copy of the LGPL license can be found
 in the distribution of the LGPL Software.  Additionally a copy of the LGPL license can be found at http://www.opensource.org/licenses.
 
 Use of the HCL Product is governed solely by the HCL license agreement ("EULA"), not by the LGPL license. You cannot use, copy, modify or redistribute any HCL Product code except as may be expressly set forth in the EULA. The LGPL Software is provided "AS IS" WITHOUT WARRANTY OR CONDITION OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. Further details of the disclaimer of warranty with respect to the LGPL Software can be found in the LGPL license itself.
 
 
-
-
-
-
-GDB; Net-tools; Procps-ng; Rsync
-
+GDB; Net-tools; Procps-ng; Gettext; Hostname; diffutils
 
 This product is distributed with the above subcomponents (the "GPL Software"), the use of which is governed by the following terms:
 
 The GPL Software is open source software that is used with this HCL software program (the "HCL Product"). The GPL Software is not owned by HCL Technologies (HCL). Use, copying, distribution and modification of the GPL Software is governed by the GNU General Public License (GPL) version 2.0. A copy of the GPL license can be found in the same directory where the GPL Software is located.   Additionally, a copy of the GPL license can be found at http://www.opensource.org/licenses or write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA. Use of the HCL Product is governed solely by the HCL license agreement (EULA), not by the GPL license. You cannot use, copy, modify or redistribute any HCL Product code except as may be expressly set forth in the EULA. The GPL Software is provided AS IS WITHOUT WARRANTY OR CONDITION OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. Further details of the disclaimer of warranty with respect to the GPL Software can be found in the GPL license itself. To the full extent permitted under applicable law, HCL disclaims all warranties and liability arising from or related to any use of the GPL Software.
 
 
-
 ------------------------------------------------
 
 
 End of Notices
+ 

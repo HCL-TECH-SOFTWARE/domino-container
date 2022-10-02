@@ -30,7 +30,7 @@ capi|12.0.0|CAPIToolkit_1200_MP.zip|-|545869c8a09c98ac8fde06fdff6f106060f09705e6
 borg|1.1.17|https://github.com/borgbackup/borg/releases/download/1.1.17/borg-linux64|-|21484d30271478d4a01aad1b286973443b50afc5379e4a6aef40da3379e21ddf
 borg|1.2.0|https://github.com/borgbackup/borg/releases/download/1.2.0/borg-linux64|-|df271a523434a445c783c1a0bc3dd599521d6a6a25acd2766e9a5577edb6018f
 safelinx|1.3.0.0|HCL-SafeLinx-1300-x86_64.tar.gz|-|ea78531287ea3573b8d008cb0f4aa951d94855dcf9807bb745bd631d8ba32edf
-nomadweb|1.0.3|20220325-2893-nomad_web_deploy.zip|-|1b133a30ec49dd4a4a071e76d3ece94889ba73b201d82e2dcd57c57eae00b364
 nomadweb|1.0.4|HCL_Nomad_web_1.0.4_20220708-3269.zip|-|12ec274643f8fa9aa7f1b4e6263aa346b739ab9a7452c1a67ce6c665d4a3b5c2
+nomadweb|1.0.5|HCL_Nomad_web_1.0.5_20220921-3553.zip|-|5877e694bd3cec4bde5b1fb8cadd7531991df893513a248016719131b4e893e3
 nomad|1.0.5beta2-12.0.2EA4|nomad-server-1.0.5-450-for-domino-1202-linux.tgz|-|6008387f7fc420df5a410b4a157b349b2116b4a87c41ac88fc35f9b5357b38c2
-nomad|1.0.5beta2-12.0.1|nomad-server-1.0.5-450-for-domino-1201-linux.tgz|-|32b07722402f072e4a8ea624087dac4817c382a4d563113e00841b887b0bb36b
+nomad|1.0.5-12.0.1|nomad-server-1.0.5-for-domino-1201-linux.tgz|-|1fc58c3c7f092c97991066588f74a284b54179544f2765769d8b976bdeb0df5e
