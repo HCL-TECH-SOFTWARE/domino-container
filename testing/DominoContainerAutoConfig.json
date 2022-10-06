@@ -59,7 +59,31 @@
         "TLSKeyType": "ES384",
         "certExpirationDays": 365
       }
+    },
+
+    "registerUsers": {
+      "defaults": {
+        "saveIDToPersonDocument": false,
+        "mailTemplatePath": "mail12.ntf",
+        "password": "default-super-secret-user-password",
+        "enableFullTextIndex": true,
+        "certificateExpirationMonths": 42
+      },
+
+      "users": [
+        {
+          "firstName": "Jane",
+          "lastName": "Smith",
+          "shortName": "jsmith",
+          "saveIDToPersonDocument": false,
+          "internetAddress": "jane.smith@notes.lab",
+          "IDFilePath": "jsmith.id",
+          "password": "domino4ever",
+          "mailFilePath": "mail/jsmith.nsf"
+        }
+      ]
     }
+
   },
 
   "IDVault": {

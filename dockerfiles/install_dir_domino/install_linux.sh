@@ -71,7 +71,7 @@ install_linux_packages_hcl()
 {
   # Only install minimum required packages for redistributable UBI image
 
-  install_packages hostname unzip lsof gdb file net-tools procps-ng diffutils 
+  install_packages hostname unzip lsof gdb file net-tools procps-ng diffutils gettext
 
   # gdb installs also the C compiler, which is not required and increases image size
   remove_packages gcc make
