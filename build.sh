@@ -678,6 +678,18 @@ set_standard_image_labels()
     CONTAINER_SAFELINX_DESCRIPTION="HCL SafeLinx - Secure reverse proxy & VPN"
   fi
 
+  if [ -z "$CONTAINER_OPENSHIFT_EXPOSED_SERVICES" ]; then
+    CONTAINER_OPENSHIFT_EXPOSED_SERVICES="1352:nrpc 80:http 110:pop3 143:imap 389:ldap 443:https 636:ldaps 993:imaps 995:pop3s"
+  fi
+
+  if [ -z "$CONTAINER_OPENSHIFT_MIN_MEMORY" ]; then
+    CONTAINER_OPENSHIFT_MIN_MEMORY="2Gi"
+  fi
+
+  if [ -z "$CONTAINER_OPENSHIFT_MIN_CPU" ]; then
+    CONTAINER_OPENSHIFT_MIN_CPU=2
+  fi
+
 }
 
 check_exposed_ports()
@@ -714,15 +726,15 @@ build_domino()
     --label architecture="x86_64" \
     --label io.k8s.description="$CONTAINER_DOMINO_DESCRIPTION" \
     --label io.k8s.display-name="$CONTAINER_DOMINO_NAME" \
-    --label io.openshift.expose-services="1352:nrpc 80:http 110:pop3 143:imap 389:ldap 443:https 636:ldaps 993:imaps 995:pop3s" \
     --label io.openshift.tags="domino" \
+    --label io.openshift.expose-services="$CONTAINER_OPENSHIFT_EXPOSED_SERVICES" \
     --label io.openshift.non-scalable=true \
-    --label io.openshift.min-memory=2Gi \
-    --label io.openshift.min-cpu=2 \
-    --label DominoDocker.maintainer="$CONTAINER_MAINTAINER" \
-    --label DominoDocker.description="$CONTAINER_DOMINO_DESCRIPTION" \
-    --label DominoDocker.version="$DOCKER_IMAGE_VERSION" \
-    --label DominoDocker.buildtime="$BUILDTIME" \
+    --label io.openshift.min-memory="$CONTAINER_OPENSHIFT_MIN_MEMORY" \
+    --label io.openshift.min-cpu="$CONTAINER_OPENSHIFT_MIN_CPU" \
+    --label DominoContainer.maintainer="$CONTAINER_MAINTAINER" \
+    --label DominoContainer.description="$CONTAINER_DOMINO_DESCRIPTION" \
+    --label DominoContainer.version="$DOCKER_IMAGE_VERSION" \
+    --label DominoContainer.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME=$PROD_NAME \
     --build-arg PROD_VER=$PROD_VER \
     --build-arg PROD_FP=$PROD_FP \
@@ -764,10 +776,14 @@ build_traveler()
     --label architecture="x86_64" \
     --label io.k8s.description="$CONTAINER_TRAVELER_DESCRIPTION" \
     --label io.k8s.display-name="$CONTAINER_TRAVELER_NAME" \
-    --label io.openshift.expose-services="1352:nrpc 25:smtp 80:http 389:ldap 443:https 636:ldaps" \
-    --label TravelerDocker.description="$CONTAINER_TRAVELER_DESCRIPTION" \
-    --label TravelerDocker.version="$DOCKER_IMAGE_VERSION" \
-    --label TravelerDocker.buildtime="$BUILDTIME" \
+    --label io.openshift.tags="traveler" \
+    --label io.openshift.expose-services="$CONTAINER_OPENSHIFT_EXPOSED_SERVICES" \
+    --label io.openshift.non-scalable=true \
+    --label io.openshift.min-memory="$CONTAINER_OPENSHIFT_MIN_MEMORY" \
+    --label io.openshift.min-cpu="$CONTAINER_OPENSHIFT_MIN_CPU" \
+    --label TravelerContainer.description="$CONTAINER_TRAVELER_DESCRIPTION" \
+    --label TravelerContainer.version="$DOCKER_IMAGE_VERSION" \
+    --label TravelerContainer.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME="$PROD_NAME" \
     --build-arg PROD_VER="$PROD_VER" \
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
@@ -794,10 +810,14 @@ build_volt()
     --label architecture="x86_64" \
     --label io.k8s.description="$CONTAINER_VOLT_DESCRIPTION" \
     --label io.k8s.display-name="$CONTAINER_VOLT_NAME" \
-    --label io.openshift.expose-services="1352:nrpc 25:smtp 80:http 389:ldap 443:https 636:ldaps" \
-    --label VoltDocker.description="$CONTAINER_VOLT_DESCRIPTION" \
-    --label VoltDocker.version="$DOCKER_IMAGE_VERSION" \
-    --label VoltDocker.buildtime="$BUILDTIME" \
+    --label io.openshift.tags="volt" \
+    --label io.openshift.expose-services="$CONTAINER_OPENSHIFT_EXPOSED_SERVICES" \
+    --label io.openshift.non-scalable=true \
+    --label io.openshift.min-memory="$CONTAINER_OPENSHIFT_MIN_MEMORY" \
+    --label io.openshift.min-cpu="$CONTAINER_OPENSHIFT_MIN_CPU" \
+    --label VoltContainer.description="$CONTAINER_VOLT_DESCRIPTION" \
+    --label VoltContainer.version="$DOCKER_IMAGE_VERSION" \
+    --label VoltContainer.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME="$PROD_NAME" \
     --build-arg PROD_VER="$PROD_VER" \
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
@@ -824,10 +844,14 @@ build_leap()
     --label architecture="x86_64" \
     --label io.k8s.description="$CONTAINER_LEAP_DESCRIPTION" \
     --label io.k8s.display-name="$CONTAINER_LEAP_NAME" \
-    --label io.openshift.expose-services="1352:nrpc 25:smtp 80:http 389:ldap 443:https 636:ldaps" \
-    --label VoltDocker.description="$CONTAINER_LEAP_DESCRIPTION" \
-    --label VoltDocker.version="$DOCKER_IMAGE_VERSION" \
-    --label VoltDocker.buildtime="$BUILDTIME" \
+    --label io.openshift.tags="leap" \
+    --label io.openshift.expose-services="$CONTAINER_OPENSHIFT_EXPOSED_SERVICES" \
+    --label io.openshift.non-scalable=true \
+    --label io.openshift.min-memory="$CONTAINER_OPENSHIFT_MIN_MEMORY" \
+    --label io.openshift.min-cpu="$CONTAINER_OPENSHIFT_MIN_CPU" \
+    --label LeapContainer.description="$CONTAINER_LEAP_DESCRIPTION" \
+    --label LeapContainer.version="$DOCKER_IMAGE_VERSION" \
+    --label LeapContainer.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME="$PROD_NAME" \
     --build-arg PROD_VER="$PROD_VER" \
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
@@ -855,6 +879,8 @@ build_safelinx()
     --label io.k8s.description="$CONTAINER_SAFELINX_DESCRIPTION" \
     --label io.k8s.display-name="$CONTAINER_SAFELINX_NAME" \
     --label io.openshift.expose-services="80:http 443:https" \
+    --label io.openshift.min-memory="2Gi" \
+    --label io.openshift.min-cpu=2 \
     --label SafeLinxContainer.description="$CONTAINER_SAFELINX_DESCRIPTION" \
     --label SafeLinxContainer.version="$DOCKER_IMAGE_VERSION" \
     --label SafeLinxContainer.buildtime="$BUILDTIME" \
@@ -1520,6 +1546,11 @@ if [ "$1" = "save" ]; then
   exit 0
 fi
 
+# Install OpenSSL by default
+if [ -z "$OPENSSL_INSTALL" ]; then
+  OPENSSL_INSTALL=yes
+fi
+
 for a in $@; do
 
   p=$(echo "$a" | awk '{print tolower($0)}')
@@ -1552,7 +1583,6 @@ for a in $@; do
         get_current_addon_version nomad NOMAD_VERSION
       fi
       ;;
-
 
    -mysql*|+mysql*)
       MYSQL_INSTALL=yes
@@ -1709,6 +1739,10 @@ for a in $@; do
 
     -openssl)
       OPENSSL_INSTALL=yes
+      ;;
+
+   -noopenssl)
+      OPENSSL_INSTALL=no
       ;;
 
     -k8s-runas)
