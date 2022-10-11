@@ -209,14 +209,16 @@ check_download_file_links
 check_download_and_decrypt
 
 # Ensure server.id name is always default name and rename if needed
-if [ -e "$ServerIDFile" ]; then
-  if [ ! "$ServerIDFile" = "server.id" ]; then
-    secure_move_file "$ServerIDFile" "server.id"
+if [ -n "$SERVERSETUP_SERVER_IDFILEPATH" ]; then
+  if [ -e "$SERVERSETUP_SERVER_IDFILEPATH" ]; then
+    if [ ! "$SERVERSETUP_SERVER_IDFILEPATH" = "$DOMINO_DATA_PATH/server.id" ]; then
+
+      secure_move_file "$SERVERSETUP_SERVER_IDFILEPATH" "$DOMINO_DATA_PATH/server.id"
+      SERVERSETUP_SERVER_IDFILEPATH=$DOMINO_DATA_PATH/server.id
+
+    fi
   fi
 fi
-
-# Ensure it is set, even not specified
-ServerIDFile=server.id
 
 # Domino One-Touch needs the hostname. Try to determine it, if not specified.
 
