@@ -452,20 +452,28 @@ install_startscript()
     header "Installing Start Script"
 
     # Run start script installer
-    $INSTALL_DIR/startscript/install_script
+    cd $INSTALL_DIR/startscript
+    ./install_script
 
-    return 0
+  else
+
+    header "Installing Start Script $STARTSCRIPT_VER"
+  
+    cd $INSTALL_DIR
+    get_download_name startscript $STARTSCRIPT_VER
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME"
+    cd domino-startscript
+    ./install_script
   fi
 
-  header "Installing Start Script $STARTSCRIPT_VER"
-  
+  if [ -n "$BORG_INSTALL" ]; then
+    header "Installing Domino Borg Backup integration"
+    # Install Borg Backup scripts
+    ./install_borg
+  fi
+
   cd $INSTALL_DIR
-  get_download_name startscript $STARTSCRIPT_VER
-  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" 
-  cd domino-startscript
-  ./install_script
-  cd $INSTALL_DIR
-  rm -rf domino-startscript
+  remove_directory domino-startscript
 
 }
 
@@ -711,12 +719,6 @@ if [ -x /usr/libexec/gdb ]; then
 fi
 
 # Install Setup Files and Docker Entrypoint
-
-if [ -n "$BORG_INSTALL" ]; then
-  header "Installing Domino Borg Backup integration"
-  # Install Borg Backup scripts
-  $INSTALL_DIR/domino-startscript/install_borg
-fi
 
 header "Final Steps & Configuration"
 
