@@ -32,6 +32,10 @@ update_traveler_ini_var()
 
     if [ "$var" = "NTS_BUILD" ]; then
       UPD_INI=1
+    elif [ "$var" = "NTS_TEMPLATE_INSTALL" ]; then
+      UPD_INI=1
+    elif [ "$var" = "NTS_CLIENT_UPDATE" ]; then
+      UPD_INI=1
     else
       return 0
     fi
@@ -127,7 +131,9 @@ copy_files_for_major_version()
 
   debug_show_data_dir "before unzip"
 
-  tar -xvf "$DOMDOCK_INSTALL_DATA_TAR" --overwrite -C "$DOMINO_DATA_PATH" ./iNotes ./domino ./help ./panagenda ./xmlschemas ./aut ./rmeval ./Properties ./W32 "*.ntf" "*.nsf" "*.cnf" >> $LOG_FILE 2>&1
+  # Expand the full data directory (notes.ini is renamed to notes.ini.install)
+  # --overwrite causes issues with read-only files. but also without the option, files are replaced
+  tar -xvf "$DOMDOCK_INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
 
   debug_show_data_dir "after unzip"
 
@@ -145,6 +151,8 @@ copy_files_for_version()
   InstalledFile=$DOMINO_DATA_PATH/domino_$1.txt
 
   if [ ! -r $VersionFile ]; then
+    # Remove fp/if files if not part of the container image
+    remove_file "$InstalledFile"
     return 1
   fi
 
@@ -210,6 +218,10 @@ copy_data_directory()
   log_file_header "Extracting install data directory from [$DOMDOCK_INSTALL_DATA_TAR]"
 
   tar -xvf "$DOMDOCK_INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH" >> $LOG_FILE 2>&1
+
+  # Renaming notes.ini.install to notes.ini
+  mv "$DOMINO_DATA_PATH/notes.ini.install" "$DOMINO_DATA_PATH/notes.ini"
+  log_file "Deploying new notes.ini for new server"
 
   log_file_delim
   debug_show_data_dir "after extract"

@@ -749,6 +749,10 @@ install_k8s_runas_user_support
 # Set notes.ini variables needed
 set_default_notes_ini_variables
 
+# Rename notes.ini to notes.ini.install to allow full extraction of the domino.taz.
+# Separate logic to deploy notes.ini from notes.ini.install if not found
+mv "$DOMINO_DATA_PATH/notes.ini" "$DOMINO_DATA_PATH/notes.ini.install"
+
 # --- Cleanup Routines to reduce image size ---
 
 # Remove Fixpack/Hotfix backup files
