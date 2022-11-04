@@ -26,6 +26,16 @@ TRAVELER_STRING_WARNINGS="Installation completed with warnings."
 INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${PROD_NAME}.taz
 
+
+copy_log()
+{
+ if [ -e "$1" ]; then
+    cp -f "$1" "$2"
+ else
+   echo "Warning: Log file not found: $1"
+ fi
+}
+
 install_traveler()
 {
   header "$PROD_NAME Installation"
@@ -57,6 +67,11 @@ install_traveler()
   if [ ! -e "$DOMINO_DATA_PATH/notes.ini" ]; then
     log_ok "Extracting install notesdata for Traveler install"
     tar xf "$DOMDOCK_INSTALL_DATA_TAR" -C "$DOMINO_DATA_PATH"
+
+    # Rename install notes.ini to run a Traveler install
+    if [ ! -e "$DOMINO_DATA_PATH/notes.ini" ]; then
+      mv -f "$DOMINO_DATA_PATH/notes.ini.install" "$DOMINO_DATA_PATH/notes.ini"
+    fi
   fi
 
   cd traveler
@@ -65,7 +80,8 @@ install_traveler()
 
   ./TravelerSetup -f $TRAVELER_INSTALLER_PROPERTIES -i SILENT -l en > $INST_TRAVELER_LOG
 
-  cp -f $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log $DOMDOCK_LOG_DIR
+  # Save installer logs into image for reference if present
+  copy_log "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log" "$DOMDOCK_LOG_DIR"
 
   check_file_str "$INST_TRAVELER_LOG" "$TRAVELER_STRING_OK"
 
@@ -81,9 +97,16 @@ install_traveler()
       echo
       log_ok "$PROD_NAME $INST_VER installed successfully (with warnings)"
     else
+
+      header "$INST_TRAVELER_LOG"
+      cat "$INST_TRAVELER_LOG"
       print_delim
-      cat $INST_TRAVELER_LOG
-      print_delim
+
+      if [ -e "/tmp/install/traveler/InstallerError.log" ]; then
+        header "/tmp/install/traveler/InstallerError.log"
+        cat /tmp/install/traveler/InstallerError.log
+        print_delim
+      fi
 
       log_error "Traveler Installation failed!!!"
       exit 1
@@ -139,8 +162,9 @@ set_version
 # Take a backup copy of Product Data Files
 
 cd $DOMINO_DATA_PATH
-tar -czf "$INSTALL_ADDON_DATA_TAR" traveler domino/workspace ${PROD_NAME}_ver.txt
 cp -f $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
+mv "$DOMINO_DATA_PATH/notes.ini" "$DOMINO_DATA_PATH/notes.ini.install"
+tar -czf "$INSTALL_ADDON_DATA_TAR" traveler domino/workspace ${PROD_NAME}_ver.txt
 
 remove_directory "$DOMINO_DATA_PATH"
 create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
