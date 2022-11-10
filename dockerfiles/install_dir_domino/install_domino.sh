@@ -594,8 +594,8 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   # Set security limits for pam modules (su needs it)
   echo >> /etc/security/limits.conf
   echo '# -- Begin Changes Domino --' >> /etc/security/limits.conf
-  echo '* soft nofile 65535' >> /etc/security/limits.conf
-  echo '* hard nofile 65535' >> /etc/security/limits.conf
+  echo '* soft nofile 80000' >> /etc/security/limits.conf
+  echo '* hard nofile 80000' >> /etc/security/limits.conf
   echo '# -- End Changes Domino --' >> /etc/security/limits.conf
 
 else

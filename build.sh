@@ -1632,7 +1632,7 @@ for a in $@; do
       PROD_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
-    9*|10*|11*|12*|v12*)
+    9*|10*|11*|12*|14*|v12*|v14*)
       PROD_VER=$a
       ;;
 
