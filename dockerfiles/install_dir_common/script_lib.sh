@@ -23,6 +23,7 @@ export DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 # Ensure the environment is setup
 export LOTUS=/opt/hcl/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
+export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
 export NUI_NOTESDIR=$LOTUS
 export PATH=$PATH:$DOMINO_DATA_PATH
 export SOFTWARE_FILE=$INSTALL_DIR/software.txt
@@ -792,6 +793,28 @@ remove_notes_ini_var()
 
   return 0
 }
+
+create_link ()
+{
+  SOURCE_FILE=$1
+  TARGET_FILE=$2
+
+  if [ -e "$SOURCE_FILE" ]; then
+    if [ ! -e "$TARGET_FILE" ]; then
+      ln -s "$SOURCE_FILE" "$TARGET_FILE"
+      if [ -e "$TARGET_FILE" ]; then
+         echo "Created link '$SOURCE_FILE' -> '$TARGET_FILE'"
+      else
+         echo "Cannot create link '$SOURCE_FILE' -> '$TARGET_FILE'"
+      fi
+    fi
+  else
+    echo "Cannot create link - file not found '$SOURCE_FILE'"
+  fi
+
+  return 0
+}
+
 
 install_res_links()
 {
