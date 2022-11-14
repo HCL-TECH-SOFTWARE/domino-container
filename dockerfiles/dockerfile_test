@@ -1,7 +1,0 @@
-############################################################################
-# Copyright Nash!Com, Daniel Nashed 2022 - APACHE 2.0 see LICENSE
-############################################################################
-
-FROM hclcom/safelinx:latest
-COPY install_dir_safelinx/entrypoint.sh /entrypoint.sh 
-RUN chmod +x /entrypoint.sh
