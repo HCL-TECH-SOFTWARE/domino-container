@@ -1,5 +1,5 @@
-domino|12.0.1|FP1|
-traveler|12.0.1FP2
+domino|12.0.2
+traveler|12.0.2
 volt|1.0.5.15
 leap|1.0.5.15
 verse|3.0.0
