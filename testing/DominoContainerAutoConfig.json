@@ -42,7 +42,8 @@
       "UPDATE_FULLTEXT_THREAD": "1",
       "FTG_USE_SYS_MEMORY": "1",
       "CertMgr_ACCEPT_TOU": "1",
-      "CERTSTORE_CACHELOG": "1"
+      "CERTSTORE_CACHELOG": "1",
+      "NOMAD_WEB_HOST": "automation.notes.lab"
     },
 
     "security": {
