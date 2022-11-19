@@ -662,11 +662,11 @@ set_standard_image_labels()
   fi
 
   if [ -z "$CONTAINER_LEAP_NAME" ]; then
-    CONTAINER_LEAP_NAME="HCL Leap Community Image"
+    CONTAINER_LEAP_NAME="HCL Domino Leap Community Image"
   fi
 
   if [ -z "$CONTAINER_LEAP_DESCRIPTION" ]; then
-    CONTAINER_LEAP_DESCRIPTION="HCL Leap - Low Code platform"
+    CONTAINER_LEAP_DESCRIPTION="HCL Domino Leap - Low Code platform"
   fi
 
 
