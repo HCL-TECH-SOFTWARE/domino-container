@@ -1,0 +1,29 @@
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2022 - APACHE 2.0 see LICENSE
+############################################################################
+
+ARG NGINX_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
+FROM $NGINX_BASE_IMAGE
+
+# External arguments with a default value
+ARG LinuxYumUpdate=
+ARG LocalInstallDir=/tmp/install
+
+USER root
+
+# Copy Install Files to container
+COPY install_dir_common $LocalInstallDir 
+COPY install_dir_nginx $LocalInstallDir 
+
+# Prepare environment for Domino
+# Update, Install required packages and run separate install script
+
+RUN $LocalInstallDir/install.sh && \
+  rm -rf $LocalInstallDir
+
+# Expose Ports HTTP HTTPS SafeLinx Admin/AdminSSL/Monitoring?
+EXPOSE 80 443
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+USER 1000

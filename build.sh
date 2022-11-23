@@ -301,16 +301,58 @@ dump_config()
   return 0
 }
 
+check_build_nginx_image()
+{
+  if [ -z "$NGINX_IMAGE_NAME" ]; then
+    return 0
+  fi
+
+  local IMAGE_ID="$($CONTAINER_CMD inspect --format "{{.ID}}" $NGINX_IMAGE_NAME 2>/dev/null)"
+
+  if [ -n "$IMAGE_ID" ]; then
+    # Image already exists
+    log "Info: $NGINX_IMAGE_NAME already exists"
+    sleep 1
+    return 0
+  fi
+
+  header "Building NGINX Image $NGINX_IMAGE_NAME ..."
+
+  if [ -z "$NGINX_BASE_IMAGE" ]; then
+    NGINX_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal:latest
+  fi
+
+  # Get Build Time
+  BUILDTIME=$(date +"%d.%m.%Y %H:%M:%S")
+
+  # Switch to directory containing the dockerfiles
+  cd dockerfiles
+
+  export BUILDAH_FORMAT
+
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION -f dockerfile_nginx -t $NGINX_IMAGE_NAME --build-arg NGINX_BASE_IMAGE=$NGINX_BASE_IMAGE .
+
+  cd ..
+
+}
+
 nginx_start()
 {
   # Create a nginx container hosting software download locally
+
+  local IMAGE_NAME=nginx
+
+  if [ -n "$NGINX_IMAGE_NAME" ]; then
+    check_build_nginx_image
+    IMAGE_NAME=$NGINX_IMAGE_NAME
+  fi
 
   # Check if we already have this container in status exited
   STATUS="$($CONTAINER_CMD inspect --format '{{ .State.Status }}' $SOFTWARE_CONTAINER 2>/dev/null)"
 
   if [ -z "$STATUS" ]; then
     echo "Creating Docker container: $SOFTWARE_CONTAINER hosting [$SOFTWARE_DIR]"
-    $CONTAINER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:Z -d nginx
+    $CONTAINER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:Z -d $IMAGE_NAME
   elif [ "$STATUS" = "exited" ]; then
     echo "Starting existing Docker container: $SOFTWARE_CONTAINER"
     $CONTAINER_CMD start $SOFTWARE_CONTAINER
@@ -1630,6 +1672,14 @@ for a in $@; do
 
    -prod_download=*)
       PROD_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+   -nginx=*)
+      NGINX_IMAGE_NAME=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+  -nginxbase=*)
+      NGINX_BASE_IMAGE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     9*|10*|11*|12*|14*|v12*|v14*)

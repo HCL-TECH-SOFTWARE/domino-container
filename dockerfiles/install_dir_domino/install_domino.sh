@@ -512,11 +512,13 @@ harden_binary_dir()
 check_build_options()
 {
 
+  local NoHardenBinDir=
+
   for b in $BUILD_SCRIPT_OPTIONS; do
 
     case "$b" in
-      -HardenBinDir)
-        harden_binary_dir
+      -NoHardenBinDir)
+        NoHardenBinDir=yes
         ;;
 
       *)
@@ -526,6 +528,12 @@ check_build_options()
     esac
 
   done
+
+  if [ "$NoHardenBinDir" = "yes" ]; then
+   echo "Info: Not hardening for binary directory!"
+  else
+    harden_binary_dir
+  fi
 
   return 0
 }
