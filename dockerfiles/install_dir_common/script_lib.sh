@@ -239,6 +239,7 @@ download_and_check_hash()
   local DOWNLOAD_STR=$2
   local TARGET_DIR=$3
   local TARGET_FILE=$4
+  local FILES_TO_EXTRACT=$5
 
   # If "nohash" option is specified, don't check for hash
   if [ "$5" = "nohash" ]; then
@@ -344,7 +345,7 @@ download_and_check_hash()
         FOUND=1
       else
         echo
-        HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+        HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS $FILES_TO_EXTRACT 2>/dev/null) | sha256sum -b | cut -d" " -f1)
         echo
         FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
       fi

@@ -273,6 +273,7 @@ dump_config()
   echo "PROD_VER             : [$PROD_VER]"
   echo "PROD_FP              : [$PROD_FP]"
   echo "PROD_HF              : [$PROD_HF]"
+  echo "DOMLP_VER            : [$DOMLP_VER]"
   echo "PROD_DOWNLOAD_FILE   : [$PROD_DOWNLOAD_FILE]"
   echo "PROD_EXT             : [$PROD_EXT]"
   echo "CHECK_SOFTWARE       : [$CHECK_SOFTWARE]"
@@ -779,6 +780,7 @@ build_domino()
     --label DominoContainer.buildtime="$BUILDTIME" \
     --build-arg PROD_NAME=$PROD_NAME \
     --build-arg PROD_VER=$PROD_VER \
+    --build-arg DOMLP_VER=$DOMLP_VER \
     --build-arg PROD_FP=$PROD_FP \
     --build-arg PROD_HF=$PROD_HF \
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
@@ -1330,6 +1332,10 @@ check_software_status()
       check_software_file "verse" "$VERSE_VERSION"
     fi
 
+    if [ -n "$DOMLP_VER" ]; then
+      check_software_file "domlp" "$DOMLP_VER"
+    fi
+
     if [ -n "$NOMAD_VERSION" ]; then
       check_software_file "nomad" "$NOMAD_VERSION"
     fi
@@ -1396,6 +1402,10 @@ check_software_status()
 
     if [ -n "$VERSE_VERSION" ]; then
       check_software_file "verse" "$VERSE_VERSION"
+    fi
+
+    if [ -n "$DOMLP_VER" ]; then
+      check_software_file "domlp" "$DOMLP_VER"
     fi
 
     if [ -n "$NOMAD_VERSION" ]; then
@@ -1698,6 +1708,10 @@ for a in $@; do
       PROD_HF=$p
       ;;
 
+    -domlp=*)
+      DOMLP_VER=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
     _*)
       PROD_EXT=$a
       ;;
@@ -1845,6 +1859,11 @@ if [ "$PROD_VER" = "latest" ]; then
   if [ -z "$TAG_LATEST" ]; then
     TAG_LATEST="latest"
   fi
+fi
+
+# Calculate the right version for Language Pack
+if [ -n "$DOMLP_VER" ]; then
+  DOMLP_VER=$DOMLP_VER-$PROD_VER
 fi
 
 check_exposed_ports
