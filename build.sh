@@ -1866,6 +1866,11 @@ if [ -n "$DOMLP_VER" ]; then
   DOMLP_VER=$DOMLP_VER-$PROD_VER
 fi
 
+# Calculate the right version for Nomad server for selected Domino version
+if [ -n "$NOMAD_VERSION" ]; then
+  NOMAD_VERSION=$NOMAD_VERSION-$PROD_VER
+fi
+
 check_exposed_ports
 
 # Ensure product versions are always uppercase
