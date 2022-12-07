@@ -6,5 +6,5 @@ verse|3.0.0
 capi|12.0.0
 borg|1.2.0
 safelinx|1.3.0.1
-nomadweb|1.0.5
-nomad|1.0.5
+nomadweb|1.0.6
+nomad|1.0.6
