@@ -225,6 +225,8 @@ usage()
   echo "-verse           adds Verse to a Domino image"
   echo "-nomad           adds the Nomad server to a Domino image"
   echo "-capi            adds the C-API sdk/toolkit to a Domino image"
+  echo "-domlp=de        adds the German Language Pack to the image"
+  echo "-restapi         adds the Domino REST API to the image"
   echo "-k8s-runas       adds K8s runas user support"
   echo "-startscript=x   installs specified start script version from software repository"
   echo
@@ -274,6 +276,7 @@ dump_config()
   echo "PROD_FP              : [$PROD_FP]"
   echo "PROD_HF              : [$PROD_HF]"
   echo "DOMLP_VER            : [$DOMLP_VER]"
+  echo "DOMRESTAPI_VER       : [$DOMRESTAPI_VER]"
   echo "PROD_DOWNLOAD_FILE   : [$PROD_DOWNLOAD_FILE]"
   echo "PROD_EXT             : [$PROD_EXT]"
   echo "CHECK_SOFTWARE       : [$CHECK_SOFTWARE]"
@@ -781,6 +784,7 @@ build_domino()
     --build-arg PROD_NAME=$PROD_NAME \
     --build-arg PROD_VER=$PROD_VER \
     --build-arg DOMLP_VER=$DOMLP_VER \
+    --build-arg DOMRESTAPI_VER=$DOMRESTAPI_VER \
     --build-arg PROD_FP=$PROD_FP \
     --build-arg PROD_HF=$PROD_HF \
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
@@ -1336,6 +1340,10 @@ check_software_status()
       check_software_file "domlp" "$DOMLP_VER"
     fi
 
+    if [ -n "$DOMRESTAPI_VER" ]; then
+      check_software_file "domrestapi" "$DOMRESTAPI_VER"
+    fi
+
     if [ -n "$NOMAD_VERSION" ]; then
       check_software_file "nomad" "$NOMAD_VERSION"
     fi
@@ -1406,6 +1414,10 @@ check_software_status()
 
     if [ -n "$DOMLP_VER" ]; then
       check_software_file "domlp" "$DOMLP_VER"
+    fi
+
+    if [ -n "$DOMRESTAPI_VER" ]; then
+      check_software_file "domrestapi" "$DOMRESTAPI_VER"
     fi
 
     if [ -n "$NOMAD_VERSION" ]; then
@@ -1710,6 +1722,15 @@ for a in $@; do
 
     -domlp=*)
       DOMLP_VER=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -restapi*|+restapi*)
+      DOMRESTAPI_VER=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$DOMRESTAPI_VER" ]; then
+        get_current_addon_version domrestapi DOMRESTAPI_VER
+      fi
+
       ;;
 
     _*)

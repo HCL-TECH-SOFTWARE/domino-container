@@ -371,6 +371,41 @@ install_capi()
   cd $CURRENT_DIR
 }
 
+install_domino_restapi()
+{
+  local ADDON_NAME=domrestapi
+  local ADDON_VER=$1
+
+  if [ -z "$ADDON_VER" ]; then
+    return 0
+  fi
+
+  header "$ADDON_NAME Installation"
+
+  get_download_name $ADDON_NAME $ADDON_VER
+
+  header "Installing $ADDON_NAME $ADDON_VER"
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_restapi
+
+  CURRENT_DIR=$(pwd)
+
+  cd "$DOMINO_DATA_PATH"
+  # Append the servertask line to notes.ini, because Keep installer needs it to detect the server
+  echo "servertasks=" >> notes.ini
+
+  "$Notes_ExecDirectory/jvm/bin/java" -jar "$CURRENT_DIR/domino_restapi/restapiInstall.jar" -d="$DOMINO_DATA_PATH" -i="$DOMINO_DATA_PATH/notes.ini" -r="/opt/hcl/restapi" -p="$Notes_ExecDirectory" -a -s
+
+  if [ "$?" = "0" ]; then
+    log_space Installed $ADDON_NAME
+  else
+    log_error "Domino REST API Installation failed!!!"
+    exit 1
+  fi
+
+  cd $CURRENT_DIR
+}
+
 
 container_set_timezone()
 {
@@ -592,6 +627,7 @@ echo "Version               = [$PROD_VER]"
 echo "Fixpack               = [$PROD_FP]"
 echo "InterimsFix/Hotfix    = [$PROD_HF]"
 echo "DOMLP_VER             = [$DOMLP_VER]"
+echo "DOMRESTAPI_VER        = [$DOMREST_VER]"
 echo "DominoResponseFile    = [$DominoResponseFile]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
@@ -740,6 +776,9 @@ install_nomad "$NOMAD_VERSION"
 
 # Install C-API if requested
 install_capi "$CAPI_VERSION"
+
+# Install Domino REST API if requested
+install_domino_restapi "$DOMRESTAPI_VER"
 
 remove_perl
 
