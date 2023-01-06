@@ -64,7 +64,7 @@ The Nash!Com Domino container script allows you to operate your server. It suppo
 ### Install Domino Container script
 
 ```
-../start_script/install_domino_container
+../domino-startscript/install_dominoctl
 ```
 
 ### Configure your container
@@ -75,7 +75,7 @@ You might want to change the container name and other detailed settings.
 
 
 ```
-domino_container cfg
+dominoctl cfg
 ```
 
 **Note:** The container script by default uses `vi` for editing.
@@ -92,7 +92,7 @@ Usually environment variables are used for setup.
 The following commands opens the environment file, configured for your container.
 
 ```
-domino_container env
+dominoctl env
 ```
 
 ## Start Domino container
@@ -100,20 +100,20 @@ domino_container env
 After specifying the configuration and setup correctly, start the container with the Domino container script.
 
 ```
-domino_container start
+dominoctl start
 ```
 
 ### Domino live console
 
 To start a Domino live console, run the console command.
-The domino_container script leverages and `exec` command into the container.
-The long version of this command would be `domino_container domino console`.
+The dominoctl script leverages and `exec` command into the container.
+The long version of this command would be `dominoctl domino console`.
 
 All console commands can be executed via `domino`.
 This command passes command line parameters to the `domino` start script.
 
 ```
-domino_container console
+dominoctl console
 
 ```
 
