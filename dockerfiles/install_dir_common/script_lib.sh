@@ -239,6 +239,7 @@ download_and_check_hash()
   local DOWNLOAD_STR=$2
   local TARGET_DIR=$3
   local TARGET_FILE=$4
+  local FILES_TO_EXTRACT=$5
 
   # If "nohash" option is specified, don't check for hash
   if [ "$5" = "nohash" ]; then
@@ -344,7 +345,7 @@ download_and_check_hash()
         FOUND=1
       else
         echo
-        HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+        HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS $FILES_TO_EXTRACT 2>/dev/null) | sha256sum -b | cut -d" " -f1)
         echo
         FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
       fi
@@ -947,19 +948,22 @@ set_ini_var_if_not_set()
 install_package()
 {
  if [ -x /usr/bin/zypper ]; then
-   zypper install -y "$@"
+   /usr/bin/zypper install -y "$@"
 
  elif [ -x /usr/bin/dnf ]; then
-   dnf install -y "$@"
+   /usr/bin/dnf install -y "$@"
+
+ elif [ -x /usr/bin/tdnf ]; then
+   /usr/bin/tdnf install -y "$@"
 
  elif [ -x /usr/bin/microdnf ]; then
-   microdnf install -y "$@"
+   /usr/bin/microdnf install -y "$@"
 
  elif [ -x /usr/bin/yum ]; then
-   yum install -y "$@"
+   /usr/bin/yum install -y "$@"
 
  elif [ -x /usr/bin/apt-get ]; then
-   apt-get install -y "$@"
+   /usr/bin/apt-get install -y "$@"
 
  else
   echo "No package manager found!"
@@ -979,19 +983,22 @@ install_packages()
 remove_package()
 {
  if [ -x /usr/bin/zypper ]; then
-   zypper rm -y "$@"
+   /usr/bin/zypper rm -y "$@"
 
  elif [ -x /usr/bin/dnf ]; then
-   dnf remove -y "$@"
+   /usr/bin/dnf remove -y "$@"
+
+ elif [ -x /usr/bin/tdnf ]; then
+   /usr/bin/tdnf remove -y "$@"
 
  elif [ -x /usr/bin/microdnf ]; then
-   microdnf remove -y "$@"
+   /usr/bin/microdnf remove -y "$@"
 
  elif [ -x /usr/bin/yum ]; then
-   yum remove -y "$@"
+   /usr/bin/yum remove -y "$@"
 
  elif [ -x /usr/bin/apt-get ]; then
-   apt-get remove -y "$@"
+   /usr/bin/apt-get remove -y "$@"
 
  fi
 }
@@ -1036,35 +1043,43 @@ check_linux_update()
   if [ -x /usr/bin/zypper ]; then
 
     header "Updating Linux via zypper"
-    zypper refresh
-    zypper update -y
+    /usr/bin/zypper refresh
+    /usr/bin/zypper update -y
 
   elif [ -x /usr/bin/dnf ]; then
 
     header "Updating Linux via dnf"
-    dnf update -y
+    /usr/bin/dnf update -y
+
+  elif [ -x /usr/bin/tdnf ]; then
+
+    header "Updating Linux via tdnf"
+    /usr/bin/tdnf update -y
 
   elif [ -x /usr/bin/microdnf ]; then
 
     header "Updating Linux via microdnf"
-    microdnf update -y
+    /usr/bin/microdnf update -y
 
   elif [ -x /usr/bin/yum ]; then
 
     header "Updating Linux via yum"
-    yum update -y
+    /usr/bin/yum update -y
 
   elif [ -x /usr/bin/apt-get ]; then
 
-    header "Updating Linux via apt-get"
-    apt-get update -y
+    header "Updating Linux via apt"
+
+    echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
+    /usr/bin/apt-get update -y
 
     # Needed by Astra Linux, Ubuntu and Debian. Should be installed before updating Linux but after updating the repo!
     if [ -x /usr/bin/apt-get ]; then
       install_package apt-utils
     fi
 
-    apt-get upgrade -y
+    /usr/bin/apt-get upgrade -y
 
   fi
 }
@@ -1074,24 +1089,34 @@ clean_linux_repo_cache()
   if [ -x /usr/bin/zypper ]; then
 
     header "Cleaning zypper cache"
-    zypper clean --all >/dev/null
+    /usr/bin/zypper clean --all >/dev/null
     rm -fr /var/cache
 
   elif [ -x /usr/bin/dnf ]; then
 
     header "Cleaning dnf cache"
-    dnf clean all >/dev/null
+    /usr/bin/dnf clean all >/dev/null
+
+  elif [ -x /usr/bin/tdnf ]; then
+
+    header "Cleaning tdnf cache"
+    /usr/bin/tdnf clean all >/dev/null
+
+  elif [ -x /usr/bin/microdnf ]; then
+
+    header "Cleaning microdnf cache"
+    /usr/bin/microdnf clean all >/dev/null
 
   elif [ -x /usr/bin/yum ]; then
 
     header "Cleaning yum cache"
-    yum clean all >/dev/null
+    /usr/bin/yum clean all >/dev/null
     rm -fr /var/cache/yum
 
   elif [ -x /usr/bin/apt-get ]; then
 
     header "Cleaning apt cache"
-    apt-get clean
+    /usr/bin/apt-get clean
   fi
 }
 

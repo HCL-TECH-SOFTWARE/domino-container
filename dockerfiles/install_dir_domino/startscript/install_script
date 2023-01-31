@@ -84,6 +84,12 @@ if [ ! -e "$DOMINO_START_SCRIPT_DIR" ]; then
   chmod 755 /opt/nashcom
 fi
 
+
+# Ubuntu and other platforms don't have a /etc/sysconfig directory. just create one to keep the config aligned
+if [ ! -e /etc/sysconfig ]; then
+  mkdir -p -m 755 /etc/sysconfig
+fi
+
 install_file "$START_SCRIPT_DIR/rc_domino" "$DOMINO_SCRIPT_BIN" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/rc_domino_script" "$DOMINO_START_SCRIPT_DIR/rc_domino_script" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/nshinfo.sh" "$DOMINO_START_SCRIPT_DIR/nshinfo.sh" $ROOT_USER $ROOT_GROUP 755

@@ -144,7 +144,7 @@ check_download_file_links()
 {
   # Domino One-Touch ID file variables
 
-  # Donwload ID files if they start with http(s):
+  # Download ID files if they start with http(s):
   download_file_link SERVERSETUP_ORG_CERTIFIERIDFILEPATH
   download_file_link SERVERSETUP_ORG_ORGUNITIDFILEPATH
   download_file_link SERVERSETUP_SERVER_IDFILEPATH
@@ -153,7 +153,7 @@ check_download_file_links()
 
   download_file_link SetupAutoConfigureParams
 
-  # Additional Community image paramters
+  # Additional Community image parameters
   download_file_link SafeIDFile
 
   # Start Script template Domino One Touch setup download
@@ -182,7 +182,7 @@ log_file_header "$NOW"
 # Switch to data directory for downloads
 cd $DOMINO_DATA_PATH
 
-# If CustomNotesdataZip file downlaod URL defined, download from remote location and unzip
+# If CustomNotesdataZip file download URL defined, download from remote location and unzip
 download_file_link CustomNotesdataZip
 
 # Expand & delete ZIP

@@ -15,6 +15,7 @@ DOM_V12_STRING_OK="Domino Server Installation Successful"
 LP_STRING_OK="Selected Language Packs are successfully installed."
 FP_STRING_OK="The installation completed successfully."
 HF_STRING_OK="The installation completed successfully."
+#LP_STRING_OK="Installation: Successful."
 TRAVELER_STRING_OK="Installation completed with warnings."
 HF_UNINSTALL_STRING_OK="The installation completed successfully."
 JVM_STRING_OK="Patch was successfully applied."
@@ -24,6 +25,7 @@ JVM_STRING_FP_OK="Tree diff file patch successful!"
 INST_DOM_LOG=$DOMDOCK_LOG_DIR/install_domino.log
 INST_FP_LOG=$DOMDOCK_LOG_DIR/install_fp.log
 INST_HF_LOG=$DOMDOCK_LOG_DIR/install_hf.log
+INST_LP_LOG=$DOMDOCK_LOG_DIR/install_domlp.log
 INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 
 
@@ -83,6 +85,11 @@ install_domino()
     download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_hf
   fi
 
+  if [ -n "$DOMLP_VER" ]; then
+    get_download_name domlp $DOMLP_VER
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_lp . LNXDomLP
+  fi
+
   # On Ubuntu and Debian the default shell for /bin/sh is /bin/dash
   # Change the shell during installation to /bin/bash and remember the change
   set_sh_shell bash
@@ -130,6 +137,39 @@ install_domino()
     mkdir -p /licenses
     cp $Notes_ExecDirectory/license/*.txt /licenses
 
+  fi
+
+  if [ -n "$DOMLP_VER" ]; then
+    header "Installing Language Pack $DOMLP_VER"
+    log_space "Running Domino Language Pack Silent Install -- This takes a while ..."
+
+    CURRENT_DIR=$(pwd)
+
+    cd domino_lp
+    chmod +x LNXDomLP
+
+    ./LNXDomLP -f $INSTALL_DIR/domlp_${DOMLP_VER}.properties -i silent -DSILENT_INI_PATH=${INSTALL_DIR}/domlp_${DOMLP_VER}_silent.ini
+
+    # Move LP install log
+    mv /opt/hcl/domino/LPLog.txt "$INST_LP_LOG"
+    check_file_str "$INST_LP_LOG" "$LP_STRING_OK"
+
+    if [ "$?" = "1" ]; then
+      echo
+      log_ok "Language Pack installed successfully"
+
+    else
+      echo
+      print_delim
+      cat LPLog.txt
+      print_delim
+      log_error "Language Pack Installation failed!!!"
+      exit 1
+    fi
+
+    cd $CURRENT_DIR
+    remove_directory domino_lp
+    remove_directory /tmp/lpFolder
   fi
 
   if [ -n "$INST_FP" ]; then
@@ -331,6 +371,41 @@ install_capi()
   cd $CURRENT_DIR
 }
 
+install_domino_restapi()
+{
+  local ADDON_NAME=domrestapi
+  local ADDON_VER=$1
+
+  if [ -z "$ADDON_VER" ]; then
+    return 0
+  fi
+
+  header "$ADDON_NAME Installation"
+
+  get_download_name $ADDON_NAME $ADDON_VER
+
+  header "Installing $ADDON_NAME $ADDON_VER"
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_restapi
+
+  CURRENT_DIR=$(pwd)
+
+  cd "$DOMINO_DATA_PATH"
+  # Append the servertask line to notes.ini, because Keep installer needs it to detect the server
+  echo "servertasks=" >> notes.ini
+
+  "$Notes_ExecDirectory/jvm/bin/java" -jar "$CURRENT_DIR/domino_restapi/restapiInstall.jar" -d="$DOMINO_DATA_PATH" -i="$DOMINO_DATA_PATH/notes.ini" -r="/opt/hcl/restapi" -p="$Notes_ExecDirectory" -a -s
+
+  if [ "$?" = "0" ]; then
+    log_space Installed $ADDON_NAME
+  else
+    log_error "Domino REST API Installation failed!!!"
+    exit 1
+  fi
+
+  cd $CURRENT_DIR
+}
+
 
 container_set_timezone()
 {
@@ -512,11 +587,13 @@ harden_binary_dir()
 check_build_options()
 {
 
+  local NoHardenBinDir=
+
   for b in $BUILD_SCRIPT_OPTIONS; do
 
     case "$b" in
-      -HardenBinDir)
-        harden_binary_dir
+      -NoHardenBinDir)
+        NoHardenBinDir=yes
         ;;
 
       *)
@@ -526,6 +603,12 @@ check_build_options()
     esac
 
   done
+
+  if [ "$NoHardenBinDir" = "yes" ]; then
+   echo "Info: Not hardening for binary directory!"
+  else
+    harden_binary_dir
+  fi
 
   return 0
 }
@@ -543,6 +626,8 @@ echo "Product               = [$PROD_NAME]"
 echo "Version               = [$PROD_VER]"
 echo "Fixpack               = [$PROD_FP]"
 echo "InterimsFix/Hotfix    = [$PROD_HF]"
+echo "DOMLP_VER             = [$DOMLP_VER]"
+echo "DOMRESTAPI_VER        = [$DOMREST_VER]"
 echo "DominoResponseFile    = [$DominoResponseFile]"
 echo "DominoVersion         = [$DominoVersion]"
 echo "DominoUserID          = [$DominoUserID]"
@@ -691,6 +776,9 @@ install_nomad "$NOMAD_VERSION"
 
 # Install C-API if requested
 install_capi "$CAPI_VERSION"
+
+# Install Domino REST API if requested
+install_domino_restapi "$DOMRESTAPI_VER"
 
 remove_perl
 

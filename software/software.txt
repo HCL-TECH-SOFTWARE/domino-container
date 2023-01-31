@@ -8,6 +8,7 @@ domino|12.0.0|Domino_12.0_Linux_English.tar|-|f8a8618c20717a04826344ca4fec808351
 domino|12.0.1|Domino_12.0.1_Linux_English.tar|-|a9d561b05f7b6850ed1230efa68ea1931cfdbb44685aad159613c29fa15e5eea
 domino|12.0.1FP1|Domino_1201FP1_Linux.tar|-|7aad22da2dfaa43ff3766d0894014da8d522b19aa5dacaf7a7a0bf6f34ad6d1d
 domino|12.0.2|Domino_12.0.2_Linux_English.tar|-|84ba743b1f5fd378b4dabd694852ddd54c6f349dc5341d275a9f68a80d2e7bbd
+domlp|de-12.0.2|Domino_12.0.2_SLP_German.tar|-|fd319a28366e4650c31fa3d90004d729d7de48d9230413de9663a9f80d2dfdf9
 traveler|11.0.0|Traveler_11.0_Linux_ML.tar.gz|-|381bfae133eb7288f37c531a636a8ec049d1d7bbb16318b40254e0ed08a294d8
 traveler|11.0.1|Traveler_11.0.1_Linux_ML.tar.gz|-|b3ef80877ad4892e2c8d78b12f4086118baf7c4377af4c459f4455e4898d80ff
 traveler|11.0.1FP1|Traveler_11.0.1FP1_Linux_ML.tar.gz|-|72b77c1aca83bdb5f3d5fd2af6e8c7201108b9d67ea3290bdafb6c215e452966
@@ -21,7 +22,7 @@ traveler|12.0.1FP2|Traveler_12.0.1FP2_Linux_ML.tar.gz|-|9555122d6cae0605ad482f1b
 traveler|12.0.2|Traveler_12.0.2_Linux_ML.tar.gz|-|c3ccbc937254fb2d6062cb8ba56009bdb019d6cc421b729409dc72b4d9fc3bf8
 volt|1.0.4.10|hcl.domino.volt-1.0.4.10.zip|-|0890b7314e0398d37d82a76de48b52a95723ea91d4c01cb1080ad0583a5420f8
 volt|1.0.5.15|hcl.domino.volt-1.0.5.15.zip|-|0efb0a18deb690d1e2b31790bab6628565aae88815ed2c8d69f1f7ff820f26db
-leap|1.0.5.15|hcl.domino.volt-1.0.5.15.zip|-|0efb0a18deb690d1e2b31790bab6628565aae88815ed2c8d69f1f7ff820f26db
+leap|1.1|hcl.dleap-1.1.0.15.zip|-|c03f2bc8ffb7750eb49e25de10d4aa4b40832df74aaa031c0ca45b349ed78858
 verse|2.0.1|HCL_Verse_2.0.1.zip|-|ce358d16d338e9a81b3402bb081ea3a2b39e6915e0f4670107df7144f1004ea8
 verse|2.1.0|HCL_Verse_2.1.0.zip|-|245b93a160601b7bd537f033d1fb91a93a1a2e7a870b031bf7268fc941ddcb94
 verse|2.2.0a|HCL_Verse_2.2.0a.zip|-|490f2218183246edfe137804969b86abb3b128bf3687788684a4a6d5b45e73d7
@@ -30,7 +31,12 @@ capi|12.0.0|CAPIToolkit_1200_MP.zip|-|545869c8a09c98ac8fde06fdff6f106060f09705e6
 borg|1.1.17|https://github.com/borgbackup/borg/releases/download/1.1.17/borg-linux64|-|21484d30271478d4a01aad1b286973443b50afc5379e4a6aef40da3379e21ddf
 borg|1.2.0|https://github.com/borgbackup/borg/releases/download/1.2.0/borg-linux64|-|df271a523434a445c783c1a0bc3dd599521d6a6a25acd2766e9a5577edb6018f
 safelinx|1.3.0.0|HCL-SafeLinx-1300-x86_64.tar.gz|-|ea78531287ea3573b8d008cb0f4aa951d94855dcf9807bb745bd631d8ba32edf
+safelinx|1.3.0.1|HCL-SafeLinx-1301-x86_64.tar.gz|-|1dbc6e0206f776196cce166af1ccfb11c37b61cb2d036cd193af525abdc50349
 nomadweb|1.0.4|HCL_Nomad_web_1.0.4_20220708-3269.zip|-|12ec274643f8fa9aa7f1b4e6263aa346b739ab9a7452c1a67ce6c665d4a3b5c2
 nomadweb|1.0.5|HCL_Nomad_web_1.0.5_20220921-3553.zip|-|5877e694bd3cec4bde5b1fb8cadd7531991df893513a248016719131b4e893e3
-nomad|1.0.5beta2-12.0.2EA4|nomad-server-1.0.5-450-for-domino-1202-linux.tgz|-|6008387f7fc420df5a410b4a157b349b2116b4a87c41ac88fc35f9b5357b38c2
+nomadweb|1.0.6|20221201-4022-nomad_web_deploy.zip|-|fd1762cc9902237203e8670d246b6a816c1039be78d0f03a9fde168ac52c9b24
+nomad|1.0.5-12.0.2|nomad-server-1.0.5-for-domino-1202-linux.tgz|-|385a018d75befd23ceb8d46c77b8ab571324c06d663f92ed7ee0b1c040846ef6
 nomad|1.0.5-12.0.1|nomad-server-1.0.5-for-domino-1201-linux.tgz|-|1fc58c3c7f092c97991066588f74a284b54179544f2765769d8b976bdeb0df5e
+nomad|1.0.6-12.0.2|nomad-server-1.0.6-for-domino-1202-linux.tgz|-|3280c77199443c2135c5b49da6a0690730a6d2f872fcaaaaacebd7b5544efcc5
+nomad|1.0.6-12.0.1|nomad-server-1.0.6-for-domino-1201-linux.tgz|-|87dbbb203b6146f96a3b0ed6486a41e92b5fb5e310b1d776e1cc3fa422de39da
+domrestapi|1.0.0|Domino_REST_API_V1_Installer.tar.gz|-|91f07be28f03b545b5d527e9fba9ac854a2a27e41cdefb724bd3512b59a83766

@@ -32,9 +32,17 @@ install_linux_packages()
   if [ -x /usr/bin/zypper ]; then
     install_packages glibc-locale libcap-progs vim
 
+  # Ubuntu, Debian, Astra Linux
+
+  # Install setcap (required to set capability for gdb)
+  # procps is named differently
+
+  elif [ -x /usr/bin/apt-get ]; then
+
+    install_package procps libcap2-bin
+
   else
 
-    # SUSE does not require those packages
     install_package procps-ng
 
     # Installing the English local should always work
@@ -43,11 +51,6 @@ install_linux_packages()
     # Installing the German locale might fail if UBI systems is running on machine without Redhat subscription
     install_package glibc-langpack-de
 
-  fi
-
-  # On Debian, Ubuntu and Astra Linux install setcap (required to set capability for gdb)
-  if [ -x /usr/bin/apt-get ]; then
-    install_package libcap2-bin
   fi
 
   # PhotonOS

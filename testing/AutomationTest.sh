@@ -370,7 +370,16 @@ log_json_begin_array testcase
 
 # Check if Traveler binary exits
 traveler_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/traveler 2>/dev/null)
-echo "Traveler binary: [$traveler_binary]"
+
+if [ -n "$traveler_binary" ]; then
+  echo "Info: Traveler Server detected"
+fi
+
+# Check if Nomad Server binary exists
+nomad_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/nomad 2>/dev/null)
+if [ -n "$nomad_binary" ]; then
+  echo "Info: Nomad Server detected"
+fi
 
 
 # Test Java Version
@@ -419,10 +428,20 @@ fi
 if [ -z "$traveler_binary" ]; then
   header "Starting HTTP"
   server_console_cmd "load http"
+  sleep 2
 else
   header "Starting Traveler"
   server_console_cmd "load traveler"
+  sleep 2
 fi
+
+# Start Nomad Server task
+
+if [ -n "$nomad_binary" ]; then
+  header "Starting Nomad Server"
+  server_console_cmd "load nomad"
+fi
+
 
 # Test if HTTP is running
 
@@ -491,6 +510,27 @@ if [ -n "$traveler_binary" ]; then
   fi
 
   test_result "traveler.server.available" "Traveler server available" "" "$ERROR_MSG"
+fi
+
+# Test Nomad server available
+
+if [ -n "$nomad_binary" ]; then
+
+  wait_for_string $CONSOLE_LOG "Nomad: Server initialized" 50
+  sleep 2
+
+  curl_count=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs -I https://automation.notes.lab:9443 2>&1 | grep "subject: O=Automation MicroCA Certificate" | wc -l)
+
+  if [ "$curl_count" = "0" ]; then
+    ERROR_MSG="No HTTPS certificate response from Domino"
+    echo
+    print_delim
+    $CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs -I https://automation.notes.lab:9443
+    print_delim
+    echo
+  fi
+
+  test_result "nomad.server.available" "Nomad server available" "" "$ERROR_MSG"
 fi
 
 
