@@ -322,6 +322,8 @@ copy_files_for_all_addons()
 NOW=$(date)
 log_file_header "$NOW"
 
+debug_show_data_dir "At Start"
+
 copy_data_directory
 
 log_file Checking for Data Directory Update
