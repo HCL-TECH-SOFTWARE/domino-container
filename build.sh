@@ -1889,7 +1889,17 @@ fi
 
 # Calculate the right version for Nomad server for selected Domino version
 if [ -n "$NOMAD_VERSION" ]; then
-  NOMAD_VERSION=$NOMAD_VERSION-$PROD_VER
+
+  # Allow to specify explict nomad version (currently identified by "-". might change in future )
+  case "$NOMAD_VERSION" in
+
+    *-*)
+      ;;
+
+    *)
+      NOMAD_VERSION=$NOMAD_VERSION-$PROD_VER
+      ;;
+  esac
 fi
 
 check_exposed_ports

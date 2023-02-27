@@ -350,13 +350,14 @@ download_and_check_hash()
         FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
       fi
 
-      if [ "$FOUND" = "1" ]; then
-        log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
-      else
+      if [ "$FOUND" = "0" ]; then
         log_error "File [$DOWNLOAD_FILE] not downloaded correctly [2]"
         dump_download_error
         exit 1
+      else
+        log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
       fi
+
     else
       echo
       $CURL_CMD $DOWNLOAD_FILE | tar $TAR_OPTIONS 2>/dev/null
