@@ -350,13 +350,14 @@ download_and_check_hash()
         FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
       fi
 
-      if [ "$FOUND" = "1" ]; then
-        log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
-      else
+      if [ "$FOUND" = "0" ]; then
         log_error "File [$DOWNLOAD_FILE] not downloaded correctly [2]"
         dump_download_error
         exit 1
+      else
+        log_ok "Successfully downloaded, extracted & checked: [$DOWNLOAD_FILE] "
       fi
+
     else
       echo
       $CURL_CMD $DOWNLOAD_FILE | tar $TAR_OPTIONS 2>/dev/null
@@ -862,6 +863,15 @@ create_startup_link()
 
 get_domino_version()
 {
+  # In case PROD_VER contains an underscore, use this explicitly specified product version
+  case "$PROD_VER" in
+
+    *_*)
+      DOMINO_VERSION=$PROD_VER
+      return 0
+      ;;
+  esac
+
   DOMINO_INSTALL_DAT=$LOTUS/.install.dat
 
   if [ -e $DOMINO_INSTALL_DAT ]; then
@@ -1129,7 +1139,7 @@ install_custom_packages()
 
 debug_show_data_dir()
 {
-  if [ -z "$DEBUG" ]; then
+  if [ ! "$DOMDOCK_DEBUG" = "yes" ]; then
     return 0
   fi
 
@@ -1139,11 +1149,15 @@ debug_show_data_dir()
   echo "----------------------------[$@] ------------------------------"
   echo
 
-  log_ok
-  log_ok "-----------------------------[$@]------------------------------"
+  if [ -z "$LOG_FILE" ]; then
+    return 0
+  fi
+
+  echo >> $LOG_FILE
+  echo "-----------------------------[$@]------------------------------" >> $LOG_FILE
   ls -l /local >> $LOG_FILE
-  log_ok "-----------------------------[$@]------------------------------"
-  log_ok
+  echo "-----------------------------[$@]------------------------------" >> $LOG_FILE
+  echo >> $LOG_FILE
 }
 
 set_sh_shell()
