@@ -1,5 +1,5 @@
 domino|12.0.2
-traveler|12.0.2
+traveler|12.0.2FP1
 volt|1.0.5.15
 leap|1.1
 verse|3.0.0
