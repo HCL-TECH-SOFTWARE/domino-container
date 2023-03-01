@@ -76,13 +76,29 @@ install_domino()
   fi
 
   if [ -n "$INST_FP" ]; then
-    get_download_name $PROD_NAME $INST_FP domino_fp
-    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_fp
+
+    # If explicitly specified just download and skip calculating hash
+    if [ -n "$PROD_FP_DOWNLOAD_FILE" ]; then
+      echo "Info: Not checking download hash for [$PROD_FP_DOWNLOAD_FILE]"
+      DOWNLOAD_NAME="$PROD_FP_DOWNLOAD_FILE"
+      download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_fp . nohash
+    else
+      get_download_name $PROD_NAME $INST_FP domino_fp
+      download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_fp
+    fi
   fi
 
   if [ -n "$INST_HF" ]; then
-    get_download_name $PROD_NAME $INST_HF domino_hf
-    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_hf
+
+    # If explicitly specified just download and skip calculating hash
+    if [ -n "$PROD_HF_DOWNLOAD_FILE" ]; then
+      echo "Info: Not checking download hash for [$PROD_HF_DOWNLOAD_FILE]"
+      DOWNLOAD_NAME="$PROD_HF_DOWNLOAD_FILE"
+      download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_hf . nohash
+    else
+      get_download_name $PROD_NAME $INST_HF domino_hf
+      download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_hf
+    fi
   fi
 
   if [ -n "$DOMLP_VER" ]; then
