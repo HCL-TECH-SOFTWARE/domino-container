@@ -278,6 +278,8 @@ dump_config()
   echo "DOMLP_VER            : [$DOMLP_VER]"
   echo "DOMRESTAPI_VER       : [$DOMRESTAPI_VER]"
   echo "PROD_DOWNLOAD_FILE   : [$PROD_DOWNLOAD_FILE]"
+  echo "PROD_FP_DOWNLOAD_FILE: [$PROD_FP_DOWNLOAD_FILE]"
+  echo "PROD_HF_DOWNLOAD_FILE: [$PROD_HF_DOWNLOAD_FILE]"
   echo "PROD_EXT             : [$PROD_EXT]"
   echo "CHECK_SOFTWARE       : [$CHECK_SOFTWARE]"
   echo "CHECK_HASH           : [$CHECK_HASH]"
@@ -788,6 +790,8 @@ build_domino()
     --build-arg PROD_FP=$PROD_FP \
     --build-arg PROD_HF=$PROD_HF \
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
+    --build-arg PROD_FP_DOWNLOAD_FILE=$PROD_FP_DOWNLOAD_FILE \
+    --build-arg PROD_HF_DOWNLOAD_FILE=$PROD_HF_DOWNLOAD_FILE \
     --build-arg DOCKER_TZ=$DOCKER_TZ \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
@@ -1400,11 +1404,62 @@ check_software_status()
       fi
 
       if [ -n "$PROD_FP" ]; then
-        check_software_file "$PROD_NAME" "$PROD_VER$PROD_FP"
+        if [ -z "$PROD_FP_DOWNLOAD_FILE" ]; then
+          check_software_file "$PROD_NAME" "$PROD_VER$PROD_FP"
+
+        else
+
+          if [ -z "$DOWNLOAD_FROM" ]; then
+
+            if [ -e "$SOFTWARE_DIR/$PROD_FP_DOWNLOAD_FILE" ]; then
+              echo "Info: Not checking download file [$SOFTWARE_DIR/$PROD_FP_DOWNLOAD_FILE]"
+            else
+              echo "Download file not found [$SOFTWARE_DIR/$PROD_FP_DOWNLOAD_FILE]"
+              exit 1
+            fi
+
+          else
+
+            http_head_check "$DOWNLOAD_FROM/$PROD_FP_DOWNLOAD_FILE"
+            if [ "$?" = "1" ]; then
+              echo "Info: Not checking download file [$DOWNLOAD_FROM/$PROD_FP_DOWNLOAD_FILE]"
+            else
+              echo "Download file not found [$DOWNLOAD_FROM/$PROD_FP_DOWNLOAD_FILE]"
+              exit 1
+            fi
+          fi
+
+        fi
       fi
 
       if [ -n "$PROD_HF" ]; then
-        check_software_file "$PROD_NAME" "$PROD_VER$PROD_FP$PROD_HF"
+
+        if [ -z "$PROD_HF_DOWNLOAD_FILE" ]; then
+          check_software_file "$PROD_NAME" "$PROD_VER$PROD_FP$PROD_HF"
+
+        else
+
+          if [ -z "$DOWNLOAD_FROM" ]; then
+
+            if [ -e "$SOFTWARE_DIR/$PROD_HF_DOWNLOAD_FILE" ]; then
+              echo "Info: Not checking download file [$SOFTWARE_DIR/$PROD_HF_DOWNLOAD_FILE]"
+            else
+              echo "Download file not found [$SOFTWARE_DIR/$PROD_HF_DOWNLOAD_FILE]"
+              exit 1
+            fi
+
+          else
+
+            http_head_check "$DOWNLOAD_FROM/$PROD_HF_DOWNLOAD_FILE"
+            if [ "$?" = "1" ]; then
+              echo "Info: Not checking download file [$DOWNLOAD_FROM/$PROD_HF_DOWNLOAD_FILE]"
+            else
+              echo "Download file not found [$DOWNLOAD_FROM/$PROD_HF_DOWNLOAD_FILE]"
+              exit 1
+            fi
+          fi
+
+        fi
       fi
     fi
 
@@ -1694,6 +1749,15 @@ for a in $@; do
 
    -prod_download=*)
       PROD_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+
+   -fp_download=*)
+      PROD_FP_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+   -hf_download=*)
+      PROD_HF_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
    -nginx=*)
