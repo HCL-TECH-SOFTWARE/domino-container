@@ -65,7 +65,6 @@
     "registerUsers": {
       "defaults": {
         "saveIDToPersonDocument": false,
-        "mailTemplatePath": "mail12.ntf",
         "password": "default-super-secret-user-password",
         "enableFullTextIndex": true,
         "certificateExpirationMonths": 42
