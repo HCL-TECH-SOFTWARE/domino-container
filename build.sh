@@ -218,6 +218,7 @@ usage()
   echo
   echo "-from=<image>    builds from a specified build image. there are named images like 'ubi' predefined"
   echo "-imagename=<img> defines the target image name"
+  echo "-imagetag=<img>  defines the target image tag"
   echo "-save=<img>      exports the image after build. e.g. -save=domino-container.tgz"
   echo "-pull            always try to pull a newer base image version"
   echo "-openssl         adds OpenSSL to Domino image"
@@ -975,6 +976,10 @@ docker_build()
 
   DOCKER_IMAGE_VERSION=$PROD_VER$PROD_FP$PROD_HF$PROD_EXT
 
+  if [ -z "$DOCKER_IMAGE_TAG" ]; then
+    DOCKER_IMAGE_TAG=$PROD_VER$PROD_FP$PROD_HF$PROD_EXT
+  fi
+
   # Set default or custom LATEST tag
   if [ -n "$TAG_LATEST" ]; then
     DOCKER_TAG_LATEST="$DOCKER_IMAGE_NAME:$TAG_LATEST"
@@ -991,7 +996,7 @@ docker_build()
   BUILDTIME=$(date +"%d.%m.%Y %H:%M:%S")
 
   # Get build arguments
-  DOCKER_IMAGE=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_VERSION
+  DOCKER_IMAGE=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
 
   # Switch to directory containing the dockerfiles
   cd dockerfiles
@@ -1729,6 +1734,10 @@ for a in $@; do
 
     -imagename=*)
       DOCKER_IMAGE_NAME=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -imagetag=*)
+      DOCKER_IMAGE_TAG=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -save=*)
