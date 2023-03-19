@@ -113,8 +113,26 @@ Skip to the next chapter if this is ok.
 To easily access the Domino Data directory over your QNAP network file share/SMB, you first need to create a folder on your NAS and condition it for the docker runtime to get access.
 
 - Create an empty directory on your NAS, e.g. using FileStation. All files in here will be persistent. Best Practice is to create a folder for each type of data, e.g. notesdata, translog, nif, ft, daos. Even if you don't use them now, create subdirectories as shown here:
+
+
+| Directory | Description |
+| ----------- | ----------- |
+| daos | Domino Attachments and Object Store (*.nlo) |
+| ft | FullText Indexes | 
+| nif | NIF/NSF directory |  
+| notesdata | Main Domino Data directory (*.nsf, *.nsf) | 
+| translog | Transaciton log |  
+
+
 ![QNAP FileStation](assets/images/png/qnap-filestation-folders.png) 
-- Change the owner of the folder so that the docker runtime will have the required permissions 
+- Change the owner of the folder so that the docker runtime will have the required permissions - e.g. use an SSH session to do that.
+The container will run with userid 1000 which in most cases is an existing user on your NAS.
+
+Example: (adjust to your data directory)
+```bash
+cd /DATA/Dockervolums/Domino
+chown -R 1000:1000 
+```
 
 The root of this folder will be mounted to /local inside the container in the next step.
 
@@ -148,6 +166,8 @@ The best security is dependent on the weakest link. So...
 - Disable any services not used, e.g. Multimedia
 - Do not directly expose the NAS to the Web, only expose the ports you really need.
 - Learn about [Hardening QNAP Devices](https://www.youtube.com/watch?v=FeYbfkCfwSc)
+- Enable [updating the QNAP Firmware automatically](https://docs.qnap.com/operating-system/qts/5.0.x/en-us/updating-the-firmware-automatically-4229F6D2.html) - it will make your life so much easier.
+- see []
 
 ### Port mapping
 When the container is using the IP address of the NAS, all applications, all containers, etc. will be sharing the same IP address. The Domino port 1352 can only be assigned to exactly one container. If more than one Domino server is running on your NAS, the container itself can still expose port 1352 but it will need to be mapped to another TCP port when running the container. ContainerStation will not allow to create a container with a port conflict.
@@ -160,6 +180,9 @@ Instructions above are for a new/empty Domino server. If you have an existing se
 - Make sure to update file/folder owner and permissions accordingly
 - Check notes.ini and server document (by opening the names.nsf from the file share) for hardcoded path/file names from your previous server and update them. Especially check DAOS, FT and Translog folder settings.
 - When moving from Windows to Linux, **be warned**, the file system is case sensitive!
+
+### The User ID 1000
+By default a Docker container will internally run with the user id 1000, which in many cases is an existing user id. While there are methods to run the container with a different user id, this is not yet covered here. 
 
 ### Compatibility
 The following list of QNAP devices have been reported to be working fine:
