@@ -11,7 +11,7 @@ has_children: false
 This article describes to run HCL Domino on a QNAP Network Attached Storage device.
 
 ### Background
-Network attached storage devices (NAS) these days offer much more than just disk space, they are quite powerful servers overall. Certainly good enough to run HCL Domino. 
+Network attached storage devices (NAS) offer much more than just disk space these days, they are quite powerful servers overall. Certainly good enough to run HCL Domino. 
 
 **Why QNAP ?**
 Simply because we had the device available and tried it. Other vendors like [Synology](https://www.synology.com) should work as well. If time permits we will publish instructions for other platforms as well.
@@ -44,13 +44,15 @@ Ok, here the instructions for newbies
 ### 1. Install ContainerStation
 Login to your QNAP NAS Admin user interface using a web browser.
 In "App Center", search for ContainerStation and click on install if it is not already installed.
-![QNAP App Center](./assets/images/svg/qnap-app-center.png "QNAP App Center")
+![QNAP App Center](./assets/images/svg/qnap-app-center.png)
 
 ### 2. Prepary a Docker image
-This step needs to be completed >outside< the QNAP NAS, e.g. on your workstation, etc.
+This step needs to be completed **outside** the QNAP NAS, e.g. on your workstation, etc.
 
 There are two options to choose from:
+
 a) just download the HCL Domino Docker image - no further actions required, you can continue to the next chapter
+
 b) build your own image - e.g. an "all inclusive" image containing Domino, Verse, Nomad, ..., and Leap
 
 For option b) see [instructions](/docs/quickstart.md) for cloing this repo and downloading the required installation files.
@@ -82,16 +84,16 @@ Uploading the image to your NAS will transfer the image file over the network. T
 - Click "Import" in the left side navigator
 - Click "Import" in the top right corner to open the import image dialog
 - Choose the location of the *.tar file
-- confirm the import
+- Confirm the import
 Depending on your network bandwidth this process may take some time.
 - validate the import was successful by clicking on "Images", where you should now be able to see the image:
-![QNAP Docker Images](./assets/images/svg/qnap-docker-images.png "QNAP Docker Images")
+![QNAP Docker Images](./assets/images/png/qnap-docker-images.png "QNAP Docker Images")
 
 **Via Command Line**
 - Copy the *.tar file exported above to a directory on your QNAP NAS
 - [SSH into the NAS](https://www.qnap.com/en/how-to/faq/article/how-do-i-access-my-qnap-nas-using-ssh) using admin privileges. Note: SSH access needs to be enabled on your NAS first!
-- navigate to the directory into which you have uploaded the *.tar file
-- import the image using the following command
+- Navigate to the directory into which you have uploaded the *.tar file
+- Import the image using the following command
 ```bash
 docker image load -i ./YourImageFilename.tar 
 ```
@@ -102,17 +104,17 @@ docker images
 - Exit / close the SSH session
 
 ### 4. Create a persistent volume
-Since we want any DominoData to be persistent, meaning to survive a the container to be killed/replaced with a newer one, we need to define a [docker volume](https://docs.docker.com/storage/volumes/).
+Since we want any Domino Data to be persistent, meaning to survive a the container to be killed/replaced with a newer one, we need to define a [docker volume](https://docs.docker.com/storage/volumes/).
 
 The easiest method is to use a docker volume at the time of starting the container. 
 However, this will not, or not easily, allow to access Domino data files over a network share.
 Skip to the next chapter if this is ok.
 
-If you want to easily access the Domino Data directory over your QNAP network file share/SMB, you first need to create a folder on your NAS and condition it for the docker runtime to get access.
+To easily access the Domino Data directory over your QNAP network file share/SMB, you first need to create a folder on your NAS and condition it for the docker runtime to get access.
 
-- Create an empty directory on your NAS, e.g. using FileStation. All files in here will be persistent. Best Practice is to create a folder for each type of data, e.g. notesdata, translog, nif, ft, daos. Even if you dont use them now, create subdirectories as shown here:
-![QNAP FileStation](assets/images/svg/qnap-filestation-folders.png) 
-- change the owner of the folder so that the docker runtime will have the required permissions 
+- Create an empty directory on your NAS, e.g. using FileStation. All files in here will be persistent. Best Practice is to create a folder for each type of data, e.g. notesdata, translog, nif, ft, daos. Even if you don't use them now, create subdirectories as shown here:
+![QNAP FileStation](assets/images/png/qnap-filestation-folders.png) 
+- Change the owner of the folder so that the docker runtime will have the required permissions 
 
 The root of this folder will be mounted to /local inside the container in the next step.
 
@@ -120,26 +122,25 @@ The root of this folder will be mounted to /local inside the container in the ne
 Finally let's start a Domino container:
 
 - Within ContainerStation on your QNAP NAS, click on "Create" and search for "domino" (or 'leap' if you have used that image). It should find the image you uploaded earlier on 'local' - click "install" as shown:
-![QNAP ContainerStation Create Container](assets/images/svg/qnap-createcontainer-1.png)
-- Define a somewhat meaningful name for the container and change resource limits for CPU and memory as needed 
-![Create Container Step 2](assets/images/svg/qnap-createcontainer-2.png)
-- Open "Advanced Settings" to change network settings. 
+![QNAP ContainerStation Create Container](assets/images/png/qnap-createcontainer-1.png)
+- Define a meaningful name for the container and change resource limits for CPU and memory as needed 
+![Create Container Step 2](assets/images/png/qnap-createcontainer-2.png)
+- Open **Advanced Settings** to change network settings. 
 Define a hostname that will be used inside the container,
-at least port 1352 is exposed so that you can access this server from a client. If you dont specify a host port, QNAP will randomly assign an available TCP port, so make sure to set a host port for all ports/services you want to access later on. e.g. SMTP, HTTP(s), etc.
-![Create Container Step 3](assets/images/svg/qnap-createcontainer-3.png)
-- In "Shared Folders" either create a new Docker volume (which is the first) or as shown in this screenshot use the folder created in the previous step as your mount point. Use "/local" as your mount point inside the container. 
-![Create Container Step 4](assets/images/svg/qnap-createcontainer-4.png)
+at least port 1352 is exposed so that you can access this server from a client. If you don't specify a host port, QNAP will randomly assign an available TCP port. Make sure to set a host port for all ports/services you want to access later on. e.g. SMTP, HTTP(s), Nomad, etc.
+![Create Container Step 3](assets/images/png/qnap-createcontainer-3.png)
+- In **Shared Folders** either create a new Docker volume (which is the first) or as shown in this screenshot use the folder created in the previous step as your mount point. Use "/local" as your mount point inside the container. 
+![Create Container Step 4](assets/images/png/qnap-createcontainer-4.png)
 - Review all settings 
 - Now really check all settings again
 - Click "Create" to start the container with Domino running inside. 
-![Create Container Done](assets/images/svg/qnap-createcontainer-5.png)
+![Create Container Done](assets/images/png/qnap-createcontainer-5.png)
 
 This will start an empty Domino server which still needs to be configured, use the remote server setup tool and connect to port 1352 to proceed.
 
 ## What else you need to know
 Your Domino server is now up and running, but what are the specialities you need to know about?
 - HCL support can not help with any QNAP related questions. For questions use the [Github Issue Tracker](https://github.com/HCL-TECH-SOFTWARE/domino-container/issues)
-
 
 ### Security
 The best security is dependent on the weakest link. So...
@@ -163,12 +164,13 @@ Instructions above are for a new/empty Domino server. If you have an existing se
 ### Compatibility
 The following list of QNAP devices have been reported to be working fine:
 - TVS-682
-(there may be many, many more - we just have not tested them all)
+
+Note: there may be many, MANY more - we just have not tested them all
 
 ### References
 some useful references
 - [How to use ContainerStation](https://www.qnap.com/en/how-to/tutorial/article/how-to-use-container-station-2)
 - [Hardening QNAP Devices](https://www.youtube.com/watch?v=FeYbfkCfwSc)
 
-### Remarks
+### Final Remarks
 This guide has been written based on the [QTS operating system](https://www.qnap.com/qts/5.0.1/en-us/) of QNAP. While commands listed above and ContainerStation should work the same on [QuTS Hero](https://www.qnap.com/en-us/operating-system/quts-hero/5.0.1) it has not been tested explicitly. Your milage may vary, but we welcome your feedback 
