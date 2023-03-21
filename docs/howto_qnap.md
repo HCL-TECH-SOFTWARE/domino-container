@@ -5,13 +5,21 @@ nav_order: 6
 description: "How to run Domino on a QNAP NAS"
 parent: "Howto"
 has_children: false
+has_toc: false
 ---
 
 ## How to run HCL Domino on a QNAP NAS
 This article describes to run HCL Domino on a [QNAP](https://www.qnap.com) Network Attached Storage device.
 
-* TOC
+<details open markdown="block">
+  <summary>
+    Table of contents
+  </summary>
+  {: .text-delta }
+1. TOC
 {:toc}
+</details>
+
 
 ### Background
 Network attached storage devices (NAS) offer much more than just disk space these days, they are quite powerful servers overall. Certainly good enough to run HCL Domino. 
@@ -201,7 +209,8 @@ By default a Docker container will internally run with the user id 1000, which i
 The following list of QNAP devices have been reported to be working fine:
 - [TVS-682](https://www.qnap.com/en-us/product/tvs-682)
 
-Note: there may be many, MANY more - we just have not tested them all.
+{: .note }
+There may be many, MANY more - we just have not tested them all.
 
 ### References
 Some useful references
