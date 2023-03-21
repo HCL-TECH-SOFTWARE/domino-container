@@ -186,7 +186,7 @@ The best security is dependent on the weakest link. So...
 - Do not directly expose the NAS to the Web, only expose the ports you really need.
 - Learn about [Hardening QNAP Devices](https://www.youtube.com/watch?v=FeYbfkCfwSc)
 - Enable [updating the QNAP Firmware automatically](https://docs.qnap.com/operating-system/qts/5.0.x/en-us/updating-the-firmware-automatically-4229F6D2.html) - It will make your life so much easier.
-- Understand the implications of [### The User ID 1000]
+- Understand the implications of [The User ID 1000](#the-user-id-1000)
 - Back up your Domino server even if it is running as a container. [DominoBackup](https://help.hcltechsw.com/domino/12.0.2/admin/admn_backupandrestore.html) is your friend.
 
 ### Port mapping
@@ -210,7 +210,7 @@ By default a Docker container will internally run with the user id 1000, which i
 The following list of QNAP devices have been reported to be working fine:
 - [TVS-682](https://www.qnap.com/en-us/product/tvs-682)
 
-{: .note }
+{: .highlight }
 There may be many, MANY more - we just have not tested them all.
 
 ### References
