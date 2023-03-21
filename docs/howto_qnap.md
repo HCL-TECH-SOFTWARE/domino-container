@@ -9,6 +9,7 @@ has_toc: false
 ---
 
 ## How to run HCL Domino on a QNAP NAS
+{: .no_toc .text-delta }
 This article describes to run HCL Domino on a [QNAP](https://www.qnap.com) Network Attached Storage device.
 
 <details open markdown="block">
@@ -78,7 +79,7 @@ On top of this Domino 'base' image above, you can now build an image which also 
 ```bash
 ./build.sh leap
 ```
-#### Export the image to a *.tar file
+**Export the image to a *.tar file**
 Export the image that was built above into a *.tar file on your machine
 usage:
 docker image save -o YourTargetFilename.tar imagename:tag
