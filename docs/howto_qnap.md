@@ -9,10 +9,9 @@ has_toc: false
 ---
 
 ## How to run HCL Domino on a QNAP NAS
-{: .no_toc .text-delta }
 This article describes to run HCL Domino on a [QNAP](https://www.qnap.com) Network Attached Storage device.
 
-<details open markdown="block">
+<details close markdown="block">
   <summary>
     Table of contents
   </summary>
@@ -53,6 +52,7 @@ On high level, you need to:
 5. Run a container based on the image
 
 ### Step-by-Step
+{: .no_toc .text-delta }
 Ok, here the instructions for newbies
 
 ### 1. Install ContainerStation
