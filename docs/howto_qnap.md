@@ -58,7 +58,7 @@ Ok, here the instructions for newbies
 ### 1. Install ContainerStation
 Login to your QNAP NAS Admin user interface using a web browser.
 In **App Center**, search for ContainerStation and click on install if it is not already installed.
-![QNAP App Center](./assets/images/svg/qnap-app-center.png)
+![QNAP App Center](assets/images/png/qnap-app-center.png)
 
 ### 2. Prepary a Docker image
 This step needs to be completed **outside** the QNAP NAS, e.g. on your workstation, etc.
@@ -101,7 +101,7 @@ Uploading the image to your NAS will transfer the image file over the network. T
 - Confirm the import
 Depending on your network bandwidth this process may take some time.
 - validate the import was successful by clicking on "Images", where you should now be able to see the image:
-![QNAP Docker Images](./assets/images/png/qnap-docker-images.png "QNAP Docker Images")
+![QNAP Docker Images](assets/images/png/qnap-docker-images.png)
 
 **Via Command Line**
 - Copy the *.tar file exported above to a directory on your QNAP NAS
