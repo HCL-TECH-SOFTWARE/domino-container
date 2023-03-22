@@ -60,7 +60,7 @@ Login to your QNAP NAS Admin user interface using a web browser.
 In **App Center**, search for ContainerStation and click on install if it is not already installed.
 ![QNAP App Center](assets/images/png/qnap-app-center.png)
 
-### 2. Prepary a Docker image
+### 2. Prepare the Domino Docker image
 This step needs to be completed **outside** the QNAP NAS, e.g. on your workstation, etc.
 
 There are two options to choose from:
