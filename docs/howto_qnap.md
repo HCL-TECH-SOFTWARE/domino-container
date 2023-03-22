@@ -69,7 +69,7 @@ a) just download the HCL Domino Docker image - no further actions required, you 
 
 b) build your own image - e.g. an "all inclusive" image containing Domino, Verse, Nomad, ..., and Leap
 
-For option b) see [instructions](/docs/quickstart.md) for cloing this repo and downloading the required installation files.
+For option b) see [instructions](/docs/quickstart.md) for cloning this repo and downloading the required installation files.
 
 To build an image that contains Domino, Verse and Nomad all together, issue this command:
 ```bash
