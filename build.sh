@@ -12,13 +12,8 @@
 # The script checks if software is available at configured location (download location or local directory).
 # In case of a local software directory it hosts the software on a local NGINX container.
 
-if [ -x /usr/bin/realpath ]; then
-  SCRIPT_NAME=$(realpath $0)
-  SCRIPT_DIR=$(dirname $SCRIPT_NAME)
-else
-  SCRIPT_NAME=$0
-  SCRIPT_DIR=$(dirname $SCRIPT_NAME)
-fi
+SCRIPT_NAME=$(readlink -f $0)
+SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
 # Standard configuration overwritten by build.cfg
 # (Default) NGINX is used hosting software from the local "software" directory.

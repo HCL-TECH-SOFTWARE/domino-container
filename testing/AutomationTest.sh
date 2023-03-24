@@ -38,16 +38,9 @@ PASSWORD="domino4ever"
 # Optional script to allow additional tests, based on the same framework
 # CUSTOM_AUTOMATION_CHECK_SCRIPT=/local/custom_tests.sh
 
-if [ -x /usr/bin/realpath ]; then
-  SCRIPT_NAME=$(realpath $0)
-  SCRIPT_DIR=$(dirname $SCRIPT_NAME)
-else
-  SCRIPT_NAME=$0
-  SCRIPT_DIR=$(dirname $SCRIPT_NAME)
-fi
+SCRIPT_NAME=$(readlink -f $0)
+SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
-# Include helper script functions
-SCRIPT_DIR=$(dirname $0)
 . $SCRIPT_DIR/script_lib.sh
 
 

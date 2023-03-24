@@ -34,11 +34,18 @@ domino_uptime()
   local LOTUS_BIN_DIR
   local DOMINO_SERVER_PID
   local PARTITION_USER
+  local DOMINO_UID
 
   if [ -z "$DOMINO_USER" ]; then
     PARTITION_USER=notes
   else
     PARTITION_USER=$DOMINO_USER
+  fi
+
+  DOMINO_UID=$(id -u notesx 2>/dev/null)
+
+  if [ -z "$DOMINO_UID" ]; then
+    return 0
   fi
 
   if [ -z "$Notes_ExecDirectory" ]; then
@@ -47,9 +54,13 @@ domino_uptime()
     LOTUS_BIN_DIR=$Notes_ExecDirectory
   fi
 
+  if [ ! -e "$LOTUS_BIN_DIR" ]; then
+    return 0
+  fi
+
   DOMINO_SERVER_PID=$(ps -ef -fu $PARTITION_USER | grep "$LOTUS_BIN_DIR" | grep "server" | grep -v " -jc" | xargs | cut -d " " -f2)
-  if [ -n $DOMINO_SERVER_PID ]; then
-    DOMINO_UPTIME=$(ps -o etimes= -p $DOMINO_SERVER_PID | awk '{x=$1/86400;y=($1%86400)/3600;z=($1%3600)/60} {printf("%d day, %d hour %d min\n",x,y,z)}' )
+  if [ -n "$DOMINO_SERVER_PID" ]; then
+    DOMINO_UPTIME=$(ps -o etimes= -p "$DOMINO_SERVER_PID" | awk '{x=$1/86400;y=($1%86400)/3600;z=($1%3600)/60} {printf("%d day, %d hour %d min\n",x,y,z)}' )
   fi
 }
 
@@ -168,7 +179,10 @@ print_infos()
     return
   fi
 
-  if [ ! -x /usr/bin/jq ]; then
+
+  JQ_VERSION=$(jq --version 2>/dev/null)
+
+  if [ -z "$JQ_VERSION" ]; then
     return
   fi
 

@@ -18,7 +18,7 @@ if [ -z "$1" ]; then
 fi
 
 LOTUS=/opt/hcl/domino
-PEM_FILE=$(realpath "$1")
+PEM_FILE=$(readlink -f "$1")
 KEYRING_FILE="$2"
 KEYRING_PASSWORD="$3"
 
