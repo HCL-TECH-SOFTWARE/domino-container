@@ -79,15 +79,18 @@ check_timezone()
   echo
 
   # If Timezone is not set use host's timezone
-  if [ -z $DOCKER_TZ ]; then
+  if [ -z "$DOCKER_TZ" ]; then
 
-    if [ $LARCH = "Linux" ]; then
-      DOCKER_TZ=$(readlink /etc/localtime | awk -F'/usr/share/zoneinfo/' '{print $2}')
-    elif [ $LARCH = "Darwin" ]; then
-      DOCKER_TZ=$(readlink /etc/localtime | awk -F'/usr/share/zoneinfo/' '{print $2}')
-    else
-      DOCKER_TZ=""
-    fi
+    case "$LARCH" in
+
+      Linux|Darwin)
+        DOCKER_TZ=$(readlink /etc/localtime | awk -F'/zoneinfo/' '{print $2}')
+        ;;
+
+      *)
+        DOCKER_TZ=""
+      ;;
+    esac
 
     echo "Using OS Timezone : [$DOCKER_TZ]"
 
