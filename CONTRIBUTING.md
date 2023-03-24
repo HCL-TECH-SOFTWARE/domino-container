@@ -13,7 +13,7 @@ Source code contributions are currently not accepted to this repository.
 
 ### Reporting a bug
 
-Please raise any bug reports on the project's issue tracker.
+Please raise any bug reports on the project's [issue tracker](https://github.com/HCL-TECH-SOFTWARE/domino-container/issues).
 Be sure to search the list to see if your issue has already been raised.
 
 A good bug report is one that make it easy for us to understand what you were trying to do and what went wrong.
