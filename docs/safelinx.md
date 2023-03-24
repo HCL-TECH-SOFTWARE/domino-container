@@ -9,6 +9,15 @@ has_children: false
 
 # Community HCL SafeLinx Container with HCL Nomad Web support
 
+<details close markdown="block">
+  <summary>
+    Table of contents
+  </summary>
+  {: .text-delta }
+1. TOC
+{:toc}
+</details>
+
 HCL Nomad Web leverages the WebSockets protocol to connect to Domino servers.
 This requires a gateway component in the HCL SafeLinx server to bridge between **WebSockets** protocol and the Notes protocol "**NRPC**".
 
