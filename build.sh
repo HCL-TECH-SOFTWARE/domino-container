@@ -456,7 +456,6 @@ get_current_addon_version()
   if [ -n "$DOWNLOAD_FROM" ]; then
 
     DOWNLOAD_FILE=$DOWNLOAD_FROM/$VERSION_FILE_NAME
-    echo "getting current add-on version from: [$DOWNLOAD_FILE]"
 
     http_head_check "$DOWNLOAD_FILE"
     if [ "$?" = "1" ]; then
