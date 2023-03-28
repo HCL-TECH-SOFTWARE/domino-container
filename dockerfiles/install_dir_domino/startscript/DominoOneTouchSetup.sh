@@ -76,7 +76,9 @@ check_json_file()
     return 1
   fi
 
-  if [ ! -e /usr/bin/jq ]; then
+  JQ_VERSION=$(jq --version 2>/dev/null)
+
+  if [ -z "$JQ_VERSION" ]; then
     echo "Warning: No jq tool installed"
   else
     # Don't show JSON but show error log
@@ -102,7 +104,11 @@ check_json_file()
     esac
   fi
 
-  if [ -x "$LOTUS/bin/validjson" ]; then
+  # If available use the stand-alone tool, which does not need Domino code installed and no switch to the notes user
+  if [ -x "/opt/nashcom/startscript/checkjson" ]; then
+    CHECKJSON_BIN="/opt/nashcom/startscript/checkjson"
+
+  elif [ -x "$LOTUS/bin/validjson" ]; then
     VALIDJSON_BIN="$LOTUS/bin/validjson"
 
   elif [ -x "$Notes_ExecDirectory/validjson" ]; then
@@ -112,13 +118,27 @@ check_json_file()
     VALIDJSON_BIN=
   fi
 
-  if [ -x "/usr/bin/checkjson" ]; then
-    CHECKJSON_BIN="/usr/bin/checkjson"
-  fi
+  if [ -n "$CHECKJSON_BIN" ]; then
 
-  echo "[$VALIDJSON_BIN]"
+    echo
+    print_delim
+    echo "One-Touch Domino Validation (via checkjson)"
+    print_delim
+    echo
 
-  if [ -n "$VALIDJSON_BIN" ]; then
+    if [ -e "/opt/hcl/domino/notes/latest/linux/$ONE_TOUCH_JSON_SCHEMA" ]; then
+      ONE_TOUCH_JSON_SCHEMA_FULL=/opt/hcl/domino/notes/latest/linux/$ONE_TOUCH_JSON_SCHEMA
+
+    elif [ -e "/opt/nashcom/startscript/OneTouchSetup/$ONE_TOUCH_JSON_SCHEMA" ]; then
+      ONE_TOUCH_JSON_SCHEMA_FULL=/opt/nashcom/startscript/OneTouchSetup/$ONE_TOUCH_JSON_SCHEMA
+    fi
+
+    $CHECKJSON_BIN "$1" "$ONE_TOUCH_JSON_SCHEMA_FULL"
+
+  elif [ -n "$VALIDJSON_BIN" ]; then
+
+    # The original Domino validjson requires Domino to be setup correctly
+
     # Save existing lib path
     local SAVED_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
 
@@ -153,24 +173,6 @@ check_json_file()
     # Restore existing env
     cd "$SAVED_PWD"
     export LD_LIBRARY_PATH="$SAVED_LD_LIBRARY_PATH"
-
-  elif [ -n "$CHECKJSON_BIN" ]; then
-
-    echo
-    print_delim
-    echo "One-Touch Domino Validation (via checkjson)"
-    print_delim
-    echo
-
-    if [ -e "/opt/hcl/domino/notes/latest/linux/$ONE_TOUCH_JSON_SCHEMA" ]; then
-      ONE_TOUCH_JSON_SCHEMA_FULL=/opt/hcl/domino/notes/latest/linux/$ONE_TOUCH_JSON_SCHEMA
-
-    elif [ -e "/opt/nashcom/startscript/OneTouchSetup/$ONE_TOUCH_JSON_SCHEMA" ]; then
-      ONE_TOUCH_JSON_SCHEMA_FULL=/opt/nashcom/startscript/OneTouchSetup/$ONE_TOUCH_JSON_SCHEMA
-    fi
-
-    $CHECKJSON_BIN "$1" "$ONE_TOUCH_JSON_SCHEMA_FULL"
-
   fi
 
   return 0
@@ -418,7 +420,7 @@ EditOneTouchSetup()
 
     esac
 
-    # If tempalte found, convert template to config
+    # If template found, convert template to config
     if [ -e "$CFG_TEMPLATE" ]; then
 
       ConfigJSON "$CFG_TEMPLATE" "$CFG_FILE"

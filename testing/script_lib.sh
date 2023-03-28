@@ -171,11 +171,13 @@ show_results()
 {
   header "Test Results JSON"
 
-  if [ -x /usr/bin/jq ]; then
-    cat $RESULT_FILE_JSON | jq
-  else
+  JQ_VERSION=$(jq --version 2>/dev/null)
+
+  if [ -z "$JQ_VERSION" ]; then
     log "Please install 'jq' for formatted test output"
     cat $RESULT_FILE_JSON
+  else
+    cat $RESULT_FILE_JSON | jq
   fi
 
   header "Test Results"

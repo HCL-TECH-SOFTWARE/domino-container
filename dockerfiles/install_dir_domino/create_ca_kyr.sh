@@ -97,7 +97,7 @@ fi
 
 # Set correct directories based on main path
 
-CERTMGR_DIR=$(realpath "$CERTMGR_DIR")
+CERTMGR_DIR=$(readlink -f "$CERTMGR_DIR")
 
 CA_DIR=$CERTMGR_DIR/ca
 KEY_DIR=$CERTMGR_DIR/key

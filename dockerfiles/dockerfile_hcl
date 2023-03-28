@@ -1,9 +1,9 @@
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2023 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-FROM registry.access.redhat.com/ubi8/ubi:8.6
+FROM registry.access.redhat.com/ubi9/ubi:9.1
 
 # External arguments with a default value
 ARG LinuxYumUpdate=

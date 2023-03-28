@@ -38,16 +38,9 @@ PASSWORD="domino4ever"
 # Optional script to allow additional tests, based on the same framework
 # CUSTOM_AUTOMATION_CHECK_SCRIPT=/local/custom_tests.sh
 
-if [ -x /usr/bin/realpath ]; then
-  SCRIPT_NAME=$(realpath $0)
-  SCRIPT_DIR=$(dirname $SCRIPT_NAME)
-else
-  SCRIPT_NAME=$0
-  SCRIPT_DIR=$(dirname $SCRIPT_NAME)
-fi
+SCRIPT_NAME=$(readlink -f $0)
+SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
-# Include helper script functions
-SCRIPT_DIR=$(dirname $0)
 . $SCRIPT_DIR/script_lib.sh
 
 
@@ -340,6 +333,8 @@ kernelVersion="$($CONTAINER_CMD exec $CONTAINER_NAME uname -r)"
 kernelBuildTime="$($CONTAINER_CMD exec $CONTAINER_NAME uname -v)"
 glibcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "glibc-[0-9]+*")
 libstdcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "libstdc++-[0-9]+*")
+timezone=$($CONTAINER_CMD exec $CONTAINER_NAME readlink /etc/localtime | awk -F'/zoneinfo/' '{print $2}')
+javaVersion=$($CONTAINER_CMD exec $CONTAINER_NAME /opt/hcl/domino/notes/latest/linux/jvm/bin/java -version 2>&1 | grep "openjdk version" | awk -F "openjdk version" '{print $2}' | xargs)
 
 header $LINUX_PRETTY_NAME
 
@@ -364,6 +359,9 @@ log_json "kernelVersion" "$kernelVersion"
 log_json "kernelBuildTime" "$kernelBuildTime"
 log_json "glibcVersion" "$glibcVersion"
 log_json "libstdcVersion" "$libstdcVersion"
+log_json "timezone" "$timezone"
+log_json "javaVersion" "$javaVersion"
+
 
 log_json_begin_array testcase
 

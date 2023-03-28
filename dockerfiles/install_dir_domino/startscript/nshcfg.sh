@@ -131,7 +131,9 @@ GetConfig()
     return 1
   fi
 
-  if [ ! -e /usr/bin/jq ]; then
+  JQ_VERSION=$(jq --version 2>/dev/null)
+
+  if [ -z "$JQ_VERSION" ]; then
     LogError "Setup requires JQ!"
     return 1
   fi
