@@ -1,11 +1,11 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2024 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.0.2
+# Version 2.0.3
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -90,7 +90,13 @@ check_timezone()
     echo "Using OS Timezone : [$DOCKER_TZ]"
 
   else
-    echo "Timezone configured: [$DOCKER_TZ]"
+
+    if [ -e "/usr/share/zoneinfo/$DOCKER_TZ" ]; then
+      echo "Timezone configured: [$DOCKER_TZ]"
+    else
+      log_error_exit "Invalid timezone specified [$DOCKER_TZ]"
+    fi
+
   fi
 
   echo
@@ -218,6 +224,7 @@ usage()
   echo "-imagename=<img> defines the target image name"
   echo "-imagetag=<img>  defines the target image tag"
   echo "-save=<img>      exports the image after build. e.g. -save=domino-container.tgz"
+  echo "-tz=<timezone>   explictly set container timezone during build. by default Linux TZ is used"
   echo "-pull            always try to pull a newer base image version"
   echo "-openssl         adds OpenSSL to Domino image"
   echo "-borg            adds borg client and Domino Borg Backup integration to image"
@@ -1739,6 +1746,10 @@ for a in $@; do
 
     -save=*)
       DOCKER_IMAGE_EXPORT_NAME=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -tz=*)
+      DOCKER_TZ=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -pull)

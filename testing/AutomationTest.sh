@@ -333,6 +333,8 @@ kernelVersion="$($CONTAINER_CMD exec $CONTAINER_NAME uname -r)"
 kernelBuildTime="$($CONTAINER_CMD exec $CONTAINER_NAME uname -v)"
 glibcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "glibc-[0-9]+*")
 libstdcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "libstdc++-[0-9]+*")
+timezone=$($CONTAINER_CMD exec $CONTAINER_NAME readlink /etc/localtime | awk -F'/zoneinfo/' '{print $2}')
+javaVersion=$($CONTAINER_CMD exec $CONTAINER_NAME /opt/hcl/domino/notes/latest/linux/jvm/bin/java -version 2>&1 | grep "openjdk version" | awk -F "openjdk version" '{print $2}' | xargs)
 
 header $LINUX_PRETTY_NAME
 
@@ -357,6 +359,9 @@ log_json "kernelVersion" "$kernelVersion"
 log_json "kernelBuildTime" "$kernelBuildTime"
 log_json "glibcVersion" "$glibcVersion"
 log_json "libstdcVersion" "$libstdcVersion"
+log_json "timezone" "$timezone"
+log_json "javaVersion" "$javaVersion"
+
 
 log_json_begin_array testcase
 
