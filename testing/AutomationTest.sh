@@ -335,6 +335,7 @@ glibcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "glibc-[0-9]+
 libstdcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "libstdc++-[0-9]+*")
 timezone=$($CONTAINER_CMD exec $CONTAINER_NAME readlink /etc/localtime | awk -F'/zoneinfo/' '{print $2}')
 javaVersion=$($CONTAINER_CMD exec $CONTAINER_NAME /opt/hcl/domino/notes/latest/linux/jvm/bin/java -version 2>&1 | grep "openjdk version" | awk -F "openjdk version" '{print $2}' | xargs)
+curl_version=$($CONTAINER_CMD exec $CONTAINER_NAME curl -V)
 
 header $LINUX_PRETTY_NAME
 
@@ -370,13 +371,13 @@ log_json_begin_array testcase
 traveler_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/traveler 2>/dev/null)
 
 if [ -n "$traveler_binary" ]; then
-  echo "Info: Traveler Server detected"
+  log "Info: Traveler Server detected"
 fi
 
 # Check if Nomad Server binary exists
 nomad_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/nomad 2>/dev/null)
 if [ -n "$nomad_binary" ]; then
-  echo "Info: Nomad Server detected"
+  log "Info: Nomad Server detected"
 fi
 
 
@@ -652,39 +653,40 @@ fi
 
 test_result "domino.translog.create" "Translog create" "" "$ERROR_MSG"
 
+send_smtp_mail()
+{
+  # Wait until SMTP started
+  wait_for_string $CONSOLE_LOG "SMTP Server: Started" 30
 
-# Wait until SMTP started
-wait_for_string $CONSOLE_LOG "SMTP Server: Started" 30
+  # SMTP takes some time to be fully available
+  sleep 10
 
-# SMTP takes some time to be fully available
-sleep 10 
+  MAIL_TXT=$DOMINO_VOLUME/notesdata/email.txt
+  MAIL_FROM=john.doe@acme.com
+  MAIL_TO=fadmin@notes.lab
+  SUBJECT="Hello via CURL"
+  RANDOM_TXT=$(echo $RANDOM | sha256sum | head -c 64)
+  SMTP_SERVER="smtp://automation.notes.lab"
+  POP3_SERVER="pop3s://automation.notes.lab"
 
-MAIL_TXT=$DOMINO_VOLUME/notesdata/email.txt
-MAIL_FROM=john.doe@acme.com
-MAIL_TO=fadmin@notes.lab
-SUBJECT="Hello via CURL"
-RANDOM_TXT=$(echo $RANDOM | sha256sum | head -c 64)
-SMTP_SERVER="smtp://automation.notes.lab"
-POP3_SERVER="pop3s://automation.notes.lab"
+  # Create mail txt file
+  echo > $MAIL_TXT
+  echo "From: <$MAIL_FROM>" >> $MAIL_TXT
+  echo "To: <$MAIL_TO>" >> $MAIL_TXT
+  echo "Subject: $SUBJECT" >> $MAIL_TXT
+  echo "Date: $(date)" >> $MAIL_TXT
 
-# Create mail txt file
-echo > $MAIL_TXT
-echo "From: <$MAIL_FROM>" >> $MAIL_TXT
-echo "To: <$MAIL_TO>" >> $MAIL_TXT
-echo "Subject: $SUBJECT" >> $MAIL_TXT
-echo "Date: $(date)" >> $MAIL_TXT
+  # Add the random text to the body to identify the message
+  echo "$RANDOM_TXT" >> $MAIL_TXT
 
-# Add the random text to the body to identify the message
-echo "$RANDOM_TXT" >> $MAIL_TXT
+  # Send message
 
-# Send message
+  $CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -s --ssl-reqd --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file /local/notesdata/email.txt "$SMTP_SERVER"
 
-$CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -s --ssl-reqd --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file /local/notesdata/email.txt "$SMTP_SERVER"
-
-if  [ "$?" != "0" ]; then
-  ERROR_MSG="Mail send failed"
-fi
-
+  if  [ "$?" != "0" ]; then
+    ERROR_MSG="Mail send failed"
+  fi
+}
 
 check_pop3()
 {
@@ -712,18 +714,43 @@ check_pop3()
   return 0
 }
 
-# Wait until POP3 started
-wait_for_string $CONSOLE_LOG "POP3 Server: Started" 30
 
-check_pop3 "$RANDOM_TXT"
+# Mail check depends on curl functionality supporting smtps/pop3s
 
-if [ "$?" = "0" ]; then
-  if [ -z "$ERROR_MSG" ]; then
-    ERROR_MSG="Mail receive failed"
-  fi
+MAIL_CHECK=1
+
+if [ -z "$(echo $curl_version | grep smtps)" ]; then
+  MAIL_CHECK=0
 fi
 
-test_result "domino.smtp_pop3.mail" "Mail sent/received" "" "$ERROR_MSG"
+if [ -z "$(echo $curl_version | grep pop3s)" ]; then
+  MAIL_CHECK=0
+fi
+
+
+if [ "$MAIL_CHECK" = "0" ]; then
+
+  log
+  log "Info: Installed Curl does not support smtps/pop3s --> Skipping test"
+  log
+
+else
+
+  send_smtp_mail
+  # Wait until POP3 started
+  wait_for_string $CONSOLE_LOG "POP3 Server: Started" 30
+
+  check_pop3 "$RANDOM_TXT"
+
+  if [ "$?" = "0" ]; then
+    if [ -z "$ERROR_MSG" ]; then
+      ERROR_MSG="Mail receive failed"
+    fi
+  fi
+
+  test_result "domino.smtp_pop3.mail" "Mail sent/received" "" "$ERROR_MSG"
+
+fi
 
 
 # Run custom commands 
