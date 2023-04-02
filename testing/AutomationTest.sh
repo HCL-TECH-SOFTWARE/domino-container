@@ -67,47 +67,35 @@ print_help()
   log
 }
 
-check_container_environment()
+
+detect_container_environment()
 {
-  CONTAINER_CMD=
-  CONTAINER_ENV_NAME=
-  CONTAINER_RUNTIME_VERSION=
 
-  if [ -x /usr/bin/podman ]; then
-    if [ -z "$USE_DOCKER" ]; then
-      # Podman environment detected
-      CONTAINER_CMD=podman
-      CONTAINER_ENV_NAME=Podman
-      CONTAINER_RUNTIME_VERSION_STR=$(podman -v | head -1)
-      CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }')
-    fi
+  if [ -n "$CONTAINER_CMD" ]; then
+    return 0
   fi
 
-  if [ -z "$CONTAINER_CMD" ]; then
-    if [ -n "$(which nerdctl 2> /dev/null)" ]; then
-      CONTAINER_CMD=nerdctl
-      CONTAINER_ENV_NAME=nerdctl
-      CONTAINER_RUNTIME_VERSION_STR=$(nerdctl -v | head -1)
-      CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }')
-
-      # Nerdctl needs no additional config
-      return 0
-    fi
+  if [ -n "$USE_DOCKER" ]; then
+     CONTAINER_CMD=docker
+     return 0
   fi
 
-  if [ -z "$CONTAINER_CMD" ]; then
-    if [ -x "/usr/bin/docker" ] || [ -x "/usr/local/bin/docker" ]; then
-      CONTAINER_CMD=docker
-      # Docker doesn't uses systemd
-      CONTAINER_ENV_NAME=Docker
+  CONTAINER_RUNTIME_VERSION_STR=$(podman -v 2> /dev/null | head -1)
+  if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+    CONTAINER_CMD=podman
+    return 0
+  fi
 
-      # Check container environment
-      CONTAINER_RUNTIME_VERSION_STR=$(docker -v | head -1)
-      CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }'|cut -d"," -f1)
+  CONTAINER_RUNTIME_VERSION_STR=$(nerdctl -v 2> /dev/null | head -1)
+  if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+    CONTAINER_CMD=nerdctl
+    return 0
+  fi
 
-      # For Docker we are done here
-      return 0
-    fi
+  CONTAINER_RUNTIME_VERSION_STR=$(docker -v 2> /dev/null | head -1)
+  if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+    CONTAINER_CMD=docker
+    return 0
   fi
 
   if [ -z "$CONTAINER_CMD" ]; then
@@ -117,6 +105,115 @@ check_container_environment()
 
   return 0
 }
+
+check_version()
+{
+  count=1
+
+  while true
+  do
+    VER=$(echo $1|cut -d"." -f $count)
+    CHECK=$(echo $2|cut -d"." -f $count)
+
+    if [ -z "$VER" ]; then return 0; fi
+    if [ -z "$CHECK" ]; then return 0; fi
+
+    if [ $VER -gt $CHECK ]; then return 0; fi
+    if [ $VER -lt $CHECK ]; then
+      echo "Warning: Unsupported $3 version $1 - Must be at least $2 !"
+      sleep 1
+      return 1
+    fi
+
+    count=$(expr $count + 1)
+  done
+
+  return 0
+}
+
+check_container_environment()
+{
+  DOCKER_MINIMUM_VERSION="20.10.0"
+  PODMAN_MINIMUM_VERSION="3.3.0"
+
+  CONTAINER_ENV_NAME=
+  CONTAINER_RUNTIME_VERSION=
+
+  detect_container_environment
+
+  if [ "$CONTAINER_CMD" = "docker" ]; then
+
+    CONTAINER_ENV_NAME=docker
+    if [ -z "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+      CONTAINER_RUNTIME_VERSION_STR=$(docker -v 2> /dev/null | head -1)
+    fi
+    CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }'|cut -d"," -f1)
+
+    # Check container environment
+    check_version "$CONTAINER_RUNTIME_VERSION" "$DOCKER_MINIMUM_VERSION" "$CONTAINER_CMD"
+
+    # Use sudo for docker command if not root on Linux
+
+    if [ $(uname) = "Linux" ]; then
+      if [ ! "$EUID" = "0" ]; then
+        if [ "$DOCKER_USE_SUDO" = "yes" ]; then
+          CONTAINER_CMD="sudo $CONTAINER_CMD"
+        fi
+      fi
+    fi
+
+  fi
+
+  if [ "$CONTAINER_CMD" = "podman" ]; then
+
+    check_version "$CONTAINER_RUNTIME_VERSION" "$PODMAN_MINIMUM_VERSION" "$CONTAINER_CMD"
+
+    CONTAINER_ENV_NAME=podman
+    if [ -z "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+      CONTAINER_RUNTIME_VERSION_STR=$(podman -v 2> /dev/null | head -1)
+    fi
+    CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }')
+
+  fi
+
+  if [ "$CONTAINER_CMD" = "nerdctl" ]; then
+
+    CONTAINER_ENV_NAME=nerdctl
+    if [ -z "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+      CONTAINER_RUNTIME_VERSION_STR=$(nerdctl -v 2> /dev/null | head -1)
+    fi
+    CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }')
+
+    if [ -z "$CONTAINER_NAMESPACE" ]; then
+      CONTAINER_NAMESPACE=k8s.io
+    fi
+
+    # Always add namespace option to nerdctl command line
+    CONTAINER_CMD="$CONTAINER_CMD --namespace=$CONTAINER_NAMESPACE"
+
+  fi
+
+  if [ -z "$DOCKER_NETWORK" ]; then
+    if [ -n "$DOCKER_NETWORK_NAME" ]; then
+      CONTAINER_NETWORK_CMD="--network=$CONTAINER_NETWORK_NAME"
+    fi
+  fi
+
+  return 0
+}
+
+
+show_version ()
+{
+  echo
+  echo HCL Domino Container Build Script
+  echo ---------------------------------
+  echo "Version $CONTAINER_BUILD_SCRIPT_VERSION"
+  echo "(Running on $CONTAINER_ENV_NAME Version $CONTAINER_RUNTIME_VERSION)"
+  echo
+  return 0
+}
+
 
 # Check & setup container environment
 check_container_environment
@@ -328,11 +425,11 @@ while [ $count -gt 0 ]; do
 done
 
 LINUX_PRETTY_NAME=$($CONTAINER_CMD exec $CONTAINER_NAME cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+LINUX_VERSION=$($CONTAINER_CMD exec $CONTAINER_NAME cat /etc/os-release | grep "VERSION="| cut -d= -f2 | xargs)
 
 kernelVersion="$($CONTAINER_CMD exec $CONTAINER_NAME uname -r)"
 kernelBuildTime="$($CONTAINER_CMD exec $CONTAINER_NAME uname -v)"
-glibcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "glibc-[0-9]+*")
-libstdcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME rpm -qa|grep -e "libstdc++-[0-9]+*")
+glibcVersion=$($CONTAINER_CMD exec $CONTAINER_NAME ldd --version| head -1 | rev | cut -d' ' -f1 | rev)
 timezone=$($CONTAINER_CMD exec $CONTAINER_NAME readlink /etc/localtime | awk -F'/zoneinfo/' '{print $2}')
 javaVersion=$($CONTAINER_CMD exec $CONTAINER_NAME /opt/hcl/domino/notes/latest/linux/jvm/bin/java -version 2>&1 | grep "openjdk version" | awk -F "openjdk version" '{print $2}' | xargs)
 curl_version=$($CONTAINER_CMD exec $CONTAINER_NAME curl -V)
@@ -351,6 +448,7 @@ log_json "suite" "Regression"
 log_json "testClient" "testing.notes.lab"
 log_json "testServer" "testing.notes.lab"
 log_json "platform" "$LINUX_PRETTY_NAME"
+log_json "platformVersion" "$LINUX_VERSION"
 log_json "testBuild" "$IMAGE_VERSION"
 
 log_json "containerPlatform" "$CONTAINER_ENV_NAME"
@@ -359,7 +457,6 @@ log_json "containerPlatformVersion" "$CONTAINER_RUNTIME_VERSION"
 log_json "kernelVersion" "$kernelVersion"
 log_json "kernelBuildTime" "$kernelBuildTime"
 log_json "glibcVersion" "$glibcVersion"
-log_json "libstdcVersion" "$libstdcVersion"
 log_json "timezone" "$timezone"
 log_json "javaVersion" "$javaVersion"
 

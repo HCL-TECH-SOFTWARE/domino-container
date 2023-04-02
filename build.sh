@@ -24,6 +24,13 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
+CONTAINER_BUILD_SCRIPT_VERSION=2.0.4
+
+if [ "$1" == "--version" ]; then
+  echo $CONTAINER_BUILD_SCRIPT_VERSION
+  exit 0
+fi
+
 # ----------------------------------------
 
 log_error_exit()
@@ -153,7 +160,7 @@ check_container_environment()
 
   if [ "$CONTAINER_CMD" = "docker" ]; then
 
-    CONTAINER_ENV_NAME=Docker
+    CONTAINER_ENV_NAME=docker
     if [ -z "$CONTAINER_RUNTIME_VERSION_STR" ]; then
       CONTAINER_RUNTIME_VERSION_STR=$(docker -v 2> /dev/null | head -1)
     fi
@@ -178,7 +185,7 @@ check_container_environment()
 
     check_version "$CONTAINER_RUNTIME_VERSION" "$PODMAN_MINIMUM_VERSION" "$CONTAINER_CMD"
 
-    CONTAINER_ENV_NAME=Podman
+    CONTAINER_ENV_NAME=podman
     if [ -z "$CONTAINER_RUNTIME_VERSION_STR" ]; then
       CONTAINER_RUNTIME_VERSION_STR=$(podman -v 2> /dev/null | head -1)
     fi
@@ -198,9 +205,8 @@ check_container_environment()
       CONTAINER_NAMESPACE=k8s.io
     fi
 
-    if [ -n "$CONTAINER_NAMESPACE" ]; then
-      CONTAINER_NAMESPACE_CMD="--namespace=$CONTAINER_NAMESPACE"
-    fi
+    # Always add namespace option to nerdctl command line
+    CONTAINER_CMD="$CONTAINER_CMD --namespace=$CONTAINER_NAMESPACE"
 
   fi
 
@@ -213,8 +219,25 @@ check_container_environment()
   return 0
 }
 
+
+show_version ()
+{
+  echo
+  echo HCL Domino Container Build Script
+  echo ---------------------------------
+  echo "Version $CONTAINER_BUILD_SCRIPT_VERSION"
+  echo "(Running on $CONTAINER_ENV_NAME Version $CONTAINER_RUNTIME_VERSION)"
+  echo
+  return 0
+}
+
 usage()
 {
+  # check container environment first
+  check_container_environment
+
+  echo
+  show_version
   echo
   echo "Usage: $(basename $SCRIPT_NAME) { domino | traveler | volt | leap | safelinx } version fp hf"
   echo
@@ -540,7 +563,7 @@ check_for_hcl_image()
       ;;
   esac
 
-  IMAGE_ID=$($CONTAINER_CMD $CONTAINER_NAMESPACE_CMD images $BASE_IMAGE -q)
+  IMAGE_ID=$($CONTAINER_CMD images $BASE_IMAGE -q)
   if [ -z "$IMAGE_ID" ]; then
     log_error_exit "Base image [$FROM_IMAGE] does not exist"
   fi
@@ -560,7 +583,7 @@ check_from_image()
 
     if [ "$PROD_NAME" = "domino" ]; then
       LINUX_NAME="CentOS Stream"
-      BASE_IMAGE=quay.io/centos/centos:stream9
+      BASE_IMAGE=quay.io/centos/centos:stream8
     elif [ "$PROD_NAME" = "safelinx" ]; then
       LINUX_NAME="CentOS Stream"
       BASE_IMAGE=quay.io/centos/centos:stream8
@@ -622,6 +645,11 @@ check_from_image()
     photon)
       LINUX_NAME="Photon OS"
       BASE_IMAGE=photon
+      ;;
+
+    photon5)
+      LINUX_NAME="Photon OS"
+      BASE_IMAGE=photon:5.0
       ;;
 
     ubi)
@@ -777,7 +805,7 @@ check_exposed_ports()
 build_domino()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -831,7 +859,7 @@ build_domino()
 build_traveler()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -865,7 +893,7 @@ build_traveler()
 build_volt()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -899,7 +927,7 @@ build_volt()
 build_leap()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -933,7 +961,7 @@ build_leap()
 build_safelinx()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -1926,6 +1954,13 @@ for a in $@; do
       K8S_RUNAS_USER_SUPPORT=yes
       ;;
 
+    ver|version|-ver|-version)
+      # check container environment first
+      check_container_environment
+      show_version
+      exit 0
+      ;;
+
     about)
 
       if [ -x /opt/nashcom/startscript/nshinfo.sh ]; then
@@ -1939,6 +1974,11 @@ for a in $@; do
       if [ -x /opt/nashcom/startscript/nshinfo.sh ]; then
         /opt/nashcom/startscript/nshinfo.sh ipinfo
       fi
+      exit 0
+      ;;
+
+    -h|/h|-?|/?|-help|--help|help|usage)
+      usage
       exit 0
       ;;
 
