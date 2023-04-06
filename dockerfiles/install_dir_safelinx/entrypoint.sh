@@ -116,6 +116,60 @@ if [ -z "$SAFELINX_HOST" ]; then
   SAFELINX_HOST=$NOMAD_HOST
 fi
 
+SL_CONFIG=-1
+case $SAFELINX_CONFIG in
+'nomadweb') SL_CONFIG = 0 ;;
+'vpn') 
+    SL_CONFIG = 1
+    # Check for required fields for VPN configuration
+    if [ -z "$VPN_HOST_ADDRESS" ]; then
+      log_error "Missing Host address for VPN confuration!"
+    fi
+
+    if [ -z "$VPN_ENABLE_DNS" ]; then
+      log_space "No value mentioned for VPN_ENABLE_DNS, taking it as '0', hence no DNS enabled"
+      VPN_ENABLE_DNS=0
+    fi
+
+    # If not ROUTE related variables are not present, disable the Routing.
+    if [ -z "$VPN_ENABLE_ROUTING" && -z "$VPN_ROUTE" ]; then
+      log_space "No value mentioned for VPN_ENABLE_ROUTING & VPN_ROUTE, taking it as '0', hence no Routing enabled"
+      VPN_ENABLE_ROUTING=0
+    fi
+
+    if [ ! -z "$VPN_ROUTE" ]; then
+      # Enable route if Routes are provided.
+      VPN_ENABLE_ROUTING=1
+    fi
+
+    # Raise error if Routing enabled and routes are not provided.
+    if [ $VPN_ENABLE_ROUTING -eq 1 && -z $VPN_ROUTE ]; then
+      log_error "Routing enabled but no Routes provided !"
+    fi
+
+    if [ -z "$VPN_SUBNET_MASK" ]; then
+      log_space "No VPN_SUBNET_MASK provided, hence considering Subnet Mask as 255.255.255.0"
+      VPN_SUBNET_MASK='255.255.255.0'
+    fi
+
+    if [ -z "$VPN_TARGET_ADAPTER" ]; then
+      log_error "VPN_TARGE_ADAPTER is not provided!"
+    fi
+    ;;
+
+'verseHA') 
+    SL_CONFIG = 2
+    if [ -z "$VERSE_DOMINO_ARG" ]; then
+      log_space "No VERSE_DOMINO_ARG mentioned, taking HOSTNAME as VERSE_DOMINO_ARG !"
+      VERSE_DOMINO_ARG="https://$(hostname)"
+    fi
+    ;;
+    
+'travelHA') SL_CONFIG = 3 ;;
+*) log_error "No valid Safelinx configuration selected! 
+Valid configurations are 'nomadweb', 'vpn', 'verseHA', 'travelHA'." ;;
+esac
+
 # Default certificate check interval is 5 minutes
 if [ -z "$CERTMGR_CHECK_INTERVAL" ]; then
   CERTMGR_CHECK_INTERVAL=300
@@ -228,6 +282,8 @@ if [  "$NOMAD_HOST" != "$SAFELINX_HOST" ]; then
   echo "SAFELINX_HOST    : [$SAFELINX_HOST]"
 fi
 
+echo "SAFELINX_CONFIG    : [$SAFELINX_CONFIG]"
+
 echo "CONFIG_BASE      : [$CONFIG_BASE]"
 
 if [ -n "$NOMAD_DOMINO_CFG" ]; then
@@ -300,20 +356,16 @@ WaitMySQLAvailable()
 
 }
 
-# SafeLinx configuration setup via command-line interface
-
-ConfigureSafeLinx()
+# Initial configuration is common
+SafelinxCommonConfiguration()
 {
-
-  # Generate passwords on first start
-  openssl rand -base64 32 > "$SERVER_PWD"
-  openssl rand -base64 32 > "$IMPORT_PWD"
-
+  DBMS_TYPE=0
   # Initial config & setup db
 
   if [ -n "$MYSQL_PASSWORD" ]; then
 
     log_space "SafeLinx MySQL configuration"
+    DBMS_TYPE=3
 
     WaitMySQLAvailable
 
@@ -350,9 +402,13 @@ ConfigureSafeLinx()
     -a cn="NomadServer"             \
     -a primaryou="$CONFIG_BASE"     \
     -a hostname="$SAFELINX_HOST"    \
-    -a dbmstype=0                   \
+    -a dbmstype=${DBMS_TYPE}        \
     -a loglvl=err,warn,log,debug
 
+}
+
+SafelinxLdapConfiguration()
+{
   # Create LDAP server
 
   if [ -z "$LDAP_USER" ]; then
@@ -391,25 +447,99 @@ ConfigureSafeLinx()
     -a userkeyfield=mail            \
     -a ibm-wlDisableVerify=TRUE     \
     -a "ibm-ldapServerRef=cn=LDAP-Server,$CONFIG_BASE"
+}
 
-  # Create Nomad web service
+# SafeLinx configuration setup via command-line interface
 
-  mkwg -s ibm-wlHttpService -t hcl-wlNomad -g mk \
-    -a description="HCL Nomad"                   \
-    -a parent="cn=NomadServer,$CONFIG_BASE"      \
-    -a ibm-wlUrl="https://$NOMAD_HOST"           \
-    -a ibm-wlkeyfile="$SERVER_P12"               \
-    -a hcl-wlkeypwd=$(cat "$SERVER_PWD")         \
-    -a listenport=443                            \
-    -a state=0                                   \
-    -a ibm-wlMaxThreads=8                        \
-    -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE" \
-    -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src"
+ConfigureSafeLinx()
+{
 
-  # LATER: Maybe allow explicit NOMAD settings
-  if [ -n "$NOMAD_DOMINO_CFG" ]; then
-      echo -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src, $NOMAD_DOMINO_CFG" 
+  # Generate passwords on first start
+  openssl rand -base64 32 > "$SERVER_PWD"
+  openssl rand -base64 32 > "$IMPORT_PWD"
+
+  SafelinxCommonConfiguration
+
+  if [ $SL_CONFIG -ne 1 ] then
+    # Setting LDAP is not required for VPN
+    SafelinxLdapConfiguration
   fi
+
+  case $SL_CONFIG in
+    0)
+        # Create Nomad web service
+        mkwg -s ibm-wlHttpService -t hcl-wlNomad -g mk \
+          -a description="HCL Nomad"                   \
+          -a parent="cn=NomadServer,$CONFIG_BASE"      \
+          -a ibm-wlUrl="https://$NOMAD_HOST"           \
+          -a ibm-wlkeyfile="$SERVER_P12"               \
+          -a hcl-wlkeypwd=$(cat "$SERVER_PWD")         \
+          -a listenport=443                            \
+          -a state=0                                   \
+          -a ibm-wlMaxThreads=8                        \
+          -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE" \
+          -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src"
+
+        # LATER: Maybe allow explicit NOMAD settings
+        if [ -n "$NOMAD_DOMINO_CFG" ]; then
+            echo -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src, $NOMAD_DOMINO_CFG" 
+        fi
+      ;;
+    
+    1)
+        # Configure for VPN
+        mkwg -s ibm-wlWlpServer -g mk                    \
+          -a ibm-wlMultiSignon=FALSE                     \
+          -a maxidle=7200                                \
+          -a parent="cn=${SAFELINX_HOST},${CONFIG_BASE}" \
+          -a description="HCL VPN Container"        \
+          -a state=0 "-X"
+
+        mkwg -s wlMnc -t ip-lan -g mk                     \
+          -a directbind=0                                 \
+          -a ibm-wlProfile= ""                            \
+          -a parent="cn=${SAFELINX_HOST},${CONFIG_BASE}" \
+          -a description="HCL VPN Container MNC"     \
+          -a state=0                                      \
+          -a ioports=8889 -X
+
+# TODO: Get the values from Environment
+        mkwg -s wlMni -g mk                                            \
+          -a state=0                                                   \
+          -a configmode=1                                              \
+          -a netaddr=${VPN_HOST_ADDRESS}                               \
+          -a enabledns=${VPN_ENABLE_DNS}                               \
+          -a ibm-route=${VPN_ROUTE}                                    \
+          -a ibm-enableRoute=${VPN_ENABLE_ROUTING}                     \
+          -a netmask=${VPN_SUBNET_MASK}                                \
+          -a enablewins=0                                              \
+          -a eTargetAdapter=${VPN_TARGET_ADAPTER}                      \
+          -a parent="cn=Mobile access,cn=${SAFELINX_HOST},${CONFIG_BASE}" -X
+
+        ;;
+    
+    2)
+        # Confgure VerseHA
+        mkwg -s ibm-wlHttpService -t hcl-wlVerseHA -g mk        \
+        -a state=0                                              \
+        -a ibm-wlkeyfile="$SERVER_P12"                          \
+        -a ibm-wlUrl="https://$NOMAD_HOST"                      \
+        -a hcl-wlkeypwd=$(cat "$SERVER_PWD")                    \
+        -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE"  \
+        -a httpproxyaddr="${VERSE_DOMINO_ARG}"                  \
+        -a parent="cn=${SAFELINX_HOST},${CONFIG_BASE}"          \
+        -a listenport=443                                       \
+        -a ibm-wlMaxThreads=8                                   \
+        -a description="HCL Verse HA"  -X 
+      ;;
+    3)
+        # Configure for travelHA
+        log_space "TODO: Currently work is inprogress..."
+        ;;
+    *)
+        log_error "No valid Safelinx configuration selected!"
+        ;;
+  esac
 
   # Keep the config in the volume and copy later on start
 
