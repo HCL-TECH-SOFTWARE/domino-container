@@ -112,64 +112,15 @@ if [ -z "$NOMAD_HOST" ]; then
   NOMAD_HOST=$(hostname)
 fi
 
+# No nothing enabled, enable NoMad Web Proxy
+if [ -z "$ENABLE_NOMAD" && -z "$ENABLE_VPN" && -z "$ENABLE_VERSEHA" ]; then
+  ENABLE_NOMAD=1
+fi
+
 if [ -z "$SAFELINX_HOST" ]; then
   SAFELINX_HOST=$NOMAD_HOST
 fi
-
-SL_CONFIG=-1
-case $SAFELINX_CONFIG in
-'nomadweb') SL_CONFIG = 0 ;;
-'vpn') 
-    SL_CONFIG = 1
-    # Check for required fields for VPN configuration
-    if [ -z "$VPN_HOST_ADDRESS" ]; then
-      log_error "Missing Host address for VPN confuration!"
-    fi
-
-    if [ -z "$VPN_ENABLE_DNS" ]; then
-      log_space "No value mentioned for VPN_ENABLE_DNS, taking it as '0', hence no DNS enabled"
-      VPN_ENABLE_DNS=0
-    fi
-
-    # If not ROUTE related variables are not present, disable the Routing.
-    if [ -z "$VPN_ENABLE_ROUTING" && -z "$VPN_ROUTE" ]; then
-      log_space "No value mentioned for VPN_ENABLE_ROUTING & VPN_ROUTE, taking it as '0', hence no Routing enabled"
-      VPN_ENABLE_ROUTING=0
-    fi
-
-    if [ ! -z "$VPN_ROUTE" ]; then
-      # Enable route if Routes are provided.
-      VPN_ENABLE_ROUTING=1
-    fi
-
-    # Raise error if Routing enabled and routes are not provided.
-    if [ $VPN_ENABLE_ROUTING -eq 1 && -z $VPN_ROUTE ]; then
-      log_error "Routing enabled but no Routes provided !"
-    fi
-
-    if [ -z "$VPN_SUBNET_MASK" ]; then
-      log_space "No VPN_SUBNET_MASK provided, hence considering Subnet Mask as 255.255.255.0"
-      VPN_SUBNET_MASK='255.255.255.0'
-    fi
-
-    if [ -z "$VPN_TARGET_ADAPTER" ]; then
-      log_error "VPN_TARGE_ADAPTER is not provided!"
-    fi
-    ;;
-
-'verseHA') 
-    SL_CONFIG = 2
-    if [ -z "$VERSE_DOMINO_ARG" ]; then
-      log_space "No VERSE_DOMINO_ARG mentioned, taking HOSTNAME as VERSE_DOMINO_ARG !"
-      VERSE_DOMINO_ARG="https://$(hostname)"
-    fi
-    ;;
     
-'travelHA') SL_CONFIG = 3 ;;
-*) log_error "No valid Safelinx configuration selected! 
-Valid configurations are 'nomadweb', 'vpn', 'verseHA', 'travelHA'." ;;
-esac
-
 # Default certificate check interval is 5 minutes
 if [ -z "$CERTMGR_CHECK_INTERVAL" ]; then
   CERTMGR_CHECK_INTERVAL=300
@@ -449,8 +400,129 @@ SafelinxLdapConfiguration()
     -a "ibm-ldapServerRef=cn=LDAP-Server,$CONFIG_BASE"
 }
 
-# SafeLinx configuration setup via command-line interface
+ConfigureNomad()
+{
 
+  if [ -z "$ENABLE_NOMAD" ]; then
+    return
+  fi
+
+  # Create Nomad web service
+  mkwg -s ibm-wlHttpService -t hcl-wlNomad -g mk \
+    -a description="HCL Nomad"                   \
+    -a parent="cn=NomadServer,$CONFIG_BASE"      \
+    -a ibm-wlUrl="https://$NOMAD_HOST"           \
+    -a ibm-wlkeyfile="$SERVER_P12"               \
+    -a hcl-wlkeypwd=$(cat "$SERVER_PWD")         \
+    -a listenport=443                            \
+    -a state=0                                   \
+    -a ibm-wlMaxThreads=8                        \
+    -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE" \
+    -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src"
+
+  # LATER: Maybe allow explicit NOMAD settings
+  if [ -n "$NOMAD_DOMINO_CFG" ]; then
+      echo -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src, $NOMAD_DOMINO_CFG" 
+  fi
+}
+
+ConfigureVPN()
+{
+  if [ -z "$ENABLE_VPN" ]; then
+    return
+  fi
+
+  if [ -z "$VPN_HOST_ADDRESS" ]; then
+      log_space "Missing Host address for VPN confuration, hence skipping VPN configuration!"
+      return
+  fi
+
+  if [ -z "$VPN_TARGET_ADAPTER" ]; then
+    log_space "VPN_TARGE_ADAPTER is not provided, hence skipping VPN configuration!"
+    return
+  fi
+
+  if [ -z "$VPN_ENABLE_DNS" ]; then
+      log_space "No value mentioned for VPN_ENABLE_DNS, taking it as '0', hence no DNS enabled"
+      VPN_ENABLE_DNS=0
+  fi
+
+  if [ -z "$VPN_ENABLE_ROUTING" && -z "$VPN_ROUTE" ]; then
+    log_space "No value mentioned for VPN_ENABLE_ROUTING & VPN_ROUTE, taking it as '0', hence no Routing enabled"
+    VPN_ENABLE_ROUTING=0
+    VPN_ENABLE_ROUTING=''
+  fi
+
+  if [ ! -z "$VPN_ROUTE" ]; then
+      # Enable route if Routes are provided.
+      VPN_ENABLE_ROUTING=1
+  fi
+
+  # Raise error if Routing enabled and routes are not provided.
+  if [ $VPN_ENABLE_ROUTING -eq 1 && -z $VPN_ROUTE ]; then
+    log_error "Routing enabled but no Routes provided !"
+  fi
+
+  if [ -z "$VPN_SUBNET_MASK" ]; then
+    log_space "No VPN_SUBNET_MASK provided, hence considering Subnet Mask as 255.255.255.0"
+    VPN_SUBNET_MASK='255.255.255.0'
+  fi
+
+  # Configure for VPN
+  mkwg -s ibm-wlWlpServer -g mk                    \
+    -a ibm-wlMultiSignon=FALSE                     \
+    -a maxidle=7200                                \
+    -a parent="cn=${SAFELINX_HOST},${CONFIG_BASE}" \
+    -a description="HCL VPN Container"        \
+    -a state=0 "-X"
+
+  mkwg -s wlMnc -t ip-lan -g mk                     \
+    -a directbind=0                                 \
+    -a ibm-wlProfile= ""                            \
+    -a parent="cn=${SAFELINX_HOST},${CONFIG_BASE}" \
+    -a description="HCL VPN Container MNC"     \
+    -a state=0                                      \
+    -a ioports=8889 -X
+
+# TODO: Get the values from Environment
+  mkwg -s wlMni -g mk                                            \
+    -a state=0                                                   \
+    -a configmode=1                                              \
+    -a netaddr=${VPN_HOST_ADDRESS}                               \
+    -a enabledns=${VPN_ENABLE_DNS}                               \
+    -a ibm-route=${VPN_ROUTE}                                    \
+    -a ibm-enableRoute=${VPN_ENABLE_ROUTING}                     \
+    -a netmask=${VPN_SUBNET_MASK}                                \
+    -a enablewins=0                                              \
+    -a eTargetAdapter=${VPN_TARGET_ADAPTER}                      \
+    -a parent="cn=Mobile access,cn=${SAFELINX_HOST},${CONFIG_BASE}" -X
+}
+
+ConfigureVerseHA()
+{
+  if [ -z "$ENABLE_VERSEHA" ]; then
+    return
+  fi
+
+  if [ -z "$VERSE_DOMINO_ARG" ]; then
+    log_space "No VERSE_DOMINO_ARG mentioned, taking HOSTNAME as VERSE_DOMINO_ARG !"
+    VERSE_DOMINO_ARG="https://$(hostname)"
+  fi
+  # Confgure VerseHA
+  mkwg -s ibm-wlHttpService -t hcl-wlVerseHA -g mk        \
+  -a state=0                                              \
+  -a ibm-wlkeyfile="$SERVER_P12"                          \
+  -a ibm-wlUrl="https://$NOMAD_HOST"                      \
+  -a hcl-wlkeypwd=$(cat "$SERVER_PWD")                    \
+  -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE"  \
+  -a httpproxyaddr="${VERSE_DOMINO_ARG}"                  \
+  -a parent="cn=${SAFELINX_HOST},${CONFIG_BASE}"          \
+  -a listenport=443                                       \
+  -a ibm-wlMaxThreads=8                                   \
+  -a description="HCL Verse HA"  -X 
+}
+
+# SafeLinx configuration setup via command-line interface
 ConfigureSafeLinx()
 {
 
@@ -459,87 +531,11 @@ ConfigureSafeLinx()
   openssl rand -base64 32 > "$IMPORT_PWD"
 
   SafelinxCommonConfiguration
+  SafelinxLdapConfiguration
 
-  if [ $SL_CONFIG -ne 1 ] then
-    # Setting LDAP is not required for VPN
-    SafelinxLdapConfiguration
-  fi
-
-  case $SL_CONFIG in
-    0)
-        # Create Nomad web service
-        mkwg -s ibm-wlHttpService -t hcl-wlNomad -g mk \
-          -a description="HCL Nomad"                   \
-          -a parent="cn=NomadServer,$CONFIG_BASE"      \
-          -a ibm-wlUrl="https://$NOMAD_HOST"           \
-          -a ibm-wlkeyfile="$SERVER_P12"               \
-          -a hcl-wlkeypwd=$(cat "$SERVER_PWD")         \
-          -a listenport=443                            \
-          -a state=0                                   \
-          -a ibm-wlMaxThreads=8                        \
-          -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE" \
-          -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src"
-
-        # LATER: Maybe allow explicit NOMAD settings
-        if [ -n "$NOMAD_DOMINO_CFG" ]; then
-            echo -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src, $NOMAD_DOMINO_CFG" 
-        fi
-      ;;
-    
-    1)
-        # Configure for VPN
-        mkwg -s ibm-wlWlpServer -g mk                    \
-          -a ibm-wlMultiSignon=FALSE                     \
-          -a maxidle=7200                                \
-          -a parent="cn=${SAFELINX_HOST},${CONFIG_BASE}" \
-          -a description="HCL VPN Container"        \
-          -a state=0 "-X"
-
-        mkwg -s wlMnc -t ip-lan -g mk                     \
-          -a directbind=0                                 \
-          -a ibm-wlProfile= ""                            \
-          -a parent="cn=${SAFELINX_HOST},${CONFIG_BASE}" \
-          -a description="HCL VPN Container MNC"     \
-          -a state=0                                      \
-          -a ioports=8889 -X
-
-# TODO: Get the values from Environment
-        mkwg -s wlMni -g mk                                            \
-          -a state=0                                                   \
-          -a configmode=1                                              \
-          -a netaddr=${VPN_HOST_ADDRESS}                               \
-          -a enabledns=${VPN_ENABLE_DNS}                               \
-          -a ibm-route=${VPN_ROUTE}                                    \
-          -a ibm-enableRoute=${VPN_ENABLE_ROUTING}                     \
-          -a netmask=${VPN_SUBNET_MASK}                                \
-          -a enablewins=0                                              \
-          -a eTargetAdapter=${VPN_TARGET_ADAPTER}                      \
-          -a parent="cn=Mobile access,cn=${SAFELINX_HOST},${CONFIG_BASE}" -X
-
-        ;;
-    
-    2)
-        # Confgure VerseHA
-        mkwg -s ibm-wlHttpService -t hcl-wlVerseHA -g mk        \
-        -a state=0                                              \
-        -a ibm-wlkeyfile="$SERVER_P12"                          \
-        -a ibm-wlUrl="https://$NOMAD_HOST"                      \
-        -a hcl-wlkeypwd=$(cat "$SERVER_PWD")                    \
-        -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE"  \
-        -a httpproxyaddr="${VERSE_DOMINO_ARG}"                  \
-        -a parent="cn=${SAFELINX_HOST},${CONFIG_BASE}"          \
-        -a listenport=443                                       \
-        -a ibm-wlMaxThreads=8                                   \
-        -a description="HCL Verse HA"  -X 
-      ;;
-    3)
-        # Configure for travelHA
-        log_space "TODO: Currently work is inprogress..."
-        ;;
-    *)
-        log_error "No valid Safelinx configuration selected!"
-        ;;
-  esac
+  ConfigureNomad
+  ConfigureVPN
+  ConfigureVerseHA
 
   # Keep the config in the volume and copy later on start
 
