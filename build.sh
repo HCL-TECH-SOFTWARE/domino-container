@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.0.3
+# Version 2.0.4
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -23,6 +23,13 @@ LinuxYumUpdate=yes
 
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
+
+CONTAINER_BUILD_SCRIPT_VERSION=2.0.4
+
+if [ "$1" == "--version" ]; then
+  echo $CONTAINER_BUILD_SCRIPT_VERSION
+  exit 0
+fi
 
 # ----------------------------------------
 
@@ -103,30 +110,40 @@ check_timezone()
   return 0
 }
 
-get_container_environment()
+detect_container_environment()
 {
-  # If specified use specified command. Else find out the platform.
 
   if [ -n "$CONTAINER_CMD" ]; then
     return 0
   fi
 
   if [ -n "$USE_DOCKER" ]; then
-    CONTAINER_CMD=docker
-    return 0
+     CONTAINER_CMD=docker
+     return 0
   fi
 
-  if [ -x /usr/bin/podman ]; then
+  CONTAINER_RUNTIME_VERSION_STR=$(podman -v 2> /dev/null | head -1)
+  if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
     CONTAINER_CMD=podman
     return 0
   fi
 
-  if [ -n "$(which nerdctl 2> /dev/null)" ]; then
+  CONTAINER_RUNTIME_VERSION_STR=$(nerdctl -v 2> /dev/null | head -1)
+  if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
     CONTAINER_CMD=nerdctl
     return 0
   fi
 
-  CONTAINER_CMD=docker
+  CONTAINER_RUNTIME_VERSION_STR=$(docker -v 2> /dev/null | head -1)
+  if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+    CONTAINER_CMD=docker
+    return 0
+  fi
+
+  if [ -z "$CONTAINER_CMD" ]; then
+    log "No container environment detected!"
+    exit 1
+  fi
 
   return 0
 }
@@ -136,34 +153,21 @@ check_container_environment()
   DOCKER_MINIMUM_VERSION="20.10.0"
   PODMAN_MINIMUM_VERSION="3.3.0"
 
-  if [ "$CONTAINER_CMD" = "podman" ]; then
-    DOCKER_ENV_NAME=Podman
-    DOCKER_VERSION_STR=$(podman -v | head -1)
-    DOCKER_VERSION=$(echo $DOCKER_VERSION_STR | awk -F'version ' '{print $2 }')
-    check_version "$DOCKER_VERSION" "$PODMAN_MINIMUM_VERSION" "$CONTAINER_CMD"
+  CONTAINER_ENV_NAME=
+  CONTAINER_RUNTIME_VERSION=
 
-    if [ -z "$DOCKER_NETWORK" ]; then
-      if [ -n "$DOCKER_NETWORK_NAME" ]; then
-        CONTAINER_NETWORK_CMD="--network=$CONTAINER_NETWORK_NAME"
-      fi
-    fi
-
-    return 0
-  fi
+  detect_container_environment
 
   if [ "$CONTAINER_CMD" = "docker" ]; then
 
-    DOCKER_ENV_NAME=Docker
-
-    if [ -z "$DOCKERD_NAME" ]; then
-      DOCKERD_NAME=dockerd
+    CONTAINER_ENV_NAME=docker
+    if [ -z "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+      CONTAINER_RUNTIME_VERSION_STR=$(docker -v 2> /dev/null | head -1)
     fi
+    CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }'|cut -d"," -f1)
 
-    # check docker environment
-    DOCKER_VERSION_STR=$(docker -v | head -1)
-    DOCKER_VERSION=$(echo $DOCKER_VERSION_STR | awk -F'version ' '{print $2 }'|cut -d"," -f1)
-
-    check_version "$DOCKER_VERSION" "$DOCKER_MINIMUM_VERSION" "$CONTAINER_CMD"
+    # Check container environment
+    check_version "$CONTAINER_RUNTIME_VERSION" "$DOCKER_MINIMUM_VERSION" "$CONTAINER_CMD"
 
     # Use sudo for docker command if not root on Linux
 
@@ -175,34 +179,65 @@ check_container_environment()
       fi
     fi
 
-    if [ -z "$DOCKER_NETWORK" ]; then
-      if [ -n "$DOCKER_NETWORK_NAME" ]; then
-        CONTAINER_NETWORK_CMD="--network=$CONTAINER_NETWORK_NAME"
-      fi
-    fi
+  fi
 
-    return 0
+  if [ "$CONTAINER_CMD" = "podman" ]; then
+
+    check_version "$CONTAINER_RUNTIME_VERSION" "$PODMAN_MINIMUM_VERSION" "$CONTAINER_CMD"
+
+    CONTAINER_ENV_NAME=podman
+    if [ -z "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+      CONTAINER_RUNTIME_VERSION_STR=$(podman -v 2> /dev/null | head -1)
+    fi
+    CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }')
+
   fi
 
   if [ "$CONTAINER_CMD" = "nerdctl" ]; then
-    DOCKER_ENV_NAME=nerdctl
+
+    CONTAINER_ENV_NAME=nerdctl
+    if [ -z "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+      CONTAINER_RUNTIME_VERSION_STR=$(nerdctl -v 2> /dev/null | head -1)
+    fi
+    CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }')
 
     if [ -z "$CONTAINER_NAMESPACE" ]; then
       CONTAINER_NAMESPACE=k8s.io
     fi
 
-    CONTAINER_NAMESPACE_CMD="--namespace=$CONTAINER_NAMESPACE"
+    # Always add namespace option to nerdctl command line
+    CONTAINER_CMD="$CONTAINER_CMD --namespace=$CONTAINER_NAMESPACE"
 
-    DOCKER_VERSION_STR=$(nerdctl -v | head -1)
-    DOCKER_VERSION=$(echo $DOCKER_VERSION_STR | awk -F'version ' '{print $2 }')
+  fi
+
+  if [ -z "$DOCKER_NETWORK" ]; then
+    if [ -n "$DOCKER_NETWORK_NAME" ]; then
+      CONTAINER_NETWORK_CMD="--network=$CONTAINER_NETWORK_NAME"
+    fi
   fi
 
   return 0
 }
 
 
+show_version ()
+{
+  echo
+  echo HCL Domino Container Build Script
+  echo ---------------------------------
+  echo "Version $CONTAINER_BUILD_SCRIPT_VERSION"
+  echo "(Running on $CONTAINER_ENV_NAME Version $CONTAINER_RUNTIME_VERSION)"
+  echo
+  return 0
+}
+
 usage()
 {
+  # check container environment first
+  check_container_environment
+
+  echo
+  show_version
   echo
   echo "Usage: $(basename $SCRIPT_NAME) { domino | traveler | volt | leap | safelinx } version fp hf"
   echo
@@ -273,7 +308,7 @@ header()
 dump_config()
 {
   header "Build Configuration"
-  echo "Build Environment    : [$CONTAINER_CMD]"
+  echo "Build Environment    : [$CONTAINER_CMD] $CONTAINER_RUNTIME_VERSION"
   echo "BASE_IMAGE           : [$BASE_IMAGE]"
   echo "DOWNLOAD_FROM        : [$DOWNLOAD_FROM]"
   echo "SOFTWARE_DIR         : [$SOFTWARE_DIR]"
@@ -528,7 +563,7 @@ check_for_hcl_image()
       ;;
   esac
 
-  IMAGE_ID=$($CONTAINER_CMD $CONTAINER_NAMESPACE_CMD images $BASE_IMAGE -q)
+  IMAGE_ID=$($CONTAINER_CMD images $BASE_IMAGE -q)
   if [ -z "$IMAGE_ID" ]; then
     log_error_exit "Base image [$FROM_IMAGE] does not exist"
   fi
@@ -610,6 +645,11 @@ check_from_image()
     photon)
       LINUX_NAME="Photon OS"
       BASE_IMAGE=photon
+      ;;
+
+    photon5)
+      LINUX_NAME="Photon OS"
+      BASE_IMAGE=photon:5.0
       ;;
 
     ubi)
@@ -765,7 +805,7 @@ check_exposed_ports()
 build_domino()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -819,7 +859,7 @@ build_domino()
 build_traveler()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -853,7 +893,7 @@ build_traveler()
 build_volt()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -887,7 +927,7 @@ build_volt()
 build_leap()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -921,7 +961,7 @@ build_leap()
 build_safelinx()
 {
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
-    $CONTAINER_NETWORK_CMD $CONTAINER_NAMESPACE_CMD \
+    $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
     --label maintainer="$CONTAINER_MAINTAINER" \
@@ -1658,7 +1698,6 @@ if [ "$1" = "save" ]; then
   fi
 
   # get and check container environment (usually initialized after getting all the options)
-  get_container_environment
   check_container_environment
 
   header "Exporting $2 -> $3 - This takes some time ..."
@@ -1801,7 +1840,7 @@ for a in $@; do
       PROD_HF=$p
       ;;
 
-    -domlp=*)
+    -domlp=*|+domlp=*)
       DOMLP_VER=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
@@ -1915,6 +1954,34 @@ for a in $@; do
       K8S_RUNAS_USER_SUPPORT=yes
       ;;
 
+    ver|version|-ver|-version)
+      # check container environment first
+      check_container_environment
+      show_version
+      exit 0
+      ;;
+
+    about)
+
+      if [ -x /opt/nashcom/startscript/nshinfo.sh ]; then
+        /opt/nashcom/startscript/nshinfo.sh
+      fi
+      exit 0
+      ;;
+
+    About|about+)
+
+      if [ -x /opt/nashcom/startscript/nshinfo.sh ]; then
+        /opt/nashcom/startscript/nshinfo.sh ipinfo
+      fi
+      exit 0
+      ;;
+
+    -h|/h|-?|/?|-help|--help|help|usage)
+      usage
+      exit 0
+      ;;
+
     *)
       log_error_exit "Invalid parameter [$a]"
       ;;
@@ -1922,7 +1989,6 @@ for a in $@; do
 done
 
 check_timezone
-get_container_environment
 check_container_environment
 
 echo "[Running in $CONTAINER_CMD configuration]"
@@ -2051,3 +2117,4 @@ fi
 print_runtime
 
 exit 0
+

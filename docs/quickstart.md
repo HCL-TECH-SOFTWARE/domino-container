@@ -9,6 +9,10 @@ has_children: false
 The default configuration should work for most environments.  
 For special requirements check the documentation for details.
 
+## You are looking to (just) configure & control Domino container instances - not to build containers?
+
+You are in luck, just at the wrong place. Head over to [Nash!Com's Domino start script](https://github.com/nashcom/domino-startscript) and follow the instructions there. There is no need to use this repository. Instructions are [repeated below](https://opensource.hcltechsw.com/domino-container/quickstart/#run-container-domino-container-script) for your convenience
+
 ## Ensure you have a supported build environment
 
 The project supports most Unix base environments including [Windows Subsystem for Linux 2 WSL2](https://docs.microsoft.com/en-us/windows/wsl/)
@@ -63,8 +67,13 @@ The Nash!Com Domino container script allows you to operate your server. It suppo
 
 ### Install Domino Container script
 
+Clone the [start script repository](https://github.com/nashcom/domino-startscript)
+
 ```
-../domino-startscript/install_dominoctl
+cd ..
+git clone https://github.com/nashcom/domino-startscript.git
+cd domino-startscript
+./install_dominoctl
 ```
 
 ### Configure your container

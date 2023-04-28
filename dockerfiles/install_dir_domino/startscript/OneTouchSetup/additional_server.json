@@ -31,7 +31,7 @@
     },
 
     "notesINI": {
-      "Create_R12_databases": "1",
+      "DisableSmartServer": "1",
       "Create_R85_log": "1",
       "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION": "1",
       "LOG_REPLICATION": "0",
@@ -124,21 +124,13 @@
                 "C030",
                 "9F",
                 "C02F",
-                "9E",
-                "C028",
-                "6B",
-                "C027",
-                "67"
+                "9E"
                 ],
               "SSLCipherSupportedList": [
                 "C030",
                 "9F",
                 "C02F",
-                "9E",
-                "C028",
-                "6B",
-                "C027",
-                "67"
+                "9E"
                 ]
             }
           }

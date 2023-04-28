@@ -170,21 +170,13 @@
                 "C030",
                 "9F",
                 "C02F",
-                "9E",
-                "C028",
-                "6B",
-                "C027",
-                "67"
+                "9E"
                 ],
               "SSLCipherSupportedList": [
                 "C030",
                 "9F",
                 "C02F",
-                "9E",
-                "C028",
-                "6B",
-                "C027",
-                "67"
+                "9E"
                 ]
             }
           },
@@ -227,18 +219,19 @@
             "computeWithForm": true,
             "items": {
               "Form": "WebSite",
-              "AutomationComment" : "Default Website",
-              "WSIsDflt"          : "1",
-              "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
-              "ISiteName"         : "AutomationTestDefaultSite",
-              "ISiteOrg"          : "AutoTestLab",
-              "WSHostingSrvrs"    : "*",
-              "TCPAnonymous"      : "0",
-              "TCPNameAndPwd"     : "1",
-              "SSLAnonymous"      : "0",
-              "SSLNameAndPwd"     : "1",
-              "SSLKeyFile"        : "keyfile.kyr",
-              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
+              "AutomationComment " : "Default Website",
+              "WSIsDflt"           : "1",
+              "ISiteAdrs"          : [ "127.0.0.1", "automation.notes.lab" ],
+              "ISiteName"          : "AutomationTestDefaultSite",
+              "ISiteOrg"           : "AutoTestLab",
+              "WSHostingSrvrs"     : "*",
+              "TCPAnonymous"       : "0",
+              "TCPNameAndPwd"      : "1",
+              "SSLAnonymous"       : "0",
+              "SSLNameAndPwd"      : "1",
+              "HTTP_SSLBearerToken": "1",
+              "SSLKeyFile"         : "keyfile.kyr",
+              "SSLCipherList"      : [ "C030", "9F", "C02F", "9E" ],
               "HTTP_EnableSessionAuth" : "1"
             }
           },
@@ -258,8 +251,7 @@
               "SSLAnonymous"      : "1",
               "SSLNameAndPwd"     : "1",
               "SSLKeyFile"        : "keyfile.kyr",
-              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
-              "HTTP_EnableSessionAuth" : "1"
+              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E" ]
             }
           },
 
@@ -278,8 +270,7 @@
               "SSLAnonymous"      : "0",
               "SSLNameAndPwd"     : "1",
               "SSLKeyFile"        : "keyfile.kyr",
-              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
-              "HTTP_EnableSessionAuth" : "1"
+              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E" ]
             }
           },
 
@@ -298,8 +289,7 @@
               "SSLAnonymous"      : "0",
               "SSLNameAndPwd"     : "1",
               "SSLKeyFile"        : "keyfile.kyr",
-              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
-              "HTTP_EnableSessionAuth" : "1"
+              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E" ]
             }
           },
 
@@ -318,8 +308,7 @@
               "SSLAnonymous"      : "0",
               "SSLNameAndPwd"     : "1",
               "SSLKeyFile"        : "keyfile.kyr",
-              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E", "C028", "6B", "C027", "67" ],
-              "HTTP_EnableSessionAuth" : "1"
+              "SSLCipherList"     : [ "C030", "9F", "C02F", "9E" ]
             }
           },
 

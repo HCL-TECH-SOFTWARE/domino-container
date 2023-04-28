@@ -4,6 +4,10 @@ This project contains build scripts for HCL Domino Docker/Container images via [
 The repository provides the utilities to build HCL Domino Server with the latest software or specific version in a Docker/Container image.
 There are separate folders within this repository for Domino add-on HCL products like Traveler and HCL Domino Volt as well.
 
+## You are looking to (just) configure & control Domino container instances - not to build containers?
+
+You are in luck, just at the wrong place. Head over to [Nash!Com's Domino start script](https://github.com/nashcom/domino-startscript) and follow the instructions there. There is no need to use this repository.
+
 ## Where to get HCL Domino software
 
 The project uses the official HCL web-kit installers to build container images download from the official HCL Flexnet repository.  
