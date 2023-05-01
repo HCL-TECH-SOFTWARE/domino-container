@@ -33,7 +33,7 @@ RUN $LocalInstallDir/install_linux.sh && \
 HEALTHCHECK --interval=60s --timeout=10s CMD /healthcheck.sh
 
 # Expose Ports HTTP HTTPS SafeLinx Admin/AdminSSL/Monitoring?
-EXPOSE 80 443 9555 9559 9557
+EXPOSE 80 443 9555 9559 9557 8889
 
 ENTRYPOINT ["/entrypoint.sh"]
 
