@@ -507,17 +507,7 @@ fi
 
 test_result "domino.server.running" "Domino Server startup" "" "$ERROR_MSG"
 
-
-# Check if OSGI is needed, else disable to reduce HTTP start/stop time
-
-if [ -n "$traveler_binary" ]; then
-  osgi_needed=1
-fi
-
-if [ -z "$osgi_needed" ]; then
-  server_console_cmd "set config iNotesDisableXPageCmd=1"
-fi
-
+sleep 10
 
 # Start HTTP or Traveler task
 
