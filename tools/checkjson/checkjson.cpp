@@ -1,7 +1,7 @@
 /*
    JSON schema validation tool
    ---------------------------
-   Copyright Nash!Com, Daniel Nashed 2022 - APACHE 2.0 see LICENSE
+   Copyright Nash!Com, Daniel Nashed 2022-2023 - APACHE 2.0 see LICENSE
 
    Syntax: %s file.json [schema.json] -default uses the standard HCL OneTouch setup JSON schema located in Domino binary directory
  */
@@ -85,22 +85,24 @@ int validate_json (char *pszFile, char *pszSchema)
         ret = 3;
         goto Done;
     }
-
-    FileReadStream jDocStream (fp, szBuffer, sizeof (szBuffer));
-
-    jDoc.ParseStream (jDocStream);
-
-    if (jDoc.HasParseError())
+    else
     {
-        pStr = GetParseError_En(jDoc.GetParseError());
-        if (pStr)
-          printf ("\nJSON file parsing error, offset: %lu: %s\n\n", jDoc.GetErrorOffset(), pStr);
+        FileReadStream jDocStream (fp, szBuffer, sizeof (szBuffer));
 
-        goto Done;
+        jDoc.ParseStream (jDocStream);
+
+        if (jDoc.HasParseError())
+        {
+            pStr = GetParseError_En(jDoc.GetParseError());
+            if (pStr)
+              printf ("\nJSON file parsing error, offset: %lu: %s\n\n", jDoc.GetErrorOffset(), pStr);
+
+            goto Done;
+        }
+
+        fclose (fp);
+       fp = NULL;
     }
-
-    fclose (fp);
-    fp = NULL;
 
     /* Read and check JSON schema file when specified */
     if ( (!pszSchema) || (!*pszSchema) )
@@ -117,51 +119,56 @@ int validate_json (char *pszFile, char *pszSchema)
         ret = 2;
         goto Done;
     }
-
-    FileReadStream jSchemaStream (fp, szBuffer, sizeof (szBuffer));
-    jSchemaDoc.ParseStream (jSchemaStream);
-
-    if (jSchemaDoc.HasParseError())
+    else
     {
-        pStr = GetParseError_En (jSchemaDoc.GetParseError());
-        if (pStr)
-          printf ("\nJSON schema file parsing error, offset: %lu: %s\n\n", jSchemaDoc.GetErrorOffset(), pStr);
+        FileReadStream jSchemaStream (fp, szBuffer, sizeof (szBuffer));
+        jSchemaDoc.ParseStream (jSchemaStream);
 
-        ret = 1;
-        goto Done;
+        if (jSchemaDoc.HasParseError())
+        {
+            pStr = GetParseError_En (jSchemaDoc.GetParseError());
+            if (pStr)
+                 printf ("\nJSON schema file parsing error, offset: %lu: %s\n\n", jSchemaDoc.GetErrorOffset(), pStr);
+
+            ret = 1;
+            goto Done;
+        }
+
+        fclose (fp);
+        fp = NULL;
     }
 
-    fclose (fp);
-    fp = NULL;
-
-    /* Now that both JSON files are valid, check the schema */
-    SchemaDocument jSchema (jSchemaDoc);
-    SchemaValidator jValidator (jSchema);
-
-    if (!jDoc.Accept (jValidator))
     {
-        rapidjson::StringBuffer jStrBuf;
-        jValidator.GetInvalidSchemaPointer().StringifyUriFragment (jStrBuf);
+        /* Now that both JSON files are valid, check the schema */
+        SchemaDocument jSchema (jSchemaDoc);
+        SchemaValidator jValidator (jSchema);
 
-        printf ("\n\nInvalid schema: %s\n", jStrBuf.GetString());
-        printf ("Invalid keyword: %s\n", jValidator.GetInvalidSchemaKeyword());
+        if (!jDoc.Accept (jValidator))
+        {
+            rapidjson::StringBuffer jStrBuf;
+            jValidator.GetInvalidSchemaPointer().StringifyUriFragment (jStrBuf);
+    
+            printf ("\n\nInvalid schema: %s\n", jStrBuf.GetString());
+            printf ("Invalid keyword: %s\n", jValidator.GetInvalidSchemaKeyword());
 
-        jStrBuf.Clear();
-
-        jValidator.GetInvalidDocumentPointer().StringifyUriFragment (jStrBuf);
-        printf ("Invalid document: %s\n\n", jStrBuf.GetString());
+            jStrBuf.Clear();
+   
+            jValidator.GetInvalidDocumentPointer().StringifyUriFragment (jStrBuf);
+            printf ("Invalid document: %s\n\n", jStrBuf.GetString());
         
-        ret = 2;
-        goto Done;
-    }
+            ret = 2;
+            goto Done;
+        }
 
-    if (jValidator.IsValid())
-    {
-        printf ("\nJSON file [%s] validated according to schema [%s]!\n\n", pszFile, pSchema);
-        ret = 0; /* Return JSON is valid against schema */
+        if (jValidator.IsValid())
+        {
+            printf ("\nJSON file [%s] validated according to schema [%s]!\n\n", pszFile, pSchema);
+            ret = 0; /* Return JSON is valid against schema */
+        }
     }
 
 Done:
+
     if (fp)
         fclose (fp);
 
@@ -183,8 +190,6 @@ int main(int argc, char *argv[])
         pszSchema = argv[2];
 
     ret = validate_json (pszFile, pszSchema);
-
-Done:
 
     return ret;
 
