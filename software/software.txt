@@ -35,13 +35,16 @@ borg|1.1.17|https://github.com/borgbackup/borg/releases/download/1.1.17/borg-lin
 borg|1.2.0|https://github.com/borgbackup/borg/releases/download/1.2.0/borg-linux64|-|df271a523434a445c783c1a0bc3dd599521d6a6a25acd2766e9a5577edb6018f
 safelinx|1.3.0.0|HCL-SafeLinx-1300-x86_64.tar.gz|-|ea78531287ea3573b8d008cb0f4aa951d94855dcf9807bb745bd631d8ba32edf
 safelinx|1.3.0.1|HCL-SafeLinx-1301-x86_64.tar.gz|-|1dbc6e0206f776196cce166af1ccfb11c37b61cb2d036cd193af525abdc50349
-safelinx|1.4.0.0|HCL-SafeLinx-1400-x86_64.tar.gz|-|1ff64eac5d2cd4abacdd4de841630865651f9ffe115c20b8a5a8ed2e13be940c
+safelinx|1.4.0.0|HCL-SafeLinx-1400-x86_64.tar.gz|-|77359b3500948c81e85e3f6567792fba6a227cfb08ae278c74712bf28ecdf476
 nomadweb|1.0.6|20221201-4022-nomad_web_deploy.zip|-|fd1762cc9902237203e8670d246b6a816c1039be78d0f03a9fde168ac52c9b24
 nomadweb|1.0.7|HCL_Nomad_web_1.0.7_20230306-4443.zip|-|d4a6157c860a8417316695db06fa24406a1a5bda1a211f53788ebd3b8dba4356
+nomadweb|1.0.8|HCL_Nomad_web_1.0.8_20230519-4788_for_HCL_SafeLinx.zip|-|0e8fdd0a8bfcffbec278bdb441dcf72627ae3b6b3b71362c527b06a96e8a833c
 nomad|1.0.6-12.0.2|nomad-server-1.0.6-for-domino-1202-linux.tgz|-|3280c77199443c2135c5b49da6a0690730a6d2f872fcaaaaacebd7b5544efcc5
 nomad|1.0.6-12.0.1|nomad-server-1.0.6-for-domino-1201-linux.tgz|-|87dbbb203b6146f96a3b0ed6486a41e92b5fb5e310b1d776e1cc3fa422de39da
 nomad|1.0.7-12.0.2|nomad-server-1.0.7-for-domino-1202-linux.tgz|-|4411be9d8692860b3fb4c8010c9ebecd6874c9c21d885b27003ead1b47830b7c
 nomad|1.0.7-12.0.1|nomad-server-1.0.7-for-domino-1201-linux.tgz|-|ce76af0ed87de1a7c66d14b6e3ba62923e5928b65d675baf780a298b83f8fe9f
+nomad|1.0.8-12.0.2|nomad-server-1.0.8-for-domino-1202-linux.tgz|-|3a2af50f48a4a1652507ff2eef9670b3b0ffbb6d1a1d9ee3d5049590b6003a65
+nomad|1.0.8-12.0.1|nomad-server-1.0.8-for-domino-1201-linux.tgz|-|2f3ebd0915c17c010db22d7d6d2a50a4552966979b4c616deb17c4ee07ab5474
 domrestapi|1.0.2|Domino_REST_API_V1.0.2_Installer.tar.gz|-|ee5d1a2de8be12576ee255508e573ae8b06a1bf9c1b6ededd21450f263fc2f81
 domrestapi|1.0.3|Domino_REST_API_V1.0.3_Installer.tar.gz|-|810acfa5521cf194725aa813bde229b3b3819f095a979f7116acc7f855ddb2ff
 domrestapi|1.0.4|Domino_REST_API_V1.0.4_Installer.tar.gz|-|92cd399729d1aa4a0eac6ee98f56028c8cba7562b4ac73c13f80d316e5bc7f08

@@ -1,9 +1,9 @@
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2022 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2023 - APACHE 2.0 see LICENSE
 ############################################################################
 
-ARG NGINX_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
-FROM $NGINX_BASE_IMAGE
+ARG SQUID_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
+FROM $SQUID_BASE_IMAGE
 
 # External arguments with a default value
 ARG LinuxYumUpdate=
@@ -13,7 +13,7 @@ USER root
 
 # Copy Install Files to container
 COPY install_dir_common $LocalInstallDir 
-COPY install_dir_nginx $LocalInstallDir 
+COPY install_dir_squid $LocalInstallDir 
 
 # Prepare environment
 # Update, Install required packages and run separate install script
@@ -22,7 +22,7 @@ RUN $LocalInstallDir/install.sh && \
   rm -rf $LocalInstallDir
 
 # Expose Ports HTTP HTTPS
-EXPOSE 80 443
+EXPOSE 3128
 
 ENTRYPOINT ["/entrypoint.sh"]
 

@@ -383,6 +383,37 @@ check_build_nginx_image()
 
 }
 
+
+build_squid_image()
+{
+  if [ -z "$SQUID_IMAGE_NAME" ]; then
+    return 0
+  fi
+
+  check_timezone
+  check_container_environment
+
+  header "Building Squid Image $SQUID_IMAGE_NAME ..."
+
+  if [ -z "$SQUID_BASE_IMAGE" ]; then
+    SQUID_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal:latest
+  fi
+
+  # Get Build Time
+  BUILDTIME=$(date +"%d.%m.%Y %H:%M:%S")
+
+  # Switch to directory containing the dockerfiles
+  cd dockerfiles
+
+  export BUILDAH_FORMAT
+
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION -f dockerfile_squid -t $SQUID_IMAGE_NAME --build-arg SQUID_BASE_IMAGE=$SQUID_BASE_IMAGE .
+
+  cd ..
+
+}
+
+
 nginx_start()
 {
   # Create a nginx container hosting software download locally
@@ -583,7 +614,7 @@ check_from_image()
 
     if [ "$PROD_NAME" = "domino" ]; then
       LINUX_NAME="CentOS Stream"
-      BASE_IMAGE=quay.io/centos/centos:stream8
+      BASE_IMAGE=quay.io/centos/centos:stream9
     elif [ "$PROD_NAME" = "safelinx" ]; then
       LINUX_NAME="CentOS Stream"
       BASE_IMAGE=quay.io/centos/centos:stream8
@@ -609,7 +640,7 @@ check_from_image()
 
     rocky)
       LINUX_NAME="Rocky Linux"
-      BASE_IMAGE=rockylinux/rockylinux
+      BASE_IMAGE=rockylinux/rockylinux:9
       ;;
 
     rocky8)
@@ -617,19 +648,14 @@ check_from_image()
       BASE_IMAGE=rockylinux/rockylinux:8
       ;;
 
-    rocky9)
-      LINUX_NAME="Rocky Linux 9"
-      BASE_IMAGE=rockylinux/rockylinux:9
-      ;;
-
     alma)
       LINUX_NAME="Alma Linux"
-      BASE_IMAGE=almalinux/almalinux
+      BASE_IMAGE=almalinux
       ;;
 
     alma8)
       LINUX_NAME="Alma Linux"
-      BASE_IMAGE=almalinux/almalinux:8
+      BASE_IMAGE=almalinux:8
       ;;
 
     amazon)
@@ -638,8 +664,8 @@ check_from_image()
       ;;
 
     oracle)
-      LINUX_NAME="Oracle Linux 8"
-      BASE_IMAGE=oraclelinux:8
+      LINUX_NAME="Oracle Linux 9"
+      BASE_IMAGE=oraclelinux:9
       ;;
 
     photon)
@@ -1725,6 +1751,13 @@ for a in $@; do
   case "$p" in
     domino|traveler|volt|leap|safelinx)
       PROD_NAME=$p
+      ;;
+
+
+    squid)
+      SQUID_IMAGE_NAME=hclcom/squid
+      build_squid_image
+      exit 0
       ;;
 
     -verse*|+verse*)
