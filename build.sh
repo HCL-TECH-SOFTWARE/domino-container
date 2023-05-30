@@ -650,7 +650,7 @@ check_from_image()
 
     alma)
       LINUX_NAME="Alma Linux"
-      BASE_IMAGE=almalinux
+      BASE_IMAGE=almalinux:9
       ;;
 
     alma8)
@@ -680,7 +680,7 @@ check_from_image()
 
     ubi)
       LINUX_NAME="RedHat UBI"
-      BASE_IMAGE=registry.access.redhat.com/ubi
+      BASE_IMAGE=registry.access.redhat.com/ubi9
       ;;
 
     ubi8)

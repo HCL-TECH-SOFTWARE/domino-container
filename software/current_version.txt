@@ -8,4 +8,4 @@ borg|1.2.0
 safelinx|1.4.0.0
 nomadweb|1.0.8
 nomad|1.0.8
-domrestapi|1.0.4
+domrestapi|1.0.5
