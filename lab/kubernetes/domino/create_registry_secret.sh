@@ -1,3 +1,4 @@
+#!/bin/bash
 
 log_error_exit()
 {

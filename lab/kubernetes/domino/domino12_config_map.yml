@@ -38,9 +38,7 @@ data:
         },
 
         "notesINI": {
-          "Create_R12_databases": "1",
           "Create_R85_log": "1",
-          "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION": "1",
           "LOG_REPLICATION": "0",
           "LOG_SESSIONS": "0",
           "HTTPPublicURLs": "/iwaredir.nsf/*:/.well-known*",

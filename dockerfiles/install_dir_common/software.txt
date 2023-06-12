@@ -30,7 +30,7 @@ leap|1.1|hcl.dleap-1.1.0.15.zip|-|c03f2bc8ffb7750eb49e25de10d4aa4b40832df74aaa03
 verse|2.0.1|HCL_Verse_2.0.1.zip|-|ce358d16d338e9a81b3402bb081ea3a2b39e6915e0f4670107df7144f1004ea8
 verse|2.1.0|HCL_Verse_2.1.0.zip|-|245b93a160601b7bd537f033d1fb91a93a1a2e7a870b031bf7268fc941ddcb94
 verse|2.2.0a|HCL_Verse_2.2.0a.zip|-|490f2218183246edfe137804969b86abb3b128bf3687788684a4a6d5b45e73d7
-verse|3.0.0|HCL_Verse_3.0.0.zip|-|867a0810ede796afedd34955d7fbbbf51b08bd1bff6b52eeddf669cd51d6bffe
+verse|3.0.2|HCL_Verse_3.0.2.zip|-|59189f9105b5cdc541d3d46b381ba35a89085dad72a9021432c15c57fa47d396
 capi|12.0.0|CAPIToolkit_1200_MP.zip|-|545869c8a09c98ac8fde06fdff6f106060f09705e621cc7103acf055baaec037
 capi|12.0.2|CAPIToolkit_1202_MP.zip|-|10ef46a999d4da73a1e1f3b1e2a5a7268c2011fdb1dff557f3fc7536a52d8fd3
 borg|1.1.17|https://github.com/borgbackup/borg/releases/download/1.1.17/borg-linux64|-|21484d30271478d4a01aad1b286973443b50afc5379e4a6aef40da3379e21ddf
