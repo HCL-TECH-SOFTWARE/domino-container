@@ -12,6 +12,11 @@
 INSTALL_DIR=$(dirname $0)
 export LANG=C
 
+LINUX_PACKAGE_LIST_BASEIMAGE=/tmp/package_list_baseimage.txt
+LINUX_PACKAGE_LIST_AFTER_UPDATE=/tmp/package_list_after_update.txt
+LINUX_PACKAGE_LIST_AFTER_INSTALL=/tmp/package_list_after_install.txt
+LINUX_PACKAGE_LIST_DIFF=/tmp/package_list_diff.txt
+
 # Include helper functions & defines
 . $INSTALL_DIR/script_lib.sh
 
@@ -112,11 +117,39 @@ yum_glibc_lang_update()
 }
 
 
+list_installed_packages()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ -x /usr/bin/apt ]; then
+     apt list --installed | tr ' ' '/' | cut -f1,3 -d'/' | tr '/' '-' | sort > "$1"
+
+  elif [ -x /usr/bin/rpm ]; then
+    rpm -qa | sort > "$1"
+
+  else
+    # Special case Photon OS, only get package name not version for now
+    yum list installed | cut -f1 -d' ' | sort | uniq > "$1"
+  fi
+}
+
+
 # Main logic to update Linux and install Linux packages
+
+
+list_installed_packages "$LINUX_PACKAGE_LIST_BASEIMAGE"
 
 # Check for Linux updates if requested first
 
 check_linux_update
+
+
+# List all installed packages in base image
+
+list_installed_packages "$LINUX_PACKAGE_LIST_AFTER_UPDATE"
+
 
 header "Linux OS layer - Installating required software"
 
@@ -195,4 +228,16 @@ fi
 
 # Cleanup repository cache to save space
 clean_linux_repo_cache
+
+# List all installed packages after installing all Linux packages 
+
+list_installed_packages "$LINUX_PACKAGE_LIST_AFTER_INSTALL"
+
+# Diff which packages have been installed
+
+comm -3 "$LINUX_PACKAGE_LIST_AFTER_UPDATE" "$LINUX_PACKAGE_LIST_AFTER_INSTALL"  > "$LINUX_PACKAGE_LIST_DIFF"
+
+header "Linux packages installed"
+cat "$LINUX_PACKAGE_LIST_DIFF"
+echo
 

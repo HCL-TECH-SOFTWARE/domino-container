@@ -53,6 +53,12 @@ SUSE SLES/Leap
 zypper install -y gcc rapidjson-devel
 ```
 
+Ubuntu
+
+```
+apt install -y rapidjson-dev
+```
+
 ### Build binary
 
 Switch to the `tools/checkjson` directory and run make.

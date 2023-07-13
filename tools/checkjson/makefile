@@ -1,11 +1,11 @@
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2022 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2022-2023 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Requires: rapidjson-devel
+# Requires: rapidjson-devel / rapidjson-dev
 
 CC=g++
-CFLAGS= -g -Wall -c -m64 -fPIC -fpermissive
+CFLAGS= -g -Wall -c -fPIC -fpermissive
 LIBS=
 
 PROGRAM=checkjson
