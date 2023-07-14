@@ -524,6 +524,8 @@ fi
 # Start Nomad Server task
 
 if [ -n "$nomad_binary" ]; then
+  # Wait 10 sec to process the last server command to avoid console buffer errors. We need to wait for HTTP start anyhow
+  sleep 10
   header "Starting Nomad Server"
   server_console_cmd "load nomad"
 fi
