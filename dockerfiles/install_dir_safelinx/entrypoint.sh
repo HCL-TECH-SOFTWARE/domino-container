@@ -409,7 +409,6 @@ ConfigureNomad()
   if [ -z "$NOMAD_PORT" ]; then
     NOMAD_PORT=$AVIALABLE_HTTPS_PORT
     ((AVIALABLE_HTTPS_PORT=AVIALABLE_HTTPS_PORT+1))
-
   fi
 
   if [ -z "$NOMAD_MAX_THREADS" ]; then
@@ -452,6 +451,9 @@ ConfigureNomad()
 ConfigureVPN()
 {
 
+  VPN_DNS_STRING=""
+  VPN_TARGET_ADAPTER_STRING=""
+
   if [ ! "$ENABLE_VPN" = "1" ]; then
     return 0
   fi
@@ -465,7 +467,16 @@ ConfigureVPN()
       VPN_ENABLE_DNS=0
   fi
 
+  if [ "$VPN_ENABLE_DNS" = "1" ]; then
+    if [ -z "$VPN_PRIMARY_DNS_SERVER" ] && [ -z "$VPN_SECONDARY_DNS_SERVER" ]; then
+      log_space "DNS server enabled but primary & secondary server details missing."
+      return 0
+    fi
+    VPN_DNS_STRING=" -a enabledns=1 -a primarydns=\"$VPN_PRIMARY_DNS_SERVER\" -a secondarydns=\"$VPN_SECONDARY_DNS_SERVER\" "
+  fi
+
   if [ -z "$VPN_ENABLE_ROUTING" ] && [ -z "$VPN_ROUTE" ]; then
+    log_space "Routing disabled. Enable routing later."
     VPN_ENABLE_ROUTING=0
   fi
 
@@ -489,17 +500,24 @@ ConfigureVPN()
     VPN_MULTI_SIGNON=FALSE
   fi
 
+  if [ -z "$VPN_TARGET_ADAPTER" ]; then
+    VPN_TARGET_ADAPTER_STRING=" -a eTargetAdapter=\"${VPN_TARGET_ADAPTER}\" "
+  fi
+
 
 echo
 echo
 echo "VPN Configuration"
 echo  ------------------------------------------------------------
-echo "VPN_HOST_ADDRESS   : $VPN_HOST_ADDRESS"
-echo "VPN_ROUTE          : $VPN_ROUTE"
-echo "VPN_ENABLE_ROUTING : $VPN_ENABLE_ROUTING"
-echo "VPN_ENABLE_DNS     : $VPN_ENABLE_DNS"
-echo "VPN_SUBNET_MASK    : $VPN_SUBNET_MASK"
-echo "VPN_TARGET_ADAPTER : $VPN_TARGET_ADAPTER"
+echo "VPN_HOST_ADDRESS           : $VPN_HOST_ADDRESS"
+echo "VPN_ROUTE                  : $VPN_ROUTE"
+echo "VPN_ENABLE_ROUTING         : $VPN_ENABLE_ROUTING"
+echo "VPN_SUBNET_MASK            : $VPN_SUBNET_MASK"
+echo "VPN_TARGET_ADAPTER         : $VPN_TARGET_ADAPTER"
+echo "VPN_MULTI_SIGNON           : $VPN_MULTI_SIGNON"
+echo "VPN_ENABLE_DNS             : $VPN_ENABLE_DNS"
+echo "VPN_PRIMARY_DNS_SERVER     : $VPN_PRIMARY_DNS_SERVER"
+echo "VPN_SECONDARY_DNS_SERVER   : $VPN_SECONDARY_DNS_SERVER"
 echo  ------------------------------------------------------------
 echo
 
@@ -508,7 +526,6 @@ echo
   log_file_header "HCL VPN Container"
 
   mkwg -s ibm-wlWlpServer -g mk                     \
-    -a ibm-wlMultiSignon=FALSE                      \
     -a maxidle=7200                                 \
     -a parent="cn=SafeLinxServer,${CONFIG_BASE}"    \
     -a description="HCL VPN Container"              \
@@ -521,18 +538,35 @@ echo
     -a state=0                                      \
     -a configmode=1                                 \
     -a netaddr=${VPN_HOST_ADDRESS}                  \
-    -a enabledns=${VPN_ENABLE_DNS}                  \
     -a ibm-route=${VPN_ROUTE}                       \
     -a ibm-enableRoute=${VPN_ENABLE_ROUTING}        \
     -a netmask=${VPN_SUBNET_MASK}                   \
     -a enablewins=0                                 \
-    -a eTargetAdapter=${VPN_TARGET_ADAPTER}         \
+    ${VPN_TARGET_ADAPTER_STRING}                    \
+    ${VPN_DNS_STRING}                               \
     -a parent="cn=SafeLinxServer,${CONFIG_BASE}"  >> "$LOG_FILE" 2>&1
 
-  mkwg "-s" "ibm-wlUser" "-g" "mk" "-a" "ePolicyRef=" "-a" "ibm-wlAssignmentType=1" "-a" "ibm-wlVerifyDeviceID=FALSE" "-a" "mail=safelinx@lab.dnug.eu" "-a" "ibm-wlForceChange=0" "-a" "uid=sl" "-a" "ibm-wlAuthRequired=1" "-a" "cn=SafeLinx" "-a" "primaryou=o=local" "-a" "userPassword=domino4ever" "-b" "o=local" >> "$LOG_FILE" 2>&1
+  # Creating a temporary user for now.
+
+  mkwg "-s" "ibm-wlUser" "-g" "mk"     \
+     -a "ePolicyRef="                  \
+     -a "ibm-wlAssignmentType=1"       \
+     -a "ibm-wlVerifyDeviceID=FALSE"   \
+     -a "mail=safelinx@lab.dnug.eu"    \
+     -a "ibm-wlForceChange=0"          \
+     -a "uid=sl"                       \
+     -a "userPassword=domino4ever"     \
+     -a "ibm-wlAuthRequired=1"         \
+     -a "cn=SafeLinx"                  \
+     -a "primaryou=o=local" -b "o=local" >> "$LOG_FILE" 2>&1
+
+  # After creating ibm-wlWlpServer, SafeLinx create 3 services to listen
+  # UDP (8889), HTTP (80), HTTPS (443) traffic on corresponding ports.
+  # Safelinx client tries to connect to server using UDP first,
+  # if fails, HTTP and then HTTPS.
+  # Hence, incrementing the HTTPS port.
 
   ((AVIALABLE_HTTPS_PORT=AVIALABLE_HTTPS_PORT+1))
-
 }
 
 ConfigureVerseHA()

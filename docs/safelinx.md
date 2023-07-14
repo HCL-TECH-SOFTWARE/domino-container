@@ -6,26 +6,33 @@ description: "HCL SafeLinx/Nomad container"
 has_children: false
 ---
 
+- [Community HCL SafeLinx Container](#community-hcl-safelinx-container)
+  - [Build the container image](#build-the-container-image)
+  - [Running the SafeLinx image](#running-the-safelinx-image)
+  - [LDAP Requirements](#ldap-requirements)
+  - [Additional LDAP Parameters](#additional-ldap-parameters)
+      - [Trusted Roots for LDAPS connections](#trusted-roots-for-ldaps-connections)
+  - [Run the container](#run-the-container)
+  - [Server Certificate support](#server-certificate-support)
+    - [Import trusted key/certs into the container](#import-trusted-keycerts-into-the-container)
+    - [Export private key to Domino CertMgr](#export-private-key-to-domino-certmgr)
+    - [Automagical Certificate update](#automagical-certificate-update)
+  - [MySQL Server Support](#mysql-server-support)
+    - [Building the container with MySQL Support](#building-the-container-with-mysql-support)
+    - [Configuration for MySQL](#configuration-for-mysql)
+    - [Running the SafeLinx container with MySQL container](#running-the-safelinx-container-with-mysql-container)
+- [Community HCL SafeLinx Container support](#community-hcl-safelinx-container-support)
+  - [With HCL Nomad Web support](#with-hcl-nomad-web-support)
+    - [Requird configuration](#requird-configuration)
+  - [With VPN server support](#with-vpn-server-support)
+    - [Required configurations](#required-configurations)
+    - [Additional VPN server requirement details](#additional-vpn-server-requirement-details)
 
-# Community HCL SafeLinx Container with HCL Nomad Web support
-
-<details close markdown="block">
-  <summary>
-    Table of contents
-  </summary>
-  {: .text-delta }
-1. TOC
-{:toc}
-</details>
-
-HCL Nomad Web leverages the WebSockets protocol to connect to Domino servers.
-This requires a gateway component in the HCL SafeLinx server to bridge between **WebSockets** protocol and the Notes protocol "**NRPC**".
-
+# Community HCL SafeLinx Container
 Setting up a SafeLinx server in a classical way requires to use of a complicated to use Java admin client.
 
-This project allows you to build a SafeLinx container including HCL Nomad Web components in one step.
-The container allows you to configure the container including NomadWeb components simply by specifying environment variables.
-
+This project allows you to build a SafeLinx container including HCL Nomad Web, VPN server components in one step.
+The container allows you to configure the container including NomadWeb, VPN server components simply by specifying environment variables.
 
 ## Build the container image
 
@@ -72,27 +79,7 @@ Review and edit the configuration file with your favourite editor
 vi .env
 ```
 
-
-### Requird configuration
-
-```
-CONTAINER_HOSTNAME=nomad.acme.com
-DOMINO_ORG=acme
-LDAP_HOST=ldap.acme.com
-```
-
-- **CONTAINER_HOSTNAME**  
-  Hostname of the container, which is also defining the hostname of the SafeLinx server
-
-- **DOMINO_ORG**  
-  Domino organization name used for the LDAP search base path and also for certificate names created by default.
-
-- **LDAP_HOST**  
-  LDAP hostname or IP address to connect to.
-  SafeLinx requires an LDAP connection to a Domino server in the domain to lookup users and servers
-
-
-### LDAP Requirements
+## LDAP Requirements
 
 SafeLinx uses LDAP to find users, their home mail servers and Domino servers.
 There are two missing attributes by default for anonymous LDAP connections.
@@ -104,7 +91,7 @@ In case you want to use an anonymous LDAP connection to your Domino LDAL you hav
 - dominoServer / **SMTPFullHostDomain**
 
 
-### Additional LDAP Parameters
+## Additional LDAP Parameters
 
 For authenticated LDAP connections you should use secure LDAP (LDAPS port: 636).
 If your LDAP server is not exposed outside your environment, adding the two missing fields with anonymous LDAP might be the easiest option.
@@ -136,6 +123,8 @@ LDAP_UNTRUSTED=FALSE
   If set to 'FALSE' verify TLS certificate for the LDAPS connection.
 
 
+
+
 #### Trusted Roots for LDAPS connections
 
 Connecting to LDAPS servers require the servers's certificat's trusted root to verify the connection unless LDAP_UNTRUSTED=TRUE is specified.  
@@ -144,7 +133,7 @@ To add trusted roots generate a PEM file `trusted_roots.pem` and store it into t
 Import files are automatically moved into the datastore.
 
 
-### Run the container
+## Run the container
 
 You have two different options to start. For a first test, it could make sense to run the container in front-end mode.
 In production use, it makes sense to run the container detached.
@@ -239,3 +228,143 @@ docker-compose -f docker-compose_mysql.yml up -d
 ``` 
 
 
+# Community HCL SafeLinx Container support
+
+SafeLinx server supports various configurations such as Nomad webserver, HTTP web server, VPN server and reverse proxy. Here providing details on currently supported configurations(Nomad and VPN server) by HCL SafeLinx container.
+
+## With HCL Nomad Web support
+
+HCL Nomad Web leverages the WebSockets protocol to connect to Domino servers.
+This requires a gateway component in the HCL SafeLinx server to bridge between **WebSockets** protocol and the Notes protocol "**NRPC**".
+
+### Requird configuration
+
+```
+ENABLE_NOMAD=1
+CONTAINER_HOSTNAME=nomad.acme.com
+DOMINO_ORG=acme
+LDAP_HOST=ldap.acme.com
+```
+
+- **ENABLE_NOMAD**  
+  As we support multiple configurations in SafeLinx container, this variable is used as switch to enable or disable the Nomad web configuraion [^note].
+
+- **CONTAINER_HOSTNAME**  
+  Hostname of the container, which is also defining the hostname of the SafeLinx server
+
+- **DOMINO_ORG**  
+  Domino organization name used for the LDAP search base path and also for certificate names created by default.
+
+- **LDAP_HOST**  
+  LDAP hostname or IP address to connect to.
+  SafeLinx requires an LDAP connection to a Domino server in the domain to lookup users and servers
+
+- **NOMAD_MAX_THREADS**  
+  Number of maximun threads to handle the Nomad Web requests.
+  Default value is 8.
+
+## With VPN server support
+HCL SafeLinx server as VPN server will create a private subnet and allow clients to access the private networks which are configured as routes.
+HCL SafeLinx server creates a new network that is mentioned in the configuration and create an network interface for the same.
+
+### Required configurations
+```
+ENABLE_VPN=1
+VPN_HOST_ADDRESS=172.20.0.1
+VPN_SUBNET_MASK=255.255.0.0
+VPN_ENABLE_ROUTING=1
+VPN_ROUTE=10.0.0.0+255.255.0.0
+VPN_ENABLE_DNS=1
+VPN_PRIMARY_DNS_SERVER="172.31.2.2"
+VPN_SECONDARY_DNS_SERVER="172.31.2.3"
+VPN_MULTI_SIGNON=TRUE
+VPN_TARGET_ADAPTER="eth0"
+```
+
+- **ENABLE_VPN**  
+  Switch to enable or disable the VPN configuration in HCL SafeLinx container.
+
+- **VPN_HOST_ADDRESS**  
+  VPN server IP. SafeLinx use this IP and creates a network interface. All clients connected to this VPN network use this address as gateway for further communincation.
+
+- **VPN_SUBNET_MASK**  
+  VPN subnet mask defines the size & class of the VPN network. 
+
+- **VPN_ENABLE_ROUTING**  
+  Switch to enable `1` or disable `0` the routing to other private network.
+
+- **VPN_ROUTE**  
+  Details of private network for which we are adding access.
+  Multiple networks can be separated with `,` character.
+
+- **VPN_ENABLE_DNS**  
+  Switch to enable DNS negotiation.
+
+- **VPN_PRIMARY_DNS_SERVER**  
+  Primary DNS server to perform DNS negotiation.
+
+- **VPN_SECONDARY_DNS_SERVER**  
+  Secondary DNS server to perform DNS negotiation.
+
+- **VPN_MULTI_SIGNON**  
+  `TRUE` to allow same user to login from multiple devices. `FALSE` to allow single login from any user.
+  If multiple logon disabled, first device will automatically signedout whenever second login happened.
+
+- **VPN_TARGET_ADAPTER**  
+  Target network adapter to bind the VPN network.
+  Optional, can be empty. SafeLinx server will choose the default network adapter.
+
+### Additional VPN server requirement details
+1. Below are the points to make sure before starting SafeLinx container with SafeLinx VPN server:
+     - Start docker container in host network mode.
+  
+        `-–network host` with `docker run`
+
+        docker-compose.yaml file:
+        ```
+        safelinx:
+          network_mode: "host"
+        ```       
+     - As SafeLinx server creates a network interface for VPN server, continer should start with privileged mode. SafeLinx also tries to update `/proc/sys/net/ipv4/ip_forward` file and enable forward, this required elevated permisssions.
+        
+        `--privileged` with `docker run`
+
+        docker-compose.yaml file:
+
+        ```
+        safelinx:
+          privileged: true
+        ```
+     - To enable the TUN device on docker container.
+        `--device=/dev/net/tun:/dev/net/tun` with `docker run`
+
+        docker-compose.yaml file:
+        ```
+        devices:
+          - /dev/net/tun
+        ```
+
+2. Main purpose of SafeLinx as VPN Server is to route/provide the access to the private networks. `VPN_ENABLE_ROUTING` & `VPN_ROUTE` are the variables control this configuration. Using below command, we can edit current routes:
+   ```
+   docker exec -it safelinx bash      # Command to start a bash shell to safelinx container.
+   lswg -s wlMni -L                   # This list all create Mobile network interfaces/ VPN configurations. We need to select the appropriate "dn" in which our VPN route falls.
+   chwg -l [dn_name] -g ch -a ibm-route="[existing routes],[new routes to add]|[updated existing routes]"
+   ```
+3. By default docker container will not allow network routing/packet forwarding. Enable it running below command on host machine:
+   ```
+   iptables -I DOCKER-USER -j ACCEPT
+   ```
+4. Update the iptables to route the traffic from incoming subnet to private network.
+   Consider in VPN server, VPN network configured as `172.20.0.0/16` and need access to the private network `10.0.0.0/16` (consider private network IP for current server is `10.0.0.9`), to achieve this add below entry to the nat table. 
+   
+   Run below command on host machine to do the same:
+   ```
+   iptables -t nat -A POSTROUTING -s 172.20.0.0/16 -d 10.0.0.0/16 -j SNAT --to-source 10.0.0.9
+   ```
+5. Update the ip route to use local server ip as the gateway for 172.20.0.0/16 network using below command:
+   ```
+   ip route add 172.20.0.0/16 via 10.0.0.9
+   ```
+
+
+[^note]: If no configuration enabled, then Nomad web configuration will be selected and container will run as Nomad web server by default.   
