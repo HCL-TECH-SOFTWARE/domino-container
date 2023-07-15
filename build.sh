@@ -1963,7 +1963,7 @@ for a in $@; do
       AutoTestImage=yes
       ;;
 
-    -borg|-borg=*)
+    -borg|-borg=*|+borg|+borg=*)
       BORG_INSTALL=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$BORG_INSTALL" ]; then
