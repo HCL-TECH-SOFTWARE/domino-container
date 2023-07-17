@@ -6,27 +6,14 @@ description: "HCL SafeLinx/Nomad container"
 has_children: false
 ---
 
-- [Community HCL SafeLinx Container](#community-hcl-safelinx-container)
-  - [Build the container image](#build-the-container-image)
-  - [Running the SafeLinx image](#running-the-safelinx-image)
-  - [LDAP Requirements](#ldap-requirements)
-  - [Additional LDAP Parameters](#additional-ldap-parameters)
-      - [Trusted Roots for LDAPS connections](#trusted-roots-for-ldaps-connections)
-  - [Run the container](#run-the-container)
-  - [Server Certificate support](#server-certificate-support)
-    - [Import trusted key/certs into the container](#import-trusted-keycerts-into-the-container)
-    - [Export private key to Domino CertMgr](#export-private-key-to-domino-certmgr)
-    - [Automagical Certificate update](#automagical-certificate-update)
-  - [MySQL Server Support](#mysql-server-support)
-    - [Building the container with MySQL Support](#building-the-container-with-mysql-support)
-    - [Configuration for MySQL](#configuration-for-mysql)
-    - [Running the SafeLinx container with MySQL container](#running-the-safelinx-container-with-mysql-container)
-- [Community HCL SafeLinx Container support](#community-hcl-safelinx-container-support)
-  - [With HCL Nomad Web support](#with-hcl-nomad-web-support)
-    - [Requird configuration](#requird-configuration)
-  - [With VPN server support](#with-vpn-server-support)
-    - [Required configurations](#required-configurations)
-    - [Additional VPN server requirement details](#additional-vpn-server-requirement-details)
+<details close markdown="block">
+  <summary>
+    Table of contents
+  </summary>
+  {: .text-delta }
+1. TOC
+{:toc}
+</details>
 
 # Community HCL SafeLinx Container
 Setting up a SafeLinx server in a classical way requires to use of a complicated to use Java admin client.
@@ -232,7 +219,7 @@ docker-compose -f docker-compose_mysql.yml up -d
 
 SafeLinx server supports various configurations such as Nomad webserver, HTTP web server, VPN server and reverse proxy. Here providing details on currently supported configurations(Nomad and VPN server) by HCL SafeLinx container.
 
-## With HCL Nomad Web support
+## Configuring as HCL Nomad Web proxy
 
 HCL Nomad Web leverages the WebSockets protocol to connect to Domino servers.
 This requires a gateway component in the HCL SafeLinx server to bridge between **WebSockets** protocol and the Notes protocol "**NRPC**".
@@ -247,7 +234,7 @@ LDAP_HOST=ldap.acme.com
 ```
 
 - **ENABLE_NOMAD**  
-  As we support multiple configurations in SafeLinx container, this variable is used as switch to enable or disable the Nomad web configuraion [^note].
+  As we support multiple configurations in SafeLinx container, this variable is used as switch to enable or disable the Nomad web configuraion [^1].
 
 - **CONTAINER_HOSTNAME**  
   Hostname of the container, which is also defining the hostname of the SafeLinx server
@@ -263,7 +250,7 @@ LDAP_HOST=ldap.acme.com
   Number of maximun threads to handle the Nomad Web requests.
   Default value is 8.
 
-## With VPN server support
+## Configuring as VPN server
 HCL SafeLinx server as VPN server will create a private subnet and allow clients to access the private networks which are configured as routes.
 HCL SafeLinx server creates a new network that is mentioned in the configuration and create an network interface for the same.
 
@@ -367,4 +354,4 @@ VPN_TARGET_ADAPTER="eth0"
    ```
 
 
-[^note]: If no configuration enabled, then Nomad web configuration will be selected and container will run as Nomad web server by default.   
+[^1]: If no configuration enabled, then Nomad web configuration will be selected and container will run as Nomad web server by default.   
