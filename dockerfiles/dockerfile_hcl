@@ -3,7 +3,8 @@
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
-FROM registry.access.redhat.com/ubi9/ubi:9.1
+# Build a base image for Linux with all required packages
+FROM registry.access.redhat.com/ubi9/ubi:9.1 AS linux_image
 
 # External arguments with a default value
 ARG LinuxYumUpdate=
@@ -37,6 +38,9 @@ COPY install_dir_domino $LocalInstallDir
 # Run install script and cleanup. Linux packages installed in separate layer first. 
 RUN $LocalInstallDir/install_linux.sh
 
+# Create final Domino image from prepared Linux image
+FROM linux_image AS domino_image
+
 # Install Domino in a layer separate from Linux packages and updates
 RUN $LocalInstallDir/install_domino.sh && \
   rm -rf $LocalInstallDir
@@ -49,3 +53,4 @@ EXPOSE 1352 25 80 110 143 389 443 636 993 995 2050 8585 63148 63149
 ENTRYPOINT ["/entrypoint.sh"]
 
 USER 1000
+
