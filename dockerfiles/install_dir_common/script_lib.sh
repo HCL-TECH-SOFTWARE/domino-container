@@ -863,10 +863,11 @@ create_startup_link()
 
 get_domino_version()
 {
-  # In case PROD_VER contains an underscore, use this explicitly specified product version
+  # In case PROD_VER contains an underscore, use this explicitly specified product version (daily builds)
+  # Also for Early Access builds overwriting the version is important to update templates
   case "$PROD_VER" in
 
-    *_*)
+    *_*|*EA*)
       DOMINO_VERSION=$PROD_VER
       return 0
       ;;
