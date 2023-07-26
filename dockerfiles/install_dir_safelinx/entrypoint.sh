@@ -15,8 +15,9 @@
 # NOMAD_DOMINO_CFG="NOMAD CN=domino-acme-01 nrpc://domino-acme-01.acme.com"
 # DOMINO_ORG=Acme
 
-# ------------------------------------------------------------ 
+# ------------------------------------------------------------
 
+AVIALABLE_HTTPS_PORT=443
 
 # Helper functions
 
@@ -32,6 +33,14 @@ log_error()
   echo
   echo "ERROR - $@"
   echo
+}
+
+log_file_header()
+{
+  echo >> "$LOG_FILE"
+  echo  ------------------------------------------------------------ >> "$LOG_FILE"
+  echo "$@" >> "$LOG_FILE"
+  echo  ------------------------------------------------------------ >> "$LOG_FILE"
 }
 
 log_debug()
@@ -54,7 +63,7 @@ remove_file()
   fi
 
   ERR_TXT=$(rm -f "$1" >/dev/null 2>/dev/null)
-  
+
   if [ -e "$1" ]; then
     echo "Info: File not deleted [$1]"
   fi
@@ -110,6 +119,12 @@ fi
 
 if [ -z "$NOMAD_HOST" ]; then
   NOMAD_HOST=$(hostname)
+fi
+
+# No nothing enabled, enable NoMad Web Proxy
+if [ -z "$ENABLE_NOMAD" ]  && [ -z "$ENABLE_VPN" ] && [ -z "$ENABLE_VERSEHA" ]; then
+  log_space "Enabling Nomad by default"
+  ENABLE_NOMAD=1
 fi
 
 if [ -z "$SAFELINX_HOST" ]; then
@@ -213,43 +228,33 @@ CA_KEY=$SAFELINX_DATASTORE/ca.key
 CA_CERT=$SAFELINX_DATASTORE/ca.pem
 CA_SEQ=$SAFELINX_DATASTORE/ca.seq
 
+LOG_FILE=/var/safelinx.log
 
 # ------------------------------------------------------------
 
 echo
 echo HCL SafeLinx Community Server
 echo
-echo "Configuration"
+echo "Base Configuration"
 echo  ------------------------------------------------------------
-echo "DOMINO_ORG       : [$DOMINO_ORG]"
-echo "NOMAD_HOST       : [$NOMAD_HOST]"
-
-if [  "$NOMAD_HOST" != "$SAFELINX_HOST" ]; then
-  echo "SAFELINX_HOST    : [$SAFELINX_HOST]"
-fi
-
-echo "CONFIG_BASE      : [$CONFIG_BASE]"
-
-if [ -n "$NOMAD_DOMINO_CFG" ]; then
-  echo "NOMAD_DOMINO_CFG : [$NOMAD_DOMINO_CFG]"
-fi
-
-echo "CERTMGR_HOST     : [$CERTMGR_HOST]"
-echo "(CHECK_INTERVAL) : [$CERTMGR_CHECK_INTERVAL]"
-
-echo "TRUSTED_ROOTS    : [$TRUSTED_ROOT_FILE]"
-echo "LDAP_HOST        : [$LDAP_HOST]"
-echo "LDAP_PORT        : [$LDAP_PORT]"
-echo "LDAP_SSL         : [$LDAP_SSL]"
-echo "LDAP_USER        : [$LDAP_USER]"
-echo "LDAP_BASEDN      : [$LDAP_BASEDN]"
+echo "SAFELINX_HOST      : $SAFELINX_HOST"
+echo "SAFELINX_CONFIG    : $SAFELINX_CONFIG"
+echo "CONFIG_BASE        : $CONFIG_BASE"
+echo "CERTMGR_HOST       : $CERTMGR_HOST"
+echo "CHECK_INTERVAL     : $CERTMGR_CHECK_INTERVAL"
+echo "TRUSTED_ROOTS      : $TRUSTED_ROOT_FILE"
+echo "LDAP_HOST          : $LDAP_HOST"
+echo "LDAP_PORT          : $LDAP_PORT"
+echo "LDAP_SSL           : $LDAP_SSL"
+echo "LDAP_USER          : $LDAP_USER"
+echo "LDAP_BASEDN        : $LDAP_BASEDN"
 echo  ------------------------------------------------------------
 echo
 
 
 start_safelinx_server()
 {
-  wgstart >> /tmp/safelinx.log 2>&1
+  wgstart >> /var/safelinx_start.log 2>&1
 }
 
 restart_safelinx_server()
@@ -300,34 +305,30 @@ WaitMySQLAvailable()
 
 }
 
-# SafeLinx configuration setup via command-line interface
-
-ConfigureSafeLinx()
+# Initial configuration is common
+SafelinxCommonConfiguration()
 {
-
-  # Generate passwords on first start
-  openssl rand -base64 32 > "$SERVER_PWD"
-  openssl rand -base64 32 > "$IMPORT_PWD"
-
+  DBMS_TYPE=0
   # Initial config & setup db
 
   if [ -n "$MYSQL_PASSWORD" ]; then
 
     log_space "SafeLinx MySQL configuration"
+    DBMS_TYPE=3
 
     WaitMySQLAvailable
 
-    mkwg -s wlCfg -g mk               \
-      -a basedn="$CONFIG_BASE"        \
-      -a hostname="$SAFELINX_HOST"    \
-      -a onlysecureconns=0            \
-      -a dbmstype=3                   \
-      -a dbmstype2=3                  \
+    mkwg -s wlCfg -g mk                      \
+      -a basedn="$CONFIG_BASE"               \
+      -a hostname="$SAFELINX_HOST"           \
+      -a onlysecureconns=0                   \
+      -a dbmstype=3                          \
+      -a dbmstype2=3                         \
       -a wpsstoredbname="$MYSQL_DATABASE"    \
       -a wpsstoredbadminid="$MYSQL_USER"     \
       -a wpsstoredbadminpw="$MYSQL_PASSWORD" \
-      -a wpsstoredbclean=0            \
-      -a wpsstoretype=1               \
+      -a wpsstoredbclean=0                   \
+      -a wpsstoretype=1                      \
       -a hcl-wlSessMySQLServer="$MYSQL_HOST" \
       -a wgmgrdlog=err,log,warn
 
@@ -347,41 +348,46 @@ ConfigureSafeLinx()
   # Create a SafeLinx server resource
 
   mkwg -s ibm-wlGateway -g mk       \
-    -a cn="NomadServer"             \
+    -a cn="SafeLinxServer"          \
     -a primaryou="$CONFIG_BASE"     \
     -a hostname="$SAFELINX_HOST"    \
-    -a dbmstype=0                   \
+    -a dbmstype=${DBMS_TYPE}        \
     -a loglvl=err,warn,log,debug
 
+}
+
+SafelinxLdapConfiguration()
+{
   # Create LDAP server
 
   if [ -z "$LDAP_USER" ]; then
 
-    mkwg -s ibm-ldapServerPtr -g mk \
-      -a cn="LDAP-Server"           \
-      -a primaryou="$CONFIG_BASE"   \
-      -a host="$LDAP_HOST"          \
-      -a ipServicePort="$LDAP_PORT" \
-      -a ibm-requiressl="$LDAP_SSL" \
+    mkwg -s ibm-ldapServerPtr -g mk         \
+      -a cn="LDAP-Server"                   \
+      -a primaryou="$CONFIG_BASE"           \
+      -a host="$LDAP_HOST"                  \
+      -a ipServicePort="$LDAP_PORT"         \
+      -a ibm-requiressl="$LDAP_SSL"         \
       -a ibm-wlkeyfile="$TRUSTED_ROOT_FILE" \
       -a ibm-wlUntrusted="$LDAP_UNTRUSTED"
   else
 
-    mkwg -s ibm-ldapServerPtr -g mk \
-      -a cn="LDAP-Server"           \
-      -a primaryou="$CONFIG_BASE"   \
-      -a host="$LDAP_HOST"          \
-      -a ipServicePort="$LDAP_PORT" \
-      -a ibm-requiressl="$LDAP_SSL" \
-      -a uid="$LDAP_USER"           \
+    mkwg -s ibm-ldapServerPtr -g mk         \
+      -a cn="LDAP-Server"                   \
+      -a primaryou="$CONFIG_BASE"           \
+      -a host="$LDAP_HOST"                  \
+      -a ipServicePort="$LDAP_PORT"         \
+      -a ibm-requiressl="$LDAP_SSL"         \
+      -a uid="$LDAP_USER"                   \
       -a ibm-wlkeyfile="$TRUSTED_ROOT_FILE" \
       -a ibm-wlUntrusted="$LDAP_UNTRUSTED"  \
       -a ibm-ldapPassword="$LDAP_PASSWORD"
   fi
- 
-  # Create LDAP authentication 
 
-  mkwg -s ibm-wlAuthMethod -t ibm-wlAuthLdap -g mk \
+  # Create LDAP authentication
+
+  mkwg -s ibm-wlAuthMethod -g mk    \
+    -t ibm-wlAuthLdap               \
     -a description="Domino LDAP"    \
     -a primaryou="$CONFIG_BASE"     \
     -a cn="LDAP-Authentication"     \
@@ -391,25 +397,234 @@ ConfigureSafeLinx()
     -a userkeyfield=mail            \
     -a ibm-wlDisableVerify=TRUE     \
     -a "ibm-ldapServerRef=cn=LDAP-Server,$CONFIG_BASE"
+}
+
+ConfigureNomad()
+{
+
+  if [ ! "$ENABLE_NOMAD" = "1" ]; then
+    return 0
+  fi
+
+  if [ -z "$NOMAD_PORT" ]; then
+    NOMAD_PORT=$AVIALABLE_HTTPS_PORT
+    ((AVIALABLE_HTTPS_PORT=AVIALABLE_HTTPS_PORT+1))
+  fi
+
+  if [ -z "$NOMAD_MAX_THREADS" ]; then
+    NOMAD_MAX_THREADS=8
+  fi
+
+  echo
+  echo
+  echo "HCL Nomad Configuration"
+  echo  ------------------------------------------------------------
+  echo "DOMINO_ORG         : $DOMINO_ORG"
+  echo "NOMAD_HOST         : $NOMAD_HOST"
+  echo "NOMAD_PORT         : $NOMAD_PORT"
+
+  if [ -n "$NOMAD_DOMINO_CFG" ]; then
+    echo "NOMAD_DOMINO_CFG   : $NOMAD_DOMINO_CFG"
+  fi
+  echo  ------------------------------------------------------------
+  echo
 
   # Create Nomad web service
-
-  mkwg -s ibm-wlHttpService -t hcl-wlNomad -g mk \
-    -a description="HCL Nomad"                   \
-    -a parent="cn=NomadServer,$CONFIG_BASE"      \
-    -a ibm-wlUrl="https://$NOMAD_HOST"           \
-    -a ibm-wlkeyfile="$SERVER_P12"               \
-    -a hcl-wlkeypwd=$(cat "$SERVER_PWD")         \
-    -a listenport=443                            \
-    -a state=0                                   \
-    -a ibm-wlMaxThreads=8                        \
-    -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE" \
+  mkwg -s ibm-wlHttpService -t hcl-wlNomad -g mk               \
+    -a description="HCL Nomad"                                 \
+    -a parent="cn=SafeLinxServer,$CONFIG_BASE"                 \
+    -a ibm-wlUrl="https://$NOMAD_HOST"                         \
+    -a ibm-wlkeyfile="$SERVER_P12"                             \
+    -a hcl-wlkeypwd=$(cat "$SERVER_PWD")                       \
+    -a listenport=${NOMAD_PORT}                                \
+    -a state=0                                                 \
+    -a ibm-wlMaxThreads=${NOMAD_MAX_THREADS}                   \
+    -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE"     \
     -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src"
 
   # LATER: Maybe allow explicit NOMAD settings
   if [ -n "$NOMAD_DOMINO_CFG" ]; then
-      echo -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src, $NOMAD_DOMINO_CFG" 
+      echo -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src, $NOMAD_DOMINO_CFG"
   fi
+}
+
+ConfigureVPN()
+{
+
+  VPN_DNS_STRING=""
+  VPN_TARGET_ADAPTER_STRING=""
+
+  if [ ! "$ENABLE_VPN" = "1" ]; then
+    return 0
+  fi
+
+  if [ -z "$VPN_HOST_ADDRESS" ]; then
+      log_space "Missing Host address for VPN confuration, skipping VPN configuration!"
+      return 0
+  fi
+
+  if [ -z "$VPN_ENABLE_DNS" ]; then
+      VPN_ENABLE_DNS=0
+  fi
+
+  if [ "$VPN_ENABLE_DNS" = "1" ]; then
+    if [ -z "$VPN_PRIMARY_DNS_SERVER" ] && [ -z "$VPN_SECONDARY_DNS_SERVER" ]; then
+      log_space "DNS server enabled but primary & secondary server details missing."
+      return 0
+    fi
+    VPN_DNS_STRING=" -a enabledns=1 -a primarydns=\"$VPN_PRIMARY_DNS_SERVER\" -a secondarydns=\"$VPN_SECONDARY_DNS_SERVER\" "
+  fi
+
+  if [ -z "$VPN_ENABLE_ROUTING" ] && [ -z "$VPN_ROUTE" ]; then
+    log_space "Routing disabled. Enable routing later."
+    VPN_ENABLE_ROUTING=0
+  fi
+
+  if [ ! -z "$VPN_ROUTE" ]; then
+      # Enable route if Routes are provided.
+      VPN_ENABLE_ROUTING=1
+  fi
+
+  # Raise error if Routing enabled and routes are not provided.
+  if [ "$VPN_ENABLE_ROUTING" = "1" ] && [ -z "$VPN_ROUTE" ]; then
+    log_space "Routing enabled but no routes provided !"
+    return 0
+  fi
+
+  if [ -z "$VPN_SUBNET_MASK" ]; then
+    log_space "No VPN_SUBNET_MASK provided, assuming subnet class C subnet mask: 255.255.255.0"
+    VPN_SUBNET_MASK='255.255.255.0'
+  fi
+
+  if [ -z "$VPN_MULTI_SIGNON" ]; then
+    VPN_MULTI_SIGNON=FALSE
+  fi
+
+  if [ -z "$VPN_TARGET_ADAPTER" ]; then
+    VPN_TARGET_ADAPTER_STRING=" -a eTargetAdapter=\"${VPN_TARGET_ADAPTER}\" "
+  fi
+
+
+echo
+echo
+echo "VPN Configuration"
+echo  ------------------------------------------------------------
+echo "VPN_HOST_ADDRESS           : $VPN_HOST_ADDRESS"
+echo "VPN_ROUTE                  : $VPN_ROUTE"
+echo "VPN_ENABLE_ROUTING         : $VPN_ENABLE_ROUTING"
+echo "VPN_SUBNET_MASK            : $VPN_SUBNET_MASK"
+echo "VPN_TARGET_ADAPTER         : $VPN_TARGET_ADAPTER"
+echo "VPN_MULTI_SIGNON           : $VPN_MULTI_SIGNON"
+echo "VPN_ENABLE_DNS             : $VPN_ENABLE_DNS"
+echo "VPN_PRIMARY_DNS_SERVER     : $VPN_PRIMARY_DNS_SERVER"
+echo "VPN_SECONDARY_DNS_SERVER   : $VPN_SECONDARY_DNS_SERVER"
+echo  ------------------------------------------------------------
+echo
+
+  # Configure VPN
+
+  log_file_header "HCL VPN Container"
+
+  mkwg -s ibm-wlWlpServer -g mk                     \
+    -a maxidle=7200                                 \
+    -a parent="cn=SafeLinxServer,${CONFIG_BASE}"    \
+    -a description="HCL VPN Container"              \
+    -a ibm-wlMultiSignon=${VPN_MULTI_SIGNON}        \
+    -a state=0 >> "$LOG_FILE" 2>&1
+
+  log_file_header "HCL VPN Container Routing"
+
+  mkwg -s wlMni -g mk                               \
+    -a state=0                                      \
+    -a configmode=1                                 \
+    -a netaddr=${VPN_HOST_ADDRESS}                  \
+    -a ibm-route=${VPN_ROUTE}                       \
+    -a ibm-enableRoute=${VPN_ENABLE_ROUTING}        \
+    -a netmask=${VPN_SUBNET_MASK}                   \
+    -a enablewins=0                                 \
+    ${VPN_TARGET_ADAPTER_STRING}                    \
+    ${VPN_DNS_STRING}                               \
+    -a parent="cn=SafeLinxServer,${CONFIG_BASE}"  >> "$LOG_FILE" 2>&1
+
+  # Creating a temporary user for now.
+
+  mkwg "-s" "ibm-wlUser" "-g" "mk"     \
+     -a "ePolicyRef="                  \
+     -a "ibm-wlAssignmentType=1"       \
+     -a "ibm-wlVerifyDeviceID=FALSE"   \
+     -a "mail=safelinx@lab.dnug.eu"    \
+     -a "ibm-wlForceChange=0"          \
+     -a "uid=sl"                       \
+     -a "userPassword=domino4ever"     \
+     -a "ibm-wlAuthRequired=1"         \
+     -a "cn=SafeLinx"                  \
+     -a "primaryou=o=local" -b "o=local" >> "$LOG_FILE" 2>&1
+
+  # After creating ibm-wlWlpServer, SafeLinx create 3 services to listen
+  # UDP (8889), HTTP (80), HTTPS (443) traffic on corresponding ports.
+  # Safelinx client tries to connect to server using UDP first,
+  # if fails, HTTP and then HTTPS.
+  # Hence, incrementing the HTTPS port.
+
+  ((AVIALABLE_HTTPS_PORT=AVIALABLE_HTTPS_PORT+1))
+}
+
+ConfigureVerseHA()
+{
+
+  if [ ! "$ENABLE_VERSEHA" = "1" ]; then
+    return 0
+  fi
+
+  if [ -z "$VERSE_DOMINO_HOST" ]; then
+    VERSE_DOMINO_HOST="https://$(hostname)"
+  fi
+
+  if [ -z "$VERSE_HA_PORT" ]; then
+    VERSE_HA_PORT=$AVIALABLE_HTTPS_PORT
+    ((AVIALABLE_HTTPS_PORT=AVIALABLE_HTTPS_PORT+1))
+  fi
+
+  echo
+  echo
+  echo "HCL Verse HA Configuration"
+  echo  ------------------------------------------------------------
+  echo "VERSE_DOMINO_HOST  : $VERSE_DOMINO_HOST"
+  echo "VERSE_HA_PORT      : $VERSE_HA_PORT"
+  echo  ------------------------------------------------------------
+  echo
+
+  # Configure Verse HA
+
+  log_file_header "HCL Verse HA"
+
+  mkwg -s ibm-wlHttpService -t hcl-wlVerseHA -g mk        \
+  -a state=0                                              \
+  -a ibm-wlkeyfile="$SERVER_P12"                          \
+  -a ibm-wlUrl="https://$NOMAD_HOST"                      \
+  -a hcl-wlkeypwd=$(cat "$SERVER_PWD")                    \
+  -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE"  \
+  -a httpproxyaddr="${VERSE_DOMINO_HOST}"                 \
+  -a parent="cn=SafeLinxServer,${CONFIG_BASE}"            \
+  -a listenport=${VERSE_HA_PORT}                          \
+  -a ibm-wlMaxThreads=8                                   \
+  -a description="HCL Verse HA" >> "$LOG_FILE" 2>&1
+}
+
+# SafeLinx configuration setup via command-line interface
+ConfigureSafeLinx()
+{
+
+  # Generate passwords on first start
+  openssl rand -base64 32 > "$SERVER_PWD"
+  openssl rand -base64 32 > "$IMPORT_PWD"
+
+  SafelinxCommonConfiguration
+  SafelinxLdapConfiguration
+
+  ConfigureVPN
+  ConfigureNomad
+  ConfigureVerseHA
 
   # Keep the config in the volume and copy later on start
 
@@ -496,7 +711,7 @@ convert_pem_to_p12()
   remove_file "$UPD_P12_FILE"
 
   # LATER: update the password if random password
-  # chwg -s hcl-wlNomad -l "cn=nomad-web-proxy0,cn=NomadServer,$CONFIG_BASE" -a hcl-wlkeypwd="$(cat "$SERVER_PWD")"
+  # chwg -s hcl-wlNomad -l "cn=nomad-web-proxy0,cn=SafeLinxServer,$CONFIG_BASE" -a hcl-wlkeypwd="$(cat "$SERVER_PWD")"
 
   return 0
 }
@@ -612,7 +827,7 @@ cert_update()
     return 2
   fi
 
-  # Keep updated cert for comparing at next update 
+  # Keep updated cert for comparing at next update
   cp -f "$NEW_PEM" "$CURRENT_PEM"
   remove_file "$NEW_PEM"
 
@@ -654,8 +869,8 @@ check_cert_download()
     return 4
   fi
 
-  cert_update "$UPD_PEM_FILE" "$SERVER_CERT" "$SERVER_KEY" 
-  
+  cert_update "$UPD_PEM_FILE" "$SERVER_CERT" "$SERVER_KEY"
+
   return 0
 }
 
@@ -728,7 +943,7 @@ check_cert_file_update()
     return 2
   fi
 
-  cert_update "$UPD_MOUNT_CERT" "$SERVER_CERT" "$SERVER_KEY" 
+  cert_update "$UPD_MOUNT_CERT" "$SERVER_CERT" "$SERVER_KEY"
 
   return 0
 }
@@ -802,7 +1017,6 @@ if [ -e "$SAFELINX_DATASTORE/wgated.conf" ]; then
 
 else
 
-  log_space "Configuring SafeLinx"
   ConfigureSafeLinx
 fi
 
@@ -831,11 +1045,9 @@ start_safelinx_server
 
 # Print product and version
 echo
-echo
 lswg -V | head -1
 echo
 
-echo
 echo
 echo "Certificate"
 echo "-----------"
