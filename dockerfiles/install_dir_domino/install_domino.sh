@@ -15,7 +15,7 @@ DOM_V12_STRING_OK="Domino Server Installation Successful"
 LP_STRING_OK="Selected Language Packs are successfully installed."
 FP_STRING_OK="The installation completed successfully."
 HF_STRING_OK="The installation completed successfully."
-#LP_STRING_OK="Installation: Successful."
+LP_STRING_OK="Installation: Successful."
 TRAVELER_STRING_OK="Installation completed with warnings."
 HF_UNINSTALL_STRING_OK="The installation completed successfully."
 JVM_STRING_OK="Patch was successfully applied."
@@ -166,7 +166,19 @@ install_domino()
 
     ./LNXDomLP -f $INSTALL_DIR/domlp_${DOMLP_VER}.properties -i silent -DSILENT_INI_PATH=${INSTALL_DIR}/domlp_${DOMLP_VER}_silent.ini
 
+    if [ ! -e /opt/hcl/domino/LPLog.txt ]; then
+
+      echo cannot find LPLog.txt in /opt/hcl/domino
+      print_delim
+      ls -l /opt/hcl/domino
+      print_delim
+
+      log_error "Language Pack Installation failed!!!"
+      exit 1
+    fi
+
     # Move LP install log
+
     mv /opt/hcl/domino/LPLog.txt "$INST_LP_LOG"
     check_file_str "$INST_LP_LOG" "$LP_STRING_OK"
 
@@ -177,7 +189,7 @@ install_domino()
     else
       echo
       print_delim
-      cat LPLog.txt
+      cat "$INST_LP_LOG"
       print_delim
       log_error "Language Pack Installation failed!!!"
       exit 1
