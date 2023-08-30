@@ -429,6 +429,12 @@ ConfigureNomad()
   echo  ------------------------------------------------------------
   echo
 
+  if [ -n "$NOMAD_DOMINO_CFG" ]; then
+      NOMAD_DOMINO_CFG="NOMAD /nomad file:///usr/local/nomad-src, $NOMAD_DOMINO_CFG"
+  else
+      NOMAD_DOMINO_CFG="NOMAD /nomad file:///usr/local/nomad-src"
+  fi
+
   # Create Nomad web service
   mkwg -s ibm-wlHttpService -t hcl-wlNomad -g mk               \
     -a description="HCL Nomad"                                 \
@@ -440,12 +446,7 @@ ConfigureNomad()
     -a state=0                                                 \
     -a ibm-wlMaxThreads=${NOMAD_MAX_THREADS}                   \
     -a ibm-wlAuthRef="cn=LDAP-Authentication,$CONFIG_BASE"     \
-    -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src"
-
-  # LATER: Maybe allow explicit NOMAD settings
-  if [ -n "$NOMAD_DOMINO_CFG" ]; then
-      echo -a httpproxyaddr="NOMAD /nomad file:///usr/local/nomad-src, $NOMAD_DOMINO_CFG"
-  fi
+    -a httpproxyaddr="$NOMAD_DOMINO_CFG" >> "$LOG_FILE" 2>&1
 }
 
 ConfigureVPN()
@@ -576,20 +577,20 @@ ConfigureVerseHA()
     return 0
   fi
 
-  if [ -z "$VERSE_DOMINO_HOST" ]; then
-    VERSE_DOMINO_HOST="https://$(hostname)"
-  fi
-
   if [ -z "$VERSE_HA_PORT" ]; then
     VERSE_HA_PORT=$AVIALABLE_HTTPS_PORT
     ((AVIALABLE_HTTPS_PORT=AVIALABLE_HTTPS_PORT+1))
   fi
 
+  if [ -z "$VERSE_DOMINO_HOST" ]; then
+    VERSE_DOMINO_HOST="http://$(hostname)"
+  fi
   echo
   echo
   echo "HCL Verse HA Configuration"
   echo  ------------------------------------------------------------
   echo "VERSE_DOMINO_HOST  : $VERSE_DOMINO_HOST"
+  echo "VERSE_HA_URL       : https://$NOMAD_HOST:$VERSE_HA_PORT"
   echo "VERSE_HA_PORT      : $VERSE_HA_PORT"
   echo  ------------------------------------------------------------
   echo
@@ -611,6 +612,74 @@ ConfigureVerseHA()
   -a description="HCL Verse HA" >> "$LOG_FILE" 2>&1
 }
 
+ConfigureTraveler()
+{
+  if [ ! "$ENABLE_TRAVELER" = "1" ]; then
+    return 0
+  fi
+
+  if [ -z $TRAVELER_DOMINO_HOST ]; then
+     TRAVELER_DOMINO_HOST="TRAVELER https://$(hostname)"
+  else
+    IFS=',' tokens=( $TRAVELER_DOMINO_HOST )
+    ARRAY=()
+    TRAVELER_DOMINO_HOST=""
+    for token in ${tokens[*]}
+    do
+      echo $token | grep -i TRAVELER > /dev/null 2>&1
+      if [ $? = 1 ]; then
+        token="TRAVELER ${token}"
+      fi
+      ARRAY+=($token)
+    done
+    TRAVELER_DOMINO_HOST=${ARRAY[*]}
+    IFS="$OLDIFS"
+
+  fi
+
+  if [ -z "$TRAVELER_PORT" ]; then
+    TRAVELER_PORT=$AVIALABLE_HTTPS_PORT
+    ((AVIALABLE_HTTPS_PORT=AVIALABLE_HTTPS_PORT+1))
+  fi
+
+  if [ -z "$TRAVELER_PATH" ]; then
+    TRAVELER_PATH="/servlet/traveler /traveler /Microsoft-Server-ActiveSync /api/traveler /api/mail /api/freebusy"
+  fi
+
+  if [ -z $TRAVELER_HEARTBEAT ]; then
+    TRAVELER_HEARTBEAT=0
+  fi
+
+  if [ -z $TRAVELER_SCHEDULE ]; then
+    TRAVELER_SCHEDULE="BALANCED"
+  fi
+
+  echo
+  echo
+  echo "HCL Traveler Configuration"
+  echo  ------------------------------------------------------------
+  echo "TRAVELER_DOMINO_HOST    : $TRAVELER_DOMINO_HOST"
+  echo "TRAVELER_URL       : https://$NOMAD_HOST:$TRAVELER_PORT"
+  echo "TRAVELER_PORT      : $TRAVELER_PORT"
+  echo  ------------------------------------------------------------
+  echo
+
+
+
+  mkwg -s ibm-wlHttpService -g mk -a state=0              \
+    -a ibm-wlUrl=https://$NOMAD_HOST                      \
+    -a httpproxyaddr="$TRAVELER_DOMINO_HOST"              \
+    -a listenport="$TRAVELER_PORT"                        \
+    -a parent="cn=SafeLinxServer,${CONFIG_BASE}"          \
+    -a description="Traveler setup"                       \
+    -a ibm-wlkeyfile="$SERVER_P12"                        \
+    -a hcl-wlkeypwd=$(cat "$SERVER_PWD")                  \
+    -a ibm-wlPath="$TRAVELER_PATH"                        \
+    -a ibm-wlTraveler=TRUE                                \
+    -a ibm-wlSchedule=$TRAVELER_SCHEDULE                  \
+    -a heartbeat=$TRAVELER_HEARTBEAT >> "$LOG_FILE"  2>&1   
+}
+
 # SafeLinx configuration setup via command-line interface
 ConfigureSafeLinx()
 {
@@ -625,6 +694,7 @@ ConfigureSafeLinx()
   ConfigureVPN
   ConfigureNomad
   ConfigureVerseHA
+  ConfigureTraveler
 
   # Keep the config in the volume and copy later on start
 
