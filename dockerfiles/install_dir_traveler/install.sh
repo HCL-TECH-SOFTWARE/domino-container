@@ -164,7 +164,7 @@ set_version
 cd $DOMINO_DATA_PATH
 cp -f $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
 mv "$DOMINO_DATA_PATH/notes.ini" "$DOMINO_DATA_PATH/notes.ini.install"
-tar -czf "$INSTALL_ADDON_DATA_TAR" traveler domino/workspace ${PROD_NAME}_ver.txt
+tar -czf "$INSTALL_ADDON_DATA_TAR" traveler domino/workspace domino/html/travelerclients ${PROD_NAME}_ver.txt
 
 remove_directory "$DOMINO_DATA_PATH"
 create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
