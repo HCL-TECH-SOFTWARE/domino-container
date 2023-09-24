@@ -12,6 +12,7 @@ domino|12.0.2FP1|Domino_1202FP1_Linux.tar|-|b9878d5d2626bdb3a41dc066d1a35f9beb71
 domino|12.0.2FP2|Domino_1202FP2_Linux.tar|-|389e73fe84b0431b9923e2b6a11f382234628e76885eeb26a7235d9d44ed889e
 domino|14.0.0EA2|Domino_14.0_Linux_English_EA2.tar|-|290867a1eb0bc13f377e103ee3809e88b3f4a0c6f14a39a1c3714efbe5942371
 domlp|de-12.0.2|Domino_12.0.2_SLP_German.tar|-|fd319a28366e4650c31fa3d90004d729d7de48d9230413de9663a9f80d2dfdf9
+domlp|de-14.0.0EA2|Domino_14.0_SLP_German_EA2.tar|-|3413055ef951dfc0c1e4391ad87ccff066fa7b701d62c9d5a22e1e3b69043f75
 traveler|11.0.0|Traveler_11.0_Linux_ML.tar.gz|-|381bfae133eb7288f37c531a636a8ec049d1d7bbb16318b40254e0ed08a294d8
 traveler|11.0.1|Traveler_11.0.1_Linux_ML.tar.gz|-|b3ef80877ad4892e2c8d78b12f4086118baf7c4377af4c459f4455e4898d80ff
 traveler|11.0.1FP1|Traveler_11.0.1FP1_Linux_ML.tar.gz|-|72b77c1aca83bdb5f3d5fd2af6e8c7201108b9d67ea3290bdafb6c215e452966
