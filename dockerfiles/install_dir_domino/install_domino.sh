@@ -1,6 +1,6 @@
 #!/bin/bash
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2023 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -12,11 +12,13 @@ export LANG=C
 
 # Installer string definitions to check for successful installation
 DOM_V12_STRING_OK="Domino Server Installation Successful"
-LP_STRING_OK="Selected Language Packs are successfully installed."
 FP_STRING_OK="The installation completed successfully."
 HF_STRING_OK="The installation completed successfully."
 LP_STRING_OK="Installation: Successful."
-TRAVELER_STRING_OK="Installation completed with warnings."
+TRAVELER_STRING_OK="Installation completed successfully."
+TRAVELER_STRING_WARNINGS="Installation completed with warnings."
+RESTAPI_STRING_OK="Installation: success"
+
 HF_UNINSTALL_STRING_OK="The installation completed successfully."
 JVM_STRING_OK="Patch was successfully applied."
 JVM_STRING_FP_OK="Tree diff file patch successful!"
@@ -27,6 +29,7 @@ INST_FP_LOG=$DOMDOCK_LOG_DIR/install_fp.log
 INST_HF_LOG=$DOMDOCK_LOG_DIR/install_hf.log
 INST_LP_LOG=$DOMDOCK_LOG_DIR/install_domlp.log
 INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
+INST_RESTAPI_LOG=$DOMDOCK_LOG_DIR/install_restapi.log
 
 
 install_domino()
@@ -348,6 +351,148 @@ install_nomad()
   log_space Installed $ADDON_NAME
 }
 
+
+install_leap()
+{
+  local ADDON_NAME=leap
+  local ADDON_VER=$1
+
+  if [ -z "$ADDON_VER" ]; then
+    return 0
+  fi
+
+  header "$ADDON_NAME Installation"
+
+  get_download_name $ADDON_NAME $ADDON_VER
+
+  header "Installing $ADDON_NAME $ADDON_VER"
+
+  local OSGI_FOLDER="$Notes_ExecDirectory/osgi"
+  local OSGI_VOLT_FOLDER=$OSGI_FOLDER"/volt"
+  local PLUGINS_FOLDER=$OSGI_VOLT_FOLDER"/eclipse/plugins"
+  local VOLT_DATA_DIR=$DOMINO_DATA_PATH"/volt"
+  local LINKS_FOLDER=$OSGI_FOLDER"/rcp/eclipse/links"
+  local LINK_PATH=$OSGI_FOLDER"/volt"
+  local LINK_FILE=$LINKS_FOLDER"/volt.link"
+
+  create_directory "$VOLT_DATA_DIR" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  create_directory "$OSGI_VOLT_FOLDER" root root 755
+  create_directory "$LINKS_FOLDER" root root 755
+  create_directory "$PLUGINS_FOLDER" root root 755
+
+  echo 'path='$LINK_PATH > $LINK_FILE
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+
+  cd "$ADDON_NAME"
+
+  echo "Unzipping files .."
+  unzip -q *.zip
+
+  echo "Copying files .."
+  cp -f "templates/"* "$VOLT_DATA_DIR"
+  cp -f "bundles/"* "$PLUGINS_FOLDER"
+
+  cd ..
+  remove_directory $ADDON_NAME
+
+  header "Final Steps & Configuration"
+
+  # Ensure permissons are set correctly for data directory
+  chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
+
+  # Copy demopack.zip if present in install dir
+  if [ -e "$INSTALL_DIR/demopack.zip" ]; then
+    cp "$INSTALL_DIR/demopack.zip" "$DOMDOCK_DIR/demopack.zip"
+  fi
+
+  # Set add-on version
+  echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
+  echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
+
+  log_space Installed $ADDON_NAME
+
+}
+
+
+install_traveler()
+{
+  local ADDON_NAME=traveler
+  local ADDON_VER=$1
+
+
+  if [ -z "$ADDON_VER" ]; then
+    return 0
+  fi
+
+  header "$ADDON_NAME Installation"
+
+  get_download_name $ADDON_NAME $ADDON_VER
+
+  header "Installing $ADDON_NAME $ADDON_VER"
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME" 
+
+  if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino1201.properties
+  elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120000*")" ]; then
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
+  else
+    # Assume latest version (No version check and no version specified)
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_hcl.properties
+  fi
+
+  cd "$ADDON_NAME"
+
+  header "Running Traveler silent install"
+
+  ./TravelerSetup -f $TRAVELER_INSTALLER_PROPERTIES -i SILENT -l en > $INST_TRAVELER_LOG 2>&1
+
+  # Save installer logs into image for reference if present
+  copy_log "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/traveler/logs/TravelerInstall.log" "$DOMDOCK_LOG_DIR"
+
+  check_file_str "$INST_TRAVELER_LOG" "$TRAVELER_STRING_OK"
+
+  if [ "$?" = "1" ]; then
+    echo
+    log_ok "$PROD_NAME $INST_VER installed successfully"
+
+  else
+
+    check_file_str "$INST_TRAVELER_LOG" "$TRAVELER_STRING_WARNINGS"
+
+    if [ "$?" = "1" ]; then
+      echo
+      log_ok "$PROD_NAME $INST_VER installed successfully (with warnings)"
+    else
+
+      header "$INST_TRAVELER_LOG"
+      cat "$INST_TRAVELER_LOG"
+      print_delim
+
+      if [ -e "/tmp/install/traveler/InstallerError.log" ]; then
+        header "/tmp/install/traveler/InstallerError.log"
+        cat /tmp/install/traveler/InstallerError.log
+        print_delim
+      fi
+
+      log_error "Traveler Installation failed!!!"
+      exit 1
+    fi
+  fi
+
+  # Save notes.ini for Traveler add-on ini
+  cp -f $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
+
+  # Set add-on version
+  echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
+  echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
+
+  log_space Installed $ADDON_NAME
+
+}
+
+
 install_capi()
 {
   local ADDON_NAME=capi
@@ -403,6 +548,7 @@ install_domino_restapi()
 {
   local ADDON_NAME=domrestapi
   local ADDON_VER=$1
+  local REST_API_INSTALLER=
 
   if [ -z "$ADDON_VER" ]; then
     return 0
@@ -422,11 +568,52 @@ install_domino_restapi()
   # Append the servertask line to notes.ini, because Keep installer needs it to detect the server
   echo "servertasks=" >> notes.ini
 
-  "$Notes_ExecDirectory/jvm/bin/java" -jar "$CURRENT_DIR/domino_restapi/restapiInstall.jar" -d="$DOMINO_DATA_PATH" -i="$DOMINO_DATA_PATH/notes.ini" -r="/opt/hcl/restapi" -p="$Notes_ExecDirectory" -a -s
+  # REST API 1.0.7 and higher supports Domino V14 which switches to Java 17 instead of Java 8.
+  # Therefore two different installers are shipped for Domino 14 and earlier versions
+
+  if [ -e "$CURRENT_DIR/domino_restapi/restapiInstall.jar" ]; then
+    log_space "Older REST API for Domino 12 detected"
+    REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall.jar
+  else
+
+    # Check if JVM version is still Java 8
+    local JAVA8_FOUND=$($Notes_ExecDirectory/jvm/bin/java -version 2>&1 | grep "1.8.0" | wc -l)
+
+    if [ -z "$JAVA8_FOUND" ]; then
+      log_space "Domino 14 Java 17 or higher detected"
+      REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r14.jar
+    else
+      log_space "Domino 11/12 Java 8 detected"
+      REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r12.jar
+    fi
+
+    if [ ! -e "$REST_API_INSTALLER" ]; then
+       log_error "Cannot find Domino REST API Installer!!!"
+       exit 1
+    fi
+
+  fi
+
+  "$Notes_ExecDirectory/jvm/bin/java" -jar "$REST_API_INSTALLER" -d="$DOMINO_DATA_PATH" -i="$DOMINO_DATA_PATH/notes.ini" -r="/opt/hcl/restapi" -p="$Notes_ExecDirectory" -a -s > $INST_RESTAPI_LOG 2>&1
 
   if [ "$?" = "0" ]; then
     log_space Installed $ADDON_NAME
   else
+    log_error "Domino REST API Installation failed!!!"
+    exit 1
+  fi
+
+  check_file_str "$INST_RESTAPI_LOG" "$RESTAPI_STRING_OK"
+
+  if [ "$?" = "1" ]; then
+    echo
+    log_ok "Domino REST API installed successfully"
+
+  else
+    echo
+    print_delim
+    cat "$INST_RESTAPI_LOG"
+    print_delim
     log_error "Domino REST API Installation failed!!!"
     exit 1
   fi
@@ -663,6 +850,8 @@ echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
 echo "DOMINO_LANG           = [$DOMINO_LANG]"
 echo "VERSE_VERSION         = [$VERSE_VERSION]"
 echo "NOMAD_VERSION         = [$NOMAD_VERSION]"
+echo "TRAVELER_VERSION      = [$TRAVELER_VERSION]"
+echo "LEAP_VERSION          = [$LEAP_VERSION]"
 echo "CAPI_VERSION          = [$CAPI_VERSION]"
 echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
 echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
@@ -807,6 +996,13 @@ install_capi "$CAPI_VERSION"
 
 # Install Domino REST API if requested
 install_domino_restapi "$DOMRESTAPI_VER"
+
+# Install Traveler Server if requested
+install_traveler "$TRAVELER_VERSION"
+
+# Install Domino Leap if requested
+install_leap "$LEAP_VERSION"
+
 
 remove_perl
 

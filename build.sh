@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.0.4
+# Version 2.1.0
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -24,7 +24,11 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.0.4
+CONTAINER_BUILD_SCRIPT_VERSION=2.1.0
+
+# Build kit shortens the output. This isn't really helpful for troubleshooting and following the build process ...
+export BUILDKIT_PROGRESS=plain
+
 
 if [ "$1" == "--version" ]; then
   echo $CONTAINER_BUILD_SCRIPT_VERSION
@@ -265,6 +269,8 @@ usage()
   echo "-borg            adds borg client and Domino Borg Backup integration to image"
   echo "-verse           adds Verse to a Domino image"
   echo "-nomad           adds the Nomad server to a Domino image"
+  echo "-traveler        adds the Traveler server to a Domino image"
+  echo "-leap            adds the Domino Leap to a Domino image"
   echo "-capi            adds the C-API sdk/toolkit to a Domino image"
   echo "-domlp=de        adds the German Language Pack to the image"
   echo "-restapi         adds the Domino REST API to the image"
@@ -331,6 +337,8 @@ dump_config()
   echo "DOCKER_FILE          : [$DOCKER_FILE]"
   echo "VERSE_VERSION        : [$VERSE_VERSION]"
   echo "NOMAD_VERSION        : [$NOMAD_VERSION]"
+  echo "TRAVELER_VERSION     : [$TRAVELER_VERSION]"
+  echo "LEAP_VERSION         : [$LEAP_VERSION]"
   echo "CAPI_VERSION         : [$CAPI_VERSION]"
   echo "NOMADWEB_VERSION     : [$NOMADWEB_VERSION]"
   echo "MYSQL_INSTALL        : [$MYSQL_INSTALL]"
@@ -871,6 +879,8 @@ build_domino()
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
     --build-arg NOMAD_VERSION="$NOMAD_VERSION" \
+    --build-arg TRAVELER_VERSION="$TRAVELER_VERSION" \
+    --build-arg LEAP_VERSION="$LEAP_VERSION" \
     --build-arg CAPI_VERSION="$CAPI_VERSION" \
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
     --build-arg MSSQL_INSTALL="$MSSQL_INSTALL" \
@@ -1427,6 +1437,14 @@ check_software_status()
       check_software_file "nomad" "$NOMAD_VERSION"
     fi
 
+    if [ -n "$TRAVELER_VERSION" ]; then
+      check_software_file "traveler" "$TRAVELER_VERSION"
+    fi
+
+    if [ -n "$LEAP_VERSION" ]; then
+      check_software_file "leap" "$LEAP_VERSION"
+    fi
+
     if [ -n "$NOMADWEB_VERSION" ]; then
       check_software_file "nomadweb" "$NOMADWEB_VERSION"
     fi
@@ -1552,6 +1570,14 @@ check_software_status()
 
     if [ -n "$NOMAD_VERSION" ]; then
       check_software_file "nomad" "$NOMAD_VERSION"
+    fi
+
+    if [ -n "$TRAVELER_VERSION" ]; then
+      check_software_file "traveler" "$TRAVELER_VERSION"
+    fi
+
+    if [ -n "$LEAP_VERSION" ]; then
+      check_software_file "leap" "$LEAP_VERSION"
     fi
 
     if [ -n "$NOMADWEB_VERSION" ]; then
@@ -1781,6 +1807,22 @@ for a in $@; do
 
       if [ -z "$NOMAD_VERSION" ]; then
         get_current_addon_version nomad NOMAD_VERSION
+      fi
+      ;;
+
+  -traveler*|+traveler*)
+      TRAVELER_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$TRAVELER_VERSION" ]; then
+        get_current_addon_version traveler TRAVELER_VERSION
+      fi
+      ;;
+
+  -leap*|+leap*)
+      LEAP_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$LEAP_VERSION" ]; then
+        get_current_addon_version leap LEAP_VERSION
       fi
       ;;
 

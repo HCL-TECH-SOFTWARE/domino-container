@@ -115,7 +115,6 @@ install_traveler()
 
   cd ..
   remove_directory traveler 
-  create_directory $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
   return 0
 }

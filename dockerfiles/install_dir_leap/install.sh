@@ -56,8 +56,6 @@ fi
 
 header "Installing $PROD_NAME $INST_VER"
 
-create_directory $DOMINO_USER $DOMINO_GROUP $DIR_PERM
-
 OSGI_FOLDER="$Notes_ExecDirectory/osgi"
 OSGI_VOLT_FOLDER=$OSGI_FOLDER"/volt"
 PLUGINS_FOLDER=$OSGI_VOLT_FOLDER"/eclipse/plugins"

@@ -116,6 +116,15 @@ log_debug()
   fi
 }
 
+copy_log()
+{
+ if [ -e "$1" ]; then
+    cp -f "$1" "$2"
+ else
+   echo "Warning: Log file not found: $1"
+ fi
+}
+
 header()
 {
   echo
@@ -450,13 +459,6 @@ install_file()
       echo "[$TARGET_FILE] Can not update binary -- No write permissions"
       return 1
     fi
-
-    check_file_busy "$TARGET_FILE"
-
-    if [ $? -eq 1 ]; then
-      echo "[$TARGET_FILE] Error - Can not update file -- Binary in use"
-      return 1
-    fi
   fi
 
   cp -f "$SOURCE_FILE" "$TARGET_FILE"
@@ -511,13 +513,6 @@ install_binary()
 
     if [ ! -w "$TARGET_BIN" ]; then
       echo "Error - Can not update binary '$TARGET_BIN' -- No write permissions"
-      return 1
-    fi
-
-    check_file_busy "$TARGET_BIN"
-
-    if [ $? -eq 1 ]; then
-      echo "Error - Can not update binary '$TARGET_BIN' -- Binary in use"
       return 1
     fi
 
