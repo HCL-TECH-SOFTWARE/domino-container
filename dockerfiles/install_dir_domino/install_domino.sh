@@ -410,8 +410,17 @@ install_leap()
   echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
   echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
 
-  log_space Installed $ADDON_NAME
+  # Copy add-on data for Domino Leap, even it will be in the full data dir
 
+  local CURRENT_DIR=$(pwd)
+  cd $DOMINO_DATA_PATH
+
+  local INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${ADDON_NAME}.taz
+  tar -czf "$INSTALL_ADDON_DATA_TAR" volt ${ADDON_NAME}_ver.txt
+
+  cd "$CURRENT_DIR"
+
+  log_space Installed $ADDON_NAME
 }
 
 
@@ -419,7 +428,6 @@ install_traveler()
 {
   local ADDON_NAME=traveler
   local ADDON_VER=$1
-
 
   if [ -z "$ADDON_VER" ]; then
     return 0
@@ -488,8 +496,16 @@ install_traveler()
   echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
   echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
 
-  log_space Installed $ADDON_NAME
+  # Copy add-on data for Traveler, even it will be in the full data dir
+  local INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${ADDON_NAME}.taz
 
+  local CURRENT_DIR=$(pwd)
+  cd $DOMINO_DATA_PATH
+  tar -czf "$INSTALL_ADDON_DATA_TAR" traveler domino/workspace domino/html/travelerclients ${ADDON_NAME}_ver.txt
+
+  cd "$CURRENT_DIR"
+
+  log_space Installed $ADDON_NAME
 }
 
 
