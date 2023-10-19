@@ -58,7 +58,7 @@ For example:
 
 - Redhat/CentOS Stream 9.x and clones
 - SUSE Leap/Enterprise 15.x
-- Ubuntu 24.04 LTS
+- Ubuntu 22.04 LTS
 - VMware Photon OS 5
 
 
