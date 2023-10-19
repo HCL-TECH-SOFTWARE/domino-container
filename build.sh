@@ -637,7 +637,7 @@ check_from_image()
   case "$FROM_IMAGE" in
 
     centos8)
-      LINUX_NAME="CentOS Stream"
+      LINUX_NAME="CentOS Stream 8"
       BASE_IMAGE=quay.io/centos/centos:stream8
       ;;
 
@@ -647,7 +647,7 @@ check_from_image()
       ;;
 
     rocky)
-      LINUX_NAME="Rocky Linux"
+      LINUX_NAME="Rocky Linux 9"
       BASE_IMAGE=rockylinux/rockylinux:9
       ;;
 
@@ -677,17 +677,17 @@ check_from_image()
       ;;
 
     photon)
-      LINUX_NAME="Photon OS"
+      LINUX_NAME="VMware Photon OS"
       BASE_IMAGE=photon
       ;;
 
     photon5)
-      LINUX_NAME="Photon OS"
+      LINUX_NAME="VMware Photon OS"
       BASE_IMAGE=photon:5.0
       ;;
 
     ubi)
-      LINUX_NAME="RedHat UBI"
+      LINUX_NAME="RedHat UBI 9"
       BASE_IMAGE=registry.access.redhat.com/ubi9
       ;;
 
@@ -711,11 +711,6 @@ check_from_image()
       BASE_IMAGE=opensuse/leap
       ;;
 
-    leap15.3)
-      LINUX_NAME="SUSE Leap 15.3"
-      BASE_IMAGE=opensuse/leap:15.3
-      ;;
-
     leap15.4)
       LINUX_NAME="SUSE Leap 15.4"
       BASE_IMAGE=opensuse/leap:15.4
@@ -726,19 +721,9 @@ check_from_image()
       BASE_IMAGE=registry.suse.com/bci/bci-base
       ;;
 
-    bci15.3)
-      LINUX_NAME="SUSE Enterprise 15.3"
-      BASE_IMAGE=registry.suse.com/bci/bci-base:15.3
-      ;;
-
     bci15.4)
       LINUX_NAME="SUSE Enterprise 15.4"
       BASE_IMAGE=registry.suse.com/bci/bci-base:15.4
-      ;;
-
-    astra)
-      LINUX_NAME="Astra Linux"
-      BASE_IMAGE=orel:latest
       ;;
 
     *)

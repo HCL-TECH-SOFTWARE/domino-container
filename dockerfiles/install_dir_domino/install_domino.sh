@@ -34,6 +34,14 @@ INST_RESTAPI_LOG=$DOMDOCK_LOG_DIR/install_restapi.log
 
 install_domino()
 {
+
+
+  #On Ubuntu & Debian Domino 14 requires to disable requirements checks
+  if [ -x /usr/bin/apt-get ]; then
+    log_space "Info: Disable Domino requirements check for Linux distribution."
+    export INSTALL_NO_CHECK=1
+  fi
+
   INST_VER=$PROD_VER
 
   check_installed_version ver $INST_VER
@@ -963,6 +971,8 @@ create_directory /local/restore $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 if [ -n "$BORG_INSTALL" ]; then
   create_directory /local/borg $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 fi
+
+create_directory /run/notes $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
 container_set_timezone
 
