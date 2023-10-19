@@ -34,29 +34,11 @@ You can switch manually from Podman to Docker for the build and run-time environ
 
 - Docker CE 20.10 and higher on Linux
 - Docker Desktop on Mac
-- Docker Desktop on Windows building with a WSL2 sub-system
+- Docker Desktop on Windows building with a WSL2 sub-system (for example Ubuntu 22.04)
 - Podman 3.3.0+ on Linux *)
 - Rancher Desktop 1.5+ with Docker back-end
 
 *) Same Podman / Docker note applies
-
-
-## Supported base images
-
-- RedHat Universal Base Image (UBI) 8.6 + 9.x
-- CentOS Stream 8.x + 9.x
-- RockyLinux 8.x + 9.x
-- AlmaLinux 8.x
-- VMware PhotonOS 4
-- SUSE Leap 15.3+
-- SUSE Enterprise 15.3+
-- Oracle Linux 8
-- Amazon Linux
-
-## Experimental base images
-
-- Ubuntu 22.x
-- Debian 11.x
 
 
 ## Recommended Linux Versions and Tips
@@ -66,14 +48,14 @@ Some distributions come with Docker CE or Podman included.
 Before you install Docker CE or Podman, please check if your platform provides the required version.
 
 - RHEL 8 / CentOS Stream 8+ ship with a current version of Podman
-- SUSE SLES / Leap 15.3+ a shipps with a current Docker version
+- SUSE SLES / Leap 15.3+ a ships with a current Docker version
 - If your platform does not come with a current Docker version there is an official [Docker Linux setup documentation](https://docs.docker.com/engine/install/)
 
-## Recommended combinations (9/2022)
+## Recommended combinations (10/2023)
 
 ### Build and run-time environments
 
-- RHEL/CentOS Stream 8/9 with Docker 20.x or Podman 3.3.0+
+- RHEL/CentOS Stream 9 with Docker 20.x or Podman 3.3.0+
 - SUSE SLES / Leap 15.3+ with Docker 20.x or Podman 3.3.0+
 - Current Rancher Desktop (Docker environment)
 - Current version of Docker Desktop with WSL2 sub-system to build the image
@@ -87,46 +69,42 @@ Before you install Docker CE or Podman, please check if your platform provides t
 - Current version of Kubernetes
 - Current versions of OpenShift
 
-
-### Tested base images
+### Supported base images
 
 The following Linux base images have been tested.  
-Current default base image is **CentOS Stream 8**.  
-Resulting image size differs by base image.  
-The smalles base images are based on PhotonOS
+Current default base image is **CentOS Stream 9**.  
+Usually there is no need to change 
+
+Resulting image size differs by base image and how current the base image is.  
+The currently smallest and most up to date base image is VMware Photon OS 5
 
 **Note:**  
-Many base images use a kernel 5.x already.  
+Starting with Domino V14 a 5.14+ kernel is required
 The 5.x kernel is officially supported starting with Domino 12.0.2.
-Ensure the base operating systems is also running a comparable 5.x kernel.
+Ensure the base operating systems is running a kernel compatible with the Domino version running inside the container
 
 Short names below can be used with the `build.sh -from=image` option.  
 For example build based on **Redhat UBI** : `./build.sh domino -from=ubi`
 
-Note: When not specifying a major version, the major version default could change and result in a newer major kernel version!
 
+The project shifted to the current major version for all base image images of each distribution.
 
-| Short Name    | Name                    | Image Name                          | Kernel Ver |
-| ------------- | ----------------------- | ----------------------------------- | ---------- |
-| ubi           | RedHat UBI default      | registry.access.redhat.com/ubi      | depends    |
-| rocky         | Rocky Linux default     | rockylinux/rockylinux               | depends    |
-| leap          | SUSE Leap default       | opensuse/leap                       | depends    |
-| alma          | Alma Linux default      | almalinux/almalinux                 | 4.x        |
-| ubi8          | RedHat UBI 8            | registry.access.redhat.com/ubi8     | 4.x        |
-| centos8       | CentOS Stream 8         | quay.io/centos/centos:stream8       | 4.x        |
-| rocky8        | Rocky Linux 8           | rockylinux/rockylinux:8             | 4.x        |
-| alma8         | Alma Linux 8            | almalinux/almalinux:8               | 4.x        |
-| amazon        | Amazon Linux            | amazonlinux                         | 4.x        |
-| oracle        | Oracle Linux 8          | oraclelinux:8                       | 4.x        |
-| ubi9          | RedHat UBI 9            | registry.access.redhat.com/ubi9     | 4.x        |
-| centos9       | CentOS Stream 9         | quay.io/centos/centos:stream9       | 5.x        |
-| rocky9        | Rocky Linux 9           | rockylinux/rockylinux:9             | 5.x        |
-| leap15.3      | SUSE Leap 15.3          | opensuse/leap:15.3                  | 5.x        |
-| leap15.4      | SUSE Leap 15.4          | opensuse/leap:15.4                  | 5.x        |
-| bci           | SUSE Enterprise default | registry.suse.com/bci/bci-base      | 5.x        |
-| bci15.3       | SUSE Enterprise 15.3    | registry.suse.com/bci/bci-base:15.3 | 5.x        |
-| bci15.4       | SUSE Enterprise 15.4    | registry.suse.com/bci/bci-base:15.4 | 5.x        |
-| photon        | VMware Photon OS 4.0    | photon                              | 5.x        |
+Please note that SUSE currently does not provide any Linux version, supporting glibc 2.34 or higher, which is required to run Domino V14.
+The next Service Pack is expected mid 2024.
+
+| Short Name    | Name                            | Image Name                          | glibc Ver |
+| ------------- | ------------------------------- | ----------------------------------- | ----------|
+| centos        | CentOS Stream 9                 | quay.io/centos/centos:stream9       | 2.34      |
+| ubi           | Red Hat Enterprise Linux 9.x    | registry.access.redhat.com/ubi9     | 2.34      |
+| photon        | VMware Photon OS/Linux          | photon                              | 2.36      |
+| rocky         | Rocky Linux 9.x                 | rockylinux/rockylinux:9             | 2.34      |
+| alma          | AlmaLinux 9.x                   | almalinux:9                         | 2.34      |
+| amazon        | Amazon Linux 2023               | amazonlinux                         | 2.34      |
+| oracle        | Oracle Linux Server 9.x         | oraclelinux:9                       | 2.34      |
+| ubuntu        | Ubuntu 22.04.x LTS              | ubuntu                              | 2.35      |
+| debian        | Debian GNU/Linux 12             | debian                              | 2.36      |
+| leap          | openSUSE Leap 15.x              | opensuse/leap:15                    | 2.31      |
+| bci           | SUSE Linux Enterprise Server 15 | registry.suse.com/bci/bci-base:15.5 | 2.31      |
 
 
 ## References
