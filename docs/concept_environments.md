@@ -30,6 +30,7 @@ But be aware that we cannot look into all distributions and run-time environment
 You can switch manually from Podman to Docker for the build and run-time environment using
 `CONTAINER_CMD=docker` either in the configuration or exporting an environment variable in your shell.
 
+
 ## Supported build environments
 
 - Docker CE 20.10 and higher on Linux
@@ -41,15 +42,36 @@ You can switch manually from Podman to Docker for the build and run-time environ
 *) Same Podman / Docker note applies
 
 
+## Domino V14 Linux base OS requirements (Kernel 5.14)
+
+Domino V14 is build based on Redhat Enterprise Linux 9.1.
+This brings new requirements like glibc 2.34+ or higher and Kernel version 5.14+.
+
+glibc is part of the container image, but the kernel is used from the base operating system.  
+This means the base Linux the container is running on must be Kernel 5.14 or higher to run Domino V14.
+
+This also includes environments using WSL2.
+
+All current Linux long term support platforms provide matching kernels in their latest versions.
+
+For example: 
+
+- Redhat/CentOS Stream 9.x and clones
+- SUSE Leap/Enterprise 15.x
+- Ubuntu 24.04 LTS
+- VMware Photon OS 5
+
+
 ## Recommended Linux Versions and Tips
 
 Docker CE and Podman are available in most distributions.
 Some distributions come with Docker CE or Podman included.
 Before you install Docker CE or Podman, please check if your platform provides the required version.
 
-- RHEL 8 / CentOS Stream 8+ ship with a current version of Podman
-- SUSE SLES / Leap 15.3+ a ships with a current Docker version
+- RHEL 9 / CentOS Stream 9+ ship with a current version of Podman
+- SUSE SLES / Leap 15.5+ a ships with a current Docker version
 - If your platform does not come with a current Docker version there is an official [Docker Linux setup documentation](https://docs.docker.com/engine/install/)
+
 
 ## Recommended combinations (10/2023)
 
@@ -69,28 +91,22 @@ Before you install Docker CE or Podman, please check if your platform provides t
 - Current version of Kubernetes
 - Current versions of OpenShift
 
+### Container base images
+
+The Domino images are build on top of a Linux base image. By default the latest **CentOS Stream 9** is used.
+The community project is tested with the major Linux distributions. There is usually there is no need to change the base image.
+
+Specially to test with different Linux distributions changing the base image could make sense.
+Also if you want to align your base image with the container image or have special requirements in your environment, changing the base image could make sense.
+
+
 ### Supported base images
 
-The following Linux base images have been tested.  
-Current default base image is **CentOS Stream 9**.  
-Usually there is no need to change 
-
-Resulting image size differs by base image and how current the base image is.  
-The currently smallest and most up to date base image is VMware Photon OS 5
-
-**Note:**  
-Starting with Domino V14 a 5.14+ kernel is required
-The 5.x kernel is officially supported starting with Domino 12.0.2.
-Ensure the base operating systems is running a kernel compatible with the Domino version running inside the container
+The project shifted to the current major version for all base image images of each distribution.
 
 Short names below can be used with the `build.sh -from=image` option.  
 For example build based on **Redhat UBI** : `./build.sh domino -from=ubi`
 
-
-The project shifted to the current major version for all base image images of each distribution.
-
-Please note that SUSE currently does not provide any Linux version, supporting glibc 2.34 or higher, which is required to run Domino V14.
-The next Service Pack is expected mid 2024.
 
 | Short Name    | Name                            | Image Name                          | glibc Ver |
 | ------------- | ------------------------------- | ----------------------------------- | ----------|
@@ -103,8 +119,12 @@ The next Service Pack is expected mid 2024.
 | oracle        | Oracle Linux Server 9.x         | oraclelinux:9                       | 2.34      |
 | ubuntu        | Ubuntu 22.04.x LTS              | ubuntu                              | 2.35      |
 | debian        | Debian GNU/Linux 12             | debian                              | 2.36      |
-| leap          | openSUSE Leap 15.x              | opensuse/leap:15                    | 2.31      |
-| bci           | SUSE Linux Enterprise Server 15 | registry.suse.com/bci/bci-base:15.5 | 2.31      |
+| leap          | openSUSE Leap 15.x              | opensuse/leap:15                    | 2.31 *)   |
+| bci           | SUSE Linux Enterprise Server 15 | registry.suse.com/bci/bci-base:15.5 | 2.31 *)   |
+
+
+*) Please note that SUSE currently does not provide any Linux version, supporting glibc 2.34 or higher, which is required to run Domino V14.
+The next Service Pack is expected mid 2024.
 
 
 ## References
