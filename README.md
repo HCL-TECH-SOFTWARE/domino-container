@@ -24,7 +24,7 @@ See detailed information about [supported run-time and build environments](docs/
 See the [documentation](docs/index.md) and the [Quickstart](docs/quickstart.md) for details
 
 ## Issues
-For issues relating specifically to the Dockerfiles and scripts, please use the [GitHub issue tracker](issues)
+For issues relating specifically to the Dockerfiles and scripts, please use the [GitHub issue tracker](https://github.com/HCL-TECH-SOFTWARE/domino-container/issues)
 
 ## Contributing
 We welcome contributions following [our guidelines](CONTRIBUTING.md).
@@ -42,8 +42,8 @@ Special Thanks go to the following people for having provided valuable input to 
 The Dockerfiles and associated scripts are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). 
 
 License for the products that can be installed within the images is as follows:
-* HCL Domino Enterprise Server 12 under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)
-* HCL Domino Volt under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)
-* HCL Notes Traveler under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)
+* HCL Domino Enterprise Server under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
+* HCL Domino Volt under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
+* HCL Notes Traveler under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
 
 Note that HCL Domino and add-on products are commercial software - The software licenses agreement does not permit further distribution of the docker image that was built using this script.
