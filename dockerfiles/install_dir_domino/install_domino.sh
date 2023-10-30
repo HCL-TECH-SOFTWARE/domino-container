@@ -125,9 +125,9 @@ install_domino()
     header "Installing $PROD_NAME $INST_VER"
     log_space "Running Domino Silent Install -- This takes a while ..."
 
-    # Install Domino V14 including Nomad web and OnTime
+    # Install Domino V14 including Nomad Server and OnTime
     case "$PROD_VER" in
-      14*)
+      V14*|14*)
         DominoResponseFile=domino14_full_install.properties
         ;;
 
