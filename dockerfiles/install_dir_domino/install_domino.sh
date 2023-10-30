@@ -125,16 +125,19 @@ install_domino()
     header "Installing $PROD_NAME $INST_VER"
     log_space "Running Domino Silent Install -- This takes a while ..."
 
-    # Install Domino V14 including Nomad Server and OnTime
-    case "$PROD_VER" in
-      V14*|14*)
-        DominoResponseFile=domino14_full_install.properties
-        ;;
+    # If no response file is specified, use the V14 install all response file
+    if [ -z "$DominoResponseFile" ]; then
+      # Install Domino V14 including Nomad Server and OnTime
+      case "$PROD_VER" in
+        V14*|14*)
+          DominoResponseFile=domino14_full_install.properties
+          ;;
 
-      *)
-        DominoResponseFile=domino_install.properties
-        ;;
-    esac
+        *)
+          DominoResponseFile=domino_install.properties
+          ;;
+      esac
+    fi
 
     CURRENT_DIR=$(pwd)
     cd domino_server/linux64
