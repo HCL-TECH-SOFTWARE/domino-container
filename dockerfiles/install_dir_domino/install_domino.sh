@@ -125,7 +125,16 @@ install_domino()
     header "Installing $PROD_NAME $INST_VER"
     log_space "Running Domino Silent Install -- This takes a while ..."
 
-    DominoResponseFile=domino_install.properties
+    # Install Domino V14 including Nomad web and OnTime
+    case "$PROD_VER" in
+      14*)
+        DominoResponseFile=domino14_full_install.properties
+        ;;
+
+      *)
+        DominoResponseFile=domino_install.properties
+        ;;
+    esac
 
     CURRENT_DIR=$(pwd)
     cd domino_server/linux64
@@ -450,12 +459,12 @@ install_traveler()
   download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME" 
 
   if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
-    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino1201.properties
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino1201.properties
   elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120000*")" ]; then
-    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_domino12.properties
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino12.properties
   else
     # Assume latest version (No version check and no version specified)
-    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_hcl.properties
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_hcl.properties
   fi
 
   cd "$ADDON_NAME"
