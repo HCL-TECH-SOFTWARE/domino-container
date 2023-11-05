@@ -214,6 +214,13 @@ show_version ()
   return 0
 }
 
+dump_var()
+{
+  header "$1"
+  echo
+  echo "$2"
+  echo
+}
 
 # Check & setup container environment
 check_container_environment
@@ -241,7 +248,11 @@ for a in $@; do
       ;;
 
     bash)
-      $CONTAINER_CMD exec -it -w /local/notesdata $CONTAINER_NAME bash
+      if [ "$2" = "root" ]; then
+        $CONTAINER_CMD exec -it -w /local/notesdata -u 0 $CONTAINER_NAME bash
+      else
+        $CONTAINER_CMD exec -it -w /local/notesdata $CONTAINER_NAME bash
+      fi
       exit 0
       ;;
 
@@ -409,6 +420,8 @@ IMAGE_VERSION="$($CONTAINER_CMD inspect --format "{{ .Config.Labels.version }}" 
 IMAGE_BUILDTIME="$($CONTAINER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $CONTAINER_IMAGE 2>/dev/null)"
 IMAGE_DOMINO_VERSION="$($CONTAINER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $CONTAINER_IMAGE 2>/dev/null)"
 
+CONTAINER_DOMINO_ADDONS="$(docker inspect --format "{{ index .Config.Labels \"DominoContainer.addons\" }}" $CONTAINER_IMAGE 2>/dev/null)"
+
 $CONTAINER_CMD run -d -it $CONTAINER_PORTS --hostname=$CONTAINER_HOSTNAME --name $CONTAINER_NAME $CONTAINER_NETWORK $CONTAINER_ENV_FILE_OPTION $CONTAINER_NOTES_UID_OPTION $CONTAINER_VOLUMES --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE --cap-add=NET_BIND_SERVICE $CONTAINER_HEALTH_CHECK $CONTAINER_IMAGE
 
 echo "Copying OneTouch configuration into container"
@@ -423,6 +436,9 @@ while [ $count -gt 0 ]; do
     count=$(expr $count - 1)
   fi
 done
+
+HOST_LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+HOST_LINUX_VERSION=$(cat /etc/os-release | grep "VERSION="| cut -d= -f2 | xargs)
 
 LINUX_PRETTY_NAME=$($CONTAINER_CMD exec $CONTAINER_NAME cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 LINUX_VERSION=$($CONTAINER_CMD exec $CONTAINER_NAME cat /etc/os-release | grep "VERSION="| cut -d= -f2 | xargs)
@@ -449,6 +465,8 @@ log_json "testClient" "testing.notes.lab"
 log_json "testServer" "testing.notes.lab"
 log_json "platform" "$LINUX_PRETTY_NAME"
 log_json "platformVersion" "$LINUX_VERSION"
+log_json "hostVersion" "$HOST_LINUX_VERSION"
+log_json "hostPlatform" "$HOST_LINUX_PRETTY_NAME"
 log_json "testBuild" "$IMAGE_VERSION"
 
 log_json "containerPlatform" "$CONTAINER_ENV_NAME"
@@ -459,10 +477,12 @@ log_json "kernelBuildTime" "$kernelBuildTime"
 log_json "glibcVersion" "$glibcVersion"
 log_json "timezone" "$timezone"
 log_json "javaVersion" "$javaVersion"
+log_json "dominoAddons" "$CONTAINER_DOMINO_ADDONS"
 
 
 log_json_begin_array testcase
 
+header "Checking add-ons"
 
 # Check if Traveler binary exits
 traveler_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/traveler 2>/dev/null)
@@ -476,6 +496,129 @@ nomad_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/la
 if [ -n "$nomad_binary" ]; then
   log "Info: Nomad Server detected"
 fi
+
+# Check if REST-API binary exists
+domrestapi_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/restapi 2>/dev/null)
+if [ -n "$domrestapi_binary" ]; then
+  log "Info: Domino REST-API detected"
+fi
+
+# Check if Domino Leap/Volt jar exists
+leap_jar=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/osgi/volt/eclipse/plugins -name "dleap*.jar" 2>/dev/null)
+if [ -n "$leap_jar" ]; then
+  log "Info: Domino Leap detected"
+fi
+
+# Check if Verse jar exists
+verse_jar=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/osgi/shared/eclipse/plugins -name "core-*.jar" 2>/dev/null)
+
+if [ -z "$verse_jar" ]; then
+  sleep 10
+  verse_jar=$($CONTAINER_CMD exec $CONTAINER_NAME find /local/notesdata/domino/workspace/applications/eclipse/plugins -name "core-*.jar" 2>/dev/null)
+fi
+
+if [ -n "$verse_jar" ]; then
+  log "Info: HCL Verse detected"
+fi
+
+lp_strings=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/res/C -name "strings_*.res" | awk -F "strings_" '{print $2}' | cut -d. -f1 2>/dev/null)
+
+if [ -n "$lp_strings" ]; then
+  log "Info: Language Pack [$lp_strings] detected"
+fi
+
+# Check if OnTime binary exists
+ontime_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/ontimegc 2>/dev/null)
+if [ -n "$ontime_binary" ]; then
+  log "Info: OnTime group calendar detected"
+fi
+
+# Check if C-API global.h and lib notes0.o exists
+capi_lib=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notesapi/lib/linux64/notes0.o 2>/dev/null)
+capi_include=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notesapi/include/global.h 2>/dev/null)
+
+if [ -n "$capi_include" ]; then
+  log "Info: C-API SDK detected"
+fi
+
+OLDIFS=$IFS
+IFS=$'\n'
+
+for ADDON_LINE in $(echo "$CONTAINER_DOMINO_ADDONS" | tr ',' '\n' | tr -d ' ');
+do
+
+  ERROR_MSG=
+  ADDON_NAME=$(echo $ADDON_LINE | cut -d'=' -f1)
+  ADDON_VERSION=$(echo $ADDON_LINE | cut -d'=' -f2)
+
+  case "$ADDON_NAME" in
+
+    traveler)
+      if [ -z "$traveler_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    nomad)
+      if [ -z "$nomad_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    domrestapi)
+      if [ -z "$domrestapi_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    verse)
+      if [ -z "$verse_jar" ]; then
+        ERROR_MSG="$ADDON_NAME main jar not found"
+      fi
+      ;;
+
+    leap)
+      if [ -z "$leap_jar" ]; then
+        ERROR_MSG="$ADDON_NAME main jar not found"
+      fi
+      ;;
+    leap)
+      if [ -z "$leap_jar" ]; then
+        ERROR_MSG="$ADDON_NAME main jar not found"
+      fi
+      ;;
+
+    capi)
+      if [ -z "$capi_lib" ] || [ -z "$capi_include" ]; then
+        ERROR_MSG="$$ADDON_NAME not found"
+      fi
+      ;;
+
+    languagepack)
+      if [ -z "$lp_strings" ]; then
+        ERROR_MSG="$ADDON_NAME not found"
+      elif [ -z $(echo "$ADDON_VERSION" | grep -i "$lp_strings" 2>/dev/null) ]; then
+        ERROR_MSG="$ADDON_NAME - Wrong Language Pack. Expected: $ADDON_VERSION, Found: $lp_strings"
+      fi
+      ;;
+
+    ontime)
+      if [ -z "$ontime_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    *)
+      echo "LATER: [$ADDON_NAME] not checked"
+      ;;
+  esac
+
+  test_result "addon.installed.$ADDON_NAME" "$ADDON installed" "" "$ERROR_MSG"
+
+done
+
+IFS=$OLDIFS
+echo
 
 
 # Test Java Version
@@ -493,7 +636,6 @@ if [ -z "$java_version" ];then
 fi
 
 test_result "domino.jvm.available" "Domino JVM available" "" "$ERROR_MSG"
-
 
 # Test server running
 
@@ -521,6 +663,15 @@ else
   sleep 2
 fi
 
+# Start Domino REST-API Server task
+
+if [ -n "$domrestapi_binary" ]; then
+  # Wait 10 sec to process the last server command to avoid console buffer errors. We need to wait for HTTP start anyhow
+  sleep 10
+  header "Starting Domino REST-API"
+  server_console_cmd "load restapi"
+fi
+
 # Start Nomad Server task
 
 if [ -n "$nomad_binary" ]; then
@@ -535,7 +686,7 @@ fi
 
 ERROR_MSG=
 
-wait_for_string $CONSOLE_LOG "HTTP Server: Started" 70 1
+wait_for_string $CONSOLE_LOG "HTTP Server: Started" 100 1
 HTTPS_STATUS=$?
 
 if [ "$HTTP_STATUS" = "0" ];then
@@ -582,9 +733,36 @@ fi
 
 test_result "domino.server.onetouch.microca-cert" "Domino One Touch create MicroCA" "" "$ERROR_MSG"
 
+
+# Test C-API SDK
+if [ -n "$capi_include" ]; then
+
+  header "$Verifying C-API SDK"
+
+  $CONTAINER_CMD cp makefile $CONTAINER_NAME:/tmp
+  docker cp nshver.cpp $CONTAINER_NAME:/tmp
+  sleep 1
+
+  capi_result=$($CONTAINER_CMD exec -it -w /tmp $CONTAINER_NAME /usr/bin/bash -i -l -c "make test | tail -1" 2>&1)
+  capi_version=$(echo $capi_result | grep "^DominoVersion=" | cut -d"=" -f2)
+
+  if [ -n "$capi_version" ]; then
+    ERROR_MSG=
+    echo "C-API SDK verified: $capi_version"
+  else
+    echo "C-API error: $capi_result"
+    ERROR_MSG="Invalid status returned"
+  fi
+
+  test_result "capi.compile&run" "C-API SDK compile & run works" "" "$ERROR_MSG"
+fi
+
+
 # Test Traveler server available
 
 if [ -n "$traveler_binary" ]; then
+
+  header "$Verifying Traveler Server"
 
   wait_for_string $CONSOLE_LOG "Traveler: Server started." 50 
   sleep 2
@@ -604,6 +782,8 @@ fi
 
 if [ -n "$nomad_binary" ]; then
 
+  header "$Verifying Verifying Nomad Server"
+
   wait_for_string $CONSOLE_LOG "Nomad: Server initialized" 50
   sleep 2
 
@@ -619,6 +799,47 @@ if [ -n "$nomad_binary" ]; then
   fi
 
   test_result "nomad.server.available" "Nomad server available" "" "$ERROR_MSG"
+fi
+
+# Test Verse available
+
+if [ -n "$verse_jar" ]; then
+
+  verse_response=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -u "$USER:$PASSWORD" -s 'https://automation.notes.lab/verse' 2>&1)
+  verse_check=$(echo "$verse_response" | grep "HCL Verse")
+
+  if [ -n "$verse_check" ]; then
+    ERROR_MSG=
+  else
+    ERROR_MSG="Invalid response from Verse URL"
+    dump_var "Verse Response" "$verse_response"
+  fi
+
+  test_result "verse.server.available" "Verse available" "" "$ERROR_MSG"
+fi
+
+
+# Test Domino REST-API available
+
+if [ -n "$domrestapi_binary" ]; then
+
+  header "$Verifying Verifying Domino REST-API"
+
+  wait_for_string $CONSOLE_LOG "Domino Rest API Initialization complete." 50
+  sleep 2
+
+  restapi_response=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -s 'http://automation.notes.lab:8880/api' 2>&1)
+
+  restapi_check=$(echo "$restapi_response" | grep "HCL Domino REST API")
+
+  if [ -n "$restapi_check" ]; then
+    ERROR_MSG=
+  else
+    ERROR_MSG="Invalid response to status command"
+    dump_var "Domino REST-API Response" "$restapi_response"
+  fi
+
+  test_result "restapi.server.available" "Domino REST-API available" "" "$ERROR_MSG"
 fi
 
 

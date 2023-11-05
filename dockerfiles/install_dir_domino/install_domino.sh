@@ -35,7 +35,6 @@ INST_RESTAPI_LOG=$DOMDOCK_LOG_DIR/install_restapi.log
 install_domino()
 {
 
-
   #On Ubuntu & Debian Domino 14 requires to disable requirements checks
   if [ -x /usr/bin/apt-get ]; then
     log_space "Info: Disable Domino requirements check for Linux distribution."
@@ -157,10 +156,7 @@ install_domino()
       set_domino_version ver
 
     else
-      print_delim
-      cat $INST_DOM_LOG
-      print_delim
-
+      dump_file "$INST_DOM_LOG"
       log_error "Domino Installation failed!!!"
       exit 1
     fi
@@ -179,7 +175,8 @@ install_domino()
   fi
 
   if [ -n "$DOMLP_VER" ]; then
-    header "Installing Language Pack $DOMLP_VER"
+    LP_LANG=$(echo "$DOMLP_VER" | cut -d'-' -f1)
+    header "Installing Language Pack $DOMLP_VER ($LP_LANG)"
     log_space "Running Domino Language Pack Silent Install -- This takes a while ..."
 
     CURRENT_DIR=$(pwd)
@@ -187,11 +184,29 @@ install_domino()
     cd domino_lp
     chmod +x LNXDomLP
 
-    ./LNXDomLP -f $INSTALL_DIR/domlp_${DOMLP_VER}.properties -i silent -DSILENT_INI_PATH=${INSTALL_DIR}/domlp_${DOMLP_VER}_silent.ini
+    #./LNXDomLP -f $INSTALL_DIR/domlp_${DOMLP_VER}.properties -i silent -DSILENT_INI_PATH=${INSTALL_DIR}/domlp_${DOMLP_VER}_silent.ini
+
+    # Generate LPSilent install ini file
+    local DOMINO_LP_INI="$(pwd)/domlp.ini"
+    local DOMLP_LANG_LCASE=$(echo "$DOMLP_VER" | cut -d"-" -f1 | awk '{print tolower($0)}')
+
+    echo "[Notes]" > "$DOMINO_LP_INI"
+    echo "INSTALL_TYPE=REPLACE" >> "$DOMINO_LP_INI"
+    echo "DOMINO_ARCH=64" >> "$DOMINO_LP_INI"
+    echo "TOTAL_DATAPATHS=1" >> "$DOMINO_LP_INI"
+    echo "TOTAL_LANGUAGES=1" >> "$DOMINO_LP_INI"
+    echo "DOMINO_INSTALL=NO" >> "$DOMINO_LP_INI"
+    echo "CORE_PATH=$DOMINO_DATA_PATH" >> "$DOMINO_LP_INI"
+    echo "CORE_DISPLAY_PATH=$LOTUS" >> "$DOMINO_LP_INI"
+    echo "DATA_PATH_00=/local/notesdata" >> "$DOMINO_LP_INI"
+    echo "LANGUAGES_00=$DOMLP_LANG_LCASE" >> "$DOMINO_LP_INI"
+
+    # Invoke LP Installer
+    ./LNXDomLP -i silent "-DSILENT_INI_PATH=$DOMINO_LP_INI"
 
     if [ ! -e /opt/hcl/domino/LPLog.txt ]; then
 
-      echo cannot find LPLog.txt in /opt/hcl/domino
+      echo Cannot find LPLog.txt in /opt/hcl/domino
       print_delim
       ls -l /opt/hcl/domino
       print_delim
@@ -210,10 +225,8 @@ install_domino()
       log_ok "Language Pack installed successfully"
 
     else
-      echo
-      print_delim
-      cat "$INST_LP_LOG"
-      print_delim
+      dump_file "$DOMINO_LP_INI"
+      dump_file "$INST_LP_LOG"
       log_error "Language Pack Installation failed!!!"
       exit 1
     fi
@@ -245,10 +258,7 @@ install_domino()
 
     else
 
-      echo
-      print_delim
-      cat $INST_FP_LOG
-      print_delim
+      dump_file $INST_FP_LOG
       log_error "Fixpack Installation failed!!!"
       exit 1
     fi
@@ -279,10 +289,7 @@ install_domino()
 
     else
 
-      echo
-      print_delim
-      cat hf.log
-      print_delim
+      dump_file hf.log
       log_error "InterimsFix/HotFix Installation failed!!!"
 
       exit 1
@@ -494,16 +501,8 @@ install_traveler()
       log_ok "$PROD_NAME $INST_VER installed successfully (with warnings)"
     else
 
-      header "$INST_TRAVELER_LOG"
-      cat "$INST_TRAVELER_LOG"
-      print_delim
-
-      if [ -e "/tmp/install/traveler/InstallerError.log" ]; then
-        header "/tmp/install/traveler/InstallerError.log"
-        cat /tmp/install/traveler/InstallerError.log
-        print_delim
-      fi
-
+      dump_file "$INST_TRAVELER_LOG"
+      dump_file "/tmp/install/traveler/InstallerError.log"
       log_error "Traveler Installation failed!!!"
       exit 1
     fi
@@ -561,7 +560,12 @@ install_capi()
   ln -s notesapi* notesapi
 
   header "Install gcc and gcc++ compilers"
-  install_packages gcc gcc-c++ make
+  install_packages gcc g++ gcc-c++ make binutils
+
+  # On Photon OS glibc includes are separate
+  if [ -e /etc/photon-release ]; then
+    install_packages glibc-devel
+  fi
 
   # Update notes user's profile
   local NOTES_BASH_PROFIL=/home/notes/.bashrc
@@ -569,6 +573,7 @@ install_capi()
   echo "# -- Begin Notes C-API environment vars --" >> $NOTES_BASH_PROFIL
   echo "export LOTUS=$LOTUS" >> $NOTES_BASH_PROFIL
   echo "export Notes_ExecDirectory=$LOTUS/notes/latest/linux" >> $NOTES_BASH_PROFIL
+  echo "export LD_LIBRARY_PATH=$Notes_ExecDirectory" >> $NOTES_BASH_PROFIL
   echo "export INCLUDE=$LOTUS/notesapi/include" >> $NOTES_BASH_PROFIL
   echo "# -- End Notes C-API environment vars --" >> $NOTES_BASH_PROFIL
   echo >> $NOTES_BASH_PROFIL
@@ -613,18 +618,29 @@ install_domino_restapi()
   else
 
     # Check if JVM version is still Java 8
-    local JAVA8_FOUND=$($Notes_ExecDirectory/jvm/bin/java -version 2>&1 | grep "1.8.0" | wc -l)
+    local JAVA8_FOUND=$($Notes_ExecDirectory/jvm/bin/java -version 2>&1 | grep "1.8.0")
 
     if [ -z "$JAVA8_FOUND" ]; then
       log_space "Domino 14 Java 17 or higher detected"
-      REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r14.jar
+      if [ -e "$CURRENT_DIR/domino_restapi/restapiInstall-r14.jar" ]; then
+        REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r14.jar
+      else
+        REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r12.jar
+      fi
     else
       log_space "Domino 11/12 Java 8 detected"
-      REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r12.jar
+      if [ -e "$CURRENT_DIR/domino_restapi/restapiInstall-r12.jar" ]; then
+        REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r12.jar
+      else
+        REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall.jar
+      fi
     fi
 
     if [ ! -e "$REST_API_INSTALLER" ]; then
-       log_error "Cannot find Domino REST API Installer!!!"
+       log_error "Cannot find Domino REST API Installer [$REST_API_INSTALLER]!!!"
+       echo "-------------------------"
+       ls $CURRENT_DIR/domino_restapi
+       echo "-------------------------"
        exit 1
     fi
 
@@ -646,10 +662,7 @@ install_domino_restapi()
     log_ok "Domino REST API installed successfully"
 
   else
-    echo
-    print_delim
-    cat "$INST_RESTAPI_LOG"
-    print_delim
+    dump_file "$INST_RESTAPI_LOG"
     log_error "Domino REST API Installation failed!!!"
     exit 1
   fi
@@ -983,8 +996,6 @@ create_directory /local/restore $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 if [ -n "$BORG_INSTALL" ]; then
   create_directory /local/borg $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 fi
-
-create_directory /run/notes $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
 container_set_timezone
 

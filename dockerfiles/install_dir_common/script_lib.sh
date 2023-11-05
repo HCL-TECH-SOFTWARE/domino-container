@@ -134,6 +134,24 @@ header()
   echo
 }
 
+dump_file()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$1" ]; then
+    echo "Cannot dump file - File does not exist: $1"
+    return 0
+  fi
+
+  echo
+  echo "----- $1 -----"
+  cat "$1"
+  echo "----- $1 -----"
+  echo
+}
+
 check_file_str()
 {
   CURRENT_FILE="$1"
@@ -646,7 +664,7 @@ remove_file()
     return 2
   fi
 
-  rm -rf "$1"
+  rm -f "$1"
   return 0
 }
 

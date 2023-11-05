@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.1.0
+# Version 2.2.0
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -24,7 +24,7 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.1.0
+CONTAINER_BUILD_SCRIPT_VERSION=2.2.0
 
 # Build kit shortens the output. This isn't really helpful for troubleshooting and following the build process ...
 export BUILDKIT_PROGRESS=plain
@@ -256,6 +256,8 @@ usage()
   echo
   echo "-tag=<image>     additional image tag"
   echo "-push=<image>    tag and push image to registry"
+  echo "-autotest        test image after build"
+  echo "testimage=<img>  test specified image"
   echo
   echo Options
   echo
@@ -274,6 +276,7 @@ usage()
   echo "-capi            adds the C-API sdk/toolkit to a Domino image"
   echo "-domlp=de        adds the German Language Pack to the image"
   echo "-restapi         adds the Domino REST API to the image"
+  echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
   echo "-k8s-runas       adds K8s runas user support"
   echo "-startscript=x   installs specified start script version from software repository"
   echo
@@ -351,6 +354,7 @@ dump_config()
   echo "NAMESPACE            : [$CONTAINER_NAMESPACE]"
   echo "K8S_RUNAS_USER       : [$K8S_RUNAS_USER_SUPPORT]"
   echo "SPECIAL_CURL_ARGS    : [$SPECIAL_CURL_ARGS]"
+  echo "DominoResponseFile   : [$DominoResponseFile]"
   echo "BUILD_SCRIPT_OPTIONS : [$BUILD_SCRIPT_OPTIONS]"
   echo
   return 0
@@ -821,8 +825,83 @@ check_exposed_ports()
   return 0
 }
 
+add_addon_label()
+{
+
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ -z "$2" ]; then
+    return 0
+  fi
+
+  if [ -z "$CONTAINER_DOMINO_ADDONS" ]; then
+    CONTAINER_DOMINO_ADDONS="$1=$2"
+  else
+    CONTAINER_DOMINO_ADDONS="$CONTAINER_DOMINO_ADDONS,$1=$2"
+  fi
+}
+
+check_addon_label()
+{
+  if [ "$DOCKER_FILE" = "dockerfile_hcl" ] || [ "$DominoResponseFile" = "domino14_full_install.properties" ]; then
+
+    # HCL container image build and full installer file: Verse, Nomad, OnTime
+    if [ -z "$VERSE_VERSION" ]; then
+      add_addon_label "verse" "3.1.0"
+    fi
+
+    if [ -z "$NOMAD_VERSION" ]; then
+      add_addon_label "nomad" "1.0.9"
+    fi
+
+    add_addon_label "ontime" "11.1.1"
+
+  elif [ "$DominoResponseFile" = "domino14_ontime_install.properties" ]; then
+
+    # OnTime is added from Domino V14 WebKit
+    add_addon_label "ontime" "11.1.1"
+  fi
+
+  if [ -n "$DOMLP_LANG" ]; then
+    add_addon_label "languagepack" "$DOMLP_LANG"
+  fi
+
+  if [ -n "$VERSE_VERSION" ]; then
+    add_addon_label "verse" "$VERSE_VERSION"
+  fi
+
+  if [ -n "$NOMAD_VERSION" ]; then
+    add_addon_label "nomad" "$NOMAD_VERSION"
+  fi
+
+  if [ -n "$TRAVELER_VERSION" ]; then
+    add_addon_label "traveler" "$TRAVELER_VERSION"
+  fi
+
+  if [ -n "$DOMRESTAPI_VER" ]; then
+    add_addon_label "domrestapi" "$DOMRESTAPI_VER"
+  fi
+
+  if [ -n "$CAPI_VERSION" ]; then
+    add_addon_label "capi" "$CAPI_VERSION"
+  fi
+
+  if [ -n "$LEAP_VERSION" ]; then
+    add_addon_label "leap" "$LEAP_VERSION"
+  fi
+}
+
 build_domino()
 {
+  CONTAINER_DOMINO_ADDONS=
+  check_addon_label
+
+  echo
+  echo "CONTAINER_DOMINO_ADDONS: [$CONTAINER_DOMINO_ADDONS]"
+  echo
+
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
@@ -847,6 +926,7 @@ build_domino()
     --label DominoContainer.description="$CONTAINER_DOMINO_DESCRIPTION" \
     --label DominoContainer.version="$DOCKER_IMAGE_VERSION" \
     --label DominoContainer.buildtime="$BUILDTIME" \
+    --label DominoContainer.addons="$CONTAINER_DOMINO_ADDONS" \
     --build-arg PROD_NAME=$PROD_NAME \
     --build-arg PROD_VER=$PROD_VER \
     --build-arg DOMLP_VER=$DOMLP_VER \
@@ -874,6 +954,7 @@ build_domino()
     --build-arg K8S_RUNAS_USER_SUPPORT="$K8S_RUNAS_USER_SUPPORT" \
     --build-arg EXPOSED_PORTS="$EXPOSED_PORTS" \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" \
+    --build-arg DominoResponseFile="$DominoResponseFile" \
     --build-arg BUILD_SCRIPT_OPTIONS="$BUILD_SCRIPT_OPTIONS" .
 }
 
@@ -1055,7 +1136,7 @@ docker_build()
     DOCKER_TAG_LATEST=
   fi
 
-  echo "Building Image : " $IMAGENAME
+  header "Building Image $IMAGENAME ..."
 
   # Get Build Time
   BUILDTIME=$(date +"%d.%m.%Y %H:%M:%S")
@@ -1148,6 +1229,74 @@ docker_build()
   return 0
 }
 
+check_domdownload()
+{
+  # Domino Download script integration to automatically download software if script is present
+  local LP_LANG=
+  local LP_VER=
+  local DOWNLOAD_OPTIONS="-silent -download"
+
+  if [ ! -e "$DOMDOWNLOAD_BIN" ]; then
+    return 0
+  fi
+
+  $DOMDOWNLOAD_BIN -product=$PROD_NAME -platform=linux -ver=$PROD_VER $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+
+  if [ "$PROD_NAME" = "domino" ]; then
+
+    if [ -n "$PROD_FP" ]; then
+      $DOMDOWNLOAD_BIN -product=domino -platform=linux -ver=$PROD_VER$PROD_FP $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+    fi
+
+    if [ -n "$PROD_HF" ]; then
+      $DOMDOWNLOAD_BIN -product=domino -platform=linux -ver=$PROD_VER$PROD_FP$PROD_HF $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+    fi
+
+  fi
+
+  if [ -n "$TRAVELER_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=traveler -platform=linux -ver=$TRAVELER_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$DOMLP_LANG" ]; then
+    $DOMDOWNLOAD_BIN -product=domino -platform=linux -type=langpack -lang=$DOMLP_LANG -ver=$PROD_VER $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$VERSE_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=verse -platform=linux -ver=$VERSE_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$DOMRESTAPI_VER" ]; then
+    $DOMDOWNLOAD_BIN -product=restapi -platform=linux -ver=$DOMRESTAPI_VER $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$NOMAD_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=nomad -platform=linux -ver=$NOMAD_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$LEAP_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=leap -platform=linux -ver=$LEAP_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$CAPI_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=capi -platform=linux -ver=$CAPI_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+}
+
+get_download_link()
+{
+  CURRENT_DOWNLOAD_URL="https://my.hcltechsw.com/downloads/domino/domino"
+}
+
+check_domdownload()
+{
+  if [ ! -e "$DOMDOWNLOAD_BIN" ]; then
+    return 0
+  fi
+
+  $DOMDOWNLOAD_BIN "$1" "-dir=$SOFTWARE_DIR" -silent
+}
+
 check_software()
 {
   CURRENT_NAME=$(echo $1|cut -d'|' -f1)
@@ -1188,6 +1337,13 @@ check_software()
             CURRENT_FILE="$CHECK_FILE"
             FOUND=TRUE
             break
+	  else
+            check_domdownload "$CHECK_FILE"
+            if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
+              CURRENT_FILE="$CHECK_FILE"
+              FOUND=TRUE
+              break
+            fi
           fi
           ;;
       esac
@@ -1286,11 +1442,11 @@ check_software()
 
       if [ -n "$DOWNLOAD_1ST_FILE" ]; then
         if [ -z "$CURRENT_PARTNO" ]; then
-          CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+          get_download_link "$CURRENT_NAME" "$DOWNLOAD_1ST_FILE"
         elif [ "$CURRENT_PARTNO" = "-" ]; then
-          CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+          get_download_link "$CURRENT_NAME" "$DOWNLOAD_1ST_FILE"
         else
-          CURRENT_DOWNLOAD_URL="$DOWNLOAD_LINK_FLEXNET$DOWNLOAD_1ST_FILE$DOWNLOAD_LINK_FLEXNET_OPTIONS"
+          get_download_link "$CURRENT_NAME" "$DOWNLOAD_1ST_FILE"
         fi
       fi
       ;;
@@ -1596,8 +1752,6 @@ check_all_software()
     SOFTWARE_FILE=$PWD/software/$SOFTWARE_FILE_NAME
   fi
 
-  DOWNLOAD_LINK_FLEXNET="https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search="
-  DOWNLOAD_LINK_FLEXNET_OPTIONS="+&resultType=Files&sortBy=eff_date&listButton=Search"
   STARTSCRIPT_GIT_URL=https://github.com/nashcom/domino-startscript
 
   DOWNLOAD_ERROR_COUNT=0
@@ -1644,21 +1798,442 @@ docker_save()
   return 0
 }
 
+test_image()
+{
+  local IMAGE_NAME=$1
+  if [ -z "$IMAGE_NAME" ]; then
+     IMAGE_NAME="$DOCKER_IMAGE"
+  fi
+
+  if [ -z "$IMAGE_NAME" ]; then
+     IMAGE_NAME="hclcom/domino:latest"
+  fi
+
+  header "Running Automation test for $IMAGE_NAME ..."
+
+  local CURRENT_DIR=$(pwd)
+  cd "$SCRIPT_DIR/testing"
+
+  ./AutomationTest.sh -image="$IMAGE_NAME"
+
+  local ret=$?
+  cd "$CURRENT_DIR"
+
+  if [ "$ret" != "0" ]; then
+    log_error_exit "Automation testing for image [$IMAGE_NAME failed] with $ret automation test errors!"
+  fi
+
+  log "Automation testing for new image [$IMAGE_NAME] successful!"
+}
+
 auto_test()
 {
   if [ "$AutoTestImage" != "yes" ]; then
     return 0
   fi
 
-  $SCRIPT_DIR/testing/AutomationTest.sh -image="$DOCKER_IMAGE"
+  test_image "$DOCKER_IMAGE"
+}
 
-  local ret=$?
 
-  if [ "$ret" != "0" ]; then
-    log_error_exit "Automation testing for image [$DOCKER_IMAGE failed] with $ret automation test errors!" 
+parse_domino_version()
+{
+  local VER_UPPER=
+
+  VER_UPPER=$(echo "$1" | awk '{print toupper($0)}')
+  PROD_VER=$(echo "$VER_UPPER" | awk -F'[A-Z ]' '{print $1}')
+
+  local FP=$(echo "$VER_UPPER" | awk -F'FP' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
+  local IF=$(echo "$VER_UPPER" | awk -F'IF' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
+  local HF=$(echo "$VER_UPPER" | awk -F'HF' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
+
+  if [ -n "$FP" ]; then
+    PROD_FP=${PROD_VER}FP${FP}
+
+    if [ -n "$IF" ]; then
+      PROD_IF=${PROD_FP}IF${IF}
+    fi
+
+    if [ -n "$HF" ]; then
+      PROD_HF=${PROD_FP}HF${HF}
+    fi
+
+  else
+
+    PROD_FP=
+    if [ -n "$IF" ]; then
+      PROD_IF=${PROD_VER}IF${IF}
+    fi
+
+    if [ -n "$HF" ]; then
+      PROD_HF=${PROD_FP}HF${HF}
+    fi
+
+  fi
+}
+
+print_lp()
+{
+  printf " (%s)  %-10s\n" "$1" "$2"
+}
+
+print_ver()
+{
+  printf "(%s)  %-10s\n" "$1" "$2"
+}
+
+print_select()
+{
+  printf " (%s)  %-19s [%s]  %s\n" "$1" "$2" "$3" "$4"
+}
+
+select_language_pack()
+{
+  local LP_DE="German"
+  local LP_ES="Spanish"
+  local LP_FR="French"
+  local LP_IT="Italian"
+  local LP_NL="Dutch"
+  local LP_JA="Japanese"
+
+  clear
+  echo
+  echo "Domino Language Pack"
+  echo "--------------------"
+  echo
+  print_lp "DE" "$LP_DE"
+  print_lp "ES" "$LP_ES"
+  print_lp "FR" "$LP_FR"
+  print_lp "IT" "$LP_IT"
+  print_lp "NL" "$LP_NL"
+  print_lp "JA" "$LP_JA"
+  echo
+  echo
+  read -n1 -p " Select language pack  [0] to cancel? " LP;
+
+  case "$LP" in
+
+    0)
+      return 0
+      ;;
+
+    d)
+      SELECT_DOMLP_LANG=DE
+      DISPLAY_DOMLP="$LP_DE"
+      ;;
+
+    e)
+      SELECT_DOMLP_LANG=ES
+      DISPLAY_DOMLP="$LP_ES"
+      ;;
+
+    f)
+      SELECT_DOMLP_LANG=FR
+      DISPLAY_DOMLP="$LP_FR"
+      ;;
+
+    i)
+      SELECT_DOMLP_LANG=IT
+      DISPLAY_DOMLP="$LP_IT"
+      ;;
+
+    n)
+      SELECT_DOMLP_LANG=NL
+      DISPLAY_DOMLP="$LP_NL"
+      ;;
+
+    j)
+      SELECT_DOMLP_LANG=JA
+      DISPLAY_DOMLP="$LP_JA"
+      ;;
+
+  esac
+}
+
+select_domino_version()
+{
+  local VER=
+  local VER_1201FP1="12.0.1FP1"
+  local VER_1202FP1="12.0.2FP1"
+  local VER_1202FP2="12.0.2FP2"
+  local VER_140EA3="14.0EA3"
+
+  clear
+  echo
+  echo "HCL Domino Version"
+  echo "------------------"
+  echo
+
+  print_ver "1" "$VER_1201FP1"
+  print_ver "2" "$VER_1202FP1"
+  print_ver "3" "$VER_1202FP2"
+  print_ver "4" "$VER_140EA3"
+
+  echo
+  read -n1 -p " Select Domino version  [0] to cancel? " VER;
+
+  case "$VER" in
+
+    0)
+      return 0
+      ;;
+
+    1)
+      DOMINO_VERSION="$VER_1201FP1"
+      parse_domino_version "$DOMINO_VERSION"
+      ;;
+
+    2)
+      DOMINO_VERSION="$VER_1202FP1"
+      parse_domino_version "$DOMINO_VERSION"
+      ;;
+
+    3)
+      DOMINO_VERSION="$VER_1202FP2"
+      parse_domino_version "$DOMINO_VERSION"
+      ;;
+
+    4)
+      DOMINO_VERSION="$VER_140EA3"
+      PROD_VER="$DOMINO_VERSION"
+      PROD_FP=
+      PROD_HF=
+      PROD_FP=
+      ;;
+
+  esac
+}
+
+
+select_software()
+{
+  SELECTED=
+  PROD_NAME="domino"
+
+  local SELECT_TRAVELER_VERSION=
+  local SELECT_NOMAD_VERSION=
+  local SELECT_VERSE_VERSION=
+
+  local SELECT_LEAP_VERSION=
+  local SELECT_CAPI_VERSION=
+  local SELECT_DOMRESTAPI_VER=
+  local SELECT_DOMLP_LANG=
+  local SELECT_CCB_CEO_ADDONS="(adds Nomad Server & OnTime)"
+
+  local X="X"
+  local Z=" "
+  local DISPLAY_LP=
+  local D=$X
+  local T=$Z
+  local N=$Z
+  local V=$Z
+  local R=$Z
+  local L=$Z
+  local C=$Z
+  local E=$Z
+  local A=$Z
+  local W=$Z
+
+  get_current_version domino
+  DOMINO_VERSION=$PROD_VER$PROD_FP$PROD_HF
+
+  get_current_addon_version verse SELECT_VERSE_VERSION
+  get_current_addon_version nomad SELECT_NOMAD_VERSION
+  get_current_addon_version traveler SELECT_TRAVELER_VERSION
+  get_current_addon_version leap SELECT_LEAP_VERSION
+  get_current_addon_version capi SELECT_CAPI_VERSION
+  get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
+
+  while [ 1 ];
+  do
+
+    if [ -z "$DOMLP_LANG" ]; then
+      DISPLAY_LP=
+    else
+       DISPLAY_LP="$DISPLAY_DOMLP ($DOMLP_LANG)"
+    fi
+
+    clear
+    echo
+    echo "HCL Domino Container Community Image"
+    echo "------------------------------------"
+    echo
+    print_select "D" "HCL Domino"     "$D" "$DOMINO_VERSION"
+
+    case "$PROD_VER" in
+      14*) print_select "W" "CCB/CEO Domino V14" "$W" "$CCB_CEO_ADDONS"
+    esac
+
+    print_select "V" "Verse"          "$V" "$VERSE_VERSION"
+    print_select "T" "Traveler"       "$T" "$TRAVELER_VERSION"
+    print_select "N" "Nomad Server"   "$N" "$NOMAD_VERSION"
+    print_select "L" "Language Pack"  "$L" "$DISPLAY_LP"
+    print_select "R" "REST-API"       "$R" "$DOMRESTAPI_VER"
+    print_select "C" "C-API SDK"      "$C" "$CAPI_VERSION"
+    print_select "E" "Domino Leap"    "$E" "$LEAP_VERSION"
+
+    echo
+    print_select "A" "Test created image" "$A"
+    echo
+    echo
+    read -n1 -p " Select software & Options,  [B] to build,  [0] to cancel? " SELECTED;
+
+    case $(echo "$SELECTED" | awk '{print tolower($0)}') in
+
+      0|b)
+        return 0
+        ;;
+
+      t)
+        if [ -z "$TRAVELER_VERSION" ]; then
+          case "$PROD_VER" in
+            14*)
+               TRAVELER_VERSION="$PROD_VER"
+               ;;
+            *)
+               TRAVELER_VERSION="$SELECT_TRAVELER_VERSION"
+               ;;
+          esac
+
+          T=$X
+        else
+          TRAVELER_VERSION=
+          T=$Z
+        fi
+        ;;
+
+      n)
+        if [ -z "$NOMAD_VERSION" ]; then
+          NOMAD_VERSION=$SELECT_NOMAD_VERSION
+          N=$X
+        else
+          NOMAD_VERSION=
+          N=$Z
+        fi
+        ;;
+
+      v)
+        if [ -z "$VERSE_VERSION" ]; then
+          VERSE_VERSION=$SELECT_VERSE_VERSION
+          V=$X
+        else
+          VERSE_VERSION=
+          V=$Z
+        fi
+        ;;
+
+      r)
+        if [ -z "$DOMRESTAPI_VER" ]; then
+          DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER
+          R=$X
+        else
+          DOMRESTAPI_VER=
+          R=$Z
+        fi
+        ;;
+
+      e)
+        if [ -z "$LEAP_VERSION" ]; then
+          LEAP_VERSION=$SELECT_LEAP_VERSION
+          E=$X
+        else
+          LEAP_VERSION=
+          E=$Z
+        fi
+        ;;
+
+      c)
+        if [ -z "$CAPI_VERSION" ]; then
+          CAPI_VERSION=$SELECT_CAPI_VERSION
+          C=$X
+        else
+          CAPI_VERSION=
+          C=$Z
+        fi
+        ;;
+
+      l)
+        if [ -z "$DOMLP_LANG" ]; then
+          select_language_pack
+          DOMLP_LANG=$SELECT_DOMLP_LANG
+          if [ -n "$DOMLP_LANG" ]; then
+            L=$X
+          fi
+        else
+          DOMLP_LANG=
+          L=$Z
+        fi
+        ;;
+
+      d)
+        select_domino_version
+
+	if [ -n "$TRAVELER_VERSION" ]; then
+          case "$PROD_VER" in
+            14*)
+               TRAVELER_VERSION="$PROD_VER"
+               ;;
+            *)
+               TRAVELER_VERSION="$SELECT_TRAVELER_VERSION"
+               ;;
+          esac
+	fi
+        ;;
+
+      w)
+        if [ "$W" = "$X" ]; then
+          W=$Z
+        else
+          W=$X
+        fi
+        ;;
+
+      a)
+        if [ -z "$AutoTestImage" ]; then
+          AutoTestImage=yes
+          A=$X
+        else
+          AutoTestImage=
+          A=$Z
+        fi
+        ;;
+
+    esac
+
+    if [ "$W" = "$X" ]; then
+       case "$PROD_VER" in
+         14*)
+           CCB_CEO_ADDONS="$SELECT_CCB_CEO_ADDONS"
+           DominoResponseFile=domino14_full_install.properties
+           ;;
+         *)
+           CCB_CEO_ADDONS=
+           DominoResponseFile=
+           ;;
+       esac
+    else
+      CCB_CEO_ADDONS=
+      DominoResponseFile=
+    fi
+  done
+}
+
+build_menu()
+{
+  select_software
+  clear
+  echo
+
+  if [ -n "$ONTIME_VER" ]; then
+    DominoResponseFile=domino14_ontime_install.properties
   fi
 
-  log "Automation testing for new image [$DOCKER_IMAGE] successful!"
+  if [ "$SELECTED" = "0" ] || [ -z "$SELECTED" ] ; then
+    log "No build selected - Done"
+    exit 0
+  fi
+
+  TAG_LATEST="latest"
 }
 
 
@@ -1670,6 +2245,7 @@ SOFTWARE_CONTAINER=hclsoftware
 CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 VERSION_FILE_NAME=current_version.txt
+DOMDOWNLOAD_BIN=/usr/local/bin/domdownload
 
 # Use vi if no other editor specified in config
 
@@ -1725,7 +2301,7 @@ fi
 
 if [ -z "$1" ]; then
   usage
-  exit 0
+  exit 1
 fi
 
 # Special commands
@@ -1768,6 +2344,16 @@ for a in $@; do
     squid)
       SQUID_IMAGE_NAME=hclcom/squid
       build_squid_image
+      exit 0
+      ;;
+
+    testimage|testimage=*)
+      IMAGE_NAME=$(echo "$a" | cut -f2 -d= -s)
+      if [ -n "$IMAGE_NAME" ]; then
+        test_image "$IMAGE_NAME"
+      else
+        test_image "$DOCKER_IMAGE_NAME"
+      fi
       exit 0
       ;;
 
@@ -1901,7 +2487,7 @@ for a in $@; do
       ;;
 
     -domlp=*|+domlp=*)
-      DOMLP_VER=$(echo "$a" | cut -f2 -d= -s)
+      DOMLP_LANG=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -restapi*|+restapi*)
@@ -1911,6 +2497,18 @@ for a in $@; do
         get_current_addon_version domrestapi DOMRESTAPI_VER
       fi
 
+      ;;
+
+    -DominoResponseFile=*)
+      DominoResponseFile=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -ccb-license|-ceo_license)
+      DominoResponseFile=domino14_full_install.properties
+      ;;
+
+    -ontime)
+      DominoResponseFile=domino14_ontime_install.properties
       ;;
 
     _*)
@@ -1986,6 +2584,10 @@ for a in $@; do
       LinuxYumUpdate=no
       ;;
 
+    menu|m)
+      BUILD_MENU=yes
+      ;;
+
     -autotest)
       AutoTestImage=yes
       ;;
@@ -2051,6 +2653,11 @@ done
 check_timezone
 check_container_environment
 
+# Invoke build menu asking for Domino image details
+if [ "$BUILD_MENU" = "yes" ]; then
+  build_menu
+fi
+
 echo "[Running in $CONTAINER_CMD configuration]"
 
 # In case software directory is not set and the well know location is filled with software
@@ -2090,8 +2697,9 @@ if [ "$PROD_VER" = "latest" ]; then
 fi
 
 # Calculate the right version for Language Pack
-if [ -n "$DOMLP_VER" ]; then
-  DOMLP_VER=$DOMLP_VER-$PROD_VER
+if [ -n "$DOMLP_LANG" ]; then
+  DOMLP_LANG=$(echo "$DOMLP_LANG" | awk '{print toupper($0)}')
+  DOMLP_VER=$DOMLP_LANG-$PROD_VER
 fi
 
 # Calculate the right version for Nomad server for selected Domino version
@@ -2115,6 +2723,7 @@ check_exposed_ports
 #PROD_VER=$(echo "$PROD_VER" | awk '{print toupper($0)}')
 PROD_FP=$(echo "$PROD_FP" | awk '{print toupper($0)}')
 PROD_HF=$(echo "$PROD_HF" | awk '{print toupper($0)}')
+DOMLP_LANG=$(echo "$DOMLP_LANG" | awk '{print toupper($0)}')
 
 echo
 echo "Product to install: $PROD_NAME $PROD_VER $PROD_FP $PROD_HF"
