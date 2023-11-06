@@ -1471,11 +1471,7 @@ check_software()
 
   echo "$CURRENT_VER [$CURRENT_STATUS] $DOWNLOAD_1ST_FILE"
 
-  if [ ! -z "$DOWNLOAD_URLS_SHOW" ]; then
-    echo $CURRENT_DOWNLOAD_URL
-  elif [ ! "$CURRENT_STATUS" = "OK" ]; then
-    echo $CURRENT_DOWNLOAD_URL
-    echo
+  if [ ! "$CURRENT_STATUS" = "OK" ]; then
     DOWNLOAD_ERROR_COUNT=$((DOWNLOAD_ERROR_COUNT+1))
   fi
 
@@ -1835,7 +1831,6 @@ auto_test()
   test_image "$DOCKER_IMAGE"
 }
 
-
 parse_domino_version()
 {
   local VER_UPPER=
@@ -1848,25 +1843,31 @@ parse_domino_version()
   local HF=$(echo "$VER_UPPER" | awk -F'HF' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
 
   if [ -n "$FP" ]; then
-    PROD_FP=${PROD_VER}FP${FP}
+
+    FULL_PROD_FP=${PROD_VER}FP${FP}
+    PROD_FP=FP${FP}
 
     if [ -n "$IF" ]; then
-      PROD_IF=${PROD_FP}IF${IF}
+      FULL_PROD_IF=${PROD_FP}IF${IF}
+      PROD_IF=IF${IF}
     fi
 
     if [ -n "$HF" ]; then
-      PROD_HF=${PROD_FP}HF${HF}
+      FULL_PROD_HF=${PROD_FP}HF${HF}
+      PROD_HF=$HF${HF}
     fi
 
   else
 
     PROD_FP=
     if [ -n "$IF" ]; then
-      PROD_IF=${PROD_VER}IF${IF}
+      FULL_PROD_IF=${PROD_VER}IF${IF}
+      PROD_IF=IF${IF}
     fi
 
     if [ -n "$HF" ]; then
-      PROD_HF=${PROD_FP}HF${HF}
+      FULL_PROD_HF=${PROD_FP}HF${HF}
+      PROD_HF=HF${HF}
     fi
 
   fi
@@ -2731,6 +2732,15 @@ echo
 
 dump_config
 
+if [ -z "$PROD_NAME" ]; then
+  log_error_exit "No product specified! - Terminating"
+fi
+
+if [ -z "$PROD_VER" ]; then
+  log_error_exit "No Target version specified! - Terminating"
+fi
+
+
 if [ "$CHECK_SOFTWARE" = "yes" ]; then
   check_all_software
 
@@ -2755,13 +2765,6 @@ fi
 
 echo
 
-if [ -z "$PROD_NAME" ]; then
-  log_error_exit "No product specified! - Terminating"
-fi
-
-if [ -z "$PROD_VER" ]; then
-  log_error_exit "No Target version specified! - Terminating"
-fi
 
 # Podman started to use OCI images by default. We still want Docker image format
 

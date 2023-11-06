@@ -222,6 +222,15 @@ dump_var()
   echo
 }
 
+log_addon_detected()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  echo "[X] $2"
+}
+
 # Check & setup container environment
 check_container_environment
 
@@ -482,32 +491,23 @@ log_json "dominoAddons" "$CONTAINER_DOMINO_ADDONS"
 
 log_json_begin_array testcase
 
-header "Checking add-ons"
+header "Detecting Add-Ons"
 
 # Check if Traveler binary exits
 traveler_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/traveler 2>/dev/null)
-
-if [ -n "$traveler_binary" ]; then
-  log "Info: Traveler Server detected"
-fi
+log_addon_detected "$traveler_binary" "Traveler Server"
 
 # Check if Nomad Server binary exists
 nomad_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/nomad 2>/dev/null)
-if [ -n "$nomad_binary" ]; then
-  log "Info: Nomad Server detected"
-fi
+log_addon_detected "$nomad_binary" "Nomad Server"
 
 # Check if REST-API binary exists
 domrestapi_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/restapi 2>/dev/null)
-if [ -n "$domrestapi_binary" ]; then
-  log "Info: Domino REST-API detected"
-fi
+log_addon_detected "$domrestapi_binary" "Domino REST-API"
 
 # Check if Domino Leap/Volt jar exists
-leap_jar=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/osgi/volt/eclipse/plugins -name "dleap*.jar" 2>/dev/null)
-if [ -n "$leap_jar" ]; then
-  log "Info: Domino Leap detected"
-fi
+dleap_jar=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/osgi/volt/eclipse/plugins -name "dleap*.jar" 2>/dev/null)
+log_addon_detected "$dleap_jar" "Domino Leap"
 
 # Check if Verse jar exists
 verse_jar=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/osgi/shared/eclipse/plugins -name "core-*.jar" 2>/dev/null)
@@ -517,29 +517,21 @@ if [ -z "$verse_jar" ]; then
   verse_jar=$($CONTAINER_CMD exec $CONTAINER_NAME find /local/notesdata/domino/workspace/applications/eclipse/plugins -name "core-*.jar" 2>/dev/null)
 fi
 
-if [ -n "$verse_jar" ]; then
-  log "Info: HCL Verse detected"
-fi
+log_addon_detected "$verse_jar" "HCL Verse"
 
 lp_strings=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/res/C -name "strings_*.res" | awk -F "strings_" '{print $2}' | cut -d. -f1 2>/dev/null)
 
-if [ -n "$lp_strings" ]; then
-  log "Info: Language Pack [$lp_strings] detected"
-fi
+log_addon_detected "$lp_strings" "Language Pack [$lp_strings]"
 
 # Check if OnTime binary exists
 ontime_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/ontimegc 2>/dev/null)
-if [ -n "$ontime_binary" ]; then
-  log "Info: OnTime group calendar detected"
-fi
+log_addon_detected "$ontime_binary" "OnTime group calendar"
 
 # Check if C-API global.h and lib notes0.o exists
 capi_lib=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notesapi/lib/linux64/notes0.o 2>/dev/null)
 capi_include=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notesapi/include/global.h 2>/dev/null)
 
-if [ -n "$capi_include" ]; then
-  log "Info: C-API SDK detected"
-fi
+log_addon_detected "$capi_include" "C-API SDK"
 
 OLDIFS=$IFS
 IFS=$'\n'
@@ -578,12 +570,7 @@ do
       ;;
 
     leap)
-      if [ -z "$leap_jar" ]; then
-        ERROR_MSG="$ADDON_NAME main jar not found"
-      fi
-      ;;
-    leap)
-      if [ -z "$leap_jar" ]; then
+      if [ -z "$dleap_jar" ]; then
         ERROR_MSG="$ADDON_NAME main jar not found"
       fi
       ;;
@@ -767,7 +754,7 @@ if [ -n "$traveler_binary" ]; then
   wait_for_string $CONSOLE_LOG "Traveler: Server started." 50 
   sleep 2
 
-  traveler_status=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -u "$USER:$PASSWORD" -s 'https://automation.notes.lab/traveler?action=getStatus' 2>&1)
+  traveler_status=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -u "$USER:$PASSWORD" -sL 'https://automation.notes.lab/traveler?action=getStatus' 2>&1)
 
   if [ "$traveler_status" = "Traveler server is available." ]; then
     ERROR_MSG=
@@ -777,6 +764,7 @@ if [ -n "$traveler_binary" ]; then
 
   test_result "traveler.server.available" "Traveler server available" "" "$ERROR_MSG"
 fi
+
 
 # Test Nomad server available
 
@@ -800,6 +788,7 @@ if [ -n "$nomad_binary" ]; then
 
   test_result "nomad.server.available" "Nomad server available" "" "$ERROR_MSG"
 fi
+
 
 # Test Verse available
 
@@ -828,7 +817,7 @@ if [ -n "$domrestapi_binary" ]; then
   wait_for_string $CONSOLE_LOG "Domino Rest API Initialization complete." 50
   sleep 2
 
-  restapi_response=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -s 'http://automation.notes.lab:8880/api' 2>&1)
+  restapi_response=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -sL 'http://automation.notes.lab:8880/api' 2>&1)
 
   restapi_check=$(echo "$restapi_response" | grep "HCL Domino REST API")
 
@@ -840,6 +829,40 @@ if [ -n "$domrestapi_binary" ]; then
   fi
 
   test_result "restapi.server.available" "Domino REST-API available" "" "$ERROR_MSG"
+fi
+
+
+# Test Domino Leap available
+
+if [ -n "$dleap_jar" ]; then
+
+  header "$Verifying Verifying Domino Leap"
+
+  leap_response=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -u "$USER:$PASSWORD" -sL 'https://automation.notes.lab/volt-apps' 2>&1)
+  echo $CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -u "$USER:$PASSWORD" -s 'https://automation.notes.lab/volt-apps'
+
+  leap_check=$(echo "$leap_response" | grep "HCL Domino Leap")
+
+  if [ -n "$leap_check" ]; then
+    ERROR_MSG=
+  else
+    ERROR_MSG="Invalid response to status command"
+    dump_var "Domino Domino Leap Response" "$leap_response"
+  fi
+
+  test_result "domino-leap.server.available" "Domino Leap available" "" "$ERROR_MSG"
+
+  server_console_cmd "tell http osgi ss dleap"
+  wait_for_string $CONSOLE_LOG "dleap_" 10
+
+  DLEAP_VERSION=$(grep "dleap_" "$CONSOLE_LOG" | awk -F "dleap_" '{print $2}')
+
+  log "Domino Leap Version: $DLEAP_VERSION"
+  if [ -z "$DLEAP_VERSION" ]; then
+    ERROR_MSG="Leap version not found"
+  fi
+
+  test_result "domino-leap.server.version" "Domino Leap version found" "" "$ERROR_MSG"
 fi
 
 
@@ -895,6 +918,7 @@ if [ "$count_backup" = "0" ]; then
 fi
 
 test_result "domino.backup.create" "Backup create" "" "$ERROR_MSG"
+
 
 # Test Start Script: archivelog
 
