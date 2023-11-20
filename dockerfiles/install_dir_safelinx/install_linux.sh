@@ -35,9 +35,6 @@ install_linux_packages()
     # Installing the English local should always work
     install_package glibc-langpack-en
 
-    # Installing the German locale might fail if UBI systems is running on machine without Redhat subscription
-    install_package glibc-langpack-de
-
   fi
 
   # On Debian, Ubuntu and Astra Linux install setcap (required to set capability for gdb)

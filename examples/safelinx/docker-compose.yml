@@ -7,7 +7,6 @@ services:
     container_name: ${CONTAINER_NAME}
     hostname:       ${CONTAINER_HOSTNAME}
     stop_grace_period: 60s
-    network_mode: "host"
     privileged: true
 
     environment:
