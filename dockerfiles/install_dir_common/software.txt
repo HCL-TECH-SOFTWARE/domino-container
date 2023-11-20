@@ -69,3 +69,4 @@ domrestapi|1.0.4|Domino_REST_API_V1.0.4_Installer.tar.gz|-|92cd399729d1aa4a0eac6
 domrestapi|1.0.5|Domino_REST_API_V1.0.5_Installer.tar.gz|-|3621be8f274632776237ce68bae609cc654deda97beac7dd7408d1d1856112f0
 domrestapi|1.0.6|Domino_REST_API_V1.0.6_Installer.tar.gz|-|31d28a804915776dc65091e23fa59b7a1165a77d993e7f954314e32fb8e1f4a6
 domrestapi|1.0.7|Domino_REST_API_V1.0.7_Installer.tar.gz|-|367d11f4a71aea147f51d8171d194800f7b902e15dcd8cbc7fb1e14e369697de
+domrestapi|1.0.8|Domino_REST_API_V1.0.8_Installer.tar.gz|-|d190aefaa4b957749a41d62e7b2d18ccb82f56ccac351a82dfce93a5d7dd86c4

@@ -636,20 +636,6 @@ fi
 
 test_result "domino.server.running" "Domino Server startup" "" "$ERROR_MSG"
 
-sleep 10
-
-# Start HTTP or Traveler task
-
-if [ -z "$traveler_binary" ]; then
-  header "Starting HTTP"
-  server_console_cmd "load http"
-  sleep 2
-else
-  header "Starting Traveler"
-  server_console_cmd "load traveler"
-  sleep 2
-fi
-
 # Start Domino REST-API Server task
 
 if [ -n "$domrestapi_binary" ]; then
@@ -667,6 +653,22 @@ if [ -n "$nomad_binary" ]; then
   header "Starting Nomad Server"
   server_console_cmd "load nomad"
 fi
+
+
+# Wait 10 sec to process the last server command to avoid console buffer errors. We need to wait for HTTP start anyhow
+sleep 10
+
+# Start HTTP or Traveler task
+
+if [ -z "$traveler_binary" ]; then
+  header "Starting HTTP"
+  server_console_cmd "load http"
+else
+  header "Starting Traveler"
+  server_console_cmd "load traveler"
+fi
+
+sleep 5
 
 
 # Test if HTTP is running
@@ -815,7 +817,7 @@ if [ -n "$domrestapi_binary" ]; then
   header "$Verifying Verifying Domino REST-API"
 
   wait_for_string $CONSOLE_LOG "Domino Rest API Initialization complete." 50
-  sleep 2
+  sleep 5
 
   restapi_response=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -sL 'http://automation.notes.lab:8880/api' 2>&1)
 

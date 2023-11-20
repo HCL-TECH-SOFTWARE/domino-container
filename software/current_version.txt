@@ -7,4 +7,4 @@ capi|12.0.2
 safelinx|1.4.1
 nomadweb|1.0.8
 nomad|1.0.9
-domrestapi|1.0.7
+domrestapi|1.0.8
