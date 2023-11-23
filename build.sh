@@ -430,7 +430,7 @@ nginx_start()
 {
   # Create a nginx container hosting software download locally
 
-  local IMAGE_NAME=nginx
+  local IMAGE_NAME=docker.io/library/nginx
 
   if [ -n "$NGINX_IMAGE_NAME" ]; then
     check_build_nginx_image
