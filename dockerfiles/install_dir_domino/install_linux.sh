@@ -214,7 +214,6 @@ else
     fi
   fi
 
-
   # Install database client if requested
 
   if [ "$MYSQL_INSTALL" = "yes" ]; then
@@ -223,6 +222,13 @@ else
 
   if [ "$MSSQL_INSTALL" = "yes" ]; then
     install_mssql_client
+  fi
+
+  # Install custom Linux packages requested by admin into Linux layer
+
+  if [ -n "LINUX_PKG_ADD" ]; then
+    header "Installing custom packages: $LINUX_PKG_ADD"
+    install_packages "$LINUX_PKG_ADD"
   fi
 
 fi

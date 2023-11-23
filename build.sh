@@ -278,6 +278,7 @@ usage()
   echo "-restapi         adds the Domino REST API to the image"
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
   echo "-k8s-runas       adds K8s runas user support"
+  echo "-linuxpkg=<pkg>  add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-startscript=x   installs specified start script version from software repository"
   echo
   echo SafeLinx options
@@ -347,6 +348,7 @@ dump_config()
   echo "MYSQL_INSTALL        : [$MYSQL_INSTALL]"
   echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
   echo "BORG_INSTALL         : [$BORG_INSTALL]"
+  echo "LINUX_PKG_ADD        : [$LINUX_PKG_ADD]"
   echo "STARTSCRIPT_VER      : [$STARTSCRIPT_VER]"
   echo "EXPOSED_PORTS        : [$EXPOSED_PORTS]"
   echo "LinuxYumUpdate       : [$LinuxYumUpdate]"
@@ -430,18 +432,20 @@ nginx_start()
 {
   # Create a nginx container hosting software download locally
 
-  local IMAGE_NAME=nginx
+  local IMAGE_NAME=docker.io/library/nginx:latest
 
   if [ -n "$NGINX_IMAGE_NAME" ]; then
     check_build_nginx_image
     IMAGE_NAME=$NGINX_IMAGE_NAME
+  elif [ -n "$NGINX_IMAGE" ]; then
+    IMAGE_NAME=$NGINX_IMAGE
   fi
 
   # Check if we already have this container in status exited
   STATUS="$($CONTAINER_CMD inspect --format '{{ .State.Status }}' $SOFTWARE_CONTAINER 2>/dev/null)"
 
   if [ -z "$STATUS" ]; then
-    echo "Creating Docker container: $SOFTWARE_CONTAINER hosting [$SOFTWARE_DIR]"
+    echo "Creating Docker container: $SOFTWARE_CONTAINER hosting [$SOFTWARE_DIR] based on [$IMAGE_NAME]"
     $CONTAINER_CMD run --name $SOFTWARE_CONTAINER -p $SOFTWARE_PORT:80 -v $SOFTWARE_DIR:/usr/share/nginx/html:Z -d $IMAGE_NAME
   elif [ "$STATUS" = "exited" ]; then
     echo "Starting existing Docker container: $SOFTWARE_CONTAINER"
@@ -948,6 +952,7 @@ build_domino()
     --build-arg LEAP_VERSION="$LEAP_VERSION" \
     --build-arg CAPI_VERSION="$CAPI_VERSION" \
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
+    --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
     --build-arg MSSQL_INSTALL="$MSSQL_INSTALL" \
     --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
@@ -2332,7 +2337,7 @@ if [ -z "$OPENSSL_INSTALL" ]; then
   OPENSSL_INSTALL=yes
 fi
 
-for a in $@; do
+for a in "$@"; do
 
   p=$(echo "$a" | awk '{print tolower($0)}')
 
@@ -2412,6 +2417,10 @@ for a in $@; do
       if [ -z "$CAPI_VERSION" ]; then
         get_current_addon_version capi CAPI_VERSION
       fi
+      ;;
+
+   -linuxpkg=*|+linuxpkg=*)
+      LINUX_PKG_ADD=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -startscript=*|+startscript=*)
