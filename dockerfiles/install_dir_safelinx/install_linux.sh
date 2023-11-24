@@ -35,6 +35,9 @@ install_linux_packages()
     # Installing the English local should always work
     install_package glibc-langpack-en
 
+    # SafeLinx currenlty requires an older crypt lib
+    install_package libxcrypt-compat
+
   fi
 
   # On Debian, Ubuntu and Astra Linux install setcap (required to set capability for gdb)

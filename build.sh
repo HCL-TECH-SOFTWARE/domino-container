@@ -629,11 +629,11 @@ check_from_image()
   if [ -z "$FROM_IMAGE" ]; then
 
     if [ "$PROD_NAME" = "domino" ]; then
-      LINUX_NAME="CentOS Stream"
+      LINUX_NAME="CentOS Stream 9"
       BASE_IMAGE=quay.io/centos/centos:stream9
     elif [ "$PROD_NAME" = "safelinx" ]; then
-      LINUX_NAME="CentOS Stream"
-      BASE_IMAGE=quay.io/centos/centos:stream8
+      LINUX_NAME="CentOS Stream 9"
+      BASE_IMAGE=quay.io/centos/centos:stream9
 
     else
       BASE_IMAGE=hclcom/domino:latest

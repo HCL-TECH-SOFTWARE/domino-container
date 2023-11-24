@@ -1286,12 +1286,15 @@ install_mysql_client()
   local ADDON_NAME="MySQL Client"
   header "$ADDON_NAME Installation"
 
-  curl -LO https://repo.mysql.com/mysql80-community-release-el7-1.noarch.rpm
+  curl -LO https://repo.mysql.com/mysql80-community-release-el9-1.noarch.rpm
   rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
 
-  install_package mysql80-community-release-el7-1.noarch.rpm
+  install_package mysql80-community-release-el9-1.noarch.rpm
   install_package mysql
   install_package mysql-connector-odbc.x86_64
+
+  # Add symbolic link to ensure driver is found
+  ln -s -T /usr/lib64/libodbc.so.2.0.0 /usr/lib64/libodbc.so
 
   log_space Installed $ADDON_NAME
 }
