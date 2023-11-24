@@ -265,7 +265,7 @@ restart_safelinx_server()
 
 WaitMySQLAvailable()
 {
-  local TIMEOUT=60
+  local TIMEOUT=120
   local STATUS=
   local seconds=0
   local sec_mod=0
@@ -280,7 +280,7 @@ WaitMySQLAvailable()
 
   while [ $seconds -lt $TIMEOUT ]; do
 
-    STATUS=$(mysqladmin -u wgdb -h mysql-sl -ppassword status 2> /dev/null)
+    STATUS=$(mysqladmin -u wgdb "-p$MYSQL_PASSWORD" -h mysql-sl status 2> /dev/null)
 
     if [ -n "$STATUS" ]; then
       log_space "MySQL Server available after $seconds seconds"
@@ -300,7 +300,7 @@ WaitMySQLAvailable()
   log_error "Cannot connect to MySQL server!"
 
   # Try to connect one final time without error redirection for admin info
-  mysqladmin -u wgdb -h mysql-sl -ppassword status 2
+  mysqladmin -u wgdb "-p$MYSQL_PASSWORD" -h mysql-sl status
   exit 1
 
 }

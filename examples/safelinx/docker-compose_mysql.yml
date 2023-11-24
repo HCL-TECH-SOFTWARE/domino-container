@@ -47,7 +47,7 @@ services:
 
     environment:
       MYSQL_DATABASE:             wgdata 
-      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD:        ${MYSQL_PASSWORD}
       MYSQL_USER:                 wgdb 
       MYSQL_PASSWORD:             ${MYSQL_PASSWORD}
 
