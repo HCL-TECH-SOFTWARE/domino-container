@@ -2,7 +2,7 @@
 
 This project contains build scripts for HCL Domino Docker/Container images via [dockerfiles](https://docs.docker.com/engine/reference/builder/).
 The repository provides the utilities to build HCL Domino Server with the latest software or specific version in a Docker/Container image.
-There are separate folders within this repository for Domino add-on HCL products like Traveler and HCL Domino Volt as well.
+There are separate folders within this repository for Domino add-on HCL products like Traveler and HCL Domino Leap  as well.
 
 ## You are looking to (just) configure & control Domino container instances - not to build containers?
 
@@ -41,9 +41,9 @@ Special Thanks go to the following people for having provided valuable input to 
 ## License
 The Dockerfiles and associated scripts are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). 
 
-License for the products that can be installed within the images is as follows:
+License for products that can be installed within images is as follows:
 * HCL Domino Enterprise Server under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
-* HCL Domino Volt under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
+* HCL Domino Leap under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
 * HCL Notes Traveler under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
 
 Note that HCL Domino and add-on products are commercial software - The software licenses agreement does not permit further distribution of the docker image that was built using this script.

@@ -15,7 +15,7 @@ has_children: true
 
 This project contains build scripts for HCL Domino Docker/Container images via [dockerfiles](https://docs.docker.com/engine/reference/builder/).
 The repository provides the utilities to build HCL Domino Server with the latest software or specific version in a Docker/Container image.
-There are separate folders within this repository for Domino add-on HCL products like Traveler and HCL Domino Volt as well.
+There are separate folders within this repository for Domino add-on HCL products like Traveler and HCL Domino Leap as well.
 
 All required HCL web-kits and fixes are downloaded from a software repository server instead of adding the source installation files to the image directly.
 If no remote server is referenced a temporary local [NGINX container](https://hub.docker.com/_/nginx) is started at build time to act as a **software repository server**.
@@ -27,10 +27,10 @@ See detailed information about [supported run-time and build environments](conce
 
 ## Where to get HCL Domino software
 
-The project uses the official HCL web-kit installers to build container images download from the official HCL Flexnet repository.
+The project uses the official HCL web-kit installers to build container images download from the new official [My HCLSoftware Portal](https://my.hcltechsw.com/).
 
-- All HCL customers with active maintenance should have a download account for [HCL Flexnet software portal](https://hclsoftware.flexnetoperations.com/flexnet/operationsportal)
-- HCL Business Partners with the [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) can download software in a similar way
+- All HCL customers with active maintenance should have a download account 
+- The [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) provides the same access for HCL Business Partners
 
 See how to [download software](howto_download-software.md) for details.
 
@@ -61,7 +61,10 @@ Add-on images always need to be derived from the Domino base image.
 
 There are currently two add-on images available:
 
-* ```./build traveler``` - Traveler on Domino
-* ```./build volt``` - Volt on Domino
+* ```./build traveler``` - Traveler on top of the Domino image
+* ```./build leap``` - Domino Leap on top of the Domino image
+
+Note: HCL Traveler and Domino Leap are no alway available as build options for the Domino image and can be combined with other add-on images in the same build step.
+No separate image build is required.
 
 Refer to Howto [Run Domino Container GitHub Repo](run_docker.md) how to run a Domino Container on Docker.

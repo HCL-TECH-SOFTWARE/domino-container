@@ -9,7 +9,7 @@ has_children: false
 
 # Build Command Documentation
 
-The `build.sh` command is used as the main entry point for building Domino, Traveler and Volt images.
+The `build.sh` command is used as the main entry point for building Domino, Traveler and Domino Leap images.
 Using the the build command line and configuration file the build operation can be customized.
 
 The only required parameter is the product to install.
@@ -92,8 +92,8 @@ Example:
 
 ### Software Options
 
-- **-volt=version**  
-  Installs specified HCL Volt version.  
+- **-leap=version**  
+  Installs specified Domino Leap version.  
   If invoked without version parameter, latest version will be installed
 
 - **-capi=version**  
@@ -110,7 +110,7 @@ Example:
 ### Reference: Build Usage
 
 ```
-Usage: build.sh { domino | traveler | volt } version fp hf
+Usage: build.sh { domino | traveler | leap } version fp hf
 
 -checkonly      checks without build
 -verifyonly     checks download file checksum without build

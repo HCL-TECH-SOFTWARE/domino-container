@@ -12,13 +12,16 @@ has_children: false
 ## build.sh
 
 Main start point for building docker images.
-You can specify the image to build.
+You can specify the image to build including additional build options and add-on software.
 
-The following images are supported
 
-- **domino** - Domino 12
-- **traveler** - Traveler 12
-- **volt** - HCL Domino Volt 1.x
+```
+./build.sh domino
+```
+
+Refer to the command line documentation invoking the script with -h to get the full list of options.  
+Invoking the build script without parameters brings up a new menu to select which add-ons to install.  
+
 
 The file `software.txt` contains an up to date list of current HCL Domino related software.
 Unless you specify a distinct version the current version will be installed and tagged as "latest".
@@ -65,7 +68,7 @@ Contains one line per product to define the latest software verison
 
 Contains a sub-directory for each product that can be installed.
 - `install_dir_domino` contains all files needed to install a HCL Domino server.
-- `install_dir_common` contains common components used by other container images like Traveler and Volt.
+- `install_dir_common` contains common components used by other container images like Traveler.
 
 Those files are copied to /tmp/install_dir during install process and are invoked by the build process.
 

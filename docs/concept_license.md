@@ -17,5 +17,5 @@ HCL Domino and add-on products are commercial software - The software licenses a
 You can find more details in the HCL License Information documents using the links below.
 
 - HCL Domino Enterprise Server 12 under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)
-- HCL Domino Volt under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)
+- HCL Domino Leap under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)
 - HCL Notes Traveler under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)
