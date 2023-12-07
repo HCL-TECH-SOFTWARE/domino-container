@@ -468,7 +468,9 @@ install_traveler()
 
   download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME" 
 
-  if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
+  if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120002*")" ]; then
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino1202.properties
+  elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120001*")" ]; then
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino1201.properties
   elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120000*")" ]; then
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino12.properties
@@ -549,8 +551,17 @@ install_capi()
   cd $ADDON_NAME
   echo "Unzipping files .."
 
-  unzip -q -d "$LOTUS" *.zip */lib/linux64/*
-  unzip -q -d "$LOTUS" *.zip */include/*
+  # Domino 14 C-API ZIP has different structure
+  if [ "$ADDON_VER" = "14.0" ]; then
+    mkdir -p "$LOTUS/notesapi14"
+    unzip -q -d "$LOTUS/notesapi14" *.zip
+    mkdir -p "$LOTUS/notesapi14/lib/linux64"
+    mv "$LOTUS/notesapi14/lib/"*.o "$LOTUS/notesapi14/lib/linux64"
+
+  else
+    unzip -q -d "$LOTUS" *.zip */include/*
+    unzip -q -d "$LOTUS" *.zip */lib/linux64/*
+  fi
 
   rm -f *.zip
   cd $LOTUS

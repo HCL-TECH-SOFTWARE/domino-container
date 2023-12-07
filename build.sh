@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.2.0
+# Version 2.2.1
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -24,7 +24,7 @@ LinuxYumUpdate=yes
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.2.0
+CONTAINER_BUILD_SCRIPT_VERSION=2.2.1
 
 # Build kit shortens the output. This isn't really helpful for troubleshooting and following the build process ...
 export BUILDKIT_PROGRESS=plain
@@ -274,7 +274,7 @@ usage()
   echo "-traveler        adds the Traveler server to a Domino image"
   echo "-leap            adds the Domino Leap to a Domino image"
   echo "-capi            adds the C-API sdk/toolkit to a Domino image"
-  echo "-domlp=de        adds the German Language Pack to the image"
+  echo "-domlp=xx        adds the specified Language Pack to the image"
   echo "-restapi         adds the Domino REST API to the image"
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
   echo "-k8s-runas       adds K8s runas user support"
@@ -1801,6 +1801,10 @@ docker_save()
 
 test_image()
 {
+
+  export CONTAINER_CMD
+  export USE_DOCKER
+
   local IMAGE_NAME=$1
   if [ -z "$IMAGE_NAME" ]; then
      IMAGE_NAME="$DOCKER_IMAGE"
@@ -1890,7 +1894,11 @@ print_ver()
 
 print_select()
 {
-  printf " (%s)  %-19s [%s]  %s\n" "$1" "$2" "$3" "$4"
+  if [ -n "$3" ]; then
+    printf " (%s)  %-19s [%s]  %s\n" "$1" "$2" "$3" "$4"
+  else
+    printf " (%s)  %-19s\n" "$1" "$2"
+  fi
 }
 
 select_language_pack()
@@ -1959,10 +1967,9 @@ select_language_pack()
 select_domino_version()
 {
   local VER=
-  local VER_1201FP1="12.0.1FP1"
-  local VER_1202FP1="12.0.2FP1"
-  local VER_1202FP2="12.0.2FP2"
-  local VER_140EA3="14.0EA3"
+  local VER_LATEST="14.0"
+  local VER_140="14.0"
+  local VER_1202="12.0.2FP2"
 
   clear
   echo
@@ -1970,10 +1977,8 @@ select_domino_version()
   echo "------------------"
   echo
 
-  print_ver "1" "$VER_1201FP1"
-  print_ver "2" "$VER_1202FP1"
-  print_ver "3" "$VER_1202FP2"
-  print_ver "4" "$VER_140EA3"
+  print_ver "1" "$VER_LATEST"
+  print_ver "2" "$VER_1202"
 
   echo
   read -n1 -p " Select Domino version  [0] to cancel? " VER;
@@ -1985,29 +1990,19 @@ select_domino_version()
       ;;
 
     1)
-      DOMINO_VERSION="$VER_1201FP1"
+      DOMINO_VERSION="$VER_LATEST"
       parse_domino_version "$DOMINO_VERSION"
       ;;
 
     2)
-      DOMINO_VERSION="$VER_1202FP1"
+      DOMINO_VERSION="$VER_1202"
       parse_domino_version "$DOMINO_VERSION"
-      ;;
-
-    3)
-      DOMINO_VERSION="$VER_1202FP2"
-      parse_domino_version "$DOMINO_VERSION"
-      ;;
-
-    4)
-      DOMINO_VERSION="$VER_140EA3"
-      PROD_VER="$DOMINO_VERSION"
-      PROD_FP=
-      PROD_HF=
-      PROD_FP=
       ;;
 
   esac
+
+  # Select corresponding C-API version
+  SELECT_CAPI_VERSION=$PROD_VER
 }
 
 
@@ -2024,7 +2019,7 @@ select_software()
   local SELECT_CAPI_VERSION=
   local SELECT_DOMRESTAPI_VER=
   local SELECT_DOMLP_LANG=
-  local SELECT_CCB_CEO_ADDONS="(adds Nomad Server & OnTime)"
+  local SELECT_DOMINO_ADDONS="1.11.1"
 
   local X="X"
   local Z=" "
@@ -2038,7 +2033,8 @@ select_software()
   local C=$Z
   local E=$Z
   local A=$Z
-  local W=$Z
+  local I=$Z
+  local O=$Z
 
   get_current_version domino
   DOMINO_VERSION=$PROD_VER$PROD_FP$PROD_HF
@@ -2067,7 +2063,7 @@ select_software()
     print_select "D" "HCL Domino"     "$D" "$DOMINO_VERSION"
 
     case "$PROD_VER" in
-      14*) print_select "W" "CCB/CEO Domino V14" "$W" "$CCB_CEO_ADDONS"
+      14*) print_select "O" "OnTime" "$O" "$DOMINO_ADDONS"
     esac
 
     print_select "V" "Verse"          "$V" "$VERSE_VERSION"
@@ -2075,11 +2071,14 @@ select_software()
     print_select "N" "Nomad Server"   "$N" "$NOMAD_VERSION"
     print_select "L" "Language Pack"  "$L" "$DISPLAY_LP"
     print_select "R" "REST-API"       "$R" "$DOMRESTAPI_VER"
-    print_select "C" "C-API SDK"      "$C" "$CAPI_VERSION"
+    print_select "A" "C-API SDK"      "$A" "$CAPI_VERSION"
     print_select "E" "Domino Leap"    "$E" "$LEAP_VERSION"
 
     echo
-    print_select "A" "Test created image" "$A"
+    print_select "I" "Test created image" "$I"
+    echo
+    print_select "C" "Configuration"
+    print_select  "H" "Help"
     echo
     echo
     read -n1 -p " Select software & Options,  [B] to build,  [0] to cancel? " SELECTED;
@@ -2148,13 +2147,13 @@ select_software()
         fi
         ;;
 
-      c)
+      a)
         if [ -z "$CAPI_VERSION" ]; then
           CAPI_VERSION=$SELECT_CAPI_VERSION
-          C=$X
+          A=$X
         else
           CAPI_VERSION=
-          C=$Z
+          A=$Z
         fi
         ;;
 
@@ -2186,39 +2185,48 @@ select_software()
 	fi
         ;;
 
-      w)
-        if [ "$W" = "$X" ]; then
-          W=$Z
+      o)
+        if [ "$O" = "$X" ]; then
+          O=$Z
         else
-          W=$X
+          O=$X
         fi
         ;;
 
-      a)
+      i)
         if [ -z "$AutoTestImage" ]; then
           AutoTestImage=yes
-          A=$X
+          I=$X
         else
           AutoTestImage=
-          A=$Z
+          I=$Z
         fi
+        ;;
+
+      c)
+	edit_config_file
+        ;;
+
+      h)
+	usage
+        read -n1 -p "" SELECTED;
         ;;
 
     esac
 
-    if [ "$W" = "$X" ]; then
+    if [ "$O" = "$X" ]; then
        case "$PROD_VER" in
          14*)
-           CCB_CEO_ADDONS="$SELECT_CCB_CEO_ADDONS"
-           DominoResponseFile=domino14_full_install.properties
+           DOMINO_ADDONS="$SELECT_DOMINO_ADDONS"
+           DominoResponseFile=domino14_ontime_install.properties
            ;;
          *)
-           CCB_CEO_ADDONS=
+           DOMINO_ADDONS=
            DominoResponseFile=
            ;;
        esac
     else
-      CCB_CEO_ADDONS=
+      DOMINO_ADDONS=
       DominoResponseFile=
     fi
   done
@@ -2306,8 +2314,7 @@ if [ ! -e "$VERSION_FILE" ]; then
 fi
 
 if [ -z "$1" ]; then
-  usage
-  exit 1
+  build_menu
 fi
 
 # Special commands
@@ -2511,10 +2518,6 @@ for a in "$@"; do
 
     -DominoResponseFile=*)
       DominoResponseFile=$(echo "$a" | cut -f2 -d= -s)
-      ;;
-
-    -ccb-license|-ceo_license)
-      DominoResponseFile=domino14_full_install.properties
       ;;
 
     -ontime)
@@ -2734,6 +2737,15 @@ check_exposed_ports
 PROD_FP=$(echo "$PROD_FP" | awk '{print toupper($0)}')
 PROD_HF=$(echo "$PROD_HF" | awk '{print toupper($0)}')
 DOMLP_LANG=$(echo "$DOMLP_LANG" | awk '{print toupper($0)}')
+
+# Ensure the right response file
+if [ "$PROD_NAME" = "domino" ] && [ -z "$DominoResponseFile" ]; then
+  case "$PROD_VER" in
+    14*)
+      DominoResponseFile=domino14_install.properties
+      ;;
+  esac
+fi
 
 echo
 echo "Product to install: $PROD_NAME $PROD_VER $PROD_FP $PROD_HF"
