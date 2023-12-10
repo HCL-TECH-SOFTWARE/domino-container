@@ -13,9 +13,6 @@ The Dockerfiles and associated scripts are licensed under the [Apache License 2.
 
 ## HCL Software License
 
-HCL Domino and add-on products are commercial software - The software licenses agreement does not permit further distribution of the docker image that was built using this script.  
-You can find more details in the HCL License Information documents using the links below.
+HCL Domino and add-on products are commercial software - The software licenses agreement does not permit further distribution of the docker image that was built using this script!
+Refer to the [HCL license home page](https://www.hcl-software.com/resources/license-agreements) for detailed information about the HCL Domino and add-on product license terms.
 
-- HCL Domino Enterprise Server 12 under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)
-- HCL Domino Leap under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)
-- HCL Notes Traveler under the [HCL License Agreement](https://www.hcltechsw.com/wps/portal/resources/license-agreements)

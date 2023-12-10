@@ -10,9 +10,12 @@ You are in luck, just at the wrong place. Head over to [Nash!Com's Domino start 
 
 ## Where to get HCL Domino software
 
-The project uses the official HCL web-kit installers to build container images download from the official HCL Flexnet repository.  
-All HCL customers should have a download account for [HCL Flexnet software portal](https://hclsoftware.flexnetoperations.com/flexnet/operationsportal).  
-HCL Business Partners with the [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) can download software in a similar way.
+The project uses the official HCL web-kit installers to build container images download from the new official [My HCLSoftware Portal](https://my.hcltechsw.com/).
+
+- All HCL customers with active maintenance should have a download account
+- The [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) provides the same access for HCL Business Partners
+
+See how to [download software](howto_download-software.md) for details.
 
 ## Supported environments
 
@@ -41,9 +44,6 @@ Special Thanks go to the following people for having provided valuable input to 
 ## License
 The Dockerfiles and associated scripts are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). 
 
-License for products that can be installed within images is as follows:
-* HCL Domino Enterprise Server under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
-* HCL Domino Leap under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
-* HCL Notes Traveler under the [HCL License Agreement](https://www.hcl-software.com/resources/license-agreements)
+HCL Domino and add-on products are commercial software - The software licenses agreement does not permit further distribution of the docker image that was built using this script!  
+Refer to the [HCL license home page](https://www.hcl-software.com/resources/license-agreements) for detailed information about the HCL Domino and add-on product license terms.
 
-Note that HCL Domino and add-on products are commercial software - The software licenses agreement does not permit further distribution of the docker image that was built using this script.
