@@ -54,17 +54,51 @@ To build the latest available image
 
 The process will perform all required actions to create the image in the version requested. Usually it takes ~5 to ~8 minutes to build the image (depending on your CPU & disk performance).
 
-Once you have built the Domino base image, you can build add-on images on top if it.  
-The add-on application is another layer on top of the Domino image.
 
-Add-on images always need to be derived from the Domino base image.
+## Building an image with additional add-ons
 
-There are currently two add-on images available:
+The community image offers building an image with additional add-on, which can be simply added to the build step. In previous versions HCL Traveler and Domino Leap have been implemented as add-on images on top of the Domino image in a layered approach.
 
-* ```./build traveler``` - Traveler on top of the Domino image
-* ```./build leap``` - Domino Leap on top of the Domino image
+Now all add-on software can be directly added in a single build step.
 
-Note: HCL Traveler and Domino Leap are no alway available as build options for the Domino image and can be combined with other add-on images in the same build step.
-No separate image build is required.
+* -verse
+* -nomad
+* -traveler
+* -ontime
+* -leap
+* -capi
+
+By default the latest version is selected. But different versions can be optionally specified for each component. Example: `-verse=3.1``
+
+
+## New build menu
+
+The project now offers a simple to use build menu, which offers the most common build options.
+Invoking `build.sh` without any parameter opens the build menu.
+
+The build menu can be also invoked via `menu` specifying additional options.
+
+The versions of the add-ons are automatically selected from current software list.
+Just select all desired components and start the build process via pressing a `b`.
+
+
+```
+HCL Domino Container Community Image
+------------------------------------
+
+ (D)  HCL Domino          [X]  14.0
+ (O)  OnTime              [ ]
+ (V)  Verse               [ ]
+ (T)  Traveler            [ ]
+ (N)  Nomad Server        [ ]
+ (L)  Language Pack       [ ]
+ (R)  REST-API            [ ]
+ (A)  C-API SDK           [ ]
+ (E)  Domino Leap         [ ]
+
+ Select software & Options,  [B] to build,  [0] to cancel?
+
+```
+
 
 Refer to Howto [Run Domino Container GitHub Repo](run_docker.md) how to run a Domino Container on Docker.

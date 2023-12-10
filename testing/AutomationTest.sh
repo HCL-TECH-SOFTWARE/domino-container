@@ -733,7 +733,7 @@ if [ -n "$capi_include" ]; then
   sleep 1
 
   capi_result=$($CONTAINER_CMD exec -it -w /tmp $CONTAINER_NAME /usr/bin/bash -i -l -c "make test | tail -1" 2>&1)
-  capi_version=$(echo $capi_result | grep "^DominoVersion=" | cut -d"=" -f2)
+  capi_version=$(echo $capi_result | grep "DominoVersion=" | cut -d"=" -f2)
 
   if [ -n "$capi_version" ]; then
     ERROR_MSG=
