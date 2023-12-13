@@ -55,7 +55,7 @@ search:
 heading_anchors: true
 
 # Aux links for the upper right navigation
-#aux_links:
+aux_links:
   "View it on GitHub":
     - "https://github.com/HCL-TECH-SOFTWARE/domino-container"
 
