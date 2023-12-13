@@ -56,8 +56,9 @@ heading_anchors: true
 
 # Aux links for the upper right navigation
 #aux_links:
-#  "This sample on Github":
-#    - "https://github.com/"
+  "View it on GitHub":
+    - "https://github.com/HCL-TECH-SOFTWARE/domino-container"
+
 
 # Makes Aux links open in a new tab. Default is false
 aux_links_new_tab: true
