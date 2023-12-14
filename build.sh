@@ -2730,6 +2730,23 @@ if [ -n "$NOMAD_VERSION" ]; then
   esac
 fi
 
+
+# Calculate the right version for Domino RESTAPI for selected Domino version
+if [ -n "$DOMRESTAPI_VER" ]; then
+
+  case "$PROD_VER" in
+
+    12*)
+      DOMRESTAPI_VER=$DOMRESTAPI_VER-12
+      ;;
+
+    *)
+      DOMRESTAPI_VER=$DOMRESTAPI_VER-14
+      ;;
+  esac
+fi
+
+
 check_exposed_ports
 
 # Ensure product versions are always uppercase
