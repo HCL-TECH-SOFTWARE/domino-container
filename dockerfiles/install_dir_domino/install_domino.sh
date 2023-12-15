@@ -14,7 +14,7 @@ export LANG=C
 DOM_V12_STRING_OK="Domino Server Installation Successful"
 FP_STRING_OK="The installation completed successfully."
 HF_STRING_OK="The installation completed successfully."
-LP_STRING_OK="Installation: Successful."
+LP_STRING_OK="Selected Language Packs are successfully installed."
 TRAVELER_STRING_OK="Installation completed successfully."
 TRAVELER_STRING_WARNINGS="Installation completed with warnings."
 RESTAPI_STRING_OK="Installation: success"
@@ -888,6 +888,19 @@ check_build_options()
   return 0
 }
 
+set_security_limits()
+{
+  if [ "$FIRST_TIME_SETUP" = "1" ]; then
+    # Set security limits for pam modules (su needs it)
+    echo >> /etc/security/limits.conf
+    echo '# -- Begin Changes Domino --' >> /etc/security/limits.conf
+    echo '* soft nofile 80000' >> /etc/security/limits.conf
+    echo '* hard nofile 80000' >> /etc/security/limits.conf
+    echo '# -- End Changes' >> /etc/security/limits.conf
+    echo >> /etc/security/limits.conf
+  fi
+}
+
 # --- Main Install Logic ---
 
 export DOMINO_USER=notes
@@ -953,13 +966,6 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
   # This alias is really missing ..
   echo "alias ll='ls -l'" >> /home/$DOMINO_USER/.bashrc
-
-  # Set security limits for pam modules (su needs it)
-  echo >> /etc/security/limits.conf
-  echo '# -- Begin Changes Domino --' >> /etc/security/limits.conf
-  echo '* soft nofile 80000' >> /etc/security/limits.conf
-  echo '* hard nofile 80000' >> /etc/security/limits.conf
-  echo '# -- End Changes Domino --' >> /etc/security/limits.conf
 
 else
 
@@ -1114,12 +1120,10 @@ install_file "$INSTALL_DIR/healthcheck.sh" "/healthcheck.sh" root root 755
 # add symbolic link to old location for now
 ln -s "/healthcheck.sh" "/domino_docker_healthcheck.sh"
 
-# Install keyring create/update script
-
-install_file "$INSTALL_DIR/create_keyring.sh" "$DOMDOCK_SCRIPT_DIR/create_keyring.sh" root root 755
-install_file "$INSTALL_DIR/create_ca_kyr.sh" "$DOMDOCK_SCRIPT_DIR/create_ca_kyr.sh" root root 755
-
 install_k8s_runas_user_support
+
+# set security limits late in the installation process to avoid conflicts with limited resources available in some container environments like Podman when switching users
+set_security_limits
 
 # Set notes.ini variables needed
 set_default_notes_ini_variables

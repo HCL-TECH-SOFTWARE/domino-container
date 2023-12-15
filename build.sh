@@ -517,13 +517,11 @@ get_current_version()
   fi
 
   if [ -n "$DOWNLOAD_VERSION_FILE" ]; then
-    echo "Getting current software version from [$DOWNLOAD_VERSION_FILE]"
     LINE=$($CURL_CMD --silent $DOWNLOAD_VERSION_FILE | grep "^$1|")
   else
     if [ ! -r "$VERSION_FILE" ]; then
       echo "No current version file found! [$VERSION_FILE]"
     else
-      echo "Getting current software version from [$VERSION_FILE]"
       LINE=$(grep "^$1|" $VERSION_FILE)
     fi
   fi
@@ -551,13 +549,11 @@ get_current_addon_version()
   fi
 
   if [ -n "$DOWNLOAD_VERSION_FILE" ]; then
-    echo "Getting current add-on version from [$DOWNLOAD_VERSION_FILE]"
     LINE=$($CURL_CMD --silent $DOWNLOAD_VERSION_FILE | grep "^$1|")
   else
     if [ ! -r "$VERSION_FILE" ]; then
       echo "No current version file found! [$VERSION_FILE]"
     else
-      echo "Getting current software version from [$VERSION_FILE]"
       LINE=$(grep "^$1|" $VERSION_FILE)
     fi
   fi
