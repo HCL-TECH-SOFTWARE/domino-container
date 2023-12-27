@@ -31,7 +31,7 @@ install_linux_packages()
   fi
 
   # Common packages for all distributions
-  install_packages curl gdb-minimal lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip
+  install_packages gdb-minimal lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip
   ln -s /usr/bin/gdb.minimal /usr/bin/gdb
 
   # SUSE
@@ -66,6 +66,7 @@ install_linux_packages()
   fi
 
   # On some platforms certain programs are in their own package not installed by default..
+  install_if_missing curl
   install_if_missing hostname
   install_if_missing xargs
   install_if_missing vi

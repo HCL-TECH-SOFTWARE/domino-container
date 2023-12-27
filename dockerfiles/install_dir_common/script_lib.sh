@@ -939,7 +939,7 @@ check_installed_version()
  INSTALL_VERSION=$(echo $2 | tr -d '.')
 
  if [ "$CHECK_VERSION" = "$INSTALL_VERSION" ]; then
-   echo "Domino $INSTALL_VERSION already installed"
+   log_space "Domino $INSTALL_VERSION already installed"
    return 1
  else
    return 0
@@ -1042,7 +1042,7 @@ install_if_missing()
   fi
 
   if [ -x  "/usr/bin/$1" ]; then
-    echo "already exists: $1"
+    log_space "Already installed: $1"
     return 0
   fi
 
