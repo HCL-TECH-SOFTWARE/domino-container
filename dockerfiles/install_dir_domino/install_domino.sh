@@ -1097,6 +1097,13 @@ if [ -x /usr/libexec/gdb ]; then
   fi
 fi
 
+# If gdb.minimal is installed, set pstack capabilities
+if [ -x /usr/bin/gdb.minimal ]; then
+    setcap 'cap_sys_ptrace+ep' /usr/bin/gdb.minimal
+    echo "Setting cap_sys_ptrace for /usr/bin/gdb.minimal"
+fi
+
+
 # Install Setup Files and Docker Entrypoint
 
 header "Final Steps & Configuration"
