@@ -291,7 +291,7 @@ wait_for_string()
 
   while [ "$seconds" -lt "$MAX_SECONDS" ]; do
 
-    FOUND=`grep -e "$2" "$1" 2>/dev/null | wc -l`
+    FOUND=$(grep -e "$2" "$1" 2>/dev/null | wc -l)
 
     if [ "$FOUND" -ge "$COUNT" ]; then
       log "Done after $seconds seconds"
@@ -299,8 +299,8 @@ wait_for_string()
     fi
   
     sleep 1
-    seconds=`expr $seconds + 1`
-    if [ `expr $seconds % 10` -eq 0 ]; then
+    seconds=$(expr $seconds + 1)
+    if [ $(expr $seconds % 10) -eq 0 ]; then
       echo " ... waiting $seconds seconds"
     fi
 

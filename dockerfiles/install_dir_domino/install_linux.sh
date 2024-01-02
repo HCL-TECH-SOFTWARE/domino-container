@@ -69,7 +69,7 @@ install_linux_packages()
   install_if_missing curl
   install_if_missing hostname
   install_if_missing xargs
-  install_if_missing vi
+  install_if_missing vi vi vim
   install_if_missing awk
 
   # jq the ultimate tool for JSON files...

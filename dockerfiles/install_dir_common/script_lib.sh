@@ -1037,23 +1037,39 @@ remove_packages()
 
 install_if_missing()
 {
+  local PACKAGE=$1
+
   if [ -z "$1" ]; then
     return 0
   fi
 
-  if [ -x  "/usr/bin/$1" ]; then
+  if [ -x "/usr/bin/$1" ] || [ -x "/usr/local/bin/$1" ]; then
     log_space "Already installed: $1"
     return 0
   fi
 
-  if [ -x "/usr/local/bin/$1" ]; then
+  if [ -n "$2" ]; then
+    PACKAGE=$2
+  fi
+
+  install_package "$PACKAGE"
+
+  if [ -x "/usr/bin/$1" ] || [ -x "/usr/local/bin/$1" ]; then
+    log_space "Successfully installed: $PACKAGE"
     return 0
   fi
 
-  if [ -z "$2" ]; then
-    install_package "$1"
-  else
-    install_package "$2"
+  if [ -z "$3" ]; then
+    return 0
+  fi
+
+  PACKAGE=$3
+
+  install_package "$PACKAGE"
+
+  if [ -x "/usr/bin/$1" ] || [ -x "/usr/local/bin/$1" ]; then
+    log_space "Successfully installed: $PACKAGE"
+    return 0
   fi
 }
 

@@ -938,7 +938,30 @@ fi
 test_result "startscript.archivelog" "Start Script archivelog" "" "$ERROR_MSG"
 
 
-# Test Start Script: restart
+# Test NSD call stacks via GDB
+
+ERROR_MSG=
+
+header "Running NSD -stacks -nomemcheck ..."
+
+NSD_BEGIN=$SECONDS
+startscript_cmd "stacks -nomemcheck" > /dev/null
+NSD_END=$SECONDS
+NSD_RUNTIME_SECONDS=$(expr $NSD_END - $NSD_BEGIN)
+
+header "NSD Done after $NSD_RUNTIME_SECONDS seconds"
+
+NSD_FILE=$(find $DOMINO_VOLUME/notesdata/IBM_TECHNICAL_SUPPORT -name "nsd*.log")
+NSD_SEARCH="$(grep 'ServerMain' $NSD_FILE)"
+
+if [ -z "$NSD_SEARCH" ]; then
+  ERROR_MSG="No server main callstack found"
+fi
+
+test_result "nsd.gdb" "NSD GDB callstacks" "" "$ERROR_MSG"
+
+
+# Test Start Script: container health
 
 ERROR_MSG=
 
