@@ -258,6 +258,9 @@ usage()
   echo "-push=<image>    tag and push image to registry"
   echo "-autotest        test image after build"
   echo "testimage=<img>  test specified image"
+  echo "-scan            scans a container image with Trivy for known vulnerabilities (CVEs)"
+  echo "-scan=<file>     scans a container with Trivy and writes the result to a file"
+  echo "                 file names ending with .json result in a JSON formatted file (CVE count is written to console)"
   echo
   echo Options
   echo
@@ -1137,20 +1140,19 @@ docker_build()
     DOCKER_TAG_LATEST=
   fi
 
-  header "Building Image $IMAGENAME ..."
-
   # Get Build Time
   BUILDTIME=$(date +"%d.%m.%Y %H:%M:%S")
 
   # Get build arguments
   DOCKER_IMAGE=$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+  DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
+
+  header "Building Image $DOCKER_IMAGE ..."
+
+  export BUILDAH_FORMAT
 
   # Switch to directory containing the dockerfiles
   cd dockerfiles
-
-  DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_VERSION
-
-  export BUILDAH_FORMAT
 
   set_standard_image_labels
 
@@ -1204,6 +1206,9 @@ docker_build()
 
   # Test image via automation testing before tagging and uploading it
   auto_test
+
+  # Scan image if requested
+  ScanImage
 
   if [ -n "$DOCKER_TAG_LATEST" ]; then
     $CONTAINER_CMD tag $DOCKER_IMAGE $DOCKER_TAG_LATEST
@@ -1834,6 +1839,68 @@ auto_test()
   fi
 
   test_image "$DOCKER_IMAGE"
+}
+
+
+trivy_scan_image()
+{
+  header "Running Trivy Scan on $DOCKER_IMAGE ..."
+
+  if [ ! -x /usr/bin/trivy ]; then
+    log "Trivy is not installed! Skipping scan"
+    return 0
+  fi
+
+  if [ -z "$DOCKER_IMAGE_BUILD_VERSION" ]; then
+    log "No image specified - Cannot scan image"
+    return 0
+  fi
+
+  # If no output file is specified, just run the scan with standard output
+  if [ -z  "$1" ]; then
+    /usr/bin/trivy image "$DOCKER_IMAGE" --scanners vuln
+    echo
+    return 0
+  fi
+
+  case "$1" in
+
+    *.json)
+
+      /usr/bin/trivy image "$DOCKER_IMAGE" -o "$1" -f json --scanners vuln
+
+      if [ ! -x /usr/bin/jq ]; then
+        log "Scan completed: $1"
+        log "JQ not availble - Cannot display summary"
+        return 0
+      fi
+
+      header "Trivy Scan Summary"
+      cat "$1" | jq -r '.Results[].Vulnerabilities[].Severity' 2> /dev/null | sort | uniq -c
+      log "JSON Output file: [$1]"
+      ;;
+
+    *)
+      /usr/bin/trivy image "$DOCKER_IMAGE" -o "$1" --scanners vuln
+      header "Trivy Scan Result"
+      cat "$1"
+      log "Output file: [$1]"
+      ;;
+
+  esac
+
+  echo
+
+}
+
+ScanImage()
+{
+  # Only scan if requested
+  if [ "$ScanImage" != "yes" ] && [ -z "$IMAGE_SCAN_RESULT_FILE" ]; then
+    return 0
+  fi
+
+  trivy_scan_image "$IMAGE_SCAN_RESULT_FILE"
 }
 
 parse_domino_version()
@@ -2599,6 +2666,14 @@ for a in "$@"; do
 
     -autotest)
       AutoTestImage=yes
+      ;;
+
+   -scan)
+      ScanImage=yes
+      ;;
+
+   -scan=*)
+      IMAGE_SCAN_RESULT_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -borg|-borg=*|+borg|+borg=*)

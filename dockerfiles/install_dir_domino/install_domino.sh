@@ -779,8 +779,7 @@ remove_perl()
   fi
 
   header "Uninstalling perl"
-
-  remove_package perl-libs perl
+  remove_package 'perl-*'
 }
 
 install_domino_installer_only_packages()
