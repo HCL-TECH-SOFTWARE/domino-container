@@ -11,6 +11,7 @@ domino|12.0.1FP1|Domino_1201FP1_Linux.tar|-|7aad22da2dfaa43ff3766d0894014da8d522
 domino|12.0.2|Domino_12.0.2_Linux_English.tar|-|84ba743b1f5fd378b4dabd694852ddd54c6f349dc5341d275a9f68a80d2e7bbd
 domino|12.0.2FP1|Domino_1202FP1_Linux.tar|-|b9878d5d2626bdb3a41dc066d1a35f9beb71583b4b9e1d00dfa971442d7b100c
 domino|12.0.2FP2|Domino_1202FP2_Linux.tar|-|389e73fe84b0431b9923e2b6a11f382234628e76885eeb26a7235d9d44ed889e
+domino|12.0.2FP3|Domino_1202FP3_Linux.tar|-|959803c0998ad6b402e366b3bb364ec677baa1a12eed5987c3492604721831bf
 domino|14.0|Domino_14.0_Linux_English.tar|-|5fd08b71e946f11308232170553aaca6f4c60c8bb8d91ef6fb89e3f171bad9a5
 domlp|DE-12.0.2|Domino_12.0.2_SLP_German.tar|-|fd319a28366e4650c31fa3d90004d729d7de48d9230413de9663a9f80d2dfdf9
 domlp|ES-12.0.2|Domino_12.0.2_SLP_Spanish.tar|-|33b6fc214c1c6f92e5463c8d6ee91447de6b07a592478838e3e62d5aee39778a
