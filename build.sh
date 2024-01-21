@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2023 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2024  - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -280,6 +280,7 @@ usage()
   echo "-domlp=xx        adds the specified Language Pack to the image"
   echo "-restapi         adds the Domino REST API to the image"
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
+  echo "-tika            updates the Tika server to the Domino server"
   echo "-k8s-runas       adds K8s runas user support"
   echo "-linuxpkg=<pkg>  add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-startscript=x   installs specified start script version from software repository"
@@ -351,6 +352,7 @@ dump_config()
   echo "MYSQL_INSTALL        : [$MYSQL_INSTALL]"
   echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
   echo "BORG_INSTALL         : [$BORG_INSTALL]"
+  echo "TIKA_INSTALL         : [$TIKA_INSTALL]"
   echo "LINUX_PKG_ADD        : [$LINUX_PKG_ADD]"
   echo "STARTSCRIPT_VER      : [$STARTSCRIPT_VER]"
   echo "EXPOSED_PORTS        : [$EXPOSED_PORTS]"
@@ -945,6 +947,7 @@ build_domino()
     --build-arg LinuxYumUpdate=$LinuxYumUpdate \
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
+    --build-arg TIKA_INSTALL="$TIKA_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
     --build-arg NOMAD_VERSION="$NOMAD_VERSION" \
     --build-arg TRAVELER_VERSION="$TRAVELER_VERSION" \
@@ -1606,6 +1609,13 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$TIKA_INSTALL" ]; then
+      if [ ! "$TIKA_INSTALL" = "yes" ]; then
+        check_software_file "tika" "$TIKA_INSTALL"
+      fi
+    fi
+
+
   else
     echo
 
@@ -1738,6 +1748,12 @@ check_software_status()
     if [ -n "$BORG_INSTALL" ]; then
       if [ ! "$BORG_INSTALL" = "yes" ]; then
         check_software_file "borg" "$BORG_INSTALL"
+      fi
+    fi
+
+    if [ -n "$TIKA_INSTALL" ]; then
+      if [ ! "$TIKA_INSTALL" = "yes" ]; then
+        check_software_file "tika" "$TIKA_INSTALL"
       fi
     fi
 
@@ -2685,6 +2701,18 @@ for a in "$@"; do
 
       if [ -z "$BORG_INSTALL" ]; then
         BORG_INSTALL=yes
+      fi
+      ;;
+
+    -tika|-tika=*|+tika|+tika=*)
+      TIKA_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$TIKA_INSTALL" ]; then
+        get_current_addon_version tika TIKA_INSTALL
+      fi
+
+      if [ -z "$TIKA_INSTALL" ]; then
+        TIKA_INSTALL=yes
       fi
       ;;
 

@@ -8,3 +8,4 @@ safelinx|1.4.1
 nomadweb|1.0.8
 nomad|1.0.10IF1
 domrestapi|1.0.9
+tika|2.9.1

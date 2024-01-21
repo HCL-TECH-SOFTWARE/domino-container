@@ -1,5 +1,5 @@
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2024 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -25,6 +25,7 @@ ARG DOMINO_LANG=
 ARG DOCKER_TZ=
 ARG OPENSSL_INSTALL=
 ARG BORG_INSTALL=
+ARG TIKA_INSTALL=
 ARG SPECIAL_CURL_ARGS=
 ARG BUILD_SCRIPT_OPTIONS=
 ARG VERSE_VERSION=

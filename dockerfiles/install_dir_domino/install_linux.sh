@@ -30,6 +30,12 @@ install_linux_packages()
     return 0
   fi
 
+  # Special package list for Archlinux
+  if [ -x /usr/bin/pacman ]; then
+    install_packages which inetutils vi unzip glibc-locales gdb
+    return 0
+  fi
+
   # Common packages for all distributions
   install_packages gdb-minimal lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip
   ln -s /usr/bin/gdb.minimal /usr/bin/gdb
@@ -130,6 +136,9 @@ list_installed_packages()
 
   elif [ -x /usr/bin/rpm ]; then
     rpm -qa | sort > "$1"
+
+  elif [ -x /usr/bin/pacman ]; then
+    /usr/bin/pacman -Q
 
   else
     # Special case Photon OS, only get package name not version for now

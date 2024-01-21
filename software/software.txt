@@ -51,6 +51,7 @@ capi|12.0.2|CAPIToolkit_1202_MP.zip|-|10ef46a999d4da73a1e1f3b1e2a5a7268c2011fdb1
 capi|14.0|CAPIToolkit_1400_Linux.zip|-|02fc99bd6e0233352756fbf217413bac3088a5eb3698675616a5c412624fb176
 borg|1.1.17|https://github.com/borgbackup/borg/releases/download/1.1.17/borg-linux64|-|21484d30271478d4a01aad1b286973443b50afc5379e4a6aef40da3379e21ddf
 borg|1.2.0|https://github.com/borgbackup/borg/releases/download/1.2.0/borg-linux64|-|df271a523434a445c783c1a0bc3dd599521d6a6a25acd2766e9a5577edb6018f
+tika|2.9.1|tika-server-standard-2.9.1.jar,https://dlcdn.apache.org/tika/2.9.1/tika-server-standard-2.9.1.jar|-|4e38d309c9396892ae14b4337cdf13f90f83da81b3b8123d72fde08fea2120bd
 safelinx|1.3.0.0|HCL-SafeLinx-1300-x86_64.tar.gz|-|ea78531287ea3573b8d008cb0f4aa951d94855dcf9807bb745bd631d8ba32edf
 safelinx|1.3.0.1|HCL-SafeLinx-1301-x86_64.tar.gz|-|1dbc6e0206f776196cce166af1ccfb11c37b61cb2d036cd193af525abdc50349
 safelinx|1.4.0.0|HCL-SafeLinx-1400-x86_64.tar.gz|-|77359b3500948c81e85e3f6567792fba6a227cfb08ae278c74712bf28ecdf476

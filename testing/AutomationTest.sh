@@ -428,6 +428,7 @@ fi
 IMAGE_VERSION="$($CONTAINER_CMD inspect --format "{{ .Config.Labels.version }}" $CONTAINER_IMAGE 2>/dev/null)"
 IMAGE_BUILDTIME="$($CONTAINER_CMD inspect --format "{{ .Config.Labels.buildtime }}" $CONTAINER_IMAGE 2>/dev/null)"
 IMAGE_DOMINO_VERSION="$($CONTAINER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $CONTAINER_IMAGE 2>/dev/null)"
+IMAGE_SIZE="$($CONTAINER_CMD inspect --format "{{ .Size }}" $CONTAINER_IMAGE 2>/dev/null)"
 
 CONTAINER_DOMINO_ADDONS="$(docker inspect --format "{{ index .Config.Labels \"DominoContainer.addons\" }}" $CONTAINER_IMAGE 2>/dev/null)"
 
@@ -461,6 +462,17 @@ curl_version=$($CONTAINER_CMD exec $CONTAINER_NAME curl -V)
 
 header $LINUX_PRETTY_NAME
 
+# Wait until server is started
+wait_for_string $CONSOLE_LOG "Server started on physical node" 100
+
+# Start Tika process and get version
+$CONTAINER_CMD exec $CONTAINER_NAME bash -c '/opt/hcl/domino/notes/latest/linux/jvm/bin/java -jar /opt/hcl/domino/notes/latest/linux/tika-server.jar -noFork --port 1234 > /tmp/tika.log 2>&1 &'
+TIKA_VERSION_STR=$($CONTAINER_CMD exec $CONTAINER_NAME curl --retry 10 --retry-delay 1 --retry-connrefused --silent http://127.0.0.1:1234/version)
+# Try again after one second to ensure we get a proper result
+sleep 1
+TIKA_VERSION_STR=$($CONTAINER_CMD exec $CONTAINER_NAME curl --retry 10 --retry-delay 1 --retry-connrefused --silent http://127.0.0.1:1234/version)
+TIKA_VERSION=$(echo "$TIKA_VERSION_STR" | awk -F "Apache Tika" '{print $2}' | xargs)
+
 # Start testing ..
 
 log_json_begin
@@ -477,6 +489,7 @@ log_json "platformVersion" "$LINUX_VERSION"
 log_json "hostVersion" "$HOST_LINUX_VERSION"
 log_json "hostPlatform" "$HOST_LINUX_PRETTY_NAME"
 log_json "testBuild" "$IMAGE_VERSION"
+log_json "imageSize" "$IMAGE_SIZE"
 
 log_json "containerPlatform" "$CONTAINER_ENV_NAME"
 log_json "containerPlatformVersion" "$CONTAINER_RUNTIME_VERSION"
@@ -486,6 +499,7 @@ log_json "kernelBuildTime" "$kernelBuildTime"
 log_json "glibcVersion" "$glibcVersion"
 log_json "timezone" "$timezone"
 log_json "javaVersion" "$javaVersion"
+log_json "tikaVersion" "$TIKA_VERSION"
 log_json "dominoAddons" "$CONTAINER_DOMINO_ADDONS"
 
 
@@ -1110,6 +1124,19 @@ else
   test_result "domino.smtp_pop3.mail" "Mail sent/received" "" "$ERROR_MSG"
 
 fi
+
+
+# Test Check Tika version
+
+ERROR_MSG=
+
+if [ -z "$TIKA_VERSION" ]; then
+  ERROR_MSG="Domino server failed to restart"
+fi
+
+echo "TIKA_VERSION: [$TIKA_VERSION]"
+
+test_result "tikaserver.available" "Check if Tika Server can be started" "" "$ERROR_MSG"
 
 
 # Run custom commands 

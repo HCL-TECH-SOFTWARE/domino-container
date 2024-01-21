@@ -359,7 +359,7 @@ download_and_check_hash()
       dump_download_error
       exit 1
     else
-      log_ok "Successfully downloaded: [$DOWNLOAD_FILE] "
+      log_ok "Successfully downloaded: [$DOWNLOAD_FILE] to [$TARGET_FILE]"
     fi
 
   else
@@ -989,8 +989,11 @@ install_package()
  elif [ -x /usr/bin/apt-get ]; then
    /usr/bin/apt-get install -y "$@"
 
+ elif [ -x /usr/bin/pacman ]; then
+   /usr/bin/pacman --noconfirm -Sy "$@"
+
  else
-  echo "No package manager found!"
+  log_error "No package manager found!"
   exit 1
 
  fi
@@ -1023,6 +1026,9 @@ remove_package()
 
  elif [ -x /usr/bin/apt-get ]; then
    /usr/bin/apt-get remove -y "$@"
+
+ elif [ -x /usr/bin/pacman ]; then
+   /usr/bin/pacman --noconfirm -R "$@"
 
  fi
 }
@@ -1075,6 +1081,18 @@ install_if_missing()
 
 check_linux_update()
 {
+
+  # On Ubuntu and Debian update the cache in any case to be able to install additional packages
+  if [ -x /usr/bin/apt-get ]; then
+    header "Refreshing packet list via apt-get"
+    /usr/bin/apt-get update -y
+  fi
+
+  if [ -x /usr/bin/pacman ]; then
+    header "Refreshing packet list via pacman"
+    pacman --noconfirm -Sy
+  fi
+
   # Install Linux updates if requested
   if [ ! "$LinuxYumUpdate" = "yes" ]; then
     return 0
@@ -1109,7 +1127,6 @@ check_linux_update()
   elif [ -x /usr/bin/apt-get ]; then
 
     header "Updating Linux via apt"
-
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
     /usr/bin/apt-get update -y
@@ -1121,6 +1138,12 @@ check_linux_update()
 
     /usr/bin/apt-get upgrade -y
 
+  elif [ -x /usr/bin/pacman ]; then
+    header "Updating Linux via pacman"
+    pacman --noconfirm -Syu
+
+  else
+    log_error "No packet manager to update Linux"
   fi
 }
 
@@ -1157,6 +1180,13 @@ clean_linux_repo_cache()
 
     header "Cleaning apt cache"
     /usr/bin/apt-get clean
+
+  elif [ -x /usr/bin/pacman ]; then
+     header "Cleaning pacman cache"
+     pacman --noconfirm -Sc
+
+  else
+    log_error "Warning: No packet manager to clear repo cache!"
   fi
 }
 

@@ -31,12 +31,35 @@ INST_LP_LOG=$DOMDOCK_LOG_DIR/install_domlp.log
 INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 INST_RESTAPI_LOG=$DOMDOCK_LOG_DIR/install_restapi.log
 
+check_install_tika()
+{
+  if [ -z "$TIKA_INSTALL" ]; then
+    return 0
+  fi
+
+  header "Installing requested TIKA Sever version $TIKA_INSTALL"
+
+  get_download_name tika "$TIKA_INSTALL"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find requested Tika Server version $TIKA_INSTALL"
+    return 0
+  fi
+
+  remove_file "$Notes_ExecDirectory/tika-server.jar"
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory" "$Notes_ExecDirectory/tika-server.jar"
+}
 
 install_domino()
 {
 
   #On Ubuntu & Debian Domino 14 requires to disable requirements checks
   if [ -x /usr/bin/apt-get ]; then
+    log_space "Info: Disable Domino requirements check for Linux distribution."
+    export INSTALL_NO_CHECK=1
+  fi
+
+  if [ -x /usr/bin/pacman ]; then
     log_space "Info: Disable Domino requirements check for Linux distribution."
     export INSTALL_NO_CHECK=1
   fi
@@ -298,6 +321,8 @@ install_domino()
     remove_directory domino_hf
 
   fi
+
+  check_install_tika
 
   # Switch back sh shell if changed /bin/sh for Ubuntu/Debian from /bin/dash to /bin/bash
   if [ -n "$ORIG_SHELL_LINK" ]; then
@@ -760,6 +785,11 @@ install_perl()
   fi
 
   if [ -x /usr/bin/zypper ]; then
+    install_package perl
+    return 0
+  fi
+
+  if [ -x /usr/bin/pacman ]; then
     install_package perl
     return 0
   fi
