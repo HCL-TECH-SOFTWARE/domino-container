@@ -284,6 +284,7 @@ usage()
   echo "-k8s-runas       adds K8s runas user support"
   echo "-linuxpkg=<pkg>  add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-startscript=x   installs specified start script version from software repository"
+  echo "-custom-addon=x  specify a tar file with additional Domino add-on sofware to install format: (https://)file.taz,sha256checksum"
   echo
   echo SafeLinx options
   echo
@@ -355,6 +356,7 @@ dump_config()
   echo "TIKA_INSTALL         : [$TIKA_INSTALL]"
   echo "LINUX_PKG_ADD        : [$LINUX_PKG_ADD]"
   echo "STARTSCRIPT_VER      : [$STARTSCRIPT_VER]"
+  echo "CUSTOM_ADD_ONS       : [$CUSTOM_ADD_ONS]"
   echo "EXPOSED_PORTS        : [$EXPOSED_PORTS]"
   echo "LinuxYumUpdate       : [$LinuxYumUpdate]"
   echo "DOMINO_LANG          : [$DOMINO_LANG]"
@@ -957,6 +959,7 @@ build_domino()
     --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
     --build-arg MSSQL_INSTALL="$MSSQL_INSTALL" \
     --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
+    --build-arg CUSTOM_ADD_ONS="$CUSTOM_ADD_ONS" \
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
     --build-arg K8S_RUNAS_USER_SUPPORT="$K8S_RUNAS_USER_SUPPORT" \
     --build-arg EXPOSED_PORTS="$EXPOSED_PORTS" \
@@ -1796,6 +1799,72 @@ check_all_software()
   CHECK_SOFTWARE_STATUS=$DOWNLOAD_ERROR_COUNT
 }
 
+
+check_custom_software()
+{
+  local DOWNLOAD_STR=$1
+  local CHECK_FILE=
+  local DOWNLOAD_FILE=
+
+  CHECK_FILE=$(echo "$DOWNLOAD_STR" | cut -f1 -d"#" | xargs)
+  EXPECTED_HASH=$(echo "$DOWNLOAD_STR" | cut -f2 -d"#" | xargs)
+
+  # Check for absolute download link
+  case "$CHECK_FILE" in
+    *://*)
+      DOWNLOAD_FILE=$CHECK_FILE
+      ;;
+
+    *)
+      if [ -n "$DOWNLOAD_FROM" ]; then
+        DOWNLOAD_FILE=$DOWNLOAD_FROM/$CHECK_FILE
+      fi
+      ;;
+  esac
+
+  if [ -z "$DOWNLOAD_FILE" ]; then
+
+    DOWNLOAD_FILE=$SOFTWARE_DIR/$CHECK_FILE
+
+    if [ ! -e "$DOWNLOAD_FILE" ]; then
+      log_error_exit "Cannot find software file: [$DOWNLOAD_FILE]"
+      exit 1
+    fi
+
+    if [ "$CHECK_HASH" = "yes" ]; then
+      HASH=$(sha256sum -b "$DOWNLOAD_FILE"| cut -d" " -f1)
+    else
+      return 0
+    fi
+
+  else
+
+    http_head_check "$DOWNLOAD_FILE"
+
+    if [ "$?" = "0" ]; then
+      log_error_exit "Cannot find file: [$DOWNLOAD_FILE]"
+      exit 1
+    fi
+
+    if [ "$CHECK_HASH" = "yes" ]; then
+      HASH=$($CURL_CMD -s $DOWNLOAD_FILE | sha256sum -b | cut -d" " -f1)
+    else
+      return 0
+    fi
+  fi
+
+  if [ -z "$CHECK_HASH" ]; then
+    log_space "Warning: No hash specified for download: [$DOWNLOAD_FILE]"
+  fi
+
+  if [ "$HASH" = "$EXPECTED_HASH" ]; then
+    return 0
+  fi
+
+  log_error_exit "Hash does not match for: [$DOWNLOAD_FILE]"
+}
+
+
 docker_save()
 {
   if [ -z "$DOCKER_IMAGE_EXPORT_NAME" ]; then
@@ -2513,6 +2582,14 @@ for a in "$@"; do
       STARTSCRIPT_VER=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
+    -custom-addon=*|+custom-addon=*)
+      CUSTOM_ADD_ONS=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -custom-add-ons=*|+custom-add-ons=*)
+      CUSTOM_ADD_ONS=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
     -from=*)
       FROM_IMAGE=$(echo "$a" | cut -f2 -d= -s)
       ;;
@@ -2884,6 +2961,10 @@ if [ "$CHECK_SOFTWARE" = "yes" ]; then
   if [ ! "$CHECK_SOFTWARE_STATUS" = "0" ]; then
     #Terminate if status is not OK. Errors are already logged
     exit 0
+  fi
+
+  if [ -n "$CUSTOM_ADD_ONS" ]; then
+    check_custom_software "$CUSTOM_ADD_ONS"
   fi
 fi
 

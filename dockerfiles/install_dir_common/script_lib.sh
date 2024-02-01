@@ -403,6 +403,48 @@ download_and_check_hash()
   return 0
 }
 
+
+download_tar_with_hash()
+{
+  local DOWNLOAD_SERVER=$1
+  local DOWNLOAD_STR=$2
+  local CHECK_FILE=
+
+  CHECK_FILE=$(echo "$DOWNLOAD_STR" | cut -f1 -d"#" | xargs)
+  CHECK_HASH=$(echo "$DOWNLOAD_STR" | cut -f2 -d"#" | xargs)
+
+  if [ -z "$CHECK_HASH" ]; then
+    log_error "No hash specified for download: [$DOWNLOAD_FILE]"
+    exit 1
+  fi
+
+  # Check for absolute download link
+  case "$CHECK_FILE" in
+    *://*)
+      DOWNLOAD_FILE=$CHECK_FILE
+      ;;
+
+    *)
+      DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
+      ;;
+  esac
+
+  http_head_check "$DOWNLOAD_FILE"
+  if [ "$?" = "0" ]; then
+    log_error "Cannot download file: [$DOWNLOAD_FILE] - File not found"
+    exit 1
+  fi
+
+  HASH=$($CURL_CMD -s $DOWNLOAD_FILE | tee >(tar xz 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+
+  if [ "$HASH" = "$CHECK_HASH" ]; then
+    return 0
+  fi
+
+  log_error "Cannot download file: [$DOWNLOAD_FILE] - Hash does not match"
+}
+
+
 check_file_busy()
 {
   if [ ! -e "$1" ]; then

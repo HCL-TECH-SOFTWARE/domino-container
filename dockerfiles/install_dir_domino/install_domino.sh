@@ -856,6 +856,64 @@ install_startscript()
 
 }
 
+
+install_files_from_dir()
+{
+  local SOURCE_DIR=$1
+  local TARGET_DIR=$2
+  local OWNER=$3
+  local GROUP=$4
+  local PERMS=$5
+
+  local ALL_FILES=
+  local CURRENT_FILE=
+  local TARGET_FILE=
+
+  ALL_FILES=$(find "$SOURCE_DIR/" -type f -printf "%p\n")
+
+  for CURRENT_FILE in $ALL_FILES; do
+    TARGET_FILE=$TARGET_DIR/$(basename "$CURRENT_FILE")
+    install_file "$CURRENT_FILE" "$TARGET_FILE" "$OWNER" "$GROUP" "$PERMS"
+  done
+
+  header "data dir"
+  ls -l /local/notesdata|grep bingo
+}
+
+
+install_custom_add_ons()
+{
+  local ALL_FILES=
+  local CURRENT_FILE=
+  local TARGET_FILE=
+
+  if [ -z "$CUSTOM_ADD_ONS" ]; then
+    return 0
+  fi
+
+  header "Installing Custom Add-Ons"
+
+  cd $INSTALL_DIR
+  mkdir custom-add-ons
+  cd custom-add-ons
+
+  download_tar_with_hash "$DownloadFrom" "$CUSTOM_ADD_ONS"
+
+  # Install Domino binary directory files
+  ALL_FILES=$(find domino-bin/ -type f -printf "%p\n")
+
+  for CURRENT_FILE in $ALL_FILES; do
+    echo "Installing: [$CURRENT_FILE]"
+    install_binary "$CURRENT_FILE"
+  done
+
+  install_files_from_dir "domino-data" "$DOMINO_DATA_PATH" "$DOMINO_USER" "$DOMINO_GROUP" 600
+
+  cd $INSTALL_DIR
+  remove_directory custom-add-ons
+}
+
+
 install_k8s_runas_user_support()
 {
   if [ ! "$K8S_RUNAS_USER_SUPPORT" = "yes" ]; then
@@ -957,6 +1015,7 @@ echo "LEAP_VERSION          = [$LEAP_VERSION]"
 echo "CAPI_VERSION          = [$CAPI_VERSION]"
 echo "LINUX_PKG_ADD         = [$LINUX_PKG_ADD]"
 echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
+echo "CUSTOM_ADD_ONS        = [$CUSTOM_ADD_ONS]"
 echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
 echo "SPECIAL_CURL_ARGS     = [$SPECIAL_CURL_ARGS]"
 echo "BUILD_SCRIPT_OPTIONS  = [$BUILD_SCRIPT_OPTIONS]"
@@ -1105,6 +1164,14 @@ remove_perl
 # Install Domino start script
 install_startscript
 
+
+# Install Custom Add-Ons if requested
+install_custom_add_ons
+
+
+# Install Setup Files and Docker Entrypoint
+header "Final Steps & Configuration"
+
 # Explicitly set container environment to ensure any container implementation works
 export CONTAINER_ENV=any
 
@@ -1131,11 +1198,6 @@ if [ -x /usr/bin/gdb.minimal ]; then
     setcap 'cap_sys_ptrace+ep' /usr/bin/gdb.minimal
     echo "Setting cap_sys_ptrace for /usr/bin/gdb.minimal"
 fi
-
-
-# Install Setup Files and Docker Entrypoint
-
-header "Final Steps & Configuration"
 
 # Copy pre-start configuration
 install_file "$INSTALL_DIR/domino_prestart.sh" "$DOMDOCK_SCRIPT_DIR/domino_prestart.sh" root root 755
