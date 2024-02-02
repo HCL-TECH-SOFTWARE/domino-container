@@ -647,6 +647,26 @@ secure_move_file()
   fi
 }
 
+install_files_from_dir()
+{
+  local SOURCE_DIR=$1
+  local TARGET_DIR=$2
+  local OWNER=$3
+  local GROUP=$4
+  local PERMS=$5
+
+  local ALL_FILES=
+  local CURRENT_FILE=
+  local TARGET_FILE=
+
+  ALL_FILES=$(find "$SOURCE_DIR/" -type f -printf "%p\n")
+
+  for CURRENT_FILE in $ALL_FILES; do
+    TARGET_FILE=$TARGET_DIR/$(basename "$CURRENT_FILE")
+    install_file "$CURRENT_FILE" "$TARGET_FILE" "$OWNER" "$GROUP" "$PERMS"
+  done
+}
+
 create_directory()
 {
   TARGET_FILE=$1

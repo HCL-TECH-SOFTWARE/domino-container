@@ -857,47 +857,25 @@ install_startscript()
 }
 
 
-install_files_from_dir()
-{
-  local SOURCE_DIR=$1
-  local TARGET_DIR=$2
-  local OWNER=$3
-  local GROUP=$4
-  local PERMS=$5
 
-  local ALL_FILES=
-  local CURRENT_FILE=
-  local TARGET_FILE=
-
-  ALL_FILES=$(find "$SOURCE_DIR/" -type f -printf "%p\n")
-
-  for CURRENT_FILE in $ALL_FILES; do
-    TARGET_FILE=$TARGET_DIR/$(basename "$CURRENT_FILE")
-    install_file "$CURRENT_FILE" "$TARGET_FILE" "$OWNER" "$GROUP" "$PERMS"
-  done
-
-  header "data dir"
-  ls -l /local/notesdata|grep bingo
-}
-
-
-install_custom_add_ons()
+install_one_custom_add_on()
 {
   local ALL_FILES=
   local CURRENT_FILE=
   local TARGET_FILE=
 
-  if [ -z "$CUSTOM_ADD_ONS" ]; then
+  if [ -z "$1" ]; then
+    echo "No custom add-on specified"
     return 0
   fi
 
-  header "Installing Custom Add-Ons"
+  header "Installing Custom Add-On $(echo $1| cut -f1 -d#)"
 
   cd $INSTALL_DIR
-  mkdir custom-add-ons
-  cd custom-add-ons
+  mkdir custom-add-on
+  cd custom-add-on
 
-  download_tar_with_hash "$DownloadFrom" "$CUSTOM_ADD_ONS"
+  download_tar_with_hash "$DownloadFrom" "$1"
 
   # Install Domino binary directory files
   ALL_FILES=$(find domino-bin/ -type f -printf "%p\n")
@@ -909,8 +887,30 @@ install_custom_add_ons()
 
   install_files_from_dir "domino-data" "$DOMINO_DATA_PATH" "$DOMINO_USER" "$DOMINO_GROUP" 600
 
+  # Runnig custom install script
+  if [ -x "install.sh" ]; then
+    header "Running custom install.sh"
+    ./install.sh
+    print_delim
+    echo
+  fi
+
   cd $INSTALL_DIR
-  remove_directory custom-add-ons
+  remove_directory custom-add-on
+}
+
+
+install_custom_add_ons()
+{
+  if [ -z "$CUSTOM_ADD_ONS" ]; then
+    return 0
+  fi
+
+  local CUSTOM_INSTALL_FILE=
+
+  for CUSTOM_INSTALL_FILE in $(echo "$CUSTOM_ADD_ONS" | tr "," "\n" ) ; do
+     install_one_custom_add_on "$CUSTOM_INSTALL_FILE"
+  done
 }
 
 
