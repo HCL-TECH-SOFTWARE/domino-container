@@ -26,6 +26,9 @@ CHECK_SOFTWARE=yes
 
 CONTAINER_BUILD_SCRIPT_VERSION=2.2.1
 
+# OnTime version
+SELECT_ONTIME_VERSION=1.11.1
+
 # Build kit shortens the output. This isn't really helpful for troubleshooting and following the build process ...
 export BUILDKIT_PROGRESS=plain
 
@@ -1887,7 +1890,6 @@ docker_save()
 
 test_image()
 {
-
   export CONTAINER_CMD
   export USE_DOCKER
 
@@ -2049,6 +2051,50 @@ print_select()
   fi
 }
 
+
+get_language_pack_display_name()
+{
+  local LP_DE="German"
+  local LP_ES="Spanish"
+  local LP_FR="French"
+  local LP_IT="Italian"
+  local LP_NL="Dutch"
+  local LP_JA="Japanese"
+
+  case "$SELECT_DOMLP_LANG" in
+
+    DE)
+      DISPLAY_DOMLP="$LP_DE"
+      ;;
+
+    ES)
+      DISPLAY_DOMLP="$LP_ES"
+      ;;
+
+    FR)
+      DISPLAY_DOMLP="$LP_FR"
+      ;;
+
+    IT)
+      DISPLAY_DOMLP="$LP_IT"
+      ;;
+
+    NL)
+      DISPLAY_DOMLP="$LP_NL"
+      ;;
+
+    JA)
+      DISPLAY_DOMLP="$LP_JA"
+      ;;
+
+    *)
+      DISPLAY_DOMLP=
+      ;;
+
+  esac
+}
+
+
 select_language_pack()
 {
   local LP_DE="German"
@@ -2117,7 +2163,7 @@ select_domino_version()
   local VER=
   local VER_LATEST="14.0"
   local VER_140="14.0"
-  local VER_1202="12.0.2FP2"
+  local VER_1202="12.0.2FP3"
 
   clear
   echo
@@ -2154,6 +2200,61 @@ select_domino_version()
 }
 
 
+load_menu()
+{
+  local MENU_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_MENU_CFG
+
+  if [ -z "$BUILD_MENU_CFG" ]; then
+    return 0
+  fi
+
+  if [ -r "$MENU_FILE" ]; then
+    . $MENU_FILE
+    echo "Menu loaded from [$MENU_FILE]"
+  fi
+}
+
+save_menu()
+{
+  local MENU_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_MENU_CFG
+
+  echo "# Saved menu configuration file" > "$MENU_FILE"
+  echo "#DOMINO_VERSION=" >> "$MENU_FILE"
+
+  if [ -n "$VERSE_VERSION" ];    then echo "VERSE_VERSION=$LATEST"    >> "$MENU_FILE"; fi
+  if [ -n "$TRAVELER_VERSION" ]; then echo "TRAVELER_VERSION=$LATEST" >> "$MENU_FILE"; fi
+  if [ -n "$NOMAD_VERSION" ];    then echo "NOMAD_VERSION=$LATEST"    >> "$MENU_FILE"; fi
+  if [ -n "$DOMRESTAPI_VER" ];   then echo "DOMRESTAPI_VER=$LATEST"   >> "$MENU_FILE"; fi
+  if [ -n "$CAPI_VERSION" ];     then echo "CAPI_VERSION=$LATEST"     >> "$MENU_FILE"; fi
+  if [ -n "$LEAP_VERSION" ];     then echo "LEAP_VERSION=$LATEST"     >> "$MENU_FILE"; fi
+  if [ -n "$ONTIME_VERSION" ];   then echo "ONTIME_VERSION=$LATEST"   >> "$MENU_FILE"; fi
+  if [ -n "$DOMLP_LANG" ];       then echo "DOMLP_LANG=$DOMLP_LANG"   >> "$MENU_FILE"; fi
+
+  if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$MENU_FILE";  fi
+
+  echo
+  echo
+  echo " Saved menu selection to [$MENU_FILE]"
+  echo -n " "
+  sleep 2
+}
+
+edit_menu()
+{
+  local MENU_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_MENU_CFG
+
+  if [ -z "$BUILD_MENU_CFG" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$MENU_FILE" ]; then
+    save_menu
+    $EDIT_COMMAND "$MENU_FILE"
+  fi
+
+  $EDIT_COMMAND "$MENU_FILE"
+}
+
 select_software()
 {
   SELECTED=
@@ -2167,7 +2268,6 @@ select_software()
   local SELECT_CAPI_VERSION=
   local SELECT_DOMRESTAPI_VER=
   local SELECT_DOMLP_LANG=
-  local SELECT_DOMINO_ADDONS="1.11.1"
 
   local X="X"
   local Z=" "
@@ -2183,9 +2283,14 @@ select_software()
   local A=$Z
   local I=$Z
   local O=$Z
+  local LATEST=*
 
-  get_current_version domino
-  DOMINO_VERSION=$PROD_VER$PROD_FP$PROD_HF
+  load_menu
+
+  if [ -z "$DOMINO_VERSION" ]; then
+    get_current_version domino
+    DOMINO_VERSION=$PROD_VER$PROD_FP$PROD_HF
+  fi
 
   get_current_addon_version verse SELECT_VERSE_VERSION
   get_current_addon_version nomad SELECT_NOMAD_VERSION
@@ -2193,6 +2298,29 @@ select_software()
   get_current_addon_version leap SELECT_LEAP_VERSION
   get_current_addon_version capi SELECT_CAPI_VERSION
   get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
+
+  # Language pack has special display mapping and is selected by name
+  SELECT_DOMLP_LANG=$DOMLP_LANG
+  get_language_pack_display_name
+
+  if [ -n "$VERSE_VERSION" ];    then V=$X; fi
+  if [ -n "$TRAVELER_VERSION" ]; then T=$X; fi
+  if [ -n "$NOMAD_VERSION" ];    then N=$X; fi
+  if [ -n "$DOMLP_LANG" ];       then L=$X; fi
+  if [ -n "$DOMRESTAPI_VER" ];   then R=$X; fi
+  if [ -n "$CAPI_VERSION" ];     then A=$X; fi
+  if [ -n "$LEAP_VERSION" ];     then E=$X; fi
+  if [ -n "$ONTIME_VERSION" ];   then O=$X; fi
+
+  if [ "$LATEST" = "$VERSE_VERSION" ];    then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
+  if [ "$LATEST" = "$TRAVELER_VERSION" ]; then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
+  if [ "$LATEST" = "$NOMAD_VERSION" ];    then NOMAD_VERSION=$SELECT_NOMAD_VERSION; fi
+  if [ "$LATEST" = "$LEAP_VERSION" ];     then LEAP_VERSION=$SELECT_LEAP_VERSION; fi
+  if [ "$LATEST" = "$DOMRESTAPI_VER" ];   then DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER; fi
+  if [ "$LATEST" = "$CAPI_VERSION" ];     then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
+  if [ "$LATEST" = "$ONTIME_VERSION" ];   then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
+
+  if [ "$AutoTestImage" = "yes" ]; then I=$X; fi
 
   while [ 1 ];
   do
@@ -2211,7 +2339,7 @@ select_software()
     print_select "D" "HCL Domino"     "$D" "$DOMINO_VERSION"
 
     case "$PROD_VER" in
-      14*) print_select "O" "OnTime" "$O" "$DOMINO_ADDONS"
+      14*) print_select "O" "OnTime" "$O" "$ONTIME_VERSION"
     esac
 
     print_select "V" "Verse"          "$V" "$VERSE_VERSION"
@@ -2225,6 +2353,8 @@ select_software()
     echo
     print_select "I" "Test created image" "$I"
     echo
+    print_select "S" "Save selection"
+    print_select "W" "Edit selection"
     print_select "C" "Configuration"
     print_select  "H" "Help"
     echo
@@ -2355,6 +2485,14 @@ select_software()
 	edit_config_file
         ;;
 
+      s)
+	save_menu
+        ;;
+
+      w)
+	edit_menu
+        ;;
+
       h)
 	usage
         read -n1 -p "" SELECTED;
@@ -2365,16 +2503,16 @@ select_software()
     if [ "$O" = "$X" ]; then
        case "$PROD_VER" in
          14*)
-           DOMINO_ADDONS="$SELECT_DOMINO_ADDONS"
+           ONTIME_VERSION="$SELECT_ONTIME_VERSION"
            DominoResponseFile=domino14_ontime_install.properties
            ;;
          *)
-           DOMINO_ADDONS=
+           ONTIME_VERSION=
            DominoResponseFile=
            ;;
        esac
     else
-      DOMINO_ADDONS=
+      ONTIME_VERSION=
       DominoResponseFile=
     fi
   done
@@ -2461,8 +2599,12 @@ if [ ! -e "$VERSION_FILE" ]; then
   VERSION_FILE=$PWD/software/$VERSION_FILE_NAME
 fi
 
+# Invoke menu if no parameters are specified or a menu file is specified
 if [ -z "$1" ]; then
-  build_menu
+
+  if [ -z "$BUILD_MENU_CFG" ]; then
+    BUILD_MENU_CFG=default.menu
+  fi
 fi
 
 # Special commands
@@ -2676,8 +2818,9 @@ for a in "$@"; do
       DominoResponseFile=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
-    -ontime)
+    -ontime|+ontime)
       DominoResponseFile=domino14_ontime_install.properties
+      ONTIME_VERSION=$SELECT_ONTIME_VERSION
       ;;
 
     _*)
@@ -2755,6 +2898,19 @@ for a in "$@"; do
 
     menu|m)
       BUILD_MENU=yes
+      BUILD_MENU_CFG=default.menu
+      ;;
+
+   menu=*|-menu=*)
+      BUILD_MENU_CFG=$(echo "$a" | cut -f2 -d= -s)
+
+      case "$BUILD_MENU_CFG" in
+        *.menu)
+          ;;
+        *)
+	  BUILD_MENU_CFG=$BUILD_MENU_CFG.menu
+          ;;
+      esac
       ;;
 
     -autotest)
@@ -2843,7 +2999,7 @@ check_timezone
 check_container_environment
 
 # Invoke build menu asking for Domino image details
-if [ "$BUILD_MENU" = "yes" ]; then
+if [ "$BUILD_MENU" = "yes" ] || [ -n "$BUILD_MENU_CFG" ] ; then
   build_menu
 fi
 
