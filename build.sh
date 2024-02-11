@@ -2218,6 +2218,22 @@ save_menu()
 {
   local MENU_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_MENU_CFG
 
+  if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
+    echo "No configuration directory set!"
+    sleep 2
+    return 0
+  fi
+
+  if [ ! -e "$DOMINO_DOCKER_CFG_DIR" ]; then
+     mkdir -p "$DOMINO_DOCKER_CFG_DIR"
+  fi
+
+  if [ ! -w "$DOMINO_DOCKER_CFG_DIR" ]; then
+    echo "Cannot write to configuration directory: $DOMINO_DOCKER_CFG_DIR"
+    sleep 2
+    return 0
+  fi
+
   echo "# Saved menu configuration file" > "$MENU_FILE"
   echo "#DOMINO_VERSION=" >> "$MENU_FILE"
 
