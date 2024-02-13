@@ -2247,6 +2247,7 @@ load_conf()
 save_conf()
 {
   local BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$CONF_FILE
+  local LATESTSEL=latest
 
   if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
     echo "No configuration directory set!"
@@ -2265,7 +2266,7 @@ save_conf()
   fi
 
   echo "# Saved conf/menu file" > "$BUILD_CONF"
-  echo "#DOMINO_VERSION=" >> "$BUILD_CONF"
+  echo "DOMINO_VERSION=$LATESTSEL" >> "$BUILD_CONF"
 
   if [ -n "$VERSE_VERSION" ];    then echo "VERSE_VERSION=$LATESTSEL"    >> "$BUILD_CONF"; fi
   if [ -n "$TRAVELER_VERSION" ]; then echo "TRAVELER_VERSION=$LATESTSEL" >> "$BUILD_CONF"; fi
@@ -2293,12 +2294,22 @@ edit_conf()
     return 0
   fi
 
+  local MODIFIED_BEFORE=$(stat -c %Y "$BUILD_CONF")
+
   if [ ! -e "$BUILD_CONF" ]; then
     save_conf
     $EDIT_COMMAND "$BUILD_CONF"
   fi
 
   $EDIT_COMMAND "$BUILD_CONF"
+
+  local MODIFIED_AFTER=$(stat -c %Y "$BUILD_CONF")
+
+  if [ "$MODIFIED_BEFORE" = "$MODIFIED_AFTER" ]; then
+    return 0
+  fi
+
+  load_conf
 }
 
 select_software()
@@ -2331,23 +2342,23 @@ select_software()
 
   load_conf
 
-  # Language pack has special display mapping and is selected by name
-  SELECT_DOMLP_LANG=$DOMLP_LANG
-  get_language_pack_display_name
-
-  if [ -n "$VERSE_VERSION" ];    then V=$X; fi
-  if [ -n "$TRAVELER_VERSION" ]; then T=$X; fi
-  if [ -n "$NOMAD_VERSION" ];    then N=$X; fi
-  if [ -n "$DOMLP_LANG" ];       then L=$X; fi
-  if [ -n "$DOMRESTAPI_VER" ];   then R=$X; fi
-  if [ -n "$CAPI_VERSION" ];     then A=$X; fi
-  if [ -n "$LEAP_VERSION" ];     then E=$X; fi
-  if [ -n "$ONTIME_VERSION" ];   then O=$X; fi
-
-  if [ "$AutoTestImage" = "yes" ]; then I=$X; fi
-
   while [ 1 ];
   do
+
+     # Language pack has special display mapping and is selected by name
+    SELECT_DOMLP_LANG=$DOMLP_LANG
+    get_language_pack_display_name
+
+    if [ -n "$VERSE_VERSION" ];    then V=$X; else V=$Z; fi
+    if [ -n "$TRAVELER_VERSION" ]; then T=$X; else T=$Z; fi
+    if [ -n "$NOMAD_VERSION" ];    then N=$X; else N=$Z; fi
+    if [ -n "$DOMLP_LANG" ];       then L=$X; else L=$Z; fi
+    if [ -n "$DOMRESTAPI_VER" ];   then R=$X; else R=$Z; fi
+    if [ -n "$CAPI_VERSION" ];     then A=$X; else A=$Z; fi
+    if [ -n "$LEAP_VERSION" ];     then E=$X; else E=$Z; fi
+    if [ -n "$ONTIME_VERSION" ];   then O=$X; else O=$Z; fi
+
+    if [ "$AutoTestImage" = "yes" ]; then I=$X; else I=$Z; fi
 
     if [ -z "$DOMLP_LANG" ]; then
       DISPLAY_LP=
@@ -2412,50 +2423,40 @@ select_software()
       n)
         if [ -z "$NOMAD_VERSION" ]; then
           NOMAD_VERSION=$SELECT_NOMAD_VERSION
-          N=$X
         else
           NOMAD_VERSION=
-          N=$Z
         fi
         ;;
 
       v)
         if [ -z "$VERSE_VERSION" ]; then
           VERSE_VERSION=$SELECT_VERSE_VERSION
-          V=$X
         else
           VERSE_VERSION=
-          V=$Z
         fi
         ;;
 
       r)
         if [ -z "$DOMRESTAPI_VER" ]; then
           DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER
-          R=$X
         else
           DOMRESTAPI_VER=
-          R=$Z
         fi
         ;;
 
       e)
         if [ -z "$LEAP_VERSION" ]; then
           LEAP_VERSION=$SELECT_LEAP_VERSION
-          E=$X
         else
           LEAP_VERSION=
-          E=$Z
         fi
         ;;
 
       a)
         if [ -z "$CAPI_VERSION" ]; then
           CAPI_VERSION=$SELECT_CAPI_VERSION
-          A=$X
         else
           CAPI_VERSION=
-          A=$Z
         fi
         ;;
 
@@ -2463,12 +2464,8 @@ select_software()
         if [ -z "$DOMLP_LANG" ]; then
           select_language_pack
           DOMLP_LANG=$SELECT_DOMLP_LANG
-          if [ -n "$DOMLP_LANG" ]; then
-            L=$X
-          fi
         else
           DOMLP_LANG=
-          L=$Z
         fi
         ;;
 
@@ -2488,20 +2485,28 @@ select_software()
         ;;
 
       o)
-        if [ "$O" = "$X" ]; then
-          O=$Z
+        if [ -z "$ONTIME_VERSION" ]; then
+          case "$PROD_VER" in
+            14*)
+              ONTIME_VERSION="$SELECT_ONTIME_VERSION"
+              DominoResponseFile=domino14_ontime_install.properties
+              ;;
+            *)
+              ONTIME_VERSION=
+              DominoResponseFile=
+              ;;
+           esac
         else
-          O=$X
+          ONTIME_VERSION=
+          DominoResponseFile=
         fi
         ;;
 
       i)
         if [ -z "$AutoTestImage" ]; then
           AutoTestImage=yes
-          I=$X
         else
           AutoTestImage=
-          I=$Z
         fi
         ;;
 
@@ -2524,21 +2529,6 @@ select_software()
 
     esac
 
-    if [ "$O" = "$X" ]; then
-       case "$PROD_VER" in
-         14*)
-           ONTIME_VERSION="$SELECT_ONTIME_VERSION"
-           DominoResponseFile=domino14_ontime_install.properties
-           ;;
-         *)
-           ONTIME_VERSION=
-           DominoResponseFile=
-           ;;
-       esac
-    else
-      ONTIME_VERSION=
-      DominoResponseFile=
-    fi
   done
 }
 
