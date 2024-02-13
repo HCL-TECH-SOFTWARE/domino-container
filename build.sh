@@ -2200,23 +2200,53 @@ select_domino_version()
 }
 
 
-load_menu()
+load_conf()
 {
-  local MENU_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_MENU_CFG
+  local BUILD_CONF=
+  local LATESTSEL=latest
 
-  if [ -z "$BUILD_MENU_CFG" ]; then
+  if [ -n "$1" ]; then
+    BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$1
+
+  elif [ -n "$CONF_FILE" ]; then
+    BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$CONF_FILE
+
+  else
     return 0
   fi
 
-  if [ -r "$MENU_FILE" ]; then
-    . $MENU_FILE
-    echo "Menu loaded from [$MENU_FILE]"
+  if [ -r "$BUILD_CONF" ]; then
+    . $BUILD_CONF
+    echo "Conf loaded from [$BUILD_CONF]"
   fi
+
+  PROD_NAME="domino"
+
+  if [ -z "$DOMINO_VERSION" ]; then
+    get_current_version domino
+    DOMINO_VERSION=$PROD_VER$PROD_FP$PROD_HF
+  fi
+
+  get_current_addon_version verse SELECT_VERSE_VERSION
+  get_current_addon_version nomad SELECT_NOMAD_VERSION
+  get_current_addon_version traveler SELECT_TRAVELER_VERSION
+  get_current_addon_version leap SELECT_LEAP_VERSION
+  get_current_addon_version capi SELECT_CAPI_VERSION
+  get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
+
+  if [ "$LATESTSEL" = "$VERSE_VERSION" ];    then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
+  if [ "$LATESTSEL" = "$TRAVELER_VERSION" ]; then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
+  if [ "$LATESTSEL" = "$NOMAD_VERSION" ];    then NOMAD_VERSION=$SELECT_NOMAD_VERSION; fi
+  if [ "$LATESTSEL" = "$LEAP_VERSION" ];     then LEAP_VERSION=$SELECT_LEAP_VERSION; fi
+  if [ "$LATESTSEL" = "$DOMRESTAPI_VER" ];   then DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER; fi
+  if [ "$LATESTSEL" = "$CAPI_VERSION" ];     then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
+  if [ "$LATESTSEL" = "$ONTIME_VERSION" ];   then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
+
 }
 
-save_menu()
+save_conf()
 {
-  local MENU_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_MENU_CFG
+  local BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$CONF_FILE
 
   if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
     echo "No configuration directory set!"
@@ -2234,47 +2264,46 @@ save_menu()
     return 0
   fi
 
-  echo "# Saved menu configuration file" > "$MENU_FILE"
-  echo "#DOMINO_VERSION=" >> "$MENU_FILE"
+  echo "# Saved conf/menu file" > "$BUILD_CONF"
+  echo "#DOMINO_VERSION=" >> "$BUILD_CONF"
 
-  if [ -n "$VERSE_VERSION" ];    then echo "VERSE_VERSION=$LATEST"    >> "$MENU_FILE"; fi
-  if [ -n "$TRAVELER_VERSION" ]; then echo "TRAVELER_VERSION=$LATEST" >> "$MENU_FILE"; fi
-  if [ -n "$NOMAD_VERSION" ];    then echo "NOMAD_VERSION=$LATEST"    >> "$MENU_FILE"; fi
-  if [ -n "$DOMRESTAPI_VER" ];   then echo "DOMRESTAPI_VER=$LATEST"   >> "$MENU_FILE"; fi
-  if [ -n "$CAPI_VERSION" ];     then echo "CAPI_VERSION=$LATEST"     >> "$MENU_FILE"; fi
-  if [ -n "$LEAP_VERSION" ];     then echo "LEAP_VERSION=$LATEST"     >> "$MENU_FILE"; fi
-  if [ -n "$ONTIME_VERSION" ];   then echo "ONTIME_VERSION=$LATEST"   >> "$MENU_FILE"; fi
-  if [ -n "$DOMLP_LANG" ];       then echo "DOMLP_LANG=$DOMLP_LANG"   >> "$MENU_FILE"; fi
+  if [ -n "$VERSE_VERSION" ];    then echo "VERSE_VERSION=$LATESTSEL"    >> "$BUILD_CONF"; fi
+  if [ -n "$TRAVELER_VERSION" ]; then echo "TRAVELER_VERSION=$LATESTSEL" >> "$BUILD_CONF"; fi
+  if [ -n "$NOMAD_VERSION" ];    then echo "NOMAD_VERSION=$LATESTSEL"    >> "$BUILD_CONF"; fi
+  if [ -n "$DOMRESTAPI_VER" ];   then echo "DOMRESTAPI_VER=$LATESTSEL"   >> "$BUILD_CONF"; fi
+  if [ -n "$CAPI_VERSION" ];     then echo "CAPI_VERSION=$LATESTSEL"     >> "$BUILD_CONF"; fi
+  if [ -n "$LEAP_VERSION" ];     then echo "LEAP_VERSION=$LATESTSEL"     >> "$BUILD_CONF"; fi
+  if [ -n "$ONTIME_VERSION" ];   then echo "ONTIME_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
+  if [ -n "$DOMLP_LANG" ];       then echo "DOMLP_LANG=$DOMLP_LANG"      >> "$BUILD_CONF"; fi
 
-  if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$MENU_FILE";  fi
+  if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF";  fi
 
   echo
   echo
-  echo " Saved menu selection to [$MENU_FILE]"
+  echo " Saved to [$BUILD_CONF]"
   echo -n " "
   sleep 2
 }
 
-edit_menu()
+edit_conf()
 {
-  local MENU_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_MENU_CFG
+  local BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$CONF_FILE
 
-  if [ -z "$BUILD_MENU_CFG" ]; then
+  if [ -z "$CONF_FILE" ]; then
     return 0
   fi
 
-  if [ ! -e "$MENU_FILE" ]; then
-    save_menu
-    $EDIT_COMMAND "$MENU_FILE"
+  if [ ! -e "$BUILD_CONF" ]; then
+    save_conf
+    $EDIT_COMMAND "$BUILD_CONF"
   fi
 
-  $EDIT_COMMAND "$MENU_FILE"
+  $EDIT_COMMAND "$BUILD_CONF"
 }
 
 select_software()
 {
   SELECTED=
-  PROD_NAME="domino"
 
   local SELECT_TRAVELER_VERSION=
   local SELECT_NOMAD_VERSION=
@@ -2299,21 +2328,8 @@ select_software()
   local A=$Z
   local I=$Z
   local O=$Z
-  local LATEST=*
 
-  load_menu
-
-  if [ -z "$DOMINO_VERSION" ]; then
-    get_current_version domino
-    DOMINO_VERSION=$PROD_VER$PROD_FP$PROD_HF
-  fi
-
-  get_current_addon_version verse SELECT_VERSE_VERSION
-  get_current_addon_version nomad SELECT_NOMAD_VERSION
-  get_current_addon_version traveler SELECT_TRAVELER_VERSION
-  get_current_addon_version leap SELECT_LEAP_VERSION
-  get_current_addon_version capi SELECT_CAPI_VERSION
-  get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
+  load_conf
 
   # Language pack has special display mapping and is selected by name
   SELECT_DOMLP_LANG=$DOMLP_LANG
@@ -2327,14 +2343,6 @@ select_software()
   if [ -n "$CAPI_VERSION" ];     then A=$X; fi
   if [ -n "$LEAP_VERSION" ];     then E=$X; fi
   if [ -n "$ONTIME_VERSION" ];   then O=$X; fi
-
-  if [ "$LATEST" = "$VERSE_VERSION" ];    then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
-  if [ "$LATEST" = "$TRAVELER_VERSION" ]; then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
-  if [ "$LATEST" = "$NOMAD_VERSION" ];    then NOMAD_VERSION=$SELECT_NOMAD_VERSION; fi
-  if [ "$LATEST" = "$LEAP_VERSION" ];     then LEAP_VERSION=$SELECT_LEAP_VERSION; fi
-  if [ "$LATEST" = "$DOMRESTAPI_VER" ];   then DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER; fi
-  if [ "$LATEST" = "$CAPI_VERSION" ];     then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
-  if [ "$LATEST" = "$ONTIME_VERSION" ];   then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
 
   if [ "$AutoTestImage" = "yes" ]; then I=$X; fi
 
@@ -2502,11 +2510,11 @@ select_software()
         ;;
 
       s)
-	save_menu
+	save_conf
         ;;
 
       w)
-	edit_menu
+	edit_conf
         ;;
 
       h)
@@ -2618,8 +2626,8 @@ fi
 # Invoke menu if no parameters are specified or a menu file is specified
 if [ -z "$1" ]; then
 
-  if [ -z "$BUILD_MENU_CFG" ]; then
-    BUILD_MENU_CFG=default.menu
+  if [ -z "$CONF_FILE" ]; then
+    CONF_FILE=default.conf
   fi
 fi
 
@@ -2914,19 +2922,38 @@ for a in "$@"; do
 
     menu|m)
       BUILD_MENU=yes
-      BUILD_MENU_CFG=default.menu
+      CONF_FILE=default.conf
       ;;
 
-   menu=*|-menu=*)
-      BUILD_MENU_CFG=$(echo "$a" | cut -f2 -d= -s)
+    menu=*|-menu=*)
+      CONF_FILE=$(echo "$a" | cut -f2 -d= -s)
 
-      case "$BUILD_MENU_CFG" in
-        *.menu)
+      case "$CONF_FILE" in
+        *.conf)
           ;;
         *)
-	  BUILD_MENU_CFG=$BUILD_MENU_CFG.menu
+	  CONF_FILE=$CONF_FILE.conf
           ;;
       esac
+      ;;
+
+    conf|-conf)
+      load_conf default.conf 
+      ;;
+
+    conf=*|-conf=*)
+      TEMP=$(echo "$a" | cut -f2 -d= -s)
+
+      case "$TEMP" in
+        *.conf)
+          ;;
+        *)
+          TEMP=$TEMP.conf
+          ;;
+      esac
+
+      load_conf "$TEMP"
+      TEMP=
       ;;
 
     -autotest)
@@ -3015,7 +3042,7 @@ check_timezone
 check_container_environment
 
 # Invoke build menu asking for Domino image details
-if [ "$BUILD_MENU" = "yes" ] || [ -n "$BUILD_MENU_CFG" ] ; then
+if [ "$BUILD_MENU" = "yes" ] || [ -n "$CONF_FILE" ] ; then
   build_menu
 fi
 
