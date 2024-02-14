@@ -2222,7 +2222,7 @@ load_conf()
 
   PROD_NAME="domino"
 
-  if [ -z "$DOMINO_VERSION" ]; then
+  if [ -z "$DOMINO_VERSION" ] || [ "$DOMINO_VERSION" = "$LATESTSEL" ]; then
     get_current_version domino
     DOMINO_VERSION=$PROD_VER$PROD_FP$PROD_HF
   fi
@@ -2289,12 +2289,16 @@ save_conf()
 edit_conf()
 {
   local BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$CONF_FILE
+  local MODIFIED_BEFORE=
+  local MODIFIED_AFTER=
 
   if [ -z "$CONF_FILE" ]; then
     return 0
   fi
 
-  local MODIFIED_BEFORE=$(stat -c %Y "$BUILD_CONF")
+  if [ -e "$BUILD_CONF" ]; then
+    local MODIFIED_BEFORE=$(stat -c %Y "$BUILD_CONF")
+  fi
 
   if [ ! -e "$BUILD_CONF" ]; then
     save_conf
@@ -2303,7 +2307,7 @@ edit_conf()
 
   $EDIT_COMMAND "$BUILD_CONF"
 
-  local MODIFIED_AFTER=$(stat -c %Y "$BUILD_CONF")
+  MODIFIED_AFTER=$(stat -c %Y "$BUILD_CONF")
 
   if [ "$MODIFIED_BEFORE" = "$MODIFIED_AFTER" ]; then
     return 0
@@ -2394,12 +2398,18 @@ select_software()
     print_select  "H" "Help"
     echo
     echo
-    read -n1 -p " Select software & Options,  [B] to build,  [0] to cancel? " SELECTED;
+    read -n1 -p " Select software & Options,  [B] to build,  [Q] to cancel? " SELECTED;
 
     case $(echo "$SELECTED" | awk '{print tolower($0)}') in
 
-      0|b)
+      b)
         return 0
+        ;;
+
+      0|q)
+        clear
+	echo
+        exit 0
         ;;
 
       t)

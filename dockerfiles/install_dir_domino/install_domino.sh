@@ -886,6 +886,7 @@ install_one_custom_add_on()
   done
 
   install_files_from_dir "domino-data" "$DOMINO_DATA_PATH" "$DOMINO_USER" "$DOMINO_GROUP" 600
+  install_files_from_dir linux-bin /usr/bin root root 755
 
   # Runnig custom install script
   if [ -x "install.sh" ]; then
