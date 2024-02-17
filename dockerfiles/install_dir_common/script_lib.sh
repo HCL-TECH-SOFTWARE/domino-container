@@ -31,6 +31,9 @@ export NUI_NOTESDIR=$LOTUS
 export PATH=$PATH:$DOMINO_DATA_PATH
 export SOFTWARE_FILE=$INSTALL_DIR/software.txt
 
+# Ensure files extracted by root get standard owner (some files have high UID/GID values)
+export TAR_OPTIONS=--no-same-owner
+
 # In container environments the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
   export LOGNAME=$(whoami)
@@ -326,27 +329,27 @@ copy_file_and_check_hash()
 
   case "$DOWNLOAD_FILE" in
     *.tar.gz)
-      TAR_OPTIONS=-xz
+      TAR_OPT=-xz
       ;;
 
     *.tgz)
-      TAR_OPTIONS=-xz
+      TAR_OPT=-xz
       ;;
 
     *.taz)
-      TAR_OPTIONS=-xz
+      TAR_OPT=-xz
       ;;
 
     *.tar)
-      TAR_OPTIONS=-x
+      TAR_OPT=-x
       ;;
 
     *)
-      TAR_OPTIONS=""
+      TAR_OPT=""
       ;;
   esac
 
-  if [ -z "$TAR_OPTIONS" ]; then
+  if [ -z "$TAR_OPT" ]; then
 
     # Download without extracting for none tar files
     if [ -z "$TARGET_FILE" ] || [ "." = "$TARGET_FILE" ]; then
@@ -377,20 +380,18 @@ copy_file_and_check_hash()
     fi
 
   else
-    TAR_OPTIONS="--no-same-owner $TAR_OPTIONS"
-
     if [ -e $SOFTWARE_FILE ]; then
 
       log_debug "Software.txt file exists: $SOFTWARE_FILE"
 
       if [ "$NOHASH" = "1" ]; then
         echo
-        tar  $TAR_OPTIONS -f "$DOWNLOAD_FILE" 2>/dev/null
+        tar  $TAR_OPT -f "$DOWNLOAD_FILE" 2>/dev/null
         echo
         FOUND=1
       else
         echo
-        HASH=$(cat $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS $FILES_TO_EXTRACT 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+        HASH=$(cat $DOWNLOAD_FILE | tee >(tar $TAR_OPT $FILES_TO_EXTRACT 2>/dev/null) | sha256sum -b | cut -d" " -f1)
         echo
         FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
       fi
@@ -407,7 +408,7 @@ copy_file_and_check_hash()
       log_debug "Software.txt file does not exists: $SOFTWARE_FILE"
 
       echo
-      tar $TAR_OPTIONS -f "$DOWNLOAD_FILE" 2>/dev/null
+      tar $TAR_OPT -f "$DOWNLOAD_FILE" 2>/dev/null
       echo
 
       if [ "$?" = "0" ]; then
@@ -485,27 +486,27 @@ download_and_check_hash()
 
   case "$DOWNLOAD_FILE" in
     *.tar.gz)
-      TAR_OPTIONS=-xz
+      TAR_OPT=-xz
       ;;
 
     *.tgz)
-      TAR_OPTIONS=-xz
+      TAR_OPT=-xz
       ;;
 
     *.taz)
-      TAR_OPTIONS=-xz
+      TAR_OPT=-xz
       ;;
 
     *.tar)
-      TAR_OPTIONS=-x
+      TAR_OPT=-x
       ;;
 
     *)
-      TAR_OPTIONS=""
+      TAR_OPT=""
       ;;
   esac
 
-  if [ -z "$TAR_OPTIONS" ]; then
+  if [ -z "$TAR_OPT" ]; then
 
     # Download without extracting for none tar files
     if [ -z "$TARGET_FILE" ] || [ "." = "$TARGET_FILE" ]; then
@@ -536,18 +537,16 @@ download_and_check_hash()
     fi
 
   else
-    TAR_OPTIONS="--no-same-owner $TAR_OPTIONS"
-
     if [ -e $SOFTWARE_FILE ]; then
 
       if [ "$NOHASH" = "1" ]; then
         echo
-        $CURL_CMD $DOWNLOAD_FILE | tar $TAR_OPTIONS 2>/dev/null
+        $CURL_CMD $DOWNLOAD_FILE | tar $TAR_OPT 2>/dev/null
         echo
         FOUND=1
       else
         echo
-        HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS $FILES_TO_EXTRACT 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+        HASH=$($CURL_CMD $DOWNLOAD_FILE | tee >(tar $TAR_OPT $FILES_TO_EXTRACT 2>/dev/null) | sha256sum -b | cut -d" " -f1)
         echo
         FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
       fi
@@ -562,7 +561,7 @@ download_and_check_hash()
 
     else
       echo
-      $CURL_CMD $DOWNLOAD_FILE | tar $TAR_OPTIONS 2>/dev/null
+      $CURL_CMD $DOWNLOAD_FILE | tar $TAR_OPT 2>/dev/null
       echo
 
       if [ "$?" = "0" ]; then
