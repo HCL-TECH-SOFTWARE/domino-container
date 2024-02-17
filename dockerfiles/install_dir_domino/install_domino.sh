@@ -363,8 +363,8 @@ install_verse()
   CURRENT_DIR=$(pwd)
   cd $ADDON_NAME
   echo "Unzipping files .."
-  unzip -q  *.zip
-  unzip -q HCL_Verse.zip
+  unzip -o -q  *.zip
+  unzip -o -q HCL_Verse.zip
 
   echo "Copying files .."
 
@@ -439,7 +439,7 @@ install_leap()
   cd "$ADDON_NAME"
 
   echo "Unzipping files .."
-  unzip -q *.zip
+  unzip -o -q *.zip
 
   echo "Copying files .."
   cp -f "templates/"* "$VOLT_DATA_DIR"
@@ -579,13 +579,13 @@ install_capi()
   # Domino 14 C-API ZIP has different structure
   if [ "$ADDON_VER" = "14.0" ]; then
     mkdir -p "$LOTUS/notesapi14"
-    unzip -q -d "$LOTUS/notesapi14" *.zip
+    unzip -o -q -d "$LOTUS/notesapi14" *.zip
     mkdir -p "$LOTUS/notesapi14/lib/linux64"
     mv "$LOTUS/notesapi14/lib/"*.o "$LOTUS/notesapi14/lib/linux64"
 
   else
-    unzip -q -d "$LOTUS" *.zip */include/*
-    unzip -q -d "$LOTUS" *.zip */lib/linux64/*
+    unzip -o -q -d "$LOTUS" *.zip */include/*
+    unzip -o -q -d "$LOTUS" *.zip */lib/linux64/*
   fi
 
   rm -f *.zip
@@ -814,12 +814,19 @@ remove_perl()
 
 install_domino_installer_only_packages()
 {
-  install_packages cpio
+  if [ ! -e /usr/bin/cpio ]; then
+    UNINSTALL_CPIO_AFTER_INSTALL=yes
+    install_package cpio
+  fi
 }
 
 remove_domino_installer_only_packages()
 {
-  remove_packages cpio
+  if [ "$UNINSTALL_CPIO_AFTER_INSTALL" = "yes" ]; then
+    remove_package cpio
+  fi
+
+  remove_compiler
 }
 
 install_startscript()
@@ -855,7 +862,6 @@ install_startscript()
   remove_directory domino-startscript
 
 }
-
 
 
 install_one_custom_add_on()
@@ -915,6 +921,26 @@ install_custom_add_ons()
 }
 
 
+install_compiler()
+{
+  if [ ! -e /usr/bin/gcc ]; then
+    UNINSTALL_COMPILER_AFTER_INSTALL=yes
+    install_packages gcc make
+  fi
+}
+
+remove_compiler()
+{
+  if [ -n "$CAPI_VERSION" ]; then
+    return 0
+  fi
+
+  if [ "$UNINSTALL_COMPILER_AFTER_INSTALL" = "yes" ]; then
+    remove_packages gcc make
+  fi
+}
+
+
 install_k8s_runas_user_support()
 {
   if [ ! "$K8S_RUNAS_USER_SUPPORT" = "yes" ]; then
@@ -925,7 +951,7 @@ install_k8s_runas_user_support()
 
   cd $INSTALL_DIR
 
-  install_packages gcc make
+  install_compiler
   make
 
   install_file nuid2pw "$DOMDOCK_SCRIPT_DIR/nuid2pw" root root 4550
@@ -1162,10 +1188,6 @@ install_leap "$LEAP_VERSION"
 
 remove_perl
 
-# Install Domino start script
-install_startscript
-
-
 # Install Custom Add-Ons if requested
 install_custom_add_ons
 
@@ -1200,6 +1222,27 @@ if [ -x /usr/bin/gdb.minimal ]; then
     echo "Setting cap_sys_ptrace for /usr/bin/gdb.minimal"
 fi
 
+# Create missing links
+
+create_startup_link kyrtool
+create_startup_link dbmt
+install_res_links
+
+# set security limits late in the installation process to avoid conflicts with limited resources available in some container environments like Podman when switching users
+set_security_limits
+
+# Ensure permissons are set correctly for data directory
+chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
+
+# Skip container specific configuration for native install
+if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+  header "Successfully completed native installation!"
+  exit 0
+fi
+
+# Install Domino Start Script
+install_startscript
+
 # Copy pre-start configuration
 install_file "$INSTALL_DIR/domino_prestart.sh" "$DOMDOCK_SCRIPT_DIR/domino_prestart.sh" root root 755
 
@@ -1220,9 +1263,6 @@ install_file "$INSTALL_DIR/healthcheck.sh" "/healthcheck.sh" root root 755
 ln -s "/healthcheck.sh" "/domino_docker_healthcheck.sh"
 
 install_k8s_runas_user_support
-
-# set security limits late in the installation process to avoid conflicts with limited resources available in some container environments like Podman when switching users
-set_security_limits
 
 # Set notes.ini variables needed
 set_default_notes_ini_variables
@@ -1254,12 +1294,6 @@ remove_directory "$Notes_ExecDirectory/jre"
 # Remove Verse add-on installer ZIP
 remove_directory "$Notes_ExecDirectory/addons/verse"
 
-# Create missing links
-
-create_startup_link kyrtool
-create_startup_link dbmt
-install_res_links
-
 # Remove tune kernel binary, because it cannot be used in container environments
 remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 
@@ -1267,9 +1301,6 @@ remove_file "$LOTUS/notes/latest/linux/tunekrnl"
 remove_file $DOMINO_DATA_PATH/tika-server.jar
 
 check_build_options
-
-# Ensure permissons are set correctly for data directory
-chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
 
 # Now export the lib path just in case for Domino to run
 export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
@@ -1296,10 +1327,6 @@ fi
 
 # Remove gcc compiler if no C-API toolkit is installed
 # gdb installs gcc on most platforms and gcc can be up to 100 MB
-
-if [ -z "$CAPI_VERSION" ]; then
-  remove_package gcc make
-fi
 
 # Remove installer only required packages
 remove_domino_installer_only_packages

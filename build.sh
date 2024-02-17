@@ -287,7 +287,7 @@ usage()
   echo "-k8s-runas       adds K8s runas user support"
   echo "-linuxpkg=<pkg>  add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-startscript=x   installs specified start script version from software repository"
-  echo "-custom-addon=x  specify a tar file with additional Domino add-on sofware to install format: (https://)file.taz,sha256checksum"
+  echo "-custom-addon=x  specify a tar file with additional Domino add-on sofware to install format: (https://)file.taz#sha256checksum"
   echo
   echo SafeLinx options
   echo
@@ -440,6 +440,11 @@ build_squid_image()
 
 nginx_start()
 {
+
+  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+    return 0
+  fi
+
   # Create a nginx container hosting software download locally
 
   local IMAGE_NAME=docker.io/library/nginx:latest
@@ -479,6 +484,10 @@ nginx_start()
 
 nginx_stop()
 {
+  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+    return 0
+  fi
+
   # Stop and remove SW repository
 
   $CONTAINER_CMD stop $SOFTWARE_CONTAINER
@@ -635,17 +644,12 @@ check_from_image()
   if [ -z "$FROM_IMAGE" ]; then
 
     if [ "$PROD_NAME" = "domino" ]; then
-      LINUX_NAME="CentOS Stream 9"
-      BASE_IMAGE=quay.io/centos/centos:stream9
+      FROM_IMAGE=centos9
     elif [ "$PROD_NAME" = "safelinx" ]; then
-      LINUX_NAME="CentOS Stream 9"
-      BASE_IMAGE=quay.io/centos/centos:stream9
-
+      FROM_IMAGE=centos9
     else
-      BASE_IMAGE=hclcom/domino:latest
+      FROM_IMAGE=centos9
     fi
-
-    return 0
   fi
 
   case "$FROM_IMAGE" in
@@ -715,9 +719,24 @@ check_from_image()
       BASE_IMAGE=registry.access.redhat.com/ubi9
       ;;
 
+    ubi-minimal)
+      LINUX_NAME="RedHat UBI 9 minimal"
+      BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
+      ;;
+
     ubi9-minimal)
       LINUX_NAME="RedHat UBI 9 minimal"
       BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
+      ;;
+
+    ubuntu)
+      LINUX_NAME="Ubuntu 22.04 LTS"
+      BASE_IMAGE=ubuntu
+      ;;
+
+    ubuntu22)
+      LINUX_NAME="Ubuntu 22.04 LTS"
+      BASE_IMAGE=ubuntu:jammy
       ;;
 
     leap)
@@ -740,6 +759,11 @@ check_from_image()
       BASE_IMAGE=registry.suse.com/bci/bci-base:15.4
       ;;
 
+    archlinux)
+      LINUX_NAME="Arch Linux (experimental)"
+      BASE_IMAGE=archlinux
+      ;;
+
     *)
       LINUX_NAME="Manual specified base image"
       BASE_IMAGE=$FROM_IMAGE
@@ -748,7 +772,7 @@ check_from_image()
 
   esac
 
-  echo "base Image - $LINUX_NAME"
+  echo "Base Image - $LINUX_NAME"
 }
 
 
@@ -2204,6 +2228,7 @@ load_conf()
 {
   local BUILD_CONF=
   local LATESTSEL=latest
+  local FROM_IMAGE_SELECT=$FROM_IMAGE
 
   if [ -n "$1" ]; then
     BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$1
@@ -2242,9 +2267,14 @@ load_conf()
   if [ "$LATESTSEL" = "$CAPI_VERSION" ];     then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
   if [ "$LATESTSEL" = "$ONTIME_VERSION" ];   then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
 
+  if [ -n "$FROM_IMAGE_SELECT" ]; then
+    FROM_IMAGE=$FROM_IMAGE_SELECT
+  fi
+
+  check_from_image
 }
 
-save_conf()
+write_conf()
 {
   local BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$CONF_FILE
   local LATESTSEL=latest
@@ -2277,7 +2307,10 @@ save_conf()
   if [ -n "$ONTIME_VERSION" ];   then echo "ONTIME_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
   if [ -n "$DOMLP_LANG" ];       then echo "DOMLP_LANG=$DOMLP_LANG"      >> "$BUILD_CONF"; fi
 
-  if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF";  fi
+  if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
+
+  # Additional parameters only configurable on command line
+  if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"      >> "$BUILD_CONF"; fi
 
   echo
   echo
@@ -2301,7 +2334,7 @@ edit_conf()
   fi
 
   if [ ! -e "$BUILD_CONF" ]; then
-    save_conf
+    write_conf
     $EDIT_COMMAND "$BUILD_CONF"
   fi
 
@@ -2339,7 +2372,7 @@ select_software()
   local R=$Z
   local L=$Z
   local C=$Z
-  local E=$Z
+  local P=$Z
   local A=$Z
   local I=$Z
   local O=$Z
@@ -2359,7 +2392,7 @@ select_software()
     if [ -n "$DOMLP_LANG" ];       then L=$X; else L=$Z; fi
     if [ -n "$DOMRESTAPI_VER" ];   then R=$X; else R=$Z; fi
     if [ -n "$CAPI_VERSION" ];     then A=$X; else A=$Z; fi
-    if [ -n "$LEAP_VERSION" ];     then E=$X; else E=$Z; fi
+    if [ -n "$LEAP_VERSION" ];     then P=$X; else P=$Z; fi
     if [ -n "$ONTIME_VERSION" ];   then O=$X; else O=$Z; fi
 
     if [ "$AutoTestImage" = "yes" ]; then I=$X; else I=$Z; fi
@@ -2387,16 +2420,17 @@ select_software()
     print_select "L" "Language Pack"  "$L" "$DISPLAY_LP"
     print_select "R" "REST-API"       "$R" "$DOMRESTAPI_VER"
     print_select "A" "C-API SDK"      "$A" "$CAPI_VERSION"
-    print_select "E" "Domino Leap"    "$E" "$LEAP_VERSION"
+    print_select "P" "Domino Leap"    "$P" "$LEAP_VERSION"
 
     echo
     print_select "I" "Test created image" "$I"
     echo
-    print_select "S" "Save selection"
-    print_select "W" "Edit selection"
+    print_select "W" "Write selection"
+    print_select "E" "Edit selection"
     print_select "C" "Configuration"
-    print_select  "H" "Help"
+    print_select "H" "Help"
     echo
+    echo " Base Image: $LINUX_NAME"
     echo
     read -n1 -p " Select software & Options,  [B] to build,  [Q] to cancel? " SELECTED;
 
@@ -2454,7 +2488,7 @@ select_software()
         fi
         ;;
 
-      e)
+      p)
         if [ -z "$LEAP_VERSION" ]; then
           LEAP_VERSION=$SELECT_LEAP_VERSION
         else
@@ -2524,11 +2558,11 @@ select_software()
 	edit_config_file
         ;;
 
-      s)
-	save_conf
+      w)
+	write_conf
         ;;
 
-      w)
+      e)
 	edit_conf
         ;;
 
@@ -2537,6 +2571,13 @@ select_software()
         read -n1 -p "" SELECTED;
         ;;
 
+      *)
+	echo
+	echo
+	echo " Invalid option selected: $SELECTED"
+	echo -n " "
+	sleep 2
+	;;
     esac
 
   done
@@ -2558,6 +2599,67 @@ build_menu()
   fi
 
   TAG_LATEST="latest"
+}
+
+
+
+install_domino_native()
+{
+  header "Installing Domino on local machine ..."
+
+  local INSTALL_TMP_DIR=/tmp/install_domino
+  export DOMDOCK_LOG_DIR=/tmp/install_domino/logs
+
+  mkdir -p "$INSTALL_TMP_DIR"
+  mkdir -p "$DOMDOCK_LOG_DIR"
+
+  cp dockerfiles/install_dir_domino/* "$INSTALL_TMP_DIR"
+  cp dockerfiles/install_dir_common/* "$INSTALL_TMP_DIR"
+  cd "$INSTALL_TMP_DIR"
+
+  # Export variables
+  export PROD_NAME
+  export PROD_VER
+  export DOMLP_VER
+  export DOMRESTAPI_VER
+  export PROD_FP
+  export PROD_HF
+  export TIKA_INSTALL
+  export VERSE_VERSION
+  export NOMAD_VERSION
+  export TRAVELER_VERSION
+  export LEAP_VERSION
+  export CAPI_VERSION
+  export CUSTOM_ADD_ONS
+  export DOMINO_LANG
+  export DominoResponseFile
+  export BUILD_SCRIPT_OPTIONS
+  export INSTALL_DOMINO_NATIVE
+
+  export SkipDominoMoveInstallData=yes
+  export DOMDOCK_LOG_DIR=/tmp
+
+  # Always replace REST API binary directory
+  if [ -n "$DOMRESTAPI_VER" ]; then
+    if [ -e "/opt/hcl/restapi" ]; then
+      rm -rf "/opt/hcl/restapi"
+    fi
+  fi
+
+  if [ -n "$DownloadFrom" ]; then
+    log "Getting software from: $DownloadFrom"
+    export DownloadFrom=file://$SOFTWARE_DIR
+
+  else
+    if [ -z "$SOFTWARE_DIR" ]; then
+      SOFTWARE_DIR=/local/software
+    fi
+    export DownloadFrom=file://$SOFTWARE_DIR
+    log "Getting software from: $DownloadFrom"
+  fi
+
+  #$(pwd)/install_linux.sh
+  $(pwd)/install_domino.sh
 }
 
 
@@ -2638,7 +2740,13 @@ if [ "$1" = "save" ]; then
   fi
 
   # get and check container environment (usually initialized after getting all the options)
-  check_container_environment
+
+
+  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+    CONTAINER_CMD=echo "NATIVE-INSTALL: "
+  else
+    check_container_environment
+  fi
 
   header "Exporting $2 -> $3 - This takes some time ..."
   $CONTAINER_CMD save "$2" | gzip > "$3"
@@ -2760,6 +2868,14 @@ for a in "$@"; do
       FROM_IMAGE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
+    -software=*)
+      SOFTWARE_DIR=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -download=*)
+      DownloadFrom=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
     -imagename=*)
       DOCKER_IMAGE_NAME=$(echo "$a" | cut -f2 -d= -s)
       ;;
@@ -2805,7 +2921,7 @@ for a in "$@"; do
       NGINX_IMAGE_NAME=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
-  -nginxbase=*)
+   -nginxbase=*)
       NGINX_BASE_IMAGE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
@@ -2918,6 +3034,10 @@ for a in "$@"; do
 
     -nolinuxupd)
       LinuxYumUpdate=no
+      ;;
+
+    -installnative)
+      INSTALL_DOMINO_NATIVE=yes
       ;;
 
     menu|m)
@@ -3046,6 +3166,9 @@ if [ "$BUILD_MENU" = "yes" ] || [ -n "$CONF_FILE" ] ; then
   build_menu
 fi
 
+check_for_hcl_image
+check_from_image
+
 echo "[Running in $CONTAINER_CMD configuration]"
 
 # In case software directory is not set and the well know location is filled with software
@@ -3072,9 +3195,6 @@ fi
 if [ -z "$BUILD_OPTIONS" ]; then
   BUILD_OPTIONS="--platform linux/amd64"
 fi
-
-check_for_hcl_image
-check_from_image
 
 if [ "$PROD_VER" = "latest" ]; then
   get_current_version "$PROD_NAME"
@@ -3194,6 +3314,12 @@ if [ "$SOFTWARE_USE_NGINX" = "1" ]; then
 fi
 
 CURRENT_DIR=$(pwd)
+
+if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+  install_domino_native
+  print_runtime
+  exit 0
+fi
 
 docker_build
 

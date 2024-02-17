@@ -17,8 +17,11 @@ export DOMDOCK_SCRIPT_LIB_INCLUDED=DONE
 export DOMDOCK_DIR=/domino-container
 export DOMDOCK_TXT_DIR=/domino-container
 export DOMDOCK_SCRIPT_DIR=/domino-container/scripts
-export DOMDOCK_LOG_DIR=/tmp/domino-container
 export DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
+
+if [ -z "$DOMDOCK_LOG_DIR" ]; then
+  export DOMDOCK_LOG_DIR=/tmp/domino-container
+fi
 
 # Ensure the environment is setup
 export LOTUS=/opt/hcl/domino
@@ -260,6 +263,167 @@ dump_download_error()
   echo
 }
 
+
+copy_file_and_check_hash()
+{
+  local DOWNLOAD_SERVER=$1
+  local DOWNLOAD_STR=$2
+  local TARGET_DIR=$3
+  local TARGET_FILE=$4
+  local FILES_TO_EXTRACT=$5
+
+  case "$DOWNLOAD_SERVER" in
+    file://*)
+      DOWNLOAD_SERVER=$(echo "$DOWNLOAD_SERVER" | awk -F "file://" '{print $2}')
+      ;;
+    *)
+      ;;
+  esac
+
+  log_debug "DOWNLOAD_SERVER: [$DOWNLOAD_SERVER]"
+
+  # If "nohash" option is specified, don't check for hash
+  if [ "$5" = "nohash" ]; then
+    local NOHASH=1
+    echo "Copying file without hash [$DOWNLOAD_STR]"
+  fi
+
+  # Check if file exists before downloading
+
+  for CHECK_FILE in $(echo "$DOWNLOAD_STR" | tr "," "\n" ) ; do
+
+    # Check for absolute download link
+    case "$CHECK_FILE" in
+      *://*)
+        echo "Skipping copy file for: [$CHECK_FILE]"
+        ;;
+
+      *)
+        DOWNLOAD_FILE=$DOWNLOAD_SERVER/$CHECK_FILE
+        ;;
+    esac
+
+    if [ -r "$DOWNLOAD_FILE" ]; then
+      CURRENT_FILE="$CHECK_FILE"
+      FOUND=TRUE
+      break
+    fi
+  done
+
+  if [ ! "$FOUND" = "TRUE" ]; then
+    log_error "File [$DOWNLOAD_FILE] does not exist"
+    exit 1
+  fi
+
+  echo "Downloading: [$DOWNLOAD_FILE]"
+
+  CURRENT_DIR=$(pwd)
+
+  if [ -n "$TARGET_DIR" ]; then
+    mkdir -p "$TARGET_DIR"
+    cd "$TARGET_DIR"
+  fi
+
+  case "$DOWNLOAD_FILE" in
+    *.tar.gz)
+      TAR_OPTIONS=-xz
+      ;;
+
+    *.tgz)
+      TAR_OPTIONS=-xz
+      ;;
+
+    *.taz)
+      TAR_OPTIONS=-xz
+      ;;
+
+    *.tar)
+      TAR_OPTIONS=-x
+      ;;
+
+    *)
+      TAR_OPTIONS=""
+      ;;
+  esac
+
+  if [ -z "$TAR_OPTIONS" ]; then
+
+    # Download without extracting for none tar files
+    if [ -z "$TARGET_FILE" ] || [ "." = "$TARGET_FILE" ]; then
+      TARGET_FILE=$(basename $DOWNLOAD_FILE)
+    fi
+
+    cp "$DOWNLOAD_FILE" "$TARGET_FILE"
+
+    if [ ! -e "$TARGET_FILE" ]; then
+      log_error "File [$DOWNLOAD_FILE] not copied [1]"
+      exit 1
+    fi
+
+    if [ "$NOHASH" = "1" ]; then
+      FOUND=1
+    else
+      HASH=$(sha256sum -b $TARGET_FILE | cut -f1 -d" ")
+      FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
+    fi
+
+    # Download file can be present more than once (e.g. IF/HF). Perfectly OK as long the hash matches.
+    if [ "$FOUND" = "0" ]; then
+      log_error "File [$DOWNLOAD_FILE] not copied correctly [1]"
+      dump_download_error
+      exit 1
+    else
+      log_ok "Successfully copied: [$DOWNLOAD_FILE] to [$TARGET_FILE]"
+    fi
+
+  else
+    TAR_OPTIONS="--no-same-owner $TAR_OPTIONS"
+
+    if [ -e $SOFTWARE_FILE ]; then
+
+      log_debug "Software.txt file exists: $SOFTWARE_FILE"
+
+      if [ "$NOHASH" = "1" ]; then
+        echo
+        tar  $TAR_OPTIONS -f "$DOWNLOAD_FILE" 2>/dev/null
+        echo
+        FOUND=1
+      else
+        echo
+        HASH=$(cat $DOWNLOAD_FILE | tee >(tar $TAR_OPTIONS $FILES_TO_EXTRACT 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+        echo
+        FOUND=$(grep "$HASH" "$SOFTWARE_FILE" | grep "$CURRENT_FILE" | wc -l)
+      fi
+
+      if [ "$FOUND" = "0" ]; then
+        log_error "File [$DOWNLOAD_FILE] not copied correctly [2]"
+        dump_download_error
+        exit 1
+      else
+        log_ok "Successfully copied, extracted & checked: [$DOWNLOAD_FILE] "
+      fi
+
+    else
+      log_debug "Software.txt file does not exists: $SOFTWARE_FILE"
+
+      echo
+      tar $TAR_OPTIONS -f "$DOWNLOAD_FILE" 2>/dev/null
+      echo
+
+      if [ "$?" = "0" ]; then
+        log_ok "Successfully copied & extracted: [$DOWNLOAD_FILE] "
+      else
+        log_error "File [$DOWNLOAD_FILE] not copied correctly [3]"
+        exit 1
+      fi
+    fi
+  fi
+
+  cd $CURRENT_DIR
+  return 0
+}
+
+
 download_and_check_hash()
 {
   local DOWNLOAD_SERVER=$1
@@ -267,6 +431,15 @@ download_and_check_hash()
   local TARGET_DIR=$3
   local TARGET_FILE=$4
   local FILES_TO_EXTRACT=$5
+
+  case "$DOWNLOAD_SERVER" in
+    file://*)
+      copy_file_and_check_hash "$@"
+      return 0
+      ;;
+    *)
+      ;;
+  esac
 
   # If "nohash" option is specified, don't check for hash
   if [ "$5" = "nohash" ]; then
@@ -312,19 +485,19 @@ download_and_check_hash()
 
   case "$DOWNLOAD_FILE" in
     *.tar.gz)
-      TAR_OPTIONS=xz
+      TAR_OPTIONS=-xz
       ;;
 
     *.tgz)
-      TAR_OPTIONS=xz
+      TAR_OPTIONS=-xz
       ;;
 
     *.taz)
-      TAR_OPTIONS=xz
+      TAR_OPTIONS=-xz
       ;;
 
     *.tar)
-      TAR_OPTIONS=x
+      TAR_OPTIONS=-x
       ;;
 
     *)
@@ -363,6 +536,8 @@ download_and_check_hash()
     fi
 
   else
+    TAR_OPTIONS="--no-same-owner $TAR_OPTIONS"
+
     if [ -e $SOFTWARE_FILE ]; then
 
       if [ "$NOHASH" = "1" ]; then
@@ -435,7 +610,7 @@ download_tar_with_hash()
     exit 1
   fi
 
-  HASH=$($CURL_CMD -s $DOWNLOAD_FILE | tee >(tar xz 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+  HASH=$($CURL_CMD -s $DOWNLOAD_FILE | tee >(tar --no-same-owner -xz 2>/dev/null) | sha256sum -b | cut -d" " -f1)
 
   if [ "$HASH" = "$CHECK_HASH" ]; then
     return 0
@@ -1332,13 +1507,13 @@ download_and_decrypt()
 
   if [ -z "$PW_IN" ] || [ "." = "$PW_IN" ] ; then
     # Only download and decode base64 if password is empty
-    curl -s "$URL" | openssl enc -d -base64 -d -out "$OUTFILE"
+    $CURL_CMD -s "$URL" | openssl enc -d -base64 -d -out "$OUTFILE"
 
   else
     case "$PW_IN" in
 
       http:*|https:*)
-        export PW=$(curl -s "$PW_IN")
+        export PW=$($CURL_CMD -s "$PW_IN")
         ;;
 
       *)
@@ -1352,7 +1527,7 @@ download_and_decrypt()
     fi
 
     # Download and decrypt
-    curl -s "$URL" | openssl enc -d -a -aes-256-cbc -pbkdf2 -pass env:PW -out "$OUTFILE"
+    $CURL_CMD -s "$URL" | openssl enc -d -a -aes-256-cbc -pbkdf2 -pass env:PW -out "$OUTFILE"
   fi
 
   # Save return code first and nuke password
@@ -1394,7 +1569,7 @@ install_mysql_client()
   local ADDON_NAME="MySQL Client"
   header "$ADDON_NAME Installation"
 
-  curl -LO https://repo.mysql.com/mysql80-community-release-el9-1.noarch.rpm
+  $CURL_CMD -LO https://repo.mysql.com/mysql80-community-release-el9-1.noarch.rpm
   rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
 
   install_package mysql80-community-release-el9-1.noarch.rpm
@@ -1413,7 +1588,7 @@ install_mssql_client()
   local ADDON_NAME="Microsoft SQL Server Client"
   header "$ADDON_NAME Installation"
 
-  curl https://packages.microsoft.com/config/rhel/8/prod.repo > /etc/yum.repos.d/mssql-release.repo
+  $CURL_CMD https://packages.microsoft.com/config/rhel/8/prod.repo > /etc/yum.repos.d/mssql-release.repo
 
   ACCEPT_EULA=Y install_package msodbcsql18
   ACCEPT_EULA=Y install_package mssql-tools18
