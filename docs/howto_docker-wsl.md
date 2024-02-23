@@ -78,7 +78,7 @@ The installed WSL Linux instance is not up to date after installtion.
 
 ```
 apt update
-apt uprade
+apt upgrade
 ```
 
 ## Install Docker Server
