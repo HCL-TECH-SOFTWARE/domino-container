@@ -666,12 +666,12 @@ check_from_image()
 
     rocky)
       LINUX_NAME="Rocky Linux 9"
-      BASE_IMAGE=rockylinux/rockylinux:9
+      BASE_IMAGE=docker.io/rockylinux/rockylinux:9
       ;;
 
     rocky8)
       LINUX_NAME="Rocky Linux 8"
-      BASE_IMAGE=rockylinux/rockylinux:8
+      BASE_IMAGE=docker.io/rockylinux/rockylinux:8
       ;;
 
     alma)
@@ -686,7 +686,7 @@ check_from_image()
 
     amazon)
       LINUX_NAME="Amazon Linux"
-      BASE_IMAGE=amazonlinux
+      BASE_IMAGE=docker.io/amazonlinux
       ;;
 
     oracle)
@@ -696,12 +696,12 @@ check_from_image()
 
     photon)
       LINUX_NAME="VMware Photon OS"
-      BASE_IMAGE=photon
+      BASE_IMAGE=docker.io/photon
       ;;
 
     photon5)
       LINUX_NAME="VMware Photon OS"
-      BASE_IMAGE=photon:5.0
+      BASE_IMAGE=docker.io/photon:5.0
       ;;
 
     ubi)
@@ -761,7 +761,7 @@ check_from_image()
 
     archlinux)
       LINUX_NAME="Arch Linux (experimental)"
-      BASE_IMAGE=archlinux
+      BASE_IMAGE=docker.io/archlinux
       ;;
 
     *)
@@ -2269,6 +2269,10 @@ load_conf()
 
   if [ -n "$FROM_IMAGE_SELECT" ]; then
     FROM_IMAGE=$FROM_IMAGE_SELECT
+  fi
+
+  if [ -n "$ONTIME_VERSION" ]; then
+     DominoResponseFile=domino14_ontime_install.properties
   fi
 
   check_from_image

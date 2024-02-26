@@ -1207,32 +1207,34 @@ set_ini_var_if_not_set()
 
 install_package()
 {
- if [ -x /usr/bin/zypper ]; then
-   /usr/bin/zypper install -y "$@"
+  if [ -x /usr/bin/zypper ]; then
+    /usr/bin/zypper install -y "$@"
 
- elif [ -x /usr/bin/dnf ]; then
-   /usr/bin/dnf install -y "$@"
+  elif [ -x /usr/bin/dnf ]; then
+    /usr/bin/dnf install -y "$@"
 
- elif [ -x /usr/bin/tdnf ]; then
-   /usr/bin/tdnf install -y "$@"
+  elif [ -x /usr/bin/tdnf ]; then
+    /usr/bin/tdnf install -y "$@"
 
- elif [ -x /usr/bin/microdnf ]; then
-   /usr/bin/microdnf install -y "$@"
+  elif [ -x /usr/bin/microdnf ]; then
+    /usr/bin/microdnf install -y "$@"
 
- elif [ -x /usr/bin/yum ]; then
-   /usr/bin/yum install -y "$@"
+  elif [ -x /usr/bin/yum ]; then
+    /usr/bin/yum install -y "$@"
 
- elif [ -x /usr/bin/apt-get ]; then
-   /usr/bin/apt-get install -y "$@"
+  elif [ -x /usr/bin/apt-get ]; then
+    /usr/bin/apt-get install -y "$@"
 
- elif [ -x /usr/bin/pacman ]; then
-   /usr/bin/pacman --noconfirm -Sy "$@"
+  elif [ -x /usr/bin/pacman ]; then
+    /usr/bin/pacman --noconfirm -Sy "$@"
 
- else
-  log_error "No package manager found!"
-  exit 1
+  elif [ -x /sbin/apk ]; then
+    /sbin/apk add "$@"
 
- fi
+  else
+    log_error "No package manager found!"
+    exit 1
+  fi
 }
 
 install_packages()
@@ -1245,28 +1247,30 @@ install_packages()
 
 remove_package()
 {
- if [ -x /usr/bin/zypper ]; then
-   /usr/bin/zypper rm -y "$@"
+  if [ -x /usr/bin/zypper ]; then
+    /usr/bin/zypper rm -y "$@"
 
- elif [ -x /usr/bin/dnf ]; then
-   /usr/bin/dnf remove -y "$@"
+  elif [ -x /usr/bin/dnf ]; then
+    /usr/bin/dnf remove -y "$@"
 
- elif [ -x /usr/bin/tdnf ]; then
-   /usr/bin/tdnf remove -y "$@"
+  elif [ -x /usr/bin/tdnf ]; then
+    /usr/bin/tdnf remove -y "$@"
 
- elif [ -x /usr/bin/microdnf ]; then
-   /usr/bin/microdnf remove -y "$@"
+  elif [ -x /usr/bin/microdnf ]; then
+    /usr/bin/microdnf remove -y "$@"
 
- elif [ -x /usr/bin/yum ]; then
-   /usr/bin/yum remove -y "$@"
+  elif [ -x /usr/bin/yum ]; then
+    /usr/bin/yum remove -y "$@"
 
- elif [ -x /usr/bin/apt-get ]; then
-   /usr/bin/apt-get remove -y "$@"
+  elif [ -x /usr/bin/apt-get ]; then
+    /usr/bin/apt-get remove -y "$@"
 
- elif [ -x /usr/bin/pacman ]; then
-   /usr/bin/pacman --noconfirm -R "$@"
+  elif [ -x /usr/bin/pacman ]; then
+    /usr/bin/pacman --noconfirm -R "$@"
 
- fi
+  elif [ -x /sbin/apk ]; then
+      /sbin/apk del "$@"
+  fi
 }
 
 remove_packages()
@@ -1377,6 +1381,10 @@ check_linux_update()
   elif [ -x /usr/bin/pacman ]; then
     header "Updating Linux via pacman"
     pacman --noconfirm -Syu
+
+  elif [ -x /sbin/apk ]; then
+    header "Updating Linux via apk"
+    /sbin/apk update
 
   else
     log_error "No packet manager to update Linux"
