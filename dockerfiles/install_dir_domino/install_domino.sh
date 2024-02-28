@@ -863,7 +863,6 @@ install_startscript()
 
 }
 
-
 install_one_custom_add_on()
 {
   local ALL_FILES=
@@ -883,16 +882,11 @@ install_one_custom_add_on()
 
   download_tar_with_hash "$DownloadFrom" "$1"
 
-  # Install Domino binary directory files
-  ALL_FILES=$(find domino-bin/ -type f -printf "%p\n")
+  install_files_from_dir "domino-bin" "$Notes_ExecDirectory" "$DOMINO_USER" "$DOMINO_GROUP" 755 755
+  install_files_from_dir "domino-data" "$DOMINO_DATA_PATH" "$DOMINO_USER" "$DOMINO_GROUP" 600 600
+  install_files_from_dir linux-bin /usr/bin root root 755 755
 
-  for CURRENT_FILE in $ALL_FILES; do
-    echo "Installing: [$CURRENT_FILE]"
-    install_binary "$CURRENT_FILE"
-  done
-
-  install_files_from_dir "domino-data" "$DOMINO_DATA_PATH" "$DOMINO_USER" "$DOMINO_GROUP" 600
-  install_files_from_dir linux-bin /usr/bin root root 755
+  create_servertask_links "servertasks.txt"
 
   # Runnig custom install script
   if [ -x "install.sh" ]; then

@@ -897,13 +897,46 @@ install_files_from_dir()
   local CURRENT_TARGET_DIR=
   local TARGET_FILE=
 
-  find "$SOURCE_DIR/" -type f | while read CURRENT_FILE; do
+  if [ -z "$SOURCE_DIR" ]; then
+    return 0
+  fi
+
+  if [ -z "$TARGET_DIR" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$SOURCE_DIR" ]; then
+    return 0
+  fi
+
+  find "$SOURCE_DIR/" -type f -printf "%P\n" | while read CURRENT_FILE; do
 
     TARGET_FILE="$TARGET_DIR/$CURRENT_FILE"
     CURRENT_TARGET_DIR="$(dirname "$TARGET_FILE")"
 
     create_directory "$CURRENT_TARGET_DIR" "$OWNER" "$GROUP" "$DIRPERMS"
+    echo "Installing file: [$SOURCE_DIR/$CURRENT_FILE] -> [$TARGET_FILE]"
     install_file "$SOURCE_DIR/$CURRENT_FILE" "$TARGET_FILE" "$OWNER" "$GROUP" "$PERMS"
+  done
+}
+
+create_servertask_links()
+{
+  local TASKNAME=
+
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 0
+  fi
+
+  cat "$1" | while read TASKNAME; do
+    if [ ! -e "$LOTUS/bin/$TASKNAME" ]; then
+      echo "Creating link [$LOTUS/bin/tools/startup] -> [$LOTUS/bin/$TASKNAME]"
+      ln -s "$LOTUS/bin/tools/startup" "$LOTUS/bin/$TASKNAME"
+    fi
   done
 }
 
