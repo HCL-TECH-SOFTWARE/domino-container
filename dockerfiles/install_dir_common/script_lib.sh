@@ -821,32 +821,12 @@ secure_move_file()
   fi
 }
 
-install_files_from_dir()
-{
-  local SOURCE_DIR=$1
-  local TARGET_DIR=$2
-  local OWNER=$3
-  local GROUP=$4
-  local PERMS=$5
-
-  local ALL_FILES=
-  local CURRENT_FILE=
-  local TARGET_FILE=
-
-  ALL_FILES=$(find "$SOURCE_DIR/" -type f -printf "%p\n")
-
-  for CURRENT_FILE in $ALL_FILES; do
-    TARGET_FILE=$TARGET_DIR/$(basename "$CURRENT_FILE")
-    install_file "$CURRENT_FILE" "$TARGET_FILE" "$OWNER" "$GROUP" "$PERMS"
-  done
-}
-
 create_directory()
 {
-  TARGET_FILE=$1
-  OWNER=$2
-  GROUP=$3
-  PERMS=$4
+  local TARGET_FILE=$1
+  local OWNER=$2
+  local GROUP=$3
+  local PERMS=$4
 
   if [ -z "$TARGET_FILE" ]; then
     return 0
@@ -902,6 +882,29 @@ remove_file()
 
   rm -f "$1"
   return 0
+}
+
+install_files_from_dir()
+{
+  local SOURCE_DIR=$1
+  local TARGET_DIR=$2
+  local OWNER=$3
+  local GROUP=$4
+  local PERMS=$5
+  local DIRPERMS=$6
+
+  local CURRENT_FILE=
+  local CURRENT_TARGET_DIR=
+  local TARGET_FILE=
+
+  find "$SOURCE_DIR/" -type f | while read CURRENT_FILE; do
+
+    TARGET_FILE="$TARGET_DIR/$CURRENT_FILE"
+    CURRENT_TARGET_DIR="$(dirname "$TARGET_FILE")"
+
+    create_directory "$CURRENT_TARGET_DIR" "$OWNER" "$GROUP" "$DIRPERMS"
+    install_file "$SOURCE_DIR/$CURRENT_FILE" "$TARGET_FILE" "$OWNER" "$GROUP" "$PERMS"
+  done
 }
 
 get_notes_ini_var()
