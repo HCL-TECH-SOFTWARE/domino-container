@@ -73,4 +73,6 @@ nomad|1.0.10-14.0|nomad-server-1.0.10-for-domino-14.0.0-linux.tgz|-|79290c56ddaa
 nomad|1.0.10IF1-14.0|nomad-server-1.0.10-1-for-domino-14.0.0-linux.tgz|-|3fee60c97018bb156ed4ff72ab36d11a4a9edbe51ec36bb5b698f117b325afd1
 domrestapi|1.0.8-12|Domino_REST_API_V1.0.8_Installer.tar.gz|-|d190aefaa4b957749a41d62e7b2d18ccb82f56ccac351a82dfce93a5d7dd86c4
 domrestapi|1.0.9-12|Domino_REST_API_V1.0.9_R12_Installer.tar.gz|-|c90c68d577351834af0864ac0a0c79be213f4bcc3f18059b2714930e44b1bcdb
+domrestapi|1.0.10-12|Domino_REST_API_V1.0.10_R12_Installer.tar.gz|-|9401c0262360c5ed7ece092d60ee06550df24e3e88b85a179442b4263003d123
 domrestapi|1.0.9-14|Domino_REST_API_V1.0.9_R14_Installer.tar.gz|-|aeab76536aa0109f397f5883378c7de9f802fd624c624431e723d73507b51b96
+domrestapi|1.0.10-14|Domino_REST_API_V1.0.10_R14_Installer.tar.gz|-|33178942c9b2f5a21553f0304f6939f39a1b17982512182f5fb33d1349676ff8
