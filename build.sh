@@ -2409,8 +2409,15 @@ select_software()
 
     clear
     echo
-    echo "HCL Domino Container Community Image"
-    echo "------------------------------------"
+
+    if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+      echo "HCL Domino on Linux Installer"
+      echo "-----------------------------"
+    else
+      echo "HCL Domino Container Community Image"
+      echo "------------------------------------"
+    fi
+
     echo
     print_select "D" "HCL Domino"     "$D" "$DOMINO_VERSION"
 
@@ -2427,15 +2434,22 @@ select_software()
     print_select "P" "Domino Leap"    "$P" "$LEAP_VERSION"
 
     echo
-    print_select "I" "Test created image" "$I"
-    echo
+    if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
+      print_select "I" "Test created image" "$I"
+      echo
+    fi
+
     print_select "W" "Write selection"
     print_select "E" "Edit selection"
     print_select "C" "Configuration"
     print_select "H" "Help"
     echo
-    echo " Base Image: $LINUX_NAME"
-    echo
+
+    if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
+      echo " Base Image: $LINUX_NAME"
+      echo
+    fi
+
     read -n1 -p " Select software & Options,  [B] to build,  [Q] to cancel? " SELECTED;
 
     case $(echo "$SELECTED" | awk '{print tolower($0)}') in
@@ -2606,6 +2620,21 @@ build_menu()
 }
 
 
+copy_software_txt()
+{
+  if [ -z "$SOFTWARE_DIR" ]; then
+    SOFTWARE_DIR=/local/software
+  fi
+
+  if [ ! -e "$SOFTWARE_DIR/software/current_version.txt" ]; then
+    cp "$SCRIPT_DIR/software/current_version.txt" "$SOFTWARE_DIR"
+  fi
+
+  if [ ! -e "$SOFTWARE_DIR/software/software.txt" ]; then
+    cp "$SCRIPT_DIR/software/software.txt" "$SOFTWARE_DIR"
+  fi
+}
+
 
 install_domino_native()
 {
@@ -2617,8 +2646,10 @@ install_domino_native()
   mkdir -p "$INSTALL_TMP_DIR"
   mkdir -p "$DOMDOCK_LOG_DIR"
 
-  cp dockerfiles/install_dir_domino/* "$INSTALL_TMP_DIR"
-  cp dockerfiles/install_dir_common/* "$INSTALL_TMP_DIR"
+  # Copy install files
+  cp $SCRIPT_DIR/dockerfiles/install_dir_domino/* "$INSTALL_TMP_DIR"
+  cp $SCRIPT_DIR/dockerfiles/install_dir_common/* "$INSTALL_TMP_DIR"
+
   cd "$INSTALL_TMP_DIR"
 
   # Export variables
@@ -2748,6 +2779,7 @@ if [ "$1" = "save" ]; then
 
   if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
     CONTAINER_CMD=echo "NATIVE-INSTALL: "
+    copy_software_txt
   else
     check_container_environment
   fi
