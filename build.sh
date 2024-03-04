@@ -163,6 +163,12 @@ check_container_environment()
   CONTAINER_ENV_NAME=
   CONTAINER_RUNTIME_VERSION=
 
+  # No container environment required for native installs
+  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+    CONTAINER_CMD=NATIVE-INSTALL
+    return 0
+  fi
+
   detect_container_environment
 
   if [ "$CONTAINER_CMD" = "docker" ]; then
@@ -2775,14 +2781,7 @@ if [ "$1" = "save" ]; then
   fi
 
   # get and check container environment (usually initialized after getting all the options)
-
-
-  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
-    CONTAINER_CMD=echo "NATIVE-INSTALL: "
-    copy_software_txt
-  else
-    check_container_environment
-  fi
+  check_container_environment
 
   header "Exporting $2 -> $3 - This takes some time ..."
   $CONTAINER_CMD save "$2" | gzip > "$3"
@@ -3193,6 +3192,13 @@ for a in "$@"; do
       ;;
   esac
 done
+
+
+# Copy software.txt ..
+if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+  copy_software_txt
+fi
+
 
 check_timezone
 check_container_environment
