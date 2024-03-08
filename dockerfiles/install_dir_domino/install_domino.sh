@@ -883,7 +883,7 @@ install_one_custom_add_on()
   download_tar_with_hash "$DownloadFrom" "$1"
 
   install_files_from_dir "domino-bin" "$Notes_ExecDirectory" "$DOMINO_USER" "$DOMINO_GROUP" 755 755
-  install_files_from_dir "domino-data" "$DOMINO_DATA_PATH" "$DOMINO_USER" "$DOMINO_GROUP" 600 600
+  install_files_from_dir "domino-data" "$DOMINO_DATA_PATH" "$DOMINO_USER" "$DOMINO_GROUP" 600 700
   install_files_from_dir linux-bin /usr/bin root root 755 755
 
   create_servertask_links "servertasks.txt"

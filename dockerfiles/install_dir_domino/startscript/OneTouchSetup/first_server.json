@@ -53,6 +53,7 @@
       "NSF_BUFFER_POOL_SIZE_MB": "256",
       "FT_FLY_INDEX_OFF": "1",
       "UPDATE_FULLTEXT_THREAD": "1",
+      "NOMAD_WEB_HOST": "{{ SERVERSETUP_NETWORK_HOSTNAME }}",
       "FTG_USE_SYS_MEMORY": "1"
     },
 
@@ -60,7 +61,35 @@
       "ACL": {
         "prohibitAnonymousAccess": true,
         "addLocalDomainAdmins": true
+      },
+
+      "TLSSetup": {
+        "method": "dominoMicroCA",
+        "CAKeyType": "ES384",
+        "orgName": "MicroCA Certificate",
+        "TLSKeyType": "ES256",
+        "certExpirationDays": 365
       }
+    }
+  },
+
+  "IDVault": {
+    "name": "O={{ SERVERSETUP_ORG_ORGNAME }}_vault",
+    "description": "{{ SERVERSETUP_ORG_ORGNAME }} Vault",
+    "IDFile": "vault.id",
+    "IDPassword": "{{ SERVERSETUP_ORG_CERTIFIERPASSWORD }}",
+    "path": "IBM_ID_VAULT/{{ SERVERSETUP_ORG_ORGNAME }}_vault.nsf",
+    "passwordReset": {
+      "helpText": "Check with your Domino admin to reset your password!"
+    },
+
+    "securitySettingsPolicy": {
+      "name": "{{ SERVERSETUP_ORG_ORGNAME }} Vault Security Settings Policy",
+      "description": "{{ SERVERSETUP_ORG_ORGNAME }} Vault Security Settings"
+    },
+
+    "masterPolicy": {
+      "description": "{{ SERVERSETUP_ORG_ORGNAME }} Vault Master Policy Description"
     }
   },
 
@@ -116,8 +145,8 @@
               "FREnbld": "1",
               "FltRcvryNot": "LocalDomainAdmins",
 
-              "ServerBuildNumber": "12.0",
-              "MajVer": 12,
+              "ServerBuildNumber": "14.0",
+              "MajVer": 14,
               "SSLCipherList": [
                 "C030",
                 "9F",
