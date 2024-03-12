@@ -1299,6 +1299,15 @@ check_build_options
 # Now export the lib path just in case for Domino to run
 export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
 
+# If configured save Domino data directory to a compressed file
+
+if [ -n "$DOMINO_INSTALL_DATA_TAR" ]; then
+  header "Saving install data: $DOMINO_DATA_PATH -> [$DOMINO_INSTALL_DATA_TAR]"
+  cd $DOMINO_DATA_PATH
+  remove_file "$DOMINO_INSTALL_DATA_TAR"
+  tar -czf "$DOMINO_INSTALL_DATA_TAR" .
+fi
+
 # If configured, move data directory to a compressed tar file
 
 if [ "$SkipDominoMoveInstallData" = "yes" ]; then

@@ -2653,8 +2653,8 @@ install_domino_native()
   mkdir -p "$DOMDOCK_LOG_DIR"
 
   # Copy install files
-  cp $SCRIPT_DIR/dockerfiles/install_dir_domino/* "$INSTALL_TMP_DIR"
-  cp $SCRIPT_DIR/dockerfiles/install_dir_common/* "$INSTALL_TMP_DIR"
+  cp -r $SCRIPT_DIR/dockerfiles/install_dir_domino/* "$INSTALL_TMP_DIR"
+  cp -r $SCRIPT_DIR/dockerfiles/install_dir_common/* "$INSTALL_TMP_DIR"
 
   cd "$INSTALL_TMP_DIR"
 
@@ -2676,6 +2676,7 @@ install_domino_native()
   export DominoResponseFile
   export BUILD_SCRIPT_OPTIONS
   export INSTALL_DOMINO_NATIVE
+  export DOMINO_INSTALL_DATA_TAR
 
   export SkipDominoMoveInstallData=yes
   export DOMDOCK_LOG_DIR=/tmp
