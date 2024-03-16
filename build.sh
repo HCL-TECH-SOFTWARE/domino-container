@@ -681,12 +681,12 @@ check_from_image()
       ;;
 
     alma)
-      LINUX_NAME="Alma Linux"
+      LINUX_NAME="Alma Linux 9"
       BASE_IMAGE=almalinux:9
       ;;
 
     alma8)
-      LINUX_NAME="Alma Linux"
+      LINUX_NAME="Alma Linux 8"
       BASE_IMAGE=almalinux:8
       ;;
 
@@ -701,12 +701,12 @@ check_from_image()
       ;;
 
     photon)
-      LINUX_NAME="VMware Photon OS"
-      BASE_IMAGE=docker.io/photon
+      LINUX_NAME="VMware Photon OS 5"
+      BASE_IMAGE=docker.io/photon:5.0
       ;;
 
     photon5)
-      LINUX_NAME="VMware Photon OS"
+      LINUX_NAME="VMware Photon OS 5"
       BASE_IMAGE=docker.io/photon:5.0
       ;;
 
@@ -737,7 +737,7 @@ check_from_image()
 
     ubuntu)
       LINUX_NAME="Ubuntu 22.04 LTS"
-      BASE_IMAGE=ubuntu
+      BASE_IMAGE=ubuntu:jammy
       ;;
 
     ubuntu22)
@@ -750,9 +750,9 @@ check_from_image()
       BASE_IMAGE=opensuse/leap
       ;;
 
-    leap15.4)
-      LINUX_NAME="SUSE Leap 15.4"
-      BASE_IMAGE=opensuse/leap:15.4
+    leap15.6)
+      LINUX_NAME="SUSE Leap 15.6"
+      BASE_IMAGE=opensuse/leap:15.6
       ;;
 
     bci)
@@ -760,9 +760,9 @@ check_from_image()
       BASE_IMAGE=registry.suse.com/bci/bci-base
       ;;
 
-    bci15.4)
-      LINUX_NAME="SUSE Enterprise 15.4"
-      BASE_IMAGE=registry.suse.com/bci/bci-base:15.4
+    bci15.6)
+      LINUX_NAME="SUSE Enterprise 15.6"
+      BASE_IMAGE=registry.suse.com/bci/bci-base:15.6
       ;;
 
     archlinux)
@@ -1803,7 +1803,7 @@ check_all_software()
 
   # if software file isn't found check standard location (check might lead to the same directory if standard location already)
   if [ ! -e "$SOFTWARE_FILE" ]; then
-    SOFTWARE_FILE=$PWD/software/$SOFTWARE_FILE_NAME
+    SOFTWARE_FILE=$SCRIPT_DIR/software/$SOFTWARE_FILE_NAME
   fi
 
   STARTSCRIPT_GIT_URL=https://github.com/nashcom/domino-startscript
@@ -2764,7 +2764,7 @@ VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
 # If version file isn't found check standard location (check might lead to the same directory if standard location already)
 if [ ! -e "$VERSION_FILE" ]; then
-  VERSION_FILE=$PWD/software/$VERSION_FILE_NAME
+  VERSION_FILE=$SCRIPT_DIR/software/$VERSION_FILE_NAME
 fi
 
 # Invoke menu if no parameters are specified or a menu file is specified
@@ -3217,7 +3217,7 @@ echo "[Running in $CONTAINER_CMD configuration]"
 # In case software directory is not set and the well know location is filled with software
 
 if [ -z "$SOFTWARE_DIR" ]; then
-  SOFTWARE_DIR=$PWD/software
+  SOFTWARE_DIR=$SCRIPT_DIR/software
 fi
 
 if [ -z "$DOWNLOAD_FROM" ]; then
@@ -3339,7 +3339,7 @@ if [ -z "$DOWNLOAD_FROM" ]; then
   SOFTWARE_USE_NGINX=1
 
   if [ -z "$SOFTWARE_DIR" ]; then
-    SOFTWARE_DIR=$PWD/software
+    SOFTWARE_DIR=$SCRIPT_DIR/software
   fi
 fi
 
