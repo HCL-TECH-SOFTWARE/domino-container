@@ -278,6 +278,8 @@ usage()
   echo "-imagetag=<img>  defines the target image tag"
   echo "-save=<img>      exports the image after build. e.g. -save=domino-container.tgz"
   echo "-tz=<timezone>   explictly set container timezone during build. by default Linux TZ is used"
+  echo "-locale=<locale> specify Linux locale to install (e.g. de_DE.UTF-8)"
+  echo "-lang=<lang>     specify Linux glibc language pack to install (e.g. de,it,fr). Multiple languages separated by comma"
   echo "-pull            always try to pull a newer base image version"
   echo "-openssl         adds OpenSSL to Domino image"
   echo "-borg            adds borg client and Domino Borg Backup integration to image"
@@ -369,6 +371,7 @@ dump_config()
   echo "EXPOSED_PORTS        : [$EXPOSED_PORTS]"
   echo "LinuxYumUpdate       : [$LinuxYumUpdate]"
   echo "DOMINO_LANG          : [$DOMINO_LANG]"
+  echo "LINUX_LANG           : [$LINUX_LANG]"
   echo "NAMESPACE            : [$CONTAINER_NAMESPACE]"
   echo "K8S_RUNAS_USER       : [$K8S_RUNAS_USER_SUPPORT]"
   echo "SPECIAL_CURL_ARGS    : [$SPECIAL_CURL_ARGS]"
@@ -481,6 +484,15 @@ nginx_start()
   if [ -z "$SOFTWARE_REPO_IP" ]; then
     echo "No specific IP address using host address"
     SOFTWARE_REPO_IP=$(hostname --all-ip-addresses | cut -f1 -d" "):$SOFTWARE_PORT
+  fi
+
+  # Ignore proxy for local repo IP
+  if [ -n "$SOFTWARE_REPO_IP" ]; then
+    if [ -z "$SPECIAL_CURL_ARGS" ]; then
+      SPECIAL_CURL_ARGS="--noproxy $SOFTWARE_REPO_IP"
+    else
+      SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS --noproxy $SOFTWARE_REPO_IP"
+    fi
   fi
 
   DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
@@ -994,6 +1006,7 @@ build_domino()
     --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
     --build-arg CUSTOM_ADD_ONS="$CUSTOM_ADD_ONS" \
     --build-arg DOMINO_LANG="$DOMINO_LANG" \
+    --build-arg LINUX_LANG="$LINUX_LANG" \
     --build-arg K8S_RUNAS_USER_SUPPORT="$K8S_RUNAS_USER_SUPPORT" \
     --build-arg EXPOSED_PORTS="$EXPOSED_PORTS" \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" \
@@ -2673,6 +2686,7 @@ install_domino_native()
   export CAPI_VERSION
   export CUSTOM_ADD_ONS
   export DOMINO_LANG
+  export LINUX_LANG
   export DominoResponseFile
   export BUILD_SCRIPT_OPTIONS
   export INSTALL_DOMINO_NATIVE
@@ -2927,6 +2941,15 @@ for a in "$@"; do
     -tz=*)
       DOCKER_TZ=$(echo "$a" | cut -f2 -d= -s)
       ;;
+
+    -locale=*)
+      DOMINO_LANG=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -lang=*)
+      LINUX_LANG=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
 
     -pull)
       DOCKER_PULL_OPTION="--pull" 

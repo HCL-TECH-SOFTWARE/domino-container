@@ -22,6 +22,7 @@ ARG DominoResponseFile=
 ARG LocalInstallDir=/tmp/install
 ARG DominoUserID=
 ARG DOMINO_LANG=
+ARG LINUX_LANG=
 ARG DOCKER_TZ=
 ARG OPENSSL_INSTALL=
 ARG BORG_INSTALL=

@@ -104,13 +104,13 @@ install_linux_packages_hcl()
 yum_glibc_lang_update()
 {
 
-  local INSTALL_LOCALE=$(echo $DOMINO_LANG|cut -f1 -d"_")
-
-  if [ -z "$INSTALL_LOCALE" ]; then
-    return 0
-  fi
+  local INSTALL_LANG=$(echo $DOMINO_LANG|cut -f1 -d"_")
 
   if [ -e /etc/photon-release ]; then
+
+    if [ -z "$INSTALL_LANG" ]; then
+      return 0
+    fi
 
     echo "Installing locale [$DOMINO_LANG] on Photon OS"
     install_package glibc-i18n
@@ -126,7 +126,23 @@ yum_glibc_lang_update()
     return 0
   fi
 
-  install_package glibc-langpack-$INSTALL_LOCALE
+  if [ -n "$INSTALL_LANG" ]; then
+    install_package glibc-langpack-$INSTALL_LANG
+  fi
+
+  if [ "$LINUX_LANG" = "all" ]; then
+
+    echo "Installing the huge all packs glibc package"
+    install_package glibc-all-langpacks
+
+  elif [ -n "$LINUX_LANG" ]; then
+
+    echo "Installing language packs:  [$LINUX_LANG]"
+    for INSTALL_LANG in $(echo "$LINUX_LANG" | tr ',' '\n')
+    do
+      install_package glibc-langpack-$INSTALL_LANG
+    done
+  fi
 
   return 0
 }
