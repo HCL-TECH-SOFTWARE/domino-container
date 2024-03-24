@@ -2622,6 +2622,9 @@ select_software()
 
 build_menu()
 {
+  # Ensure to always read from terminal even stdin was redirected
+  exec < /dev/tty
+
   select_software
   clear
   echo
@@ -2949,7 +2952,6 @@ for a in "$@"; do
     -lang=*)
       LINUX_LANG=$(echo "$a" | cut -f2 -d= -s)
       ;;
-
 
     -pull)
       DOCKER_PULL_OPTION="--pull" 
