@@ -2717,8 +2717,12 @@ install_domino_native()
     log "Getting software from: $DownloadFrom"
   fi
 
-  #$(pwd)/install_linux.sh
+  $(pwd)/install_linux.sh
   $(pwd)/install_domino.sh
+
+  # cleanup
+  cd /
+  rm -rf "$INSTALL_TMP_DIR"
 }
 
 
