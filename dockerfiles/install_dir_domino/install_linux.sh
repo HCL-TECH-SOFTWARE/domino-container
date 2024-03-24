@@ -44,7 +44,7 @@ install_linux_packages()
     install_package gdb
   else
     install_package gdb-minimal
-    if [ ! -e /usr/bin/gdb.minimal ]; then
+    if [ ! -e /usr/bin/gdb ]; then
       ln -s /usr/bin/gdb.minimal /usr/bin/gdb
     fi
   fi

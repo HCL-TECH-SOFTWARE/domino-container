@@ -996,7 +996,7 @@ check_build_options()
   return 0
 }
 
-set_security_limits()
+set_security_limitsOld()
 {
   if [ "$FIRST_TIME_SETUP" = "1" ]; then
     # Set security limits for pam modules (su needs it)
@@ -1008,6 +1008,51 @@ set_security_limits()
     echo >> /etc/security/limits.conf
   fi
 }
+
+
+set_security_limits()
+{
+  header "Set security limits"
+
+  local REQ_NOFILES_SOFT=80000
+  local REQ_NOFILES_HARD=80000
+
+  local SET_SOFT=
+  local SET_HARD=
+  local UPD=FALSE
+
+  NOFILES_SOFT=$(su - $DOMINO_USER -c ulimit' -n')
+  NOFILES_HARD=$(su - $DOMINO_USER -c ulimit' -Hn')
+
+  if [ "$NOFILES_SOFT" -ne "$REQ_NOFILES_SOFT" ]; then
+    SET_SOFT=$REQ_NOFILES_SOFT
+    UPD=TRUE
+  fi
+
+  if [ "$NOFILES_HARD" -ne "$REQ_NOFILES_HARD" ]; then
+    SET_HARD=$REQ_NOFILES_HARD
+    UPD=TRUE
+  fi
+
+  if [ "$UPD" = "FALSE" ]; then
+    return 0
+  fi
+
+  echo >> /etc/security/limits.conf
+  echo "# -- Domino configuation begin --" >> /etc/security/limits.conf
+
+  if [ -n "$SET_HARD" ]; then
+    echo "$DOMINO_USER  hard    nofile  $SET_HARD" >> /etc/security/limits.conf
+  fi
+
+  if [ -n "$SET_SOFT" ]; then
+    echo "$DOMINO_USER  soft    nofile  $SET_SOFT" >> /etc/security/limits.conf
+  fi
+
+  echo "# -- Domino configuation end --" >> /etc/security/limits.conf
+  echo >> /etc/security/limits.conf
+}
+
 
 # --- Main Install Logic ---
 
@@ -1223,7 +1268,9 @@ create_startup_link dbmt
 install_res_links
 
 # set security limits late in the installation process to avoid conflicts with limited resources available in some container environments like Podman when switching users
-set_security_limits
+if [ "$FIRST_TIME_SETUP" = "1" ]; then
+  set_security_limits
+fi
 
 # Ensure permissons are set correctly for data directory
 chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
