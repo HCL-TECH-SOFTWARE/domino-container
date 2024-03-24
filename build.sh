@@ -19,7 +19,10 @@ SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 # (Default) NGINX is used hosting software from the local "software" directory.
 
 # Default: Update Linux base image while building the image
-LinuxYumUpdate=yes
+
+if [ -z "LinuxYumUpdate" ]; then
+  LinuxYumUpdate=yes
+fi
 
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
