@@ -2694,6 +2694,7 @@ install_domino_native()
   export BUILD_SCRIPT_OPTIONS
   export INSTALL_DOMINO_NATIVE
   export DOMINO_INSTALL_DATA_TAR
+  export LinuxYumUpdate
 
   export SkipDominoMoveInstallData=yes
   export DOMDOCK_LOG_DIR=/tmp
