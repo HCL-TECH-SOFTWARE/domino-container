@@ -25,7 +25,7 @@ Once installed the build.sh script automatically detects the `domdownload` scrip
 This new option leverages the download API provided by MHS.
 
 
-# Manual download from MY HCLSoftware Portal
+# Manual download from My HCLSoftware Portal
 
 1. Log into the [My HCLSoftware Portal](https://my.hcltechsw.com/) with your account
 2. Copy the download URL with a right click action in your browser

@@ -1,4 +1,4 @@
-#!/bin/bash
+
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2023 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
@@ -809,6 +809,7 @@ remove_perl()
   fi
 
   header "Uninstalling perl"
+  remove_package perl
   remove_package 'perl-*'
 }
 
@@ -1281,10 +1282,14 @@ if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
   # If configured save Domino data directory to a compressed file
 
   if [ -n "$DOMINO_INSTALL_DATA_TAR" ]; then
-    header "Saving install data: $DOMINO_DATA_PATH -> [$DOMINO_INSTALL_DATA_TAR]"
-    cd $DOMINO_DATA_PATH
-    remove_file "$DOMINO_INSTALL_DATA_TAR"
-    tar -czf "$DOMINO_INSTALL_DATA_TAR" .
+
+    if [ -e "$DOMINO_INSTALL_DATA_TAR" ]; then
+      header "Skipping saving install data because it already exists -> [$DOMINO_INSTALL_DATA_TAR]"
+    else
+      header "Saving install data: $DOMINO_DATA_PATH -> [$DOMINO_INSTALL_DATA_TAR]"
+      cd $DOMINO_DATA_PATH
+      tar -czf "$DOMINO_INSTALL_DATA_TAR" .
+    fi
   fi
 
   header "Successfully completed native installation!"

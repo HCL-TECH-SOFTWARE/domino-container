@@ -151,6 +151,7 @@ int main (int argc, char *argv[])
         return error;
     }
 
+    /* LATER: Enhance logic for argument processing */
     if (argc <= 1)
     {
         AddInFormatError (szBuild, 1);
@@ -160,9 +161,12 @@ int main (int argc, char *argv[])
 
     if ('=' == *argv[1])
     {
-        /* Handled by Domino */
+        AddInFormatError (szBuild, 1);
+        printf ("DominoVersion=%s\n", szBuild);
+	goto Done;
     }
-    else if (0 == strcmp (argv[1], "-intl"))
+
+    if (0 == strcmp (argv[1], "-intl"))
     {
         DumpLangInfoAll ();
         DumpLangOsLangStuff();

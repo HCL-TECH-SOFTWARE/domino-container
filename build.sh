@@ -3335,6 +3335,11 @@ if [ "$PROD_NAME" = "domino" ] && [ -z "$DominoResponseFile" ]; then
   esac
 fi
 
+# The HCL image always uses the full Domino 14.0 install including Verse, Nomad and OnTime
+if [ "$DOCKER_FILE" = "dockerfile_hcl" ]; then
+  DominoResponseFile=domino14_full_install.properties
+fi
+
 echo
 echo "Product to install: $PROD_NAME $PROD_VER $PROD_FP $PROD_HF"
 echo
