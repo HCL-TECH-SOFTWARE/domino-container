@@ -158,7 +158,11 @@ int main (int argc, char *argv[])
 	goto Done;
     }
 
-    if (0 == strcmp (argv[1], "-intl"))
+    if ('=' == *argv[1])
+    {
+        /* Handled by Domino */
+    }
+    else if (0 == strcmp (argv[1], "-intl"))
     {
         DumpLangInfoAll ();
         DumpLangOsLangStuff();
