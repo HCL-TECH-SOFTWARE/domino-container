@@ -81,7 +81,7 @@ Before you install Docker CE or Podman, please check if your platform provides t
 - SUSE SLES / Leap 15.3+ with Docker 20.x or Podman 3.3.0+
 - Current Rancher Desktop (Docker environment)
 - Current version of Docker Desktop with WSL2 sub-system to build the image
-- Current version of Docker Desktop on Mac
+- Current version of Docker Desktop on MacOS
 
 ### Run-time environments
 
@@ -109,10 +109,9 @@ For example build based on **Redhat UBI** : `./build.sh domino -from=ubi`
 
 
 | Short Name    | Name                            | Image Name                          | glibc Ver |
-| ------------- | ------------------------------- | ----------------------------------- | ----------|
+| :------------ | :------------------------------ | :---------------------------------- | :-------- |
 | centos        | CentOS Stream 9                 | quay.io/centos/centos:stream9       | 2.34      |
 | ubi           | Red Hat Enterprise Linux 9.x    | registry.access.redhat.com/ubi9     | 2.34      |
-| photon        | VMware Photon OS/Linux          | photon                              | 2.36      |
 | rocky         | Rocky Linux 9.x                 | rockylinux/rockylinux:9             | 2.34      |
 | alma          | AlmaLinux 9.x                   | almalinux:9                         | 2.34      |
 | amazon        | Amazon Linux 2023               | amazonlinux                         | 2.34      |
@@ -121,6 +120,7 @@ For example build based on **Redhat UBI** : `./build.sh domino -from=ubi`
 | debian        | Debian GNU/Linux 12             | debian                              | 2.36      |
 | leap          | openSUSE Leap 15.x              | opensuse/leap:15                    | 2.31 *)   |
 | bci           | SUSE Linux Enterprise Server 15 | registry.suse.com/bci/bci-base:15.5 | 2.31 *)   |
+| photon        | VMware Photon OS/Linux          | photon                              | 2.36      |
 
 
 *) Please note that SUSE currently does not provide any Linux version, supporting glibc 2.34 or higher, which is required to run Domino V14.

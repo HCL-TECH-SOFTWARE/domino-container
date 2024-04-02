@@ -7,6 +7,7 @@
       "title": "{{ SERVERSETUP_SERVER_TITLE }}",
       "password": null,
       "minPasswordLength": 0,
+      "restartServer": true,
       "serverTasks": "replica,router,update,amgr,adminp,http,certmgr"
     },
 
