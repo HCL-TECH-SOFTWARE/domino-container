@@ -1287,8 +1287,21 @@ if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
       header "Skipping saving install data because it already exists -> [$DOMINO_INSTALL_DATA_TAR]"
     else
       header "Saving install data: $DOMINO_DATA_PATH -> [$DOMINO_INSTALL_DATA_TAR]"
-      cd $DOMINO_DATA_PATH
-      tar -czf "$DOMINO_INSTALL_DATA_TAR" .
+
+      DOMINO_INSTALL_DATA_DIR=$(dirname "$DOMINO_INSTALL_DATA_TAR")
+      if [ ! -e "$DOMINO_INSTALL_DATA_DIR" ]; then
+	log_space "Info: Creating directory $DOMINO_INSTALL_DATA_DIR"
+        mkdir -p "$DOMINO_INSTALL_DATA_DIR"
+      fi
+
+      if [ -w "$DOMINO_INSTALL_DATA_DIR" ]; then
+        cd $DOMINO_DATA_PATH
+        tar -czf "$DOMINO_INSTALL_DATA_TAR" .
+      else
+        log_error "Cannot write to: $DOMINO_INSTALL_DATA_DIR"
+	exit 1
+      fi
+
     fi
   fi
 
