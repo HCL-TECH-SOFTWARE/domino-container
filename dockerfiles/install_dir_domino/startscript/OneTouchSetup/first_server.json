@@ -5,10 +5,9 @@
       "name": "{{ SERVERSETUP_SERVER_NAME }}",
       "domainName": "{{ SERVERSETUP_SERVER_DOMAINNAME }}",
       "title": "{{ SERVERSETUP_SERVER_TITLE }}",
+      "serverTasks": "replica,router,update,amgr,adminp,http,certmgr",
       "password": null,
-      "minPasswordLength": 0,
-      "restartServer": true,
-      "serverTasks": "replica,router,update,amgr,adminp,http,certmgr"
+      "minPasswordLength": 0
     },
 
     "network": {

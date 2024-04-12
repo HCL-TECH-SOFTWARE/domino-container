@@ -273,9 +273,13 @@ usage()
   echo "-scan            scans a container image with Trivy for known vulnerabilities (CVEs)"
   echo "-scan=<file>     scans a container with Trivy and writes the result to a file"
   echo "                 file names ending with .json result in a JSON formatted file (CVE count is written to console)"
+  echo "menu             invokes the build menu. the build menu is also invoked when no option is specified"
+  echo "-menu=<file>     uses the specified menu name. Default is no menu file is specfied: default.conf"
   echo
   echo Options
   echo
+  echo "-conf            uses the default.conf file to build an image (see menu for details)"
+  echo "-conf=<file>     uses the specified file to build an image"
   echo "-from=<image>    builds from a specified build image. there are named images like 'ubi' predefined"
   echo "-imagename=<img> defines the target image name"
   echo "-imagetag=<img>  defines the target image tag"
@@ -312,8 +316,8 @@ usage()
   echo
   echo "Examples:"
   echo
-  echo "  $(basename $SCRIPT_NAME) domino 12.0.1 fp1"
-  echo "  $(basename $SCRIPT_NAME) traveler 12.0.1"
+  echo "  $(basename $SCRIPT_NAME) domino 12.0.2 fp4"
+  echo "  $(basename $SCRIPT_NAME) traveler 12.0.2"
   echo
 
   return 0
@@ -375,6 +379,7 @@ dump_config()
   echo "LinuxYumUpdate       : [$LinuxYumUpdate]"
   echo "DOMINO_LANG          : [$DOMINO_LANG]"
   echo "LINUX_LANG           : [$LINUX_LANG]"
+  echo "DOCKER_TZ            : [$DOCKER_TZ]"
   echo "NAMESPACE            : [$CONTAINER_NAMESPACE]"
   echo "K8S_RUNAS_USER       : [$K8S_RUNAS_USER_SUPPORT]"
   echo "SPECIAL_CURL_ARGS    : [$SPECIAL_CURL_ARGS]"
@@ -2251,6 +2256,11 @@ load_conf()
   local BUILD_CONF=
   local LATESTSEL=latest
   local FROM_IMAGE_SELECT=$FROM_IMAGE
+  local DOCKER_TZ_SELECT=$DOCKER_TZ
+  local LINUX_LANG_SELECT=$LINUX_LANG
+  local DOMINO_LANG_SELECT=$DOMINO_LANG
+  local LINUX_PKG_ADD_SELECT=$LINUX_PKG_ADD
+  local CUSTOM_ADD_ONS_SELECT=$CUSTOM_ADD_ONS
 
   if [ -n "$1" ]; then
     BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$1
@@ -2289,9 +2299,12 @@ load_conf()
   if [ "$LATESTSEL" = "$CAPI_VERSION" ];     then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
   if [ "$LATESTSEL" = "$ONTIME_VERSION" ];   then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
 
-  if [ -n "$FROM_IMAGE_SELECT" ]; then
-    FROM_IMAGE=$FROM_IMAGE_SELECT
-  fi
+  if [ -n "$FROM_IMAGE_SELECT" ];     then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
+  if [ -n "$DOCKER_TZ_SELECT" ];      then DOCKER_TZ=$DOCKER_TZ_SELECT; fi
+  if [ -n "$LINUX_LANG_SELECT" ];     then LINUX_LANG=$LINUX_LANG_SELECT; fi
+  if [ -n "$DOMINO_LANG_SELECT" ];    then DOMINO_LANG=$DOMINO_LANG_SELECT; fi
+  if [ -n "$LINUX_PKG_ADD_SELECT" ];  then LINUX_PKG_ADD=$LINUX_PKG_ADD_SELECT; fi
+  if [ -n "$CUSTOM_ADD_ONS_SELECT" ]; then CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS_SELECT; fi
 
   if [ -n "$ONTIME_VERSION" ]; then
      DominoResponseFile=domino14_ontime_install.properties
@@ -2336,7 +2349,12 @@ write_conf()
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
   # Additional parameters only configurable on command line
-  if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"      >> "$BUILD_CONF"; fi
+  if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"         >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_PKG_ADD" ];    then echo "LINUX_PKG_ADD=$LINUX_PKG_ADD"   >> "$BUILD_CONF"; fi
+  if [ -n "$CUSTOM_ADD_ONS" ];   then echo "CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS" >> "$BUILD_CONF"; fi
+  if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"           >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"         >> "$BUILD_CONF"; fi
+  if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"       >> "$BUILD_CONF"; fi
 
   echo
   echo
