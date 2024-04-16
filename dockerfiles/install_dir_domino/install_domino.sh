@@ -1340,6 +1340,10 @@ set_default_notes_ini_variables
 # Separate logic to deploy notes.ini from notes.ini.install if not found
 mv "$DOMINO_DATA_PATH/notes.ini" "$DOMINO_DATA_PATH/notes.ini.install"
 
+# --- Ensure FP/IF data is readable  ---
+
+find "$Notes_ExecDirectory/data1_bck" -type d -exec chmod 755 {} \; 2>/dev/null
+
 # --- Cleanup Routines to reduce image size ---
 
 # Remove Fixpack/Hotfix backup files
