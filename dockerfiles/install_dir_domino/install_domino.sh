@@ -1055,6 +1055,44 @@ set_security_limits()
 }
 
 
+create_notes_user_and_group()
+{
+  local NOTES_UID=1000
+  local NOTES_GID=1000
+  local USER=
+  local GROUP=
+
+  if [ -n "$DominoUserID" ]; then
+    UID=$DominoUserID
+  fi
+
+  # Check if uid or gid is already in use and move existing user
+
+  USER=$(id $NOTES_UID -u -n 2>/dev/null)
+  GROUP=$(id $NOTES_GID -g -n 2>/dev/null)
+
+  if [ "$USER" = "notes" ]; then
+    echo "Info: User 'notes' already exists"
+    return 0
+  fi
+
+  if [ -n "$USER" ]; then
+    echo "Info: Assigning new uid to existing user: $USER"
+    usermod -u 1001 "$USER"
+  fi
+
+  if [ -n "$GROUP" ]; then
+    echo "Info: Assigning new gid to existing group: $GROUP"
+    groupmod -g 1001 "$GROUP"
+  fi
+
+  echo "Creating notes ($NOTES_UID) user and group ($NOTES_GID)"
+
+  groupadd notes -g $NOTES_GID
+  useradd notes -u $NOTES_UID -g $NOTES_GID -m
+}
+
+
 # --- Main Install Logic ---
 
 export DOMINO_USER=notes
@@ -1107,12 +1145,7 @@ fi
 
 if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
-  # Add notes user
-  if [ -z "$DominoUserID" ]; then
-    useradd $DOMINO_USER -U -m
-  else
-    useradd $DOMINO_USER -U -m -u $DominoUserID
-  fi
+  create_notes_user_and_group
 
   # Set user local if configured
   if [ -n "$DOMINO_LANG" ]; then
