@@ -303,6 +303,7 @@ usage()
   echo "-linuxpkg=<pkg>  add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-startscript=x   installs specified start script version from software repository"
   echo "-custom-addon=x  specify a tar file with additional Domino add-on sofware to install format: (https://)file.taz#sha256checksum"
+  echo "-software=<dir>  explicitly specify SOFTWARE_DIR and override cfg file "
   echo
   echo SafeLinx options
   echo
@@ -670,11 +671,11 @@ check_from_image()
   if [ -z "$FROM_IMAGE" ]; then
 
     if [ "$PROD_NAME" = "domino" ]; then
-      FROM_IMAGE=centos9
+      FROM_IMAGE=ubi9-minimal
     elif [ "$PROD_NAME" = "safelinx" ]; then
-      FROM_IMAGE=centos9
+      FROM_IMAGE=ubi9-minimal
     else
-      FROM_IMAGE=centos9
+      FROM_IMAGE=ubi9-minimal
     fi
   fi
 
@@ -685,7 +686,7 @@ check_from_image()
       BASE_IMAGE=quay.io/centos/centos:stream8
       ;;
 
-    centos9)
+    centos|centos9)
       LINUX_NAME="CentOS Stream 9"
       BASE_IMAGE=quay.io/centos/centos:stream9
       ;;

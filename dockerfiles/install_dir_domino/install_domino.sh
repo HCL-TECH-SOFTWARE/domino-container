@@ -1380,6 +1380,7 @@ find "$Notes_ExecDirectory/data1_bck" -type d -exec chmod 755 {} \; 2>/dev/null
 # --- Cleanup Routines to reduce image size ---
 
 # Remove Fixpack/Hotfix backup files
+find $Notes_ExecDirectory -maxdepth 1 -type d -name "140**" -exec rm -rf {} \; 2>/dev/null
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "120**" -exec rm -rf {} \; 2>/dev/null
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "110**" -exec rm -rf {} \; 2>/dev/null
 
@@ -1392,6 +1393,9 @@ remove_directory "$DOMINO_DATA_PATH/domino/html/help"
 
 # Remove Domino 12 and higher uninstaller --> we never uninstall but rebuild from scratch
 remove_directory "$Notes_ExecDirectory/_HCL Domino_installation"
+
+# Remove Traveler uninstaller --> we never uninstall but rebuild from scratch
+remove_directory "$Notes_ExecDirectory/_HCL_Traveler_installation"
 
 # Remove InstallAnywhere uninstaller JVMs (name differs depending on version)
 remove_directory "$Notes_ExecDirectory/IA_jre"
