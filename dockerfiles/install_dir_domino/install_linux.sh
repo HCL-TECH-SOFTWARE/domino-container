@@ -103,47 +103,160 @@ install_linux_packages_hcl()
 }
 
 
-yum_glibc_lang_update()
+glibc_lang_photon()
 {
+  if  [ -z "$LINUX_LANG" ]; then
+    echo "Info: No support for -locale option on Photon OS"
+  fi
+
+  if [ -z "$DOMINO_LANG" ]; then
+    return 0
+  fi
+
+  echo "Installing locale [$DOMINO_LANG] on Photon OS"
+  install_package glibc-i18n
+  echo "$DOMINO_LANG UTF-8" > /etc/locale-gen.conf
+  locale-gen.sh
+  remove_package glibc-i18n
+}
+
+
+glibc_lang_ubuntu()
+{
+  echo "Ubuntu Linux detected"
+
+  install_package locales
 
   local INSTALL_LANG=$(echo $DOMINO_LANG|cut -f1 -d"_")
 
-  if [ -e /etc/photon-release ]; then
-
-    if [ -z "$INSTALL_LANG" ]; then
-      return 0
-    fi
-
-    echo "Installing locale [$DOMINO_LANG] on Photon OS"
-    install_package glibc-i18n
-    echo "$DOMINO_LANG UTF-8" > /etc/locale-gen.conf
-    locale-gen.sh
-    remove_package glibc-i18n
-    return 0
+  if [ -n "$INSTALL_LANG" ]; then
+    echo "Installing language pack: [$LINUX_LANG]"
+    locale-gen $INSTALL_LANG
   fi
 
-  # Only needed for CentOS like platforms -> check if yum is installed
+  if [ -n "$LINUX_LANG" ]; then
 
-  if [ ! -x /usr/bin/yum ]; then
-    return 0
+    echo "Installing language packs: [$LINUX_LANG]"
+    for INSTALL_LANG in $(echo "$LINUX_LANG" | tr ',' '\n')
+    do
+      locale-gen $INSTALL_LANG
+    done
   fi
+
+  update-locale
+}
+
+
+glibc_lang_redhat()
+{
+  local INSTALL_LANG=$(echo $DOMINO_LANG|cut -f1 -d"_")
 
   if [ -n "$INSTALL_LANG" ]; then
+    echo "Installing language pack: [$LINUX_LANG]"
     install_package glibc-langpack-$INSTALL_LANG
   fi
 
-  if [ "$LINUX_LANG" = "all" ]; then
+  if [ -n "$LINUX_LANG" ]; then
 
-    echo "Installing the huge all packs glibc package"
-    install_package glibc-all-langpacks
-
-  elif [ -n "$LINUX_LANG" ]; then
-
-    echo "Installing language packs:  [$LINUX_LANG]"
+    echo "Installing language packs: [$LINUX_LANG]"
     for INSTALL_LANG in $(echo "$LINUX_LANG" | tr ',' '\n')
     do
       install_package glibc-langpack-$INSTALL_LANG
     done
+  fi
+}
+
+
+glibc_lang_all_install()
+{
+  header "Installing the huge all packs glibc package (>200 MB)"
+
+  if [ -x /usr/bin/zypper ]; then
+    install_package glibc-locale
+    return 0
+  fi
+
+  if [ -x /usr/bin/apt-get ]; then
+    install_package locales-all
+    return 0
+  fi
+
+  install_package glibc-all-langpacks
+}
+
+
+glibc_lang_ubi()
+{
+  echo "Redhat Universal base image (UBI) detected"
+  glibc_lang_all_install
+}
+
+
+glibc_lang_update()
+{
+  header "glibc Language Setup"
+
+  echo "DOMINO_LANG: $DOMINO_LANG"
+  echo "LINUX_LANG : $LINUX_LANG"
+  echo
+
+  if [ -z "$DOMINO_LANG" ] && [ -z "$LINUX_LANG" ]; then
+    echo "Info: No locale to install"
+    return 0
+  fi
+
+  # Special handling for VMware Photon OS
+  if [ -e /etc/photon-release ]; then
+    glibc_lang_photon
+    return 0
+  fi
+
+  # If all languages are requests, just do that
+  if [ "$LINUX_LANG" = "all" ]; then
+    glibc_lang_all_install
+    return 0
+  fi
+
+  # Redhat UBI does not provide separate glibc langpacks. Install all locales as a fallback
+  if [ -n "$(grep '^NAME=' /etc/os-release | grep 'Red Hat Enterprise Linux')" ]; then
+    glibc_lang_ubi
+    return 0
+  fi
+
+  # Ubuntu supports generating locales
+  if [ -n "$(grep '^NAME=' /etc/os-release | grep 'Ubuntu')" ]; then
+    glibc_lang_ubuntu
+    return 0
+  fi
+
+  if [ -x /usr/bin/zypper ]; then
+    glibc_lang_all_install
+
+  elif [ -x /usr/bin/dnf ]; then
+    glibc_lang_redhat
+    return 0
+
+  elif [ -x /usr/bin/microdnf ]; then
+    glibc_lang_redhat
+    return 0
+
+  elif [ -x /usr/bin/yum ]; then
+    glibc_lang_redhat
+    return 0
+
+  elif [ -x /usr/bin/apt-get ]; then
+    # For other Debian package manger based platforms use glibc locales-all
+    echo "Info: Debian package manager base platform detected"
+    glibc_lang_all_install
+    return 0
+
+  elif [ -x /usr/bin/pacman ]; then
+    echo "Info: No locale update routine for Arch Linux"
+    return 0
+
+  else
+    echo "Info: No locale update routine for this platform"
+    return 0
   fi
 
   return 0
@@ -204,7 +317,10 @@ else
 
   install_linux_packages
 
-  yum_glibc_lang_update
+  glibc_lang_update
+  header "glibc locales installed"
+  locale -a
+  echo
 
   if [ -n "$BORG_INSTALL" ]; then
     OPENSSL_INSTALL=yes

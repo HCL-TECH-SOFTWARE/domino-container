@@ -7,6 +7,6 @@ capi|14.0
 safelinx|1.4.1
 nomadweb|1.0.11
 nomad|1.0.11
-domrestapi|1.0.11
+domrestapi|1.0.12
 tika|2.9.1
-borg|1.2.7
+borg|1.2.8

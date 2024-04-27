@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.2.1
+# Version 2.3.0
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -27,7 +27,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.2.1
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.0
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -2262,6 +2262,7 @@ load_conf()
   local DOMINO_LANG_SELECT=$DOMINO_LANG
   local LINUX_PKG_ADD_SELECT=$LINUX_PKG_ADD
   local CUSTOM_ADD_ONS_SELECT=$CUSTOM_ADD_ONS
+  local BORG_SELECT=$BORG_INSTALL
 
   if [ -n "$1" ]; then
     BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$1
@@ -2291,6 +2292,7 @@ load_conf()
   get_current_addon_version leap SELECT_LEAP_VERSION
   get_current_addon_version capi SELECT_CAPI_VERSION
   get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
+  get_current_addon_version borg SELECT_BORG
 
   if [ "$LATESTSEL" = "$VERSE_VERSION" ];    then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
   if [ "$LATESTSEL" = "$TRAVELER_VERSION" ]; then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
@@ -2299,6 +2301,7 @@ load_conf()
   if [ "$LATESTSEL" = "$DOMRESTAPI_VER" ];   then DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER; fi
   if [ "$LATESTSEL" = "$CAPI_VERSION" ];     then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
   if [ "$LATESTSEL" = "$ONTIME_VERSION" ];   then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
+  if [ "$LATESTSEL" = "$BORG_INSTALL" ];     then BORG_INSTALL=$SELECT_BORG; fi
 
   if [ -n "$FROM_IMAGE_SELECT" ];     then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
   if [ -n "$DOCKER_TZ_SELECT" ];      then DOCKER_TZ=$DOCKER_TZ_SELECT; fi
@@ -2306,6 +2309,7 @@ load_conf()
   if [ -n "$DOMINO_LANG_SELECT" ];    then DOMINO_LANG=$DOMINO_LANG_SELECT; fi
   if [ -n "$LINUX_PKG_ADD_SELECT" ];  then LINUX_PKG_ADD=$LINUX_PKG_ADD_SELECT; fi
   if [ -n "$CUSTOM_ADD_ONS_SELECT" ]; then CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS_SELECT; fi
+  if [ -n "$BORG_SELECT" ];           then BORG_INSTALL=$BORG_SELECT; fi
 
   if [ -n "$ONTIME_VERSION" ]; then
      DominoResponseFile=domino14_ontime_install.properties
@@ -2346,6 +2350,7 @@ write_conf()
   if [ -n "$LEAP_VERSION" ];     then echo "LEAP_VERSION=$LATESTSEL"     >> "$BUILD_CONF"; fi
   if [ -n "$ONTIME_VERSION" ];   then echo "ONTIME_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
   if [ -n "$DOMLP_LANG" ];       then echo "DOMLP_LANG=$DOMLP_LANG"      >> "$BUILD_CONF"; fi
+  if [ -n "$BORG_INSTALL" ];     then echo "BORG_INSTALL=$LATESTSEL"     >> "$BUILD_CONF"; fi
 
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
@@ -2394,6 +2399,32 @@ edit_conf()
   load_conf
 }
 
+
+display_custom_add-ons()
+{
+  local TXT=
+  local ADD_ON=
+  local DISPLAY_ADD_ONS=
+
+  if [ -z "$CUSTOM_ADD_ONS" ]; then
+    return 0
+  fi
+
+  for ADD_ON in $(echo "$CUSTOM_ADD_ONS" | tr "," "\n" ) ; do
+
+    TXT=$(echo $ADD_ON | cut -f1 -d'#')
+    if [ -z "$DISPLAY_ADD_ONS" ]; then
+      DISPLAY_ADD_ONS="$TXT"
+    else
+      DISPLAY_ADD_ONS="$DISPLAY_ADD_ONS, $TXT"
+    fi
+  done
+
+  echo " Add-Ons   : $DISPLAY_ADD_ONS"
+  echo
+}
+
+
 select_software()
 {
   SELECTED=
@@ -2406,6 +2437,7 @@ select_software()
   local SELECT_CAPI_VERSION=
   local SELECT_DOMRESTAPI_VER=
   local SELECT_DOMLP_LANG=
+  local SELECT_BORG=
 
   local X="X"
   local Z=" "
@@ -2421,6 +2453,7 @@ select_software()
   local A=$Z
   local I=$Z
   local O=$Z
+  local G=$Z
 
   load_conf
 
@@ -2439,6 +2472,7 @@ select_software()
     if [ -n "$CAPI_VERSION" ];     then A=$X; else A=$Z; fi
     if [ -n "$LEAP_VERSION" ];     then P=$X; else P=$Z; fi
     if [ -n "$ONTIME_VERSION" ];   then O=$X; else O=$Z; fi
+    if [ -n "$BORG_INSTALL" ];     then G=$X; else G=$Z; fi
 
     if [ "$AutoTestImage" = "yes" ]; then I=$X; else I=$Z; fi
 
@@ -2473,6 +2507,7 @@ select_software()
     print_select "R" "REST-API"       "$R" "$DOMRESTAPI_VER"
     print_select "A" "C-API SDK"      "$A" "$CAPI_VERSION"
     print_select "P" "Domino Leap"    "$P" "$LEAP_VERSION"
+    print_select "G" "Borg Backup"    "$G" "$BORG_INSTALL"
 
     echo
     if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
@@ -2485,6 +2520,8 @@ select_software()
     print_select "C" "Configuration"
     print_select "H" "Help"
     echo
+
+    display_custom_add-ons
 
     if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
       echo " Base Image: $LINUX_NAME"
@@ -2560,6 +2597,14 @@ select_software()
           CAPI_VERSION=$SELECT_CAPI_VERSION
         else
           CAPI_VERSION=
+        fi
+        ;;
+
+      g)
+        if [ -z "$BORG_INSTALL" ]; then
+          BORG_INSTALL=$SELECT_BORG
+        else
+          BORG_INSTALL=
         fi
         ;;
 
