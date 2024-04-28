@@ -32,7 +32,7 @@ install_linux_packages()
 
   # Special package list for Archlinux
   if [ -x /usr/bin/pacman ]; then
-    install_packages which inetutils vi unzip glibc-locales gdb
+    install_packages which inetutils vi glibc-locales gdb
     return 0
   fi
 

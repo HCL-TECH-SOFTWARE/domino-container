@@ -2396,6 +2396,12 @@ edit_conf()
     return 0
   fi
 
+  # Reset certain variables before reload
+  CUSTOM_ADD_ONS=
+  FROM_IMAGE=
+  BORG_INSTALL=
+  TIKA_INSTALL=
+
   load_conf
 }
 
