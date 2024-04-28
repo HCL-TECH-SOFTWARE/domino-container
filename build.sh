@@ -2263,6 +2263,7 @@ load_conf()
   local LINUX_PKG_ADD_SELECT=$LINUX_PKG_ADD
   local CUSTOM_ADD_ONS_SELECT=$CUSTOM_ADD_ONS
   local BORG_SELECT=$BORG_INSTALL
+  local TIKA_SELECT=$TIKA_INSTALL
 
   if [ -n "$1" ]; then
     BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$1
@@ -2293,6 +2294,7 @@ load_conf()
   get_current_addon_version capi SELECT_CAPI_VERSION
   get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
   get_current_addon_version borg SELECT_BORG
+  get_current_addon_version tika SELECT_TIKA
 
   if [ "$LATESTSEL" = "$VERSE_VERSION" ];    then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
   if [ "$LATESTSEL" = "$TRAVELER_VERSION" ]; then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
@@ -2302,6 +2304,7 @@ load_conf()
   if [ "$LATESTSEL" = "$CAPI_VERSION" ];     then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
   if [ "$LATESTSEL" = "$ONTIME_VERSION" ];   then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
   if [ "$LATESTSEL" = "$BORG_INSTALL" ];     then BORG_INSTALL=$SELECT_BORG; fi
+  if [ "$LATESTSEL" = "$TIKA_INSTALL" ];     then TIKA_INSTALL=$SELECT_TIKA; fi
 
   if [ -n "$FROM_IMAGE_SELECT" ];     then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
   if [ -n "$DOCKER_TZ_SELECT" ];      then DOCKER_TZ=$DOCKER_TZ_SELECT; fi
@@ -2310,6 +2313,7 @@ load_conf()
   if [ -n "$LINUX_PKG_ADD_SELECT" ];  then LINUX_PKG_ADD=$LINUX_PKG_ADD_SELECT; fi
   if [ -n "$CUSTOM_ADD_ONS_SELECT" ]; then CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS_SELECT; fi
   if [ -n "$BORG_SELECT" ];           then BORG_INSTALL=$BORG_SELECT; fi
+  if [ -n "$TIKA_SELECT" ];           then TIKA_INSTALL=$TIKA_SELECT; fi
 
   if [ -n "$ONTIME_VERSION" ]; then
      DominoResponseFile=domino14_ontime_install.properties
@@ -2351,6 +2355,7 @@ write_conf()
   if [ -n "$ONTIME_VERSION" ];   then echo "ONTIME_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
   if [ -n "$DOMLP_LANG" ];       then echo "DOMLP_LANG=$DOMLP_LANG"      >> "$BUILD_CONF"; fi
   if [ -n "$BORG_INSTALL" ];     then echo "BORG_INSTALL=$LATESTSEL"     >> "$BUILD_CONF"; fi
+  if [ -n "$TIKA_INSTALL" ];     then echo "TIKA_INSTALL=$LATESTSEL"     >> "$BUILD_CONF"; fi
 
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
@@ -2426,8 +2431,7 @@ display_custom_add-ons()
     fi
   done
 
-  echo " Add-Ons   : $DISPLAY_ADD_ONS"
-  echo
+  echo " Add-Ons    : $DISPLAY_ADD_ONS"
 }
 
 
@@ -2528,12 +2532,16 @@ select_software()
     echo
 
     display_custom_add-ons
-
-    if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
-      echo " Base Image: $LINUX_NAME"
-      echo
+    if [ -n "$TIKA_INSTALL" ]; then
+      echo " Tika Server: $TIKA_INSTALL"
     fi
 
+    if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
+      echo
+      echo " Base Image : $LINUX_NAME"
+    fi
+
+    echo
     read -n1 -p " Select software & Options,  [B] to build,  [Q] to cancel? " SELECTED;
 
     case $(echo "$SELECTED" | awk '{print tolower($0)}') in
