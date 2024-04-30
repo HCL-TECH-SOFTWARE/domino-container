@@ -1182,13 +1182,21 @@ docker_build()
   fi
 
   if [ -z "$DOCKER_IMAGE_NAME" ]; then
-    DOCKER_IMAGE_NAME="hclcom/$PROD_NAME"
+    if [ -n "$CONTAINER_IMAGE_NAME" ]; then
+      DOCKER_IMAGE_NAME=$CONTAINER_IMAGE_NAME
+    else
+      DOCKER_IMAGE_NAME="hclcom/$PROD_NAME"
+    fi
   fi
 
   DOCKER_IMAGE_VERSION=$PROD_VER$PROD_FP$PROD_HF$PROD_EXT
 
   if [ -z "$DOCKER_IMAGE_TAG" ]; then
-    DOCKER_IMAGE_TAG=$PROD_VER$PROD_FP$PROD_HF$PROD_EXT
+    if [ -n "$CONTAINER_IMAGE_VERSION" ]; then
+      DOCKER_IMAGE_TAG=$CONTAINER_IMAGE_VERSION
+    else
+      DOCKER_IMAGE_TAG=$PROD_VER$PROD_FP$PROD_HF$PROD_EXT
+    fi
   fi
 
   # Set default or custom LATEST tag
@@ -2366,6 +2374,14 @@ write_conf()
   if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"           >> "$BUILD_CONF"; fi
   if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"         >> "$BUILD_CONF"; fi
   if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"       >> "$BUILD_CONF"; fi
+
+  # Parameters only stored in conf file
+  if [ -n "$CONTAINER_MAINTAINER" ];         then echo "CONTAINER_MAINTAINER=$CONTAINER_MAINTAINER"                 >> "$BUILD_CONF"; fi
+  if [ -n "$CONTAINER_VENDOR" ];             then echo "CONTAINER_VENDOR=$CONTAINER_VENDOR"                         >> "$BUILD_CONF"; fi
+  if [ -n "$CONTAINER_DOMINO_NAME" ];        then echo "CONTAINER_DOMINO_NAME=$CONTAINER_DOMINO_NAME"               >> "$BUILD_CONF"; fi
+  if [ -n "$CONTAINER_DOMINO_DESCRIPTION" ]; then echo "CONTAINER_DOMINO_DESCRIPTION=$CONTAINER_DOMINO_DESCRIPTION" >> "$BUILD_CONF"; fi
+  if [ -n "$CONTAINER_IMAGE_VERSION" ];      then echo "CONTAINER_IMAGE_VERSION=$CONTAINER_IMAGE_VERSION"           >> "$BUILD_CONF"; fi
+  if [ -n "$CONTAINER_IMAGE_NAME" ];         then echo "CONTAINER_IMAGE_NAME=$CONTAINER_IMAGE_NAME"                 >> "$BUILD_CONF"; fi
 
   echo
   echo
