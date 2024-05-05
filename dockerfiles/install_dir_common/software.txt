@@ -55,10 +55,8 @@ capi|14.0|CAPIToolkit_1400_Linux.zip|-|02fc99bd6e0233352756fbf217413bac3088a5eb3
 borg|1.2.7|borg-linuxnew64-1.2.7,https://github.com/borgbackup/borg/releases/download/1.2.7/borg-linuxnew64|-|d8d3313ebaf48ba135001b7f230b494259f112e56adf0d5f952af999742e1190
 borg|1.2.8|borg-linuxnew64-1.2.8,https://github.com/borgbackup/borg/releases/download/1.2.8/borg-linuxnew64|-|85847a2ceb27d4a6c0ca0c0fb92d31bb2c1fcf6c77df1b2275b3f6f161d3571c
 tika|2.9.1|tika-server-standard-2.9.1.jar,https://dlcdn.apache.org/tika/2.9.1/tika-server-standard-2.9.1.jar|-|4e38d309c9396892ae14b4337cdf13f90f83da81b3b8123d72fde08fea2120bd
-safelinx|1.3.0.0|HCL-SafeLinx-1300-x86_64.tar.gz|-|ea78531287ea3573b8d008cb0f4aa951d94855dcf9807bb745bd631d8ba32edf
-safelinx|1.3.0.1|HCL-SafeLinx-1301-x86_64.tar.gz|-|1dbc6e0206f776196cce166af1ccfb11c37b61cb2d036cd193af525abdc50349
-safelinx|1.4.0.0|HCL-SafeLinx-1400-x86_64.tar.gz|-|77359b3500948c81e85e3f6567792fba6a227cfb08ae278c74712bf28ecdf476
 safelinx|1.4.1|HCL-SafeLinx-1410-x86_64.tar.gz|-|c8c207f810343c7ab47997c1006e144998d0717080241ea6e6f2644191499c31
+safelinx|1.4.2|HCL-SafeLinx-1420-x86_64.tar.gz|-|dfe9244848fd2ad3367db002de5dcdbf6b577ad8d240db75298b411b03c04ef0
 nomadweb|1.0.11|HCL_Nomad_web_1.0.11_20240305-18_for_HCL_SafeLinx.zip|-|e7484c7d42f8357cf79d609363c13fb08da0baee445e0d4bebb71497dfd99bbc
 nomad|1.0.6-12.0.2|nomad-server-1.0.6-for-domino-1202-linux.tgz|-|3280c77199443c2135c5b49da6a0690730a6d2f872fcaaaaacebd7b5544efcc5
 nomad|1.0.6-12.0.1|nomad-server-1.0.6-for-domino-1201-linux.tgz|-|87dbbb203b6146f96a3b0ed6486a41e92b5fb5e310b1d776e1cc3fa422de39da

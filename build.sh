@@ -2376,12 +2376,12 @@ write_conf()
   if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"       >> "$BUILD_CONF"; fi
 
   # Parameters only stored in conf file
-  if [ -n "$CONTAINER_MAINTAINER" ];         then echo "CONTAINER_MAINTAINER=$CONTAINER_MAINTAINER"                 >> "$BUILD_CONF"; fi
-  if [ -n "$CONTAINER_VENDOR" ];             then echo "CONTAINER_VENDOR=$CONTAINER_VENDOR"                         >> "$BUILD_CONF"; fi
-  if [ -n "$CONTAINER_DOMINO_NAME" ];        then echo "CONTAINER_DOMINO_NAME=$CONTAINER_DOMINO_NAME"               >> "$BUILD_CONF"; fi
-  if [ -n "$CONTAINER_DOMINO_DESCRIPTION" ]; then echo "CONTAINER_DOMINO_DESCRIPTION=$CONTAINER_DOMINO_DESCRIPTION" >> "$BUILD_CONF"; fi
-  if [ -n "$CONTAINER_IMAGE_VERSION" ];      then echo "CONTAINER_IMAGE_VERSION=$CONTAINER_IMAGE_VERSION"           >> "$BUILD_CONF"; fi
-  if [ -n "$CONTAINER_IMAGE_NAME" ];         then echo "CONTAINER_IMAGE_NAME=$CONTAINER_IMAGE_NAME"                 >> "$BUILD_CONF"; fi
+  echo "CONTAINER_MAINTAINER=$CONTAINER_MAINTAINER"                 >> "$BUILD_CONF"
+  echo "CONTAINER_VENDOR=$CONTAINER_VENDOR"                         >> "$BUILD_CONF"
+  echo "CONTAINER_DOMINO_NAME=$CONTAINER_DOMINO_NAME"               >> "$BUILD_CONF"
+  echo "CONTAINER_DOMINO_DESCRIPTION=$CONTAINER_DOMINO_DESCRIPTION" >> "$BUILD_CONF"
+  echo "CONTAINER_IMAGE_VERSION=$CONTAINER_IMAGE_VERSION"           >> "$BUILD_CONF"
+  echo "CONTAINER_IMAGE_NAME=$CONTAINER_IMAGE_NAME"                 >> "$BUILD_CONF"
 
   echo
   echo
