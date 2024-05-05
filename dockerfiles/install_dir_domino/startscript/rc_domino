@@ -3,12 +3,12 @@
 ###########################################################################
 # RC RunLevel Entry Point
 ###########################################################################
-# Start/Stop Script for Domino on xLinux/zLinux/AIX
-# 2005-2022 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
+# Start/Stop Script for Domino on Linux & AIX
+# 2005-2024 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
 # You may use and distribute the unmodified version of this script.
 # Use at your own risk. No implied or specific warranties are given.
 # You may change it for your own usage only
-# Version 3.7.2 30.08.2022
+# Version 3.9.0 24.04.2024
 ###########################################################################
 # chkconfig: 345 66 19
 # description: HCL Domino Server (notes)
@@ -21,8 +21,8 @@
 # Default-Stop:   0 1 2 6
 # Short-Description: HCL Domino Server (notes)
 # Description:       HCL Domino Server (notes)
-#       Start/Stop Script V3.7.2 for xLinux/zLinux/AIX
-#       2005-2022 Copyright by Daniel Nashed (domino_unix@nashcom.de)
+#       Start/Stop Script V3.8.0 for Linux & AIX
+#       2005-2023 Copyright by Daniel Nashed (domino_unix@nashcom.de)
 ### END INIT INFO
 
 # Specify username for this Domino instance.
@@ -42,21 +42,21 @@ DOMINO_SYSTEMD_NAME=domino.service
 # . /etc/sysconfig/rc_domino_config
 
 # Optional get the name from script name e.g. 'domino_myuser1"
-# DOMINO_USER=`basename $0 | cut -f 2 -d _`
+# DOMINO_USER=$(basename $0 | cut -f 2 -d _)
 
 # VERBOSE_INFO="yes"
 
 
 # Determine architecture and platform
-if [ `uname` = AIX ]; then
+if [ $(uname) = "AIX" ]; then
   LARCH=ibmpow
   PLATFORM_NAME=AIX
-elif [ `uname` = Linux ]; then
+else
   LARCH=linux
   PLATFORM_NAME=xLinux
 fi
 
-if [ ${LARCH} = "linux" ]; then
+if [ "$LARCH" = "linux" ]; then
   # Determine script name. for symbolic link check real name
   DOMINO_SERVICE_NAME=$(readlink $0)
   if [ -z "$DOMINO_SERVICE_NAME" ]; then
@@ -79,17 +79,46 @@ if [ -z "$DOMINO_USER" ]; then
   export DOMINO_USER=$LOGNAME
 fi
 
-# If no systemd is running start server directy (Docker, Podman, K8s, WSL)
 
-if [ -z "$( ps -p 1 -o cmd= | grep systemd)" ]; then
+# Check if sudo is requested or fall back in case of error
+SUDO()
+{
+  local RET=
 
-  if [ "$LOGNAME" = "$DOMINO_USER" ]; then
-    $DOMINO_START_SCRIPT "$1" "$2" "$3" "$4" "$5" "$6"
-  else
-    su - $DOMINO_USER -c "$DOMINO_START_SCRIPT '$1' '$2' '$3' '$4' '$5' '$6'"
+  if [ -z "$DOMINO_NO_SUDO" ]; then
+    sudo "$@"
+    RET="$?"
+
+    if [ "$RET" = "0" ]; then
+      return 0
+    fi
+
+    if [ "$RET" = "9" ]; then
+      return 0
+    fi
+
+    echo
+    echo "Info: export DOMINO_NO_SUDO=1 or enable sudo $DOMINO_USER for systemctl"
+    echo
   fi
 
-  exit 0
+  "$@"
+}
+
+
+# If no systemd is running start server directy (Docker, Podman, K8s, WSL)
+
+if [ "$LARCH" = "linux" ]; then
+  if [ -z "$(ps --no-headers -o comm 1 | grep systemd)" ]; then
+
+    if [ "$LOGNAME" = "$DOMINO_USER" ]; then
+      $DOMINO_START_SCRIPT "$1" "$2" "$3" "$4" "$5" "$6"
+    else
+      su - $DOMINO_USER -c "$DOMINO_START_SCRIPT '$1' '$2' '$3' '$4' '$5' '$6'"
+    fi
+
+    exit 0
+  fi
 fi
 
 # systemd operations for start/stop
@@ -104,7 +133,7 @@ if [ -e /etc/systemd/system ]; then
 
     if [ "$1" = "start" ]; then
       echo Starting systemd "$DOMINO_SYSTEMD_NAME"
-      systemctl start "$DOMINO_SYSTEMD_NAME"
+      SUDO systemctl start "$DOMINO_SYSTEMD_NAME"
 
       if [ "$2" = "live" ]; then
         echo starting live console
@@ -118,11 +147,11 @@ if [ -e /etc/systemd/system ]; then
       echo
  
       if [ "$2" = "live" ]; then
-        systemctl stop "$DOMINO_SYSTEMD_NAME" &
+        SUDO systemctl stop "$DOMINO_SYSTEMD_NAME" &
         echo starting live console
         $SWITCH_MONITOR_COMMAND "$DOMINO_START_SCRIPT monitor"
       else
-        systemctl stop "$DOMINO_SYSTEMD_NAME"
+        SUDO systemctl stop "$DOMINO_SYSTEMD_NAME"
       fi
       echo
       exit 0
@@ -133,18 +162,18 @@ if [ -e /etc/systemd/system ]; then
       fi
       echo
       echo Stopping systemd "$DOMINO_SYSTEMD_NAME"
-      systemctl stop "$DOMINO_SYSTEMD_NAME"
+      SUDO systemctl stop "$DOMINO_SYSTEMD_NAME"
 
       echo
       echo Starting systemd "$DOMINO_SYSTEMD_NAME"
-      systemctl start "$DOMINO_SYSTEMD_NAME"
+      SUDO systemctl start "$DOMINO_SYSTEMD_NAME"
       echo
       exit 0
 
     elif [ "$1" = "restartcompact" ]; then
       echo
       echo Stopping systemd "$DOMINO_SYSTEMD_NAME"
-      systemctl stop "$DOMINO_SYSTEMD_NAME"
+      SUDO systemctl stop "$DOMINO_SYSTEMD_NAME"
 
       if [ "$LOGNAME" = "$DOMINO_USER" ]; then
         $DOMINO_START_SCRIPT compact
@@ -154,14 +183,14 @@ if [ -e /etc/systemd/system ]; then
 
       echo
       echo Starting systemd "$DOMINO_SYSTEMD_NAME"
-      systemctl start "$DOMINO_SYSTEMD_NAME"
+      SUDO systemctl start "$DOMINO_SYSTEMD_NAME"
       echo
       exit 0
 
     elif [ "$1" = "restartfixup" ]; then
       echo
       echo Stopping systemd "$DOMINO_SYSTEMD_NAME"
-      systemctl stop "$DOMINO_SYSTEMD_NAME"
+      SUDO systemctl stop "$DOMINO_SYSTEMD_NAME"
 
       if [ "$LOGNAME" = "$DOMINO_USER" ]; then
       $DOMINO_START_SCRIPT fixup
@@ -171,7 +200,7 @@ if [ -e /etc/systemd/system ]; then
 
       echo
       echo Starting systemd "$DOMINO_SYSTEMD_NAME"
-      systemctl start "$DOMINO_SYSTEMD_NAME"
+      SUDO systemctl start "$DOMINO_SYSTEMD_NAME"
       echo
       exit 0
 
@@ -197,28 +226,33 @@ if [ -e /etc/systemd/system ]; then
 
     elif [ "$1" = "service" ]; then
       echo
-      if [ -z "$2" ]; then
-        echo "Status"
-        systemctl status "$DOMINO_SYSTEMD_NAME"
-      elif [ "$2" = "status" ]; then
-        echo "Status"
-        systemctl status "$DOMINO_SYSTEMD_NAME"
-      elif [ "$2" = "on" ]; then
-        echo "Enabling Service"
-        systemctl enable "$DOMINO_SYSTEMD_NAME"
-      elif [ "$2" = "off" ]; then
-        echo "Disabling Service"
-        systemctl disable "$DOMINO_SYSTEMD_NAME"
-      elif [ "$2" = "add" ]; then
-        echo "Enabling Service"
-        systemctl enable "$DOMINO_SYSTEMD_NAME"
-      elif [ "$2" = "del" ]; then
-        echo "Disabling Service"
-        systemctl disable "$DOMINO_SYSTEMD_NAME"
-      else
-        systemctl "$2" "$DOMINO_SYSTEMD_NAME"
-      fi
     
+      case "$2" in
+        "")
+          echo "Status"
+          systemctl status "$DOMINO_SYSTEMD_NAME"
+          ;;
+
+        status)
+          echo "Status"
+          systemctl status "$DOMINO_SYSTEMD_NAME"
+          ;;
+
+        on|add|enable)
+          echo "Enabling Service"
+          SUDO systemctl enable "$DOMINO_SYSTEMD_NAME"
+          ;;
+
+        off|del|disable)
+          echo "Disabling Service"
+          SUDO systemctl disable "$DOMINO_SYSTEMD_NAME"
+          ;;
+
+        *)
+          systemctl "$2" "$DOMINO_SYSTEMD_NAME"
+          ;;
+      esac
+
       echo
       exit 0
     fi
@@ -255,7 +289,7 @@ else
   if [ "$VERBOSE_INFO" = "yes" ]; then
     echo Switching to $DOMINO_USER
   fi
-  su - $DOMINO_USER -c "$DOMINO_START_SCRIPT '$1' '$2' '$3' '$4' '$5' '$6'"
+  SUDO su - $DOMINO_USER -c "$DOMINO_START_SCRIPT '$1' '$2' '$3' '$4' '$5' '$6'"
 fi
 
 RETVAL=$?
