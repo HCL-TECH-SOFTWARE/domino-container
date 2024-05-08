@@ -255,7 +255,7 @@ usage()
   echo
   show_version
   echo
-  echo "Usage: $(basename $SCRIPT_NAME) { domino | traveler | volt | leap | safelinx } version fp hf"
+  echo "Usage: $(basename $SCRIPT_NAME) { domino | safelinx } version fp hf"
   echo
   echo "-checkonly       checks without build"
   echo "-verifyonly      checks download file checksum without build"
@@ -2293,6 +2293,8 @@ load_conf()
   if [ -z "$DOMINO_VERSION" ] || [ "$DOMINO_VERSION" = "$LATESTSEL" ]; then
     get_current_version domino
     DOMINO_VERSION=$PROD_VER$PROD_FP$PROD_HF
+  else
+    parse_domino_version "$DOMINO_VERSION"
   fi
 
   get_current_addon_version verse SELECT_VERSE_VERSION
