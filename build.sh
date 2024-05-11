@@ -672,6 +672,10 @@ check_from_image()
 
     if [ "$PROD_NAME" = "domino" ]; then
       FROM_IMAGE=ubi9-minimal
+    elif [ "$PROD_NAME" = "traveler" ]; then
+      FROM_IMAGE=hclcom/domino:latest
+    elif [ "$PROD_NAME" = "leap" ]; then
+      FROM_IMAGE=hclcom/domino:latest
     elif [ "$PROD_NAME" = "safelinx" ]; then
       FROM_IMAGE=ubi9-minimal
     else
@@ -2931,7 +2935,6 @@ for a in "$@"; do
     domino|traveler|volt|leap|safelinx)
       PROD_NAME=$p
       ;;
-
 
     squid)
       SQUID_IMAGE_NAME=hclcom/squid

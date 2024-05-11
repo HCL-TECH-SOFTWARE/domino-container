@@ -598,6 +598,15 @@ install_capi()
   header "Install gcc and gcc++ compilers"
   install_packages gcc g++ gcc-c++ make binutils
 
+  # Install OpenSSL developement required packages
+  install_package openssl
+
+  if [ -x /usr/bin/apt-get ]; then
+    install_package openssl-dev
+  else
+    install_package openssl-devel
+  fi
+
   # On Photon OS glibc includes are separate
   if [ -e /etc/photon-release ]; then
     install_packages glibc-devel
@@ -711,6 +720,12 @@ container_set_timezone()
 {
   if [ -z "$DOCKER_TZ" ]; then
     return 0
+  fi
+
+  if [ -x /usr/bin/microdnf ]; then
+    log_space "Info: Reinstalling tzdata on Redhat UBI minimal to add timezone support"
+    /usr/bin/microdnf update -y tzdata
+    /usr/bin/microdnf reinstall -y tzdata
   fi
 
   CURRENT_TZ=$(readlink /etc/localtime)
