@@ -85,6 +85,11 @@ SUDO()
 {
   local RET=
 
+  if [ "$EUID" = 0 ]; then
+    "$@"
+    return 0
+  fi
+
   if [ -z "$DOMINO_NO_SUDO" ]; then
     sudo "$@"
     RET="$?"

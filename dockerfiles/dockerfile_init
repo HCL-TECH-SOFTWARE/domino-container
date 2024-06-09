@@ -1,0 +1,63 @@
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2024 - APACHE 2.0 see LICENSE
+############################################################################
+
+FROM registry.access.redhat.com/ubi9-init:latest  
+
+# External arguments with a default value
+ARG LinuxYumUpdate=
+ARG DownloadFrom=
+ARG PROD_NAME=
+ARG PROD_VER=
+ARG PROD_FP=
+ARG PROD_HF=
+ARG DOMLP_VER=
+ARG DOMRESTAPI_VER=
+ARG PROD_DOWNLOAD_FILE=
+ARG PROD_FP_DOWNLOAD_FILE=
+ARG PROD_HF_DOWNLOAD_FILE=
+ARG DominoResponseFile=
+ARG LocalInstallDir=/tmp/install
+ARG DominoUserID=
+ARG DOMINO_LANG=
+ARG LINUX_LANG=
+ARG DOCKER_TZ=
+ARG OPENSSL_INSTALL=
+ARG BORG_INSTALL=
+ARG TIKA_INSTALL=
+ARG SPECIAL_CURL_ARGS=
+ARG BUILD_SCRIPT_OPTIONS=
+ARG VERSE_VERSION=
+ARG NOMAD_VERSION=
+ARG TRAVELER_VERSION=
+ARG LEAP_VERSION=
+ARG CAPI_VERSION=
+ARG MYSQL_INSTALL=
+ARG MSSQL_INSTALL=
+ARG LINUX_PKG_ADD=
+ARG STARTSCRIPT_VER=
+ARG CUSTOM_ADD_ONS=
+ARG K8S_RUNAS_USER_SUPPORT=
+ARG EXPOSED_PORTS="1352 25 80 110 143 389 443 636 993 995 2050 63148 63149"
+
+USER root
+
+# Copy install files to container
+COPY install_dir_common $LocalInstallDir
+COPY install_dir_domino $LocalInstallDir
+
+# Enforce using Systemd
+ENV CONTAINER_USE_SYSTEMD=yes
+
+# Run install script and cleanup. Linux packages installed in separate layer first.
+RUN $LocalInstallDir/install_linux.sh
+
+# Install Domino in a layer separate from Linux packages and updates
+RUN  $LocalInstallDir/install_domino.sh && \
+  rm -rf $LocalInstallDir
+
+HEALTHCHECK --interval=60s --timeout=10s CMD /healthcheck.sh
+
+# Expose Ports NRPC SMTP HTTP POP3 IMAP LDAP HTTPS LDAPS IMAPS POP3S DIIOP DIIOPS
+EXPOSE $EXPOSED_PORTS
+

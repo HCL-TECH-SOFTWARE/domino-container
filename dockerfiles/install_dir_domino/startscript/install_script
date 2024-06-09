@@ -394,7 +394,7 @@ fi
 # In a container environment install entrypoint.sh
 detect_container_env
 
-if [ -n "$CONTAINER_ENV" ]; then
+if [ -n "$CONTAINER_ENV" ] || [ "$CONTAINER_USE_SYSTEMD" = "yes" ]; then
   # when running in a container environment, don't use systemd/init.d
   if [ "$CONTAINER_ENV" = "other" ]; then
     header "Container environment detected!"
@@ -409,7 +409,7 @@ if [ -n "$CONTAINER_ENV" ]; then
   fi
 fi
 
-# Configure systemd in available
+# Configure systemd if available
 if [ ${LARCH} = "linux" ]; then
   if [ -e /etc/systemd/system ]; then
 
