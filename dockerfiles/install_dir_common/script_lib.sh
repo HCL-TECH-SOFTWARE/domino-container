@@ -432,6 +432,7 @@ download_and_check_hash()
   local TARGET_DIR=$3
   local TARGET_FILE=$4
   local FILES_TO_EXTRACT=$5
+  local TAR_OPT=
 
   case "$DOWNLOAD_SERVER" in
     file://*)
@@ -583,6 +584,7 @@ download_tar_with_hash()
   local DOWNLOAD_SERVER=$1
   local DOWNLOAD_STR=$2
   local CHECK_FILE=
+  local TAR_OPT=
 
   CHECK_FILE=$(echo "$DOWNLOAD_STR" | cut -f1 -d"#" | xargs)
   CHECK_HASH=$(echo "$DOWNLOAD_STR" | cut -f2 -d"#" | xargs)
@@ -603,19 +605,47 @@ download_tar_with_hash()
       ;;
   esac
 
+  case "$DOWNLOAD_FILE" in
+    *.tar.gz)
+      TAR_OPT=-xz
+      ;;
+
+    *.tgz)
+      TAR_OPT=-xz
+      ;;
+
+    *.taz)
+      TAR_OPT=-xz
+      ;;
+
+    *.tar)
+      TAR_OPT=-x
+      ;;
+
+    *)
+      TAR_OPT=""
+      ;;
+  esac
+
   http_head_check "$DOWNLOAD_FILE"
   if [ "$?" = "0" ]; then
     log_error "Cannot download file: [$DOWNLOAD_FILE] - File not found"
     exit 1
   fi
 
-  HASH=$($CURL_CMD -s $DOWNLOAD_FILE | tee >(tar --no-same-owner -xz 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+  HASH=$($CURL_CMD -s $DOWNLOAD_FILE | tee >(tar $TAR_OPT --no-same-owner 2>/dev/null) | sha256sum -b | cut -d" " -f1)
 
   if [ "$HASH" = "$CHECK_HASH" ]; then
     return 0
   fi
 
+  echo 
+  echo "Download : $DOWNLOAD_FILE"
+  echo "Current  : $HASH"
+  echo "Expected : $CHECK_HASH"
+
   log_error "Cannot download file: [$DOWNLOAD_FILE] - Hash does not match"
+  exit 1
 }
 
 
