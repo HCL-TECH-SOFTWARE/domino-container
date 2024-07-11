@@ -44,15 +44,19 @@ The following white list entries would be currently required for consuming Redha
 
 ## Proxy white list for HCL Software downloads
 
+```
 https://my.hcltechsw.com
 https://api.hcltechsw.com
 https://ds_infolib.hcltechsw.com
 https://d1rvrben0dw4ya.cloudfront.net
+```
 
 ## Proxy white list for accessing GitHub
 
+```
 https://github.com
 https://raw.githubusercontent.com
+```
 
 
 # Build requirements
@@ -112,7 +116,8 @@ vi ~/.docker/config.json
 
 Specify the proxy configuration like shown in this example.
 
-```{
+```
+{
 "proxies": {
  "default": {
    "httpProxy": "http://192.168.96.99:3128",
