@@ -1603,6 +1603,7 @@ check_software_file()
 
       echo "$CURRENT_VER [NA] $1 - Not found in software file!"
       DOWNLOAD_ERROR_COUNT=$((DOWNLOAD_ERROR_COUNT+1))
+      SOFTWARE_FILE_ERROR_COUNT=$((SOFTWARE_FILE_ERROR_COUNT+1))
     fi
   fi
 }
@@ -1843,8 +1844,15 @@ check_all_software()
   STARTSCRIPT_GIT_URL=https://github.com/nashcom/domino-startscript
 
   DOWNLOAD_ERROR_COUNT=0
+  SOFTWARE_FILE_ERROR_COUNT=0
 
   check_software_status
+
+  if [ ! "$SOFTWARE_FILE_ERROR_COUNT" = "0" ]; then
+    echo "Correct Software file Error(s) before building image [$SOFTWARE_FILE_ERROR_COUNT]"
+    echo "Hint: You might have an older custom software.txt file in your software location, which needs to be updated"
+    echo
+  fi
 
   if [ ! "$DOWNLOAD_ERROR_COUNT" = "0" ]; then
     echo "Correct Software Download Error(s) before building image [$DOWNLOAD_ERROR_COUNT]"

@@ -49,11 +49,11 @@ git clone https://github.com/HCL-TECH-SOFTWARE/domino-container.git
 cd domino-container
 ```
 
-## Download software from Flexnet
+## Download software from  My HCLSoftware Portal
 
 Before starting the build process, the required HCL web-kits have to be available on the build machine or a remote download location - if configured.  
 
-See howto [download software](howto_download-software.md) for details downloading software from Flexnet.
+See howto [download software](howto_download-software.md) for details downloading software from [My HCLSoftware Portal](https://my.hcltechsw.com/).
 
 ## Build the image
 

@@ -85,7 +85,7 @@ usage:
 docker image save -o YourTargetFilename.tar imagename:tag
 
 ```bash
-docker image save -o ./domino1202-verse-nomad.tar hclcom/domino:12.0.2
+docker image save -o ./domino14-verse-nomad.tar hclcom/domino:14.0
 ```
 or for the Leap image:
 docker image save -o ./domino1202-verse-nomad-leap.tar hclcom/leap:1.0.1
@@ -187,7 +187,7 @@ The best security is dependent on the weakest link. So...
 - Learn about [Hardening QNAP Devices](https://www.youtube.com/watch?v=FeYbfkCfwSc)
 - Enable [updating the QNAP Firmware automatically](https://docs.qnap.com/operating-system/qts/5.0.x/en-us/updating-the-firmware-automatically-4229F6D2.html) - It will make your life so much easier.
 - Understand the implications of [The User ID 1000](#the-user-id-1000)
-- Back up your Domino server even if it is running as a container. [DominoBackup](https://help.hcltechsw.com/domino/12.0.2/admin/admn_backupandrestore.html) is your friend.
+- Back up your Domino server even if it is running as a container. [DominoBackup](https://help.hcltechsw.com/domino/14.0.0/admin/admn_backupandrestore.html) is your friend.
 
 ### Port mapping
 When the container is using the IP address of the NAS, all applications, all containers, etc. will be sharing the same IP address. The Domino port 1352 can only be assigned to exactly one container. If more than one Domino server is running on your NAS, the container itself can still expose port 1352 but it will need to be mapped to another TCP port when running the container. ContainerStation will not allow to create a container with a port conflict.

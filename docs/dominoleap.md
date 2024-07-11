@@ -13,7 +13,7 @@ has_children: false
 
 
 Domino Leap used to be a separate image build on top the Domino image.
-Beginning with Domino 14, it is now availabe as an build options for the standard Domino image and can be combined with other add-ons like Traveler or the REST API.
+Beginning with Domino 14, it is now available as an build options for the standard Domino image and can be combined with other add-ons like Traveler or the REST API.
 
 The separate add-on image build remains to be available for now.
 

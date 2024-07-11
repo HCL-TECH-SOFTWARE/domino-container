@@ -27,27 +27,10 @@ Download the SafeLinx WebKit and also the NomadWeb server components to your sof
 
 The build command either builds the container or shows missing software files and the download target directory:
 
+See howto [download software](howto_download-software.md) for details downloading software from [My HCLSoftware Portal](https://my.hcltechsw.com/).
+
 ```
 ./build.sh safelinx -nomadweb
-```
-
-Once authenticated in Flexnet, you can use the links provided to search for the software components.
-Links only work with customer accounts with an enabled download search option.
-
-**Example:**
-
-```
-Checking software via [/local/github/domino-container/software/software.txt]
-
-1.3.0.0             [NA] HCL-SafeLinx-1300-x86_64.tar.gz
-https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search=HCL-SafeLinx-1300-x86_64.tar.gz+&resultType=Files&sortBy=eff_date&listButton=Search
-
-1.0.3               [NA] 20220325-2893-nomad_web_deploy.zip
-https://hclsoftware.flexnetoperations.com/flexnet/operationsportal/DownloadSearchPage.action?search=20220325-2893-nomad_web_deploy.zip+&resultType=Files&sortBy=eff_date&listButton=Search
-
-
-Correct Software Download Error(s) before building image [2]
-
 ```
 
 Once all software is available,run the build process again.
@@ -60,7 +43,7 @@ The SafeLinx container project ships with a predefined Docker compose file locat
 
 The `docker-compose.yml` contains template variables, which are referenced in the configuration file `.env`
 
-Review and edit the configuration file with your favourite editor
+Review and edit the configuration file with your favorite editor
 
 ```
 vi .env
@@ -272,7 +255,7 @@ VPN_TARGET_ADAPTER="eth0"
   Switch to enable or disable the VPN configuration in HCL SafeLinx container.
 
 - **VPN_HOST_ADDRESS**  
-  VPN server IP. SafeLinx use this IP and creates a network interface. All clients connected to this VPN network use this address as gateway for further communincation.
+  VPN server IP. SafeLinx use this IP and creates a network interface. All clients connected to this VPN network use this address as gateway for further communication.
 
 - **VPN_SUBNET_MASK**  
   VPN subnet mask defines the size & class of the VPN network. 

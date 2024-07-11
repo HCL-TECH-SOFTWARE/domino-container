@@ -27,7 +27,7 @@ See detailed information about [supported run-time and build environments](conce
 
 ## Where to get HCL Domino software
 
-The project uses the official HCL web-kit installers to build container images download from the new official [My HCLSoftware Portal](https://my.hcltechsw.com/).
+The project uses the official HCL web-kit installers to build container images from [My HCLSoftware Portal](https://my.hcltechsw.com/).
 
 - All HCL customers with active maintenance should have a download account 
 - The [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) provides the same access for HCL Business Partners
@@ -37,7 +37,7 @@ See how to [download software](howto_download-software.md) for details.
 ## How to download this project
 
 We recommend to download the GitHub project directly via git.  
-An alternate way is to download the project via ZIP file from the respository page.
+An alternate way is to download the project via ZIP file from the repository page.
 
 See Howto [Get Domino Container GitHub Repo](howto_github.md) for details.
 

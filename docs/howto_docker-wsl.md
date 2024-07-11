@@ -11,7 +11,7 @@ has_children: false
 
 Microsoft offers [WSL2](https://docs.microsoft.com/en-us/windows/wsl/) a very interesting Linux integration platform,
 which is very convenient and flexible for local build and run-time environments.
-It can be used as build and run-time environmen for Domino on Docker.
+It can be used as build and run-time environment for Domino on Docker.
 
 The most flexible setup is to run one of the standard Linux distributions and install a Docker Linux host on the WSL2 instance.
 WSL2 is also used in current Docker Desktop installations. Important for a build environment is any Docker or Podman installation with Bash support.
@@ -38,24 +38,21 @@ wsl --install
 
 Once WSL2 is installed, WSL can list all available Linux distributions.
 
-For SUSE Linux installations it is recommended to install the SUSE Leap 15.3 version directly from the Microsoft online app store.
-The versions listed in WSL are outdated.
-
 ## List available images
 
 ```
 wsl --list --online
 ```
 
-## Install Ubuntu 20.04 LTS
+## Example installing Ubuntu
 
-WSL offers automatic installations of selected distributions:
+The default distribution is Ubuntu. Make sure you select a LTS version to ensure long term support.
 
 ```
-wsl --install -d Ubuntu-20.04
+wsl --install -d Ubuntu-24.04
 ```
 
-Once Ubuntu ist installed, it can be launched in multiple ways:
+Once Ubuntu is installed, it can be launched in multiple ways:
 
 - Desktop/taskbar icon
 - `wsl` command line

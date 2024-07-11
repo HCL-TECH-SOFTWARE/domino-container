@@ -52,15 +52,15 @@ During ```docker run``` you can setup a volume that mounts property files into `
 
 ### Stopping the Application Server gracefully
 
-Stopping a Domino server takes longer than the time a Docker server would expect by default (**10 seconds**), the recommended way is to add the parameter `--stop-timeout` already when starting the container.
-If the container was started with the parameter ```--stop-timeout=``` then you may stop the container using the following command:
+Stopping a Domino server takes longer than the time a Docker server would expect by default (**10 seconds**), the recommended way is to add the parameter `--stop-timeout` already when starting the container.
+If the container was started with the parameter ```--stop-timeout=``` then you may stop the container using the following command:
 
-```docker stop <container-name>```
+```docker stop <container-name>```
 
-If the container was started without specifying the parameter `--stop-timeout=` then use the following command to stop the container gracefully
+If the container was started without specifying the parameter `--stop-timeout=` then use the following command to stop the container gracefully
 
-```docker stop --time=<timeout> <container-name>```
+```docker stop --time=<timeout> <container-name>```
 
 Example:
 
-```docker stop --time=60 test```
+```docker stop --time=60 test```

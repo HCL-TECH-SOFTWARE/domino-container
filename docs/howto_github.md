@@ -17,6 +17,12 @@ Example: Install for Redhat/CentOS based platforms via yum
 yum install git -y
 ```
 
+Example: Install for Ubuntu/Debian based platforms via apt
+
+```
+apt install git -y
+```
+
 Create a directory where to download Git projects and switch to it.
 
 Example:
@@ -35,5 +41,5 @@ cd domino-container
 
 Note:  
 Leveraging Git repositories directly does allow to update the repository via `git pull`.  
-Git also allows to swith between different branches of the project.  
+Git also allows to switch between different branches of the project.  
 The project uses a main and a develop branch. The develop branch should be only used by experienced administrators.

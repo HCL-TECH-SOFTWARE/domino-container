@@ -82,7 +82,7 @@ Example:
 - **-from=imagename**  
   Use a specific base image for installation.  
   This can be a prebuild environment or an alternate Linux base image  
-  There are a couple of predfined images, which can be referenced by their short name
+  There are a couple of pre-defined images, which can be referenced by their short name
 
 - **-tag=imagename**  
   Tag image additionally with this tag after build
@@ -177,7 +177,7 @@ save <img> <my.tgz>   exports the specified image to tgz format (e.g. save hclco
 
 Examples:
 
-  build.sh domino 12.0.2 fp4
+  build.sh domino 14.0 fp1
   build.sh traveler 12.0.2
 
 ```
