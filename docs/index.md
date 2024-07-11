@@ -15,7 +15,7 @@ has_children: true
 
 This project contains build scripts for HCL Domino Docker/Container images via [dockerfiles](https://docs.docker.com/engine/reference/builder/).
 The repository provides the utilities to build HCL Domino Server with the latest software or specific version in a Docker/Container image.
-There are separate folders within this repository for Domino add-on HCL products like Traveler and HCL Domino Leap as well.
+Additional software ( like HCL Traveler, Verse, Nomad Server) can be added as build options to a Domino container image.
 
 All required HCL web-kits and fixes are downloaded from a software repository server instead of adding the source installation files to the image directly.
 If no remote server is referenced a temporary local [NGINX container](https://hub.docker.com/_/nginx) is started at build time to act as a **software repository server**.
@@ -36,7 +36,7 @@ See how to [download software](howto_download-software.md) for details.
 
 ## How to download this project
 
-We recommend to download the GitHub project directly via git.  
+The recommended method is to clone the download the GitHub project directly via git is the .  
 An alternate way is to download the project via ZIP file from the repository page.
 
 See Howto [Get Domino Container GitHub Repo](howto_github.md) for details.
@@ -61,12 +61,14 @@ The community image offers building an image with additional add-on, which can b
 
 Now all add-on software can be directly added in a single build step.
 
-* -verse
-* -nomad
-* -traveler
-* -ontime
-* -leap
-* -capi
+```
+-verse
+-nomad
+-traveler
+-ontime
+-leap
+-capi
+```
 
 By default the latest version is selected. But different versions can be optionally specified for each component. Example: `-verse=3.1``
 
@@ -99,6 +101,5 @@ HCL Domino Container Community Image
  Select software & Options,  [B] to build,  [0] to cancel?
 
 ```
-
 
 Refer to Howto [Run Domino Container GitHub Repo](run_docker.md) how to run a Domino Container on Docker.
