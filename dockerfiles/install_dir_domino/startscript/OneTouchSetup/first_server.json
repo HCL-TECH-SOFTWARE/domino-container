@@ -208,8 +208,8 @@
             "action": "create",
             "items": {
               "Form": "LoginMap",
-              "LF_LoginForm": "DWALoginForm",
-              "LF_LoginFormDB": "iwaredir.nsf",
+              "LF_LoginForm": "$$LoginUserForm",
+              "LF_LoginFormDB": "domcfg.nsf",
               "LF_ServerType": "0",
               "LF_IP": "",
               "$PublicAccess": "1"

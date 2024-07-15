@@ -49,7 +49,7 @@ To build the latest available image
 2. From the root folder of this repository issue the following command
 
 ```bash
-./build domino
+./build.sh domino
 ```
 
 The process will perform all required actions to create the image in the version requested. Usually it takes ~5 to ~8 minutes to build the image (depending on your CPU & disk performance).
