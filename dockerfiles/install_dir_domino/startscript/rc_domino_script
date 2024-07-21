@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version  3.9.2 05.01.2024                                               #
+# Version  3.9.3 16.07.2024                                               #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2024                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=3.9.2
+DOMINO_SCRIPT_VERSION=3.9.3
 
 VERBOSE_INFO="yes"
 
@@ -2414,9 +2414,17 @@ check_one_touch_setup()
     return 0
   fi
 
-  DOMINO_AUTO_CONFIG_ENV_FILE=$DOMINO_DATA_PATH/DominoAutoConfig.env
-  DOMINO_AUTO_CONFIG_JSON_FILE=$DOMINO_DATA_PATH/DominoAutoConfig.json
-  DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE=$DOMINO_DATA_PATH/DominoAutoConfigTemplate.json
+  if [ -z "$DOMINO_AUTO_CONFIG_ENV_FILE" ]; then
+    DOMINO_AUTO_CONFIG_ENV_FILE=$DOMINO_DATA_PATH/DominoAutoConfig.env
+  fi
+
+  if [ -z "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
+    DOMINO_AUTO_CONFIG_JSON_FILE=$DOMINO_DATA_PATH/DominoAutoConfig.json
+  fi
+
+  if [ -z "$DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE" ]; then
+    DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE=$DOMINO_DATA_PATH/DominoAutoConfigTemplate.json
+  fi
 
   # Replace template file variables only if no configuration file present
   if [ ! -e "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
