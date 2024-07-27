@@ -51,6 +51,7 @@ verse|3.1.0|HCL_Verse_3.1.0.zip|-|efaeac1c2cfcb8a77dec045f150862b6dcca57e15639bf
 verse|3.2.0|HCL_Verse_3.2.0.zip|-|475e785c97e6afb564787609bfde198a62546e3ceca8f77bd0a7823700eef279
 verse|3.2.1|HCL_Verse_3.2.1.zip|-|87feda28be377b836d115c961b0ff6c76d9cc3bd2ada8c4baccead59cd5cc4dd
 verse|3.2.1if1|HCL_Verse_3.2.1IF1.zip|-|7c5dcd015f5db5cac08cdf116d1266f2acd0355ca6b764508e10e6adc0c4b324
+verse|3.2.2|HCL_Verse_3.2.2.zip|tp1U3jxkBOxNvpMll3ldM|5d554d1b918b9bb84f5c975e245c02b07f2ccb140eb3713d76f4b20ea6b8636b
 capi|12.0|CAPIToolkit_1200_MP.zip|-|545869c8a09c98ac8fde06fdff6f106060f09705e621cc7103acf055baaec037
 capi|12.0.2|CAPIToolkit_1202_MP.zip|-|10ef46a999d4da73a1e1f3b1e2a5a7268c2011fdb1dff557f3fc7536a52d8fd3
 capi|14.0|CAPIToolkit_1400_Linux.zip|-|02fc99bd6e0233352756fbf217413bac3088a5eb3698675616a5c412624fb176
@@ -71,12 +72,12 @@ nomad|1.0.9-12.0.2|nomad-server-1.0.9-for-domino-12.0.2-linux.tgz|-|77e16374db80
 nomad|1.0.10-12.0.2|nomad-server-1.0.10-for-domino-12.0.2-linux.tgz|-|0ec34d38e1794499c5b29611e70a4c31eb8e803c22c0a8beadca3342a1778706
 nomad|1.0.10IF1-12.0.2|nomad-server-1.0.10-1-for-domino-12.0.2-linux.tgz|-|6c9d0f13ff0a01ee2134ee72f9c244bef982262d3a4a37e6274c5627d7b29ac6
 nomad|1.0.11-12.0.2|nomad-server-1.0.11-for-domino-12.0.2-linux.tgz|-|1c38b349b002d0d45a7f5efc9a3d78cab7a72178f94ae43ae14dda7688d09a03
-nomad|1.0.12-12.0.2|nomad-server-1.0.12-for-domino-12.0.2-linux.tgz|-|effc0385a0230d58bb7c7f2d622d37859b6890eec030a91033bc924d50fdd459
+nomad|1.0.12IF1-12.0.2|nomad-server-1.0.12-for-domino-12.0.2-linux.tgz|zt2gdp54ImzgDHCTX26S6|84df2f4ba57568be481358259dc2d18542e0ddabfc97d3b898c1f2b5b5c28246
 nomad|1.0.9-14.0|nomad-server-1.0.9-for-domino-12.0.2-linux.tgz|-|77e16374db8075701ddc3e081c45de9ba300ab0af40e8d32d041aad9391c9acc
 nomad|1.0.10-14.0|nomad-server-1.0.10-for-domino-14.0.0-linux.tgz|-|79290c56ddaa45283428bc8e86a66f4f4ab376abd25352cc76fca37afd60b5e2
 nomad|1.0.10IF1-14.0|nomad-server-1.0.10-1-for-domino-14.0.0-linux.tgz|-|3fee60c97018bb156ed4ff72ab36d11a4a9edbe51ec36bb5b698f117b325afd1
 nomad|1.0.11-14.0|nomad-server-1.0.11-for-domino-14.0.0-linux.tgz|-|0d39bd27dfc01007d030736fbe5a6e175ff5455fa659427bea9630732c13edf1
-nomad|1.0.12-14.0|nomad-server-1.0.12-for-domino-14.0.0-linux.tgz|-|4b0cca30eab1db60b762c4c63747c3b50f87ab3fa1e3b3c1be326e64e18b4eac
+nomad|1.0.12IF1-14.0|nomad-server-1.0.12-for-domino-14.0.0-linux.tgz|dZTS5fllw2dNECaHuhtR5|0083ac39d1371fd83fa41d5372e161ca2e5d0bae27181d88ff95c3959a986ab2
 domrestapi|1.0.10-12|Domino_REST_API_V1.0.10_R12_Installer.tar.gz|-|9401c0262360c5ed7ece092d60ee06550df24e3e88b85a179442b4263003d123
 domrestapi|1.0.10-14|Domino_REST_API_V1.0.10_R14_Installer.tar.gz|-|33178942c9b2f5a21553f0304f6939f39a1b17982512182f5fb33d1349676ff8
 domrestapi|1.0.11-12|Domino_REST_API_V1.0.11_R12_Installer.tar.gz|-|0ae41f3deb098760abb5a16f25b73a33eee8da02a1282b03b582f11e201df708

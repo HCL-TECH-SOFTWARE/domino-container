@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.0
+# Version 2.3.1 21.07.2024
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -27,7 +27,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.0
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.1
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -1308,7 +1308,7 @@ docker_build()
   return 0
 }
 
-check_domdownload()
+check_all_domdownload()
 {
   # Domino Download script integration to automatically download software if script is present
   local LP_LANG=
@@ -1369,7 +1369,17 @@ get_download_link()
 
 check_domdownload()
 {
+  # $1 download file name
+  # $2 optional file id
+  # $3 hash if fileID  is specified
+
   if [ ! -e "$DOMDOWNLOAD_BIN" ]; then
+    return 0
+  fi
+
+  # if MHS fileID is specified don't search but directly download from MHS
+  if [ -n "$2" ]; then
+    $DOMDOWNLOAD_BIN "-filename=$1" "-fileid=$2" "-hash=$3" "-dir=$SOFTWARE_DIR" -silent
     return 0
   fi
 
@@ -1381,8 +1391,12 @@ check_software()
   CURRENT_NAME=$(echo $1|cut -d'|' -f1)
   CURRENT_VER=$(echo $1|cut -d'|' -f2)
   CURRENT_FILES=$(echo $1|cut -d'|' -f3)
-  CURRENT_PARTNO=$(echo $1|cut -d'|' -f4)
+  CURRENT_FILE_ID=$(echo $1|cut -d'|' -f4)
   CURRENT_HASH=$(echo $1|cut -d'|' -f5)
+
+  if [ "$CURRENT_FILE_ID" = "-" ]; then
+    CURRENT_FILE_ID=
+  fi
 
   if [ -z "$DOWNLOAD_FROM" ]; then
 
@@ -1417,7 +1431,7 @@ check_software()
             FOUND=TRUE
             break
 	  else
-            check_domdownload "$CHECK_FILE"
+            check_domdownload "$CHECK_FILE" "$CURRENT_FILE_ID" "$CURRENT_HASH"
             if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
               CURRENT_FILE="$CHECK_FILE"
               FOUND=TRUE
@@ -1520,13 +1534,7 @@ check_software()
     domino|traveler|volt|leap|verse|nomad|capi|borg|safelinx|nomadweb)
 
       if [ -n "$DOWNLOAD_1ST_FILE" ]; then
-        if [ -z "$CURRENT_PARTNO" ]; then
-          get_download_link "$CURRENT_NAME" "$DOWNLOAD_1ST_FILE"
-        elif [ "$CURRENT_PARTNO" = "-" ]; then
-          get_download_link "$CURRENT_NAME" "$DOWNLOAD_1ST_FILE"
-        else
-          get_download_link "$CURRENT_NAME" "$DOWNLOAD_1ST_FILE"
-        fi
+        get_download_link "$CURRENT_NAME" "$DOWNLOAD_1ST_FILE"
       fi
       ;;
 
