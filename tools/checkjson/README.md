@@ -5,15 +5,23 @@ It can be used to validate a JSON file, in case  no Domino is installed on the D
 
 To ensure compatibility with the HCL validjson, the command-line tool also supports `-default` to find the default schema file in Domino binary directory.
 
+In addition the tool can pretty format JSON output after validation.
+If you want to use it without validating JSON with the schema specify an empty string `""` or a single dot for the schema.
+
+The program supports stdin and STDOUT for the JSON input and output file. For STDIN/STDOUT specify a single dash.
+
+
 ## Syntax
 
 
 ```
-./checkjson file.json [schema.json]
+./checkjson file.json [schema.json] [pretty.json]
 ```
 
 
-## Example
+## Examples
+
+Validate a OTS file against the Domino OTS schema
 
 ```
 checkjson /opt/nashcom/startscript/OneTouchSetup/first_server.json /opt/hcl/domino/notes/latest/linux/dominoOneTouchSetup.schema.json
@@ -21,6 +29,13 @@ checkjson /opt/nashcom/startscript/OneTouchSetup/first_server.json /opt/hcl/domi
 JSON file [/opt/nashcom/startscript/OneTouchSetup/first_server.json] validated according to schema [/opt/hcl/domino/notes/latest/linux/dominoOneTouchSetup.schema.json]!
 
 ```
+
+Download a JSON file via curl, pipe it via STDIN and write it pretty printed to STDOUT
+
+```
+curl -sL https://myserver.lab/software.json | ./checkjson - . -
+```
+
 
 ## Retun codes
 
@@ -31,7 +46,7 @@ JSON file [/opt/nashcom/startscript/OneTouchSetup/first_server.json] validated a
 | 1 | JSON invalid
 | 2 | Not matching schema
 | 3 | File error
-
+| 4 | Other error
 
 ## How to build
 
@@ -79,4 +94,3 @@ Note: If the binary is not build, this step will also build the binary.
 ```
 make install
 ```
-
