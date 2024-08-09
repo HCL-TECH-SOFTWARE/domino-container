@@ -224,11 +224,12 @@ check_container_environment()
     # Always add namespace option to nerdctl command line
     CONTAINER_CMD="$CONTAINER_CMD --namespace=$CONTAINER_NAMESPACE"
 
-  fi
+    # nerdctl does not support a network name during build
 
-  if [ -z "$DOCKER_NETWORK" ]; then
+  else
+
     if [ -n "$DOCKER_NETWORK_NAME" ]; then
-      CONTAINER_NETWORK_CMD="--network=$CONTAINER_NETWORK_NAME"
+      CONTAINER_NETWORK_CMD="--network=$DOCKER_NETWORK_NAME"
     fi
   fi
 
