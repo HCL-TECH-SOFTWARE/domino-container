@@ -2243,7 +2243,7 @@ select_domino_version()
 {
   local VER=
   local VER_LATEST="14.0FP1"
-  local VER_140="14.0"
+  local VER_140="14.0FP1"
   local VER_1202="12.0.2FP4"
 
   clear
@@ -2598,9 +2598,6 @@ select_software()
       t)
         if [ -z "$TRAVELER_VERSION" ]; then
           case "$PROD_VER" in
-            14*)
-               TRAVELER_VERSION="$PROD_VER"
-               ;;
             *)
                TRAVELER_VERSION="$SELECT_TRAVELER_VERSION"
                ;;
