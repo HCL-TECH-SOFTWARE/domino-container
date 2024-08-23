@@ -66,6 +66,7 @@ update_traveler_ini()
   BAK_IFS=
 }
 
+
 copy_files()
 {
   if [ ! -e "$1" ]; then
@@ -79,10 +80,54 @@ copy_files()
   fi
 
   log_file "Copying files [$1] --> [$2]"
-  cp -rvf "$1/" "$2" >> $LOG_FILE
+
+  # Without a star the directory name is added to the traget directory path name
+  cp -rvf "$1/"* -t "$2" >> $LOG_FILE
 
   return 0
 }
+
+
+file_cleanup()
+{
+  local FILE_NAME=$(basename "$1")
+
+  if [ ! -e "$1" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$2/$FILE_NAME" ]; then
+    return 0
+  fi
+
+  echo "Removing wrong FP copied file: [$1]" >> $LOG_FILE
+  rm -f "$1" >> $LOG_FILE 2>&1
+}
+
+
+cleanup_fixpack_data_files()
+{
+  log_file_header "Fixup Fixpack Data Files"
+
+  # Fix wrongly copied Fixpack files. Specially templates are are problem and cause duplicate templates in data directory
+  # First check if the template really exists in data directory to not delete any unrelated files
+
+  if [ -e "$DOMINO_DATA_PATH/localnotesdata" ]; then
+    find $DOMINO_DATA_PATH/localnotesdata -type f | while read file; do file_cleanup "$file" "$DOMINO_DATA_PATH"; done
+    rmdir "$DOMINO_DATA_PATH/localnotesdata" >> $LOG_FILE 2>&1
+  fi
+
+  if [ -e "$DOMINO_DATA_PATH/iNotes/localnotesdataiNotes" ]; then
+    find $DOMINO_DATA_PATH/iNotes/localnotesdataiNotes -type f | while read file; do file_cleanup "$file" "$DOMINO_DATA_PATH/iNotes"; done
+    rmdir "$DOMINO_DATA_PATH/iNotes/localnotesdataiNotes" >> $LOG_FILE 2>&1
+  fi
+
+  if [ -e "$DOMINO_DATA_PATH/domino/java/localnotesdatadominojava" ]; then
+    find $DOMINO_DATA_PATH/domino/java/localnotesdatadominojava -type f | while read file; do file_cleanup "$file" "$DOMINO_DATA_PATH/domino/java"; done
+    rmdir "$DOMINO_DATA_PATH/domino/java/localnotesdatadominojava" >> $LOG_FILE 2>&1
+  fi
+}
+
 
 copy_files_for_major_version()
 {
@@ -189,7 +234,6 @@ copy_data_directory()
     log_file "Data directory already exists - nothing to copy."
     return 0
   fi
-
 
   if [ -e "$DOMINO_DATA_PATH" ]; then
     log_file "[$DOMINO_DATA_PATH] already exists"
@@ -323,6 +367,8 @@ NOW=$(date)
 log_file_header "$NOW"
 
 debug_show_data_dir "At Start"
+
+cleanup_fixpack_data_files
 
 copy_data_directory
 
