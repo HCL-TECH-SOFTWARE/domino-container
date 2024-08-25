@@ -762,8 +762,8 @@ check_from_image()
       ;;
 
     ubuntu)
-      LINUX_NAME="Ubuntu 22.04 LTS"
-      BASE_IMAGE=ubuntu:jammy
+      LINUX_NAME="Ubuntu 24.04 LTS"
+      BASE_IMAGE=ubuntu
       ;;
 
     ubuntu22)
