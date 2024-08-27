@@ -2272,6 +2272,9 @@ select_domino_version()
     2)
       DOMINO_VERSION="$VER_1202"
       parse_domino_version "$DOMINO_VERSION"
+      # Reset OnTime for older releases
+      ONTIME_VERSION=
+      DominoResponseFile=
       ;;
 
   esac
