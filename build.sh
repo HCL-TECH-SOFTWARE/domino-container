@@ -2081,8 +2081,14 @@ parse_domino_version()
   local FP=$(echo "$VER_UPPER" | awk -F'FP' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
   local IF=$(echo "$VER_UPPER" | awk -F'IF' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
   local HF=$(echo "$VER_UPPER" | awk -F'HF' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
+  local EA=$(echo "$VER_UPPER" | awk -F'EA' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
 
-  if [ -n "$FP" ]; then
+  if [ -n "$EA" ]; then
+    PROD_VER="$1"
+    PROD_FP=
+    PROD_IF=
+
+  elif [ -n "$FP" ]; then
 
     FULL_PROD_FP=${PROD_VER}FP${FP}
     PROD_FP=FP${FP}
@@ -2242,9 +2248,10 @@ select_language_pack()
 select_domino_version()
 {
   local VER=
-  local VER_LATEST="14.0FP1"
-  local VER_140="14.0FP1"
+  local VER_LATEST="14.0FP2"
+  local VER_140="14.0FP2"
   local VER_1202="12.0.2FP4"
+  local VER_145="14.5EA1"
 
   clear
   echo
@@ -2254,6 +2261,7 @@ select_domino_version()
 
   print_ver "1" "$VER_LATEST"
   print_ver "2" "$VER_1202"
+  print_ver "3" "$VER_145"
 
   echo
   read -n1 -p " Select Domino version  [0] to cancel? " VER;
@@ -2267,10 +2275,18 @@ select_domino_version()
     1)
       DOMINO_VERSION="$VER_LATEST"
       parse_domino_version "$DOMINO_VERSION"
+      get_current_addon_version traveler SELECT_TRAVELER_VERSION
       ;;
 
     2)
       DOMINO_VERSION="$VER_1202"
+      parse_domino_version "$DOMINO_VERSION"
+      get_current_addon_version traveler SELECT_TRAVELER_VERSION
+      ;;
+
+    3)
+      DOMINO_VERSION="$VER_145"
+      SELECT_TRAVELER_VERSION="$VER_145"
       parse_domino_version "$DOMINO_VERSION"
       ;;
 
@@ -2672,9 +2688,6 @@ select_software()
 
 	if [ -n "$TRAVELER_VERSION" ]; then
           case "$PROD_VER" in
-            14*)
-               TRAVELER_VERSION="$PROD_VER"
-               ;;
             *)
                TRAVELER_VERSION="$SELECT_TRAVELER_VERSION"
                ;;
