@@ -16,6 +16,7 @@ domino|12.0.2FP4|Domino_1202FP4_Linux.tar|N0hQIwHvBGDQzhM7ma4Ya|75014c847e70f193
 domino|14.0|Domino_14.0_Linux_English.tar|ZS2SlUJcfR70cNMuQlzQp|5fd08b71e946f11308232170553aaca6f4c60c8bb8d91ef6fb89e3f171bad9a5
 domino|14.0FP1|Domino_140FP1_Linux.tar|KnAvDQcFMQHyG20b0Tlo0|9da4297f87544cf7e6520cebf1c5680cd15e8225c8fd2dbdfcd443388d2b8064
 domino|14.0FP2|Domino_1400FP2_Linux.tar,Domino_140FP2_Linux.tar|XN8KJutYRTZokm1rq0Yjt|1785787ef9daefa126eb4c3db6973766d98c9274fb83b6d35ade929406bdc487
+domino|14.5EA1|Domino_14.5_Linux_English_EA1.tar|aLsvoj9qwqxTj5wW1AyQK|3d96498fc5e61bcb6268dbbdb753f0cb7f3cc7b43bdfbd94bc0672370d779c15
 domlp|DE-12.0.2|Domino_12.0.2_SLP_German.tar|1zzZ8HoOX7SIHWk0yfp5Z|fd319a28366e4650c31fa3d90004d729d7de48d9230413de9663a9f80d2dfdf9
 domlp|ES-12.0.2|Domino_12.0.2_SLP_Spanish.tar|4emFE7XxB5sO9dwkngCvE|33b6fc214c1c6f92e5463c8d6ee91447de6b07a592478838e3e62d5aee39778a
 domlp|FR-12.0.2|Domino_12.0.2_SLP_French.tar|V65caqowSyeZXVIN24Vhl|f3766413c3f43d3054e62a5db318dcfa21d1168627071530df99a74827cea615
@@ -42,6 +43,7 @@ traveler|12.0.2|Traveler_12.0.2_Linux_ML.tar.gz|a2Gx2Jt6BYm1qAOU8QYKe|c3ccbc9372
 traveler|12.0.2FP1|Traveler_12.0.2FP1_Linux_ML.tar.gz|5uf028p7eJWqcp7Fqoqzj|d670c90ef81f0491fcf15b5aea03c815b7ee932fceed027f925741c2a54e9e7c
 traveler|14.0|Traveler_14.0_Linux_ML.tar.gz|h0xrRc7U3NtRTCpsHlaiN|6eb21bb0abf9a11d250b35437ffee1dc5f4531a33eaae5901b4818ec2da8d1fa
 traveler|14.0FP1|Traveler_14.0.0FP1_Linux_ML.tar.gz|zXO2cxMi2AjyXyCRQdnL8|080af5bc897ba058fa8ac04b36b32521648c4342ae40dd5bc80e86d85b97f87d
+traveler|14.5EA1|Traveler_14.5_Linux_ML_EA1.tar.gz|uF2Y8WyRo1nngOwexka0D|1fef24fb4412f36ec37a9cdf3c4ce2be66ac55c534c45bfa8be22be99ba97763
 volt|1.0.4.10|hcl.domino.volt-1.0.4.10.zip|-|0890b7314e0398d37d82a76de48b52a95723ea91d4c01cb1080ad0583a5420f8
 volt|1.0.5.15|hcl.domino.volt-1.0.5.15.zip|-|0efb0a18deb690d1e2b31790bab6628565aae88815ed2c8d69f1f7ff820f26db
 leap|1.1|hcl.dleap-1.1.0.15.zip|-|c03f2bc8ffb7750eb49e25de10d4aa4b40832df74aaa031c0ca45b349ed78858
@@ -81,6 +83,7 @@ nomad|1.0.10-14.0|nomad-server-1.0.10-for-domino-14.0.0-linux.tgz|1eYAmUwtd5rxCV
 nomad|1.0.10IF1-14.0|nomad-server-1.0.10-1-for-domino-14.0.0-linux.tgz|7FDYNcNgpT2cxuRK5IU2d|3fee60c97018bb156ed4ff72ab36d11a4a9edbe51ec36bb5b698f117b325afd1
 nomad|1.0.11-14.0|nomad-server-1.0.11-for-domino-14.0.0-linux.tgz|L5dE1wc7SJaMArzBrcEM0|0d39bd27dfc01007d030736fbe5a6e175ff5455fa659427bea9630732c13edf1
 nomad|1.0.12IF1-14.0|nomad-server-1.0.12-for-domino-14.0.0-linux.tgz|dZTS5fllw2dNECaHuhtR5|0083ac39d1371fd83fa41d5372e161ca2e5d0bae27181d88ff95c3959a986ab2
+nomad|1.0.12IF1-14.5EA1|nomad-server-1.0.12-for-domino-14.0.0-linux.tgz|dZTS5fllw2dNECaHuhtR5|0083ac39d1371fd83fa41d5372e161ca2e5d0bae27181d88ff95c3959a986ab2
 domrestapi|1.0.10-12|Domino_REST_API_V1.0.10_R12_Installer.tar.gz|CMHEUOzmCNPAJj2quzHGz|9401c0262360c5ed7ece092d60ee06550df24e3e88b85a179442b4263003d123
 domrestapi|1.0.10-14|Domino_REST_API_V1.0.10_R14_Installer.tar.gz|tCI44Ccfv8unzfkD8ariR|33178942c9b2f5a21553f0304f6939f39a1b17982512182f5fb33d1349676ff8
 domrestapi|1.0.11-12|Domino_REST_API_V1.0.11_R12_Installer.tar.gz|TT1k4cJaNa8F1iL72NDBB|0ae41f3deb098760abb5a16f25b73a33eee8da02a1282b03b582f11e201df708
