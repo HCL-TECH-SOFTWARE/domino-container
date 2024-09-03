@@ -52,6 +52,7 @@ check_install_tika()
 
 install_domino()
 {
+  local KERNEL_VERSION=$(uname -r)
 
   #On Ubuntu & Debian Domino 14 requires to disable requirements checks
   if [ -x /usr/bin/apt-get ]; then
@@ -63,6 +64,13 @@ install_domino()
     log_space "Info: Disable Domino requirements check for Linux distribution."
     export INSTALL_NO_CHECK=1
   fi
+
+  case "$KERNEL_VERSION" in
+    6*|7*)
+    log_space "Info: Disable Domino requirements check for unsupported kernel version $KERNEL_VERSION"
+    export INSTALL_NO_CHECK=1
+     ;;
+  esac
 
   INST_VER=$PROD_VER
 
