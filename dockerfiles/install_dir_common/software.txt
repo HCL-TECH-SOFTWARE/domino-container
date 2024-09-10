@@ -84,6 +84,7 @@ nomad|1.0.10IF1-14.0|nomad-server-1.0.10-1-for-domino-14.0.0-linux.tgz|7FDYNcNgp
 nomad|1.0.11-14.0|nomad-server-1.0.11-for-domino-14.0.0-linux.tgz|L5dE1wc7SJaMArzBrcEM0|0d39bd27dfc01007d030736fbe5a6e175ff5455fa659427bea9630732c13edf1
 nomad|1.0.12IF1-14.0|nomad-server-1.0.12-for-domino-14.0.0-linux.tgz|dZTS5fllw2dNECaHuhtR5|0083ac39d1371fd83fa41d5372e161ca2e5d0bae27181d88ff95c3959a986ab2
 nomad|1.0.12IF1-14.5EA1|nomad-server-1.0.12-for-domino-14.0.0-linux.tgz|dZTS5fllw2dNECaHuhtR5|0083ac39d1371fd83fa41d5372e161ca2e5d0bae27181d88ff95c3959a986ab2
+nomad|1.0.13|nomad-server-1.0.13-linux.tar.gz|kzsOP2qCPZRk5YvhjU3eg|7d5108b0efc36a53e4cb959d0032adb6a5994fb3d8465b407280d83239652f26
 domrestapi|1.0.10-12|Domino_REST_API_V1.0.10_R12_Installer.tar.gz|CMHEUOzmCNPAJj2quzHGz|9401c0262360c5ed7ece092d60ee06550df24e3e88b85a179442b4263003d123
 domrestapi|1.0.10-14|Domino_REST_API_V1.0.10_R14_Installer.tar.gz|tCI44Ccfv8unzfkD8ariR|33178942c9b2f5a21553f0304f6939f39a1b17982512182f5fb33d1349676ff8
 domrestapi|1.0.11-12|Domino_REST_API_V1.0.11_R12_Installer.tar.gz|TT1k4cJaNa8F1iL72NDBB|0ae41f3deb098760abb5a16f25b73a33eee8da02a1282b03b582f11e201df708
