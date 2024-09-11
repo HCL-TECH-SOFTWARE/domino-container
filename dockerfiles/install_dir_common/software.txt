@@ -67,13 +67,7 @@ tika|2.9.2|tika-server-standard-2.9.2.jar,https://dlcdn.apache.org/tika/2.9.2/ti
 safelinx|1.4.1|HCL-SafeLinx-1410-x86_64.tar.gz|AbiYxUssdE1MT0GtR4gH8|c8c207f810343c7ab47997c1006e144998d0717080241ea6e6f2644191499c31
 safelinx|1.4.2|HCL-SafeLinx-1420-x86_64.tar.gz|75sNbH9gws5m6nZ3M5yR6|dfe9244848fd2ad3367db002de5dcdbf6b577ad8d240db75298b411b03c04ef0
 nomadweb|1.0.11|HCL_Nomad_web_1.0.11_20240305-18_for_HCL_SafeLinx.zip|y2cf6x3wcUpgtAI3Gldbi|e7484c7d42f8357cf79d609363c13fb08da0baee445e0d4bebb71497dfd99bbc
-nomad|1.0.6-12.0.2|nomad-server-1.0.6-for-domino-1202-linux.tgz|-|3280c77199443c2135c5b49da6a0690730a6d2f872fcaaaaacebd7b5544efcc5
-nomad|1.0.6-12.0.1|nomad-server-1.0.6-for-domino-1201-linux.tgz|-|87dbbb203b6146f96a3b0ed6486a41e92b5fb5e310b1d776e1cc3fa422de39da
-nomad|1.0.7-12.0.2|nomad-server-1.0.7-for-domino-1202-linux.tgz|biWW7bqlEKCdkhRuuPsX2|4411be9d8692860b3fb4c8010c9ebecd6874c9c21d885b27003ead1b47830b7c
-nomad|1.0.7-12.0.1|nomad-server-1.0.7-for-domino-1201-linux.tgz|OpPfnBQDzJyOyh9p0eEzh|ce76af0ed87de1a7c66d14b6e3ba62923e5928b65d675baf780a298b83f8fe9f
-nomad|1.0.8-12.0.2|nomad-server-1.0.8-for-domino-1202-linux.tgz|adbvjlWQJ2yChDfTeLWZP|3a2af50f48a4a1652507ff2eef9670b3b0ffbb6d1a1d9ee3d5049590b6003a65
-nomad|1.0.8-12.0.1|nomad-server-1.0.8-for-domino-1201-linux.tgz|Bbew6EXoGVwJ6jHI2CTBD|2f3ebd0915c17c010db22d7d6d2a50a4552966979b4c616deb17c4ee07ab5474
-nomad|1.0.9-12.0.2|nomad-server-1.0.9-for-domino-12.0.2-linux.tgz|RWShRz58VhkvXSgkig3PF|77e16374db8075701ddc3e081c45de9ba300ab0af40e8d32d041aad9391c9acc
+nomadweb|1.0.13|HCL_Nomad_web_1.0.13_20240904-48_for_HCL_SafeLinx.zip|hDVwqcVmy8qy0zNOu0pUh|238865877ae87dab498ca5207b8b0042abc18a6d8d7b7edf9aea4760bc1a5efe
 nomad|1.0.10-12.0.2|nomad-server-1.0.10-for-domino-12.0.2-linux.tgz|HNOTAeDGS3XuHtVFloF9N|0ec34d38e1794499c5b29611e70a4c31eb8e803c22c0a8beadca3342a1778706
 nomad|1.0.10IF1-12.0.2|nomad-server-1.0.10-1-for-domino-12.0.2-linux.tgz|zpwVtTlGPATmB5GV3wtX0|6c9d0f13ff0a01ee2134ee72f9c244bef982262d3a4a37e6274c5627d7b29ac6
 nomad|1.0.11-12.0.2|nomad-server-1.0.11-for-domino-12.0.2-linux.tgz|INBy0N3YrWjawuG1kU6EE|1c38b349b002d0d45a7f5efc9a3d78cab7a72178f94ae43ae14dda7688d09a03
