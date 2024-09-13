@@ -1,4 +1,6 @@
 domino|14.0|FP2|IF1
+domino-12.0.2|12.0.2|FP4
+domino-14.5|14.5EA1
 traveler|14.0FP1
 volt|1.0.5.15
 leap|1.1.5

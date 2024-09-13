@@ -318,8 +318,8 @@ usage()
   echo
   echo "Examples:"
   echo
-  echo "  $(basename $SCRIPT_NAME) domino 12.0.2 fp4"
-  echo "  $(basename $SCRIPT_NAME) traveler 12.0.2"
+  echo "  $(basename $SCRIPT_NAME) domino1 14.0 fp2"
+  echo "  $(basename $SCRIPT_NAME) traveler 14.0 fp1"
   echo
 
   return 0
@@ -573,9 +573,14 @@ get_current_version()
     fi
   fi
 
-  PROD_VER=$(echo $LINE|cut -d'|' -f2)
-  PROD_FP=$(echo $LINE|cut -d'|' -f3)
-  PROD_HF=$(echo $LINE|cut -d'|' -f4)
+  if [ -z "$2" ]; then
+    PROD_VER=$(echo $LINE|cut -d'|' -f2)
+    PROD_FP=$(echo $LINE|cut -d'|' -f3)
+    PROD_HF=$(echo $LINE|cut -d'|' -f4)
+
+  else
+    export $2=$(echo $LINE|cut -d'|' -f2)$(echo $LINE|cut -d'|' -f3)$(echo $LINE|cut -d'|' -f4)
+  fi
 
   return 0
 }
@@ -2074,6 +2079,10 @@ ScanImage()
 parse_domino_version()
 {
   local VER_UPPER=
+  PROD_VER=
+  PROD_FP=
+  PROD_IF=
+  PROD_HF=
 
   VER_UPPER=$(echo "$1" | awk '{print toupper($0)}')
   PROD_VER=$(echo "$VER_UPPER" | awk -F'[A-Z ]' '{print $1}')
@@ -2248,10 +2257,17 @@ select_language_pack()
 select_domino_version()
 {
   local VER=
-  local VER_LATEST="14.0FP2"
-  local VER_140="14.0FP2"
-  local VER_1202="12.0.2FP4"
-  local VER_145="14.5EA1"
+  local VER_LATEST=
+  local VER_140=
+  local VER_1202=
+  local VER_145=
+
+  get_current_version domino VER_LATEST
+  VER="$VER_LATEST"
+  VER_140="$VER"
+
+  get_current_version domino-12.0.2 VER_1202
+  get_current_version domino-14.5 VER_145
 
   clear
   echo
