@@ -801,6 +801,11 @@ check_from_image()
       BASE_IMAGE=docker.io/archlinux
       ;;
 
+    kali)
+      LINUX_NAME="Kali Linux (experimental)"
+      BASE_IMAGE=docker.io/kalilinux/kali-rolling
+      ;;
+
     *)
       LINUX_NAME="Manual specified base image"
       BASE_IMAGE=$FROM_IMAGE
