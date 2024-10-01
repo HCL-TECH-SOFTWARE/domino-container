@@ -8,7 +8,7 @@ verse|3.2.2
 capi|14.0
 safelinx|1.4.2
 nomadweb|1.0.13
-nomad|1.0.13
+nomad|1.0.13IF1
 domrestapi|1.1
 tika|2.9.2
 borg|1.2.8
