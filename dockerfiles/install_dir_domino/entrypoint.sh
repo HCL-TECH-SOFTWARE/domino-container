@@ -266,6 +266,18 @@ cleanup_setup_env()
   history -c
 }
 
+
+# Ensure security limits don't have more than 1024*1024 open files. This can cause high CPU usage for LSOF used by NSD
+
+CONTAINER_ORIGINAL_NOFILES_LIMIT=$(ulimit -n)
+
+if [ "$CONTAINER_ORIGINAL_NOFILES_LIMIT" -gt "1048576" ]; then
+
+  log "Info: Changing number of open files from $CONTAINER_ORIGINAL_NOFILES_LIMIT to 1048576"
+  ulimit -n 1048576
+fi
+
+
 # "docker stop" will send a SIGTERM to the shell. catch it and stop Domino gracefully.
 # Use e.g. "docker stop --time=90 .." to ensure server has sufficient time to terminate.
 

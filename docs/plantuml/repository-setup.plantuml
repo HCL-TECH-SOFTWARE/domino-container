@@ -1,0 +1,59 @@
+@startuml
+state "Community submission" as ComSubmit
+state "HCL submission" as HclSubmit
+state "Nash!Com Start Script" as StartScript
+
+state "**Community repository**" as ComRepo {
+  state "**Develop**" as ComDevRepo
+  state "**Main**" as ComMainRepo
+
+  ComDevRepo: Active develop branch
+  ComMainRepo: Stable main branch
+}
+
+state "**Customer environment**" as CustomerEnv {
+  state "**Local Repo**" as LocalRepo
+  state "HCL WebKit" as HclWebKit
+  HclWebKit: MHS download
+  state "**Community image**" as ComImage
+  state "**Main**" as ComMainRepo
+}
+
+state "**HCL environment**" as HCLEnv {
+
+  state "**HCL repository**" as HclRepo {
+    state "**community-main**" as HclDevRepo
+    state "**Main**" as HclMainRepo
+    HclMainRepo: + hcl-local / jenkins files
+  }
+
+  state "**HCL pull request**" as HclPull {
+    HclPull: e.g hcl-local change
+  }
+
+  state "**HCL official HCL image**" as HclImage
+  state "HCL WebKit daily" as HclDailyWebKit
+  state "**HCL daily image**" as HCLDailyImage
+  state "HCL WebKit(Gold)" as HclWebKitGold
+}
+ 
+StartScript --> ComDevRepo : Nash!Com contribution
+
+ComSubmit --> ComDevRepo : Approved by community team
+ComDevRepo --> ComMainRepo : Merged by community team
+
+ComMainRepo --> HclDevRepo : Synced by HCL
+HclDevRepo --> HclMainRepo : Merged by CFIUS approver
+HclSubmit --> ComDevRepo : HCL contribution
+HclMainRepo --> HclImage : Build by build room
+HclWebKit --> ComImage : Used to build image
+
+HclMainRepo -> HCLDailyImage : Build by build room
+HclDailyWebKit --> HCLDailyImage : Used to build image
+HclWebKitGold -> HclImage : Used to build image
+
+ComMainRepo --> LocalRepo : Cloned/forked by customer
+LocalRepo --> ComImage
+HclPull ---> HclMainRepo
+@enduml
+
