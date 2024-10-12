@@ -2,7 +2,7 @@
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version  3.9.2 05.01:2024                                               #
+# Version  4.0.1 07.08:2024                                               #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2024                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -32,7 +32,7 @@ DOMINO_DOCKER_SCRIPT=entrypoint.sh
 DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
 DONT_TOUCH_THIS_STANDARD_USER=notes
 
-DOMINO_SCRIPT_VERSION=3.9.2
+DOMINO_SCRIPT_VERSION=4.0.1
 
 # if you really really need to, change this and all files will be patched
 
@@ -402,10 +402,12 @@ if [ -n "$CONTAINER_ENV" ] || [ "$CONTAINER_USE_SYSTEMD" = "yes" ]; then
     header "${CONTAINER_ENV} container environment detected!"
   fi
   
-  if [ "$PARAM1" = "upd" ]; then
-    install_file "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
-  else
-    install_file_noupdate "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
+  if [ -e "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" ]; then
+    if [ "$PARAM1" = "upd" ]; then
+      install_file "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
+    else
+      install_file_noupdate "$START_SCRIPT_DIR/$DOMINO_DOCKER_SCRIPT" "/$DOMINO_DOCKER_SCRIPT" $ROOT_USER $ROOT_GROUP 755
+    fi
   fi
 fi
 
@@ -418,17 +420,18 @@ if [ ${LARCH} = "linux" ]; then
     else
       install_file_noupdate $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
     fi
-
-    if [ $? -eq 2 ]; then
-      systemctl daemon-reload
-    fi
   fi
 
   patch_install_dir "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
   patch_user_name "/etc/systemd/system/$DOMINO_SYSTEMD_NAME"
 
   # add domino service (systemd/init.d)
-  $DOMINO_SCRIPT_BIN service add
+  if [ -z "$(ps --no-headers -o comm 1 | grep systemd)" ]; then
+    echo "Info: System is not running systemd"
+  else
+    systemctl daemon-reload
+    $DOMINO_SCRIPT_BIN service add
+  fi
 
 fi
 

@@ -3,7 +3,7 @@
 # Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
 ############################################################################
 
-ARG BASE_IMAGE=
+ARG BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal:latest
 FROM $BASE_IMAGE
 
 # External arguments with a default value

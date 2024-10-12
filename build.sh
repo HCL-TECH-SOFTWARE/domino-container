@@ -318,8 +318,8 @@ usage()
   echo
   echo "Examples:"
   echo
-  echo "  $(basename $SCRIPT_NAME) domino 12.0.2 fp4"
-  echo "  $(basename $SCRIPT_NAME) traveler 12.0.2"
+  echo "  $(basename $SCRIPT_NAME) domino1 14.0 fp2"
+  echo "  $(basename $SCRIPT_NAME) traveler 14.0 fp1"
   echo
 
   return 0
@@ -573,9 +573,14 @@ get_current_version()
     fi
   fi
 
-  PROD_VER=$(echo $LINE|cut -d'|' -f2)
-  PROD_FP=$(echo $LINE|cut -d'|' -f3)
-  PROD_HF=$(echo $LINE|cut -d'|' -f4)
+  if [ -z "$2" ]; then
+    PROD_VER=$(echo $LINE|cut -d'|' -f2)
+    PROD_FP=$(echo $LINE|cut -d'|' -f3)
+    PROD_HF=$(echo $LINE|cut -d'|' -f4)
+
+  else
+    export $2=$(echo $LINE|cut -d'|' -f2)$(echo $LINE|cut -d'|' -f3)$(echo $LINE|cut -d'|' -f4)
+  fi
 
   return 0
 }
@@ -794,6 +799,11 @@ check_from_image()
     archlinux)
       LINUX_NAME="Arch Linux (experimental)"
       BASE_IMAGE=docker.io/archlinux
+      ;;
+
+    kali)
+      LINUX_NAME="Kali Linux (experimental)"
+      BASE_IMAGE=docker.io/kalilinux/kali-rolling
       ;;
 
     *)
@@ -2074,6 +2084,10 @@ ScanImage()
 parse_domino_version()
 {
   local VER_UPPER=
+  PROD_VER=
+  PROD_FP=
+  PROD_IF=
+  PROD_HF=
 
   VER_UPPER=$(echo "$1" | awk '{print toupper($0)}')
   PROD_VER=$(echo "$VER_UPPER" | awk -F'[A-Z ]' '{print $1}')
@@ -2081,8 +2095,14 @@ parse_domino_version()
   local FP=$(echo "$VER_UPPER" | awk -F'FP' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
   local IF=$(echo "$VER_UPPER" | awk -F'IF' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
   local HF=$(echo "$VER_UPPER" | awk -F'HF' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
+  local EA=$(echo "$VER_UPPER" | awk -F'EA' '{print $2}' | awk -F'[A-Z ]' '{print $1}')
 
-  if [ -n "$FP" ]; then
+  if [ -n "$EA" ]; then
+    PROD_VER="$1"
+    PROD_FP=
+    PROD_IF=
+
+  elif [ -n "$FP" ]; then
 
     FULL_PROD_FP=${PROD_VER}FP${FP}
     PROD_FP=FP${FP}
@@ -2242,9 +2262,17 @@ select_language_pack()
 select_domino_version()
 {
   local VER=
-  local VER_LATEST="14.0FP1"
-  local VER_140="14.0FP1"
-  local VER_1202="12.0.2FP4"
+  local VER_LATEST=
+  local VER_140=
+  local VER_1202=
+  local VER_145=
+
+  get_current_version domino VER_LATEST
+  VER="$VER_LATEST"
+  VER_140="$VER"
+
+  get_current_version domino-12.0.2 VER_1202
+  get_current_version domino-14.5 VER_145
 
   clear
   echo
@@ -2254,6 +2282,7 @@ select_domino_version()
 
   print_ver "1" "$VER_LATEST"
   print_ver "2" "$VER_1202"
+  print_ver "3" "$VER_145"
 
   echo
   read -n1 -p " Select Domino version  [0] to cancel? " VER;
@@ -2267,10 +2296,21 @@ select_domino_version()
     1)
       DOMINO_VERSION="$VER_LATEST"
       parse_domino_version "$DOMINO_VERSION"
+      get_current_addon_version traveler SELECT_TRAVELER_VERSION
       ;;
 
     2)
       DOMINO_VERSION="$VER_1202"
+      parse_domino_version "$DOMINO_VERSION"
+      # Reset OnTime for older releases
+      ONTIME_VERSION=
+      DominoResponseFile=
+      get_current_addon_version traveler SELECT_TRAVELER_VERSION
+      ;;
+
+    3)
+      DOMINO_VERSION="$VER_145"
+      SELECT_TRAVELER_VERSION="$VER_145"
       parse_domino_version "$DOMINO_VERSION"
       ;;
 
@@ -2672,9 +2712,6 @@ select_software()
 
 	if [ -n "$TRAVELER_VERSION" ]; then
           case "$PROD_VER" in
-            14*)
-               TRAVELER_VERSION="$PROD_VER"
-               ;;
             *)
                TRAVELER_VERSION="$SELECT_TRAVELER_VERSION"
                ;;
@@ -3406,6 +3443,10 @@ if [ -n "$NOMAD_VERSION" ]; then
   case "$NOMAD_VERSION" in
 
     *-*)
+      ;;
+
+    # For now make it a special case before we phase out older Nomad versions
+    1.0.13*|1.0.14*)
       ;;
 
     *)
