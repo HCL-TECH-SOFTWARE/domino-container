@@ -1251,7 +1251,7 @@ cd "$INSTALL_DIR"
 # Download updated software.txt file if available
 download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 
-if [ "$FIRST_TIME_SETUP" = "1" ]; then
+if [ "$FIRST_TIME_SETUP" = "1" ] || [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
   case "$PROD_NAME" in
     domino)
       install_domino
