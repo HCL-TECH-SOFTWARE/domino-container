@@ -606,6 +606,11 @@ download_tar_with_hash()
   esac
 
   case "$DOWNLOAD_FILE" in
+
+    *.zip)
+      TAR_OPT=unzip
+      ;;
+
     *.tar.gz)
       TAR_OPT=-xz
       ;;
@@ -633,7 +638,23 @@ download_tar_with_hash()
     exit 1
   fi
 
-  HASH=$($CURL_CMD -s $DOWNLOAD_FILE | tee >(tar $TAR_OPT --no-same-owner 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+  if [ "$TAR_OPT" = "unzip" ]; then
+
+    header "Unzip $DOWNLOAD_FILE"
+
+    local ZIP_FILE=custom_addon_download.zip
+    $CURL_CMD -s $DOWNLOAD_FILE -o "$ZIP_FILE"
+    HASH=$(sha256sum -b "$ZIP_FILE" | cut -d" " -f1)
+
+    if [ "$HASH" = "$CHECK_HASH" ]; then
+      unzip -o -q "$ZIP_FILE"
+    fi
+
+    find .
+
+  else
+    HASH=$($CURL_CMD -s $DOWNLOAD_FILE | tee >(tar $TAR_OPT --no-same-owner 2>/dev/null) | sha256sum -b | cut -d" " -f1)
+  fi
 
   if [ "$HASH" = "$CHECK_HASH" ]; then
     return 0

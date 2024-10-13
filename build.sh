@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.1 21.07.2024
+# Version 2.3.2 14.10.2024
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -27,7 +27,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.1
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.2
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -901,6 +901,48 @@ check_exposed_ports()
   return 0
 }
 
+add_custom_addon_label()
+{
+  local ADDON_NAME=
+  local ADDON_VER=
+  local ADDON_TEXT=
+
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  ADDON_NAME="$(basename $(echo $1| cut -f1 -d# | cut -f1 -d'.'))"
+  ADDON_VER="$(echo $1| cut -f3 -d#)"
+
+  if [ -z "$ADDON_VER" ]; then
+     ADDON_TEXT="$ADDON_NAME"
+  else
+     ADDON_TEXT="$ADDON_NAME=$ADDON_VER"
+  fi
+
+  if [ -z "$CONTAINER_DOMINO_CUSTOM_ADDONS" ]; then
+    CONTAINER_DOMINO_CUSTOM_ADDONS="$ADDON_TEXT"
+  else
+    CONTAINER_DOMINO_CUSTOM_ADDONS="$CONTAINER_DOMINO_CUSTOM_ADDONS,$ADDON_TEXT"
+  fi
+}
+
+
+check_custom_addon_label()
+{
+
+  if [ -z "$CUSTOM_ADD_ONS" ]; then
+    return 0
+  fi
+
+  local CUSTOM_INSTALL_FILE=
+
+  for CUSTOM_INSTALL_FILE in $(echo "$CUSTOM_ADD_ONS" | tr "," "\n" ) ; do
+     add_custom_addon_label "$CUSTOM_INSTALL_FILE"
+  done
+}
+
+
 add_addon_label()
 {
 
@@ -918,6 +960,7 @@ add_addon_label()
     CONTAINER_DOMINO_ADDONS="$CONTAINER_DOMINO_ADDONS,$1=$2"
   fi
 }
+
 
 check_addon_label()
 {
@@ -973,9 +1016,11 @@ build_domino()
 {
   CONTAINER_DOMINO_ADDONS=
   check_addon_label
+  check_custom_addon_label
 
   echo
   echo "CONTAINER_DOMINO_ADDONS: [$CONTAINER_DOMINO_ADDONS]"
+  echo "CONTAINER_DOMINO_CUSTON_ADDONS: [$CONTAINER_DOMINO_CUSTOM_ADDONS]"
   echo
 
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
@@ -1003,6 +1048,7 @@ build_domino()
     --label DominoContainer.version="$DOCKER_IMAGE_VERSION" \
     --label DominoContainer.buildtime="$BUILDTIME" \
     --label DominoContainer.addons="$CONTAINER_DOMINO_ADDONS" \
+    --label DominoContainer.custom-addons="$CONTAINER_DOMINO_CUSTOM_ADDONS" \
     --build-arg PROD_NAME=$PROD_NAME \
     --build-arg PROD_VER=$PROD_VER \
     --build-arg DOMLP_VER=$DOMLP_VER \
@@ -1424,11 +1470,13 @@ check_software()
             DOWNLOAD_1ST_FILE=$(basename $CHECK_FILE)
           fi
 
-          http_head_check "$CHECK_FILE"
-          if [ "$?" = "1" ]; then
-            CURRENT_FILE="$CHECK_FILE"
-            FOUND=TRUE
-            break
+          if [ -z "$FOUND" ]; then
+            http_head_check "$CHECK_FILE"
+            if [ "$?" = "1" ]; then
+              CURRENT_FILE="$CHECK_FILE"
+              FOUND=TRUE
+              break
+            fi
           fi
           ;;
 
@@ -1442,11 +1490,14 @@ check_software()
             FOUND=TRUE
             break
 	  else
-            check_domdownload "$CHECK_FILE" "$CURRENT_FILE_ID" "$CURRENT_HASH"
-            if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
-              CURRENT_FILE="$CHECK_FILE"
-              FOUND=TRUE
-              break
+
+            if [ "$CURRENT_FILE_ID" != "x" ]; then
+              check_domdownload "$CHECK_FILE" "$CURRENT_FILE_ID" "$CURRENT_HASH"
+              if [ -r "$SOFTWARE_DIR/$CHECK_FILE" ]; then
+                CURRENT_FILE="$CHECK_FILE"
+                FOUND=TRUE
+                break
+              fi
             fi
           fi
           ;;

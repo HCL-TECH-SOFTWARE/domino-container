@@ -1,6 +1,6 @@
 #!/bin/bash
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2023 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2024 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -30,6 +30,8 @@ INST_HF_LOG=$DOMDOCK_LOG_DIR/install_hf.log
 INST_LP_LOG=$DOMDOCK_LOG_DIR/install_domlp.log
 INST_TRAVELER_LOG=$DOMDOCK_LOG_DIR/install_traveler.log
 INST_RESTAPI_LOG=$DOMDOCK_LOG_DIR/install_restapi.log
+
+DOMINO_CUSTOM_DATA_PATH=/tmp/customdata
 
 check_install_tika()
 {
@@ -893,13 +895,18 @@ install_one_custom_add_on()
   local ALL_FILES=
   local CURRENT_FILE=
   local TARGET_FILE=
+  local ADDON_NAME=
+  local ADDON_VER=
 
   if [ -z "$1" ]; then
     echo "No custom add-on specified"
     return 0
   fi
 
-  header "Installing Custom Add-On $(echo $1| cut -f1 -d#)"
+  ADDON_NAME="$(basename $(echo $1| cut -f1 -d# | cut -f1 -d'.'))"
+  ADDON_VER="$(echo $1| cut -f3 -d#)"
+
+  header "Installing Custom Add-On $ADDON_NAME"
 
   cd $INSTALL_DIR
   mkdir custom-add-on
@@ -907,8 +914,12 @@ install_one_custom_add_on()
 
   download_tar_with_hash "$DownloadFrom" "$1"
 
+  create_directory "$DOMINO_CUSTOM_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+
   install_files_from_dir "domino-bin" "$Notes_ExecDirectory" root root 755 755
   install_files_from_dir "domino-data" "$DOMINO_DATA_PATH" "$DOMINO_USER" "$DOMINO_GROUP" 600 700
+  # Remember files for custom addon tar
+  install_files_from_dir "domino-data" "$DOMINO_CUSTOM_DATA_PATH" "$DOMINO_USER" "$DOMINO_GROUP" 600 700
   install_files_from_dir linux-bin /usr/bin root root 755 755
 
   create_servertask_links "servertasks.txt"
@@ -920,6 +931,29 @@ install_one_custom_add_on()
     print_delim
     echo
   fi
+
+  # Get version from custom install line, or version.txt. Else use current timestamp
+  if [ -z "$ADDON_VER" ]; then
+    if [ -e "version.txt" ]; then
+      ADDON_VER=$(cat "version.txt" | xargs)
+    else
+      ADDON_VER=$(LANG=C date -u +"%y%m%d%H%M%S")
+    fi
+  fi
+
+  # Set add-on version
+  echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
+  echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
+  echo $ADDON_VER > "$DOMINO_CUSTOM_DATA_PATH/${ADDON_NAME}_ver.txt"
+
+  # Copy add-on custom data, even it will be in the full data dir
+  local INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${ADDON_NAME}.taz
+
+  local CURRENT_DIR=$(pwd)
+  cd "$DOMINO_CUSTOM_DATA_PATH"
+  tar -czf "$INSTALL_ADDON_DATA_TAR" *
+  remove_directory "$DOMINO_CUSTOM_DATA_PATH"
+
 
   cd $INSTALL_DIR
   remove_directory custom-add-on

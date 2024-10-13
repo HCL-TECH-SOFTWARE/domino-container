@@ -62,10 +62,10 @@ verse|3.2.2|HCL_Verse_3.2.2.zip|tp1U3jxkBOxNvpMll3ldM|5d554d1b918b9bb84f5c975e24
 capi|12.0|CAPIToolkit_1200_MP.zip|-|545869c8a09c98ac8fde06fdff6f106060f09705e621cc7103acf055baaec037
 capi|12.0.2|CAPIToolkit_1202_MP.zip|aZyOpGR0hXuO6HThl8DdJ|10ef46a999d4da73a1e1f3b1e2a5a7268c2011fdb1dff557f3fc7536a52d8fd3
 capi|14.0|CAPIToolkit_1400_Linux.zip|zpJqVq44zayvOhEsiGbKq|02fc99bd6e0233352756fbf217413bac3088a5eb3698675616a5c412624fb176
-borg|1.2.7|borg-linuxnew64-1.2.7,https://github.com/borgbackup/borg/releases/download/1.2.7/borg-linuxnew64|-|d8d3313ebaf48ba135001b7f230b494259f112e56adf0d5f952af999742e1190
-borg|1.2.8|borg-linuxnew64-1.2.8,https://github.com/borgbackup/borg/releases/download/1.2.8/borg-linuxnew64|-|85847a2ceb27d4a6c0ca0c0fb92d31bb2c1fcf6c77df1b2275b3f6f161d3571c
-tika|2.9.1|tika-server-standard-2.9.1.jar,https://dlcdn.apache.org/tika/2.9.1/tika-server-standard-2.9.1.jar|-|4e38d309c9396892ae14b4337cdf13f90f83da81b3b8123d72fde08fea2120bd
-tika|2.9.2|tika-server-standard-2.9.2.jar,https://dlcdn.apache.org/tika/2.9.2/tika-server-standard-2.9.2.jar|-|379cdb319b80618d166057beecdb445b677d099c438ec026e5810239c1cd03d5
+borg|1.2.7|borg-linuxnew64-1.2.7,https://github.com/borgbackup/borg/releases/download/1.2.7/borg-linuxnew64|x|d8d3313ebaf48ba135001b7f230b494259f112e56adf0d5f952af999742e1190
+borg|1.2.8|borg-linuxnew64-1.2.8,https://github.com/borgbackup/borg/releases/download/1.2.8/borg-linuxnew64|x|85847a2ceb27d4a6c0ca0c0fb92d31bb2c1fcf6c77df1b2275b3f6f161d3571c
+tika|2.9.1|tika-server-standard-2.9.1.jar,https://dlcdn.apache.org/tika/2.9.1/tika-server-standard-2.9.1.jar|x|4e38d309c9396892ae14b4337cdf13f90f83da81b3b8123d72fde08fea2120bd
+tika|2.9.2|tika-server-standard-2.9.2.jar,https://dlcdn.apache.org/tika/2.9.2/tika-server-standard-2.9.2.jar|x|379cdb319b80618d166057beecdb445b677d099c438ec026e5810239c1cd03d5
 safelinx|1.4.1|HCL-SafeLinx-1410-x86_64.tar.gz|AbiYxUssdE1MT0GtR4gH8|c8c207f810343c7ab47997c1006e144998d0717080241ea6e6f2644191499c31
 safelinx|1.4.2|HCL-SafeLinx-1420-x86_64.tar.gz|75sNbH9gws5m6nZ3M5yR6|dfe9244848fd2ad3367db002de5dcdbf6b577ad8d240db75298b411b03c04ef0
 nomadweb|1.0.11|HCL_Nomad_web_1.0.11_20240305-18_for_HCL_SafeLinx.zip|y2cf6x3wcUpgtAI3Gldbi|e7484c7d42f8357cf79d609363c13fb08da0baee445e0d4bebb71497dfd99bbc
