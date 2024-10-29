@@ -51,7 +51,7 @@ install_linux_packages()
 
   # SUSE
   if [ -x /usr/bin/zypper ]; then
-    install_packages glibc-locale libcap-progs vim
+    install_packages glibc-locale libcap-progs vim procps
 
   # Ubuntu, Debian, Astra Linux
 
