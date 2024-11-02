@@ -92,6 +92,40 @@ install_linux_packages()
 
 }
 
+
+install_ssh_client()
+{
+  if [ -x /usr/bin/zypper ]; then
+    install_package openssh
+
+  elif [ -x /usr/bin/dnf ]; then
+    install_package openssh-clients
+
+  elif [ -x /usr/bin/tdnf ]; then
+    install_package openssh-clients
+
+  elif [ -x /usr/bin/microdnf ]; then
+    install_package openssh-clients
+
+  elif [ -x /usr/bin/yum ]; then
+    install_package openssh-clients
+
+  elif [ -x /usr/bin/apt-get ]; then
+    install_package openssh-client
+
+  elif [ -x /usr/bin/pacman ]; then
+    install_package openssh
+
+  elif [ -x /sbin/apk ]; then
+    install_package openssh
+
+  else
+    log_error "No package manager found!"
+    exit 1
+  fi
+}
+
+
 install_linux_packages_hcl()
 {
   # Only install minimum required packages for redistributable UBI image
@@ -324,6 +358,7 @@ else
 
   if [ -n "$BORG_INSTALL" ]; then
     OPENSSL_INSTALL=yes
+    SSH_INSTALL=yes
     install_package fuse
   fi
 
@@ -356,6 +391,13 @@ else
       fi
 
       chmod 755 /usr/bin/borg
+  fi
+
+  if [ "$SSH_INSTALL" = "yes" ]; then
+    if [ ! -e /usr/bin/ssh ]; then
+      header "Installing SSH client"
+      install_ssh_client
+    fi
   fi
 
   if [ "$OPENSSL_INSTALL" = "yes" ]; then

@@ -1182,6 +1182,9 @@ echo "CUSTOM_ADD_ONS        = [$CUSTOM_ADD_ONS]"
 echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
 echo "SPECIAL_CURL_ARGS     = [$SPECIAL_CURL_ARGS]"
 echo "BUILD_SCRIPT_OPTIONS  = [$BUILD_SCRIPT_OPTIONS]"
+echo "BORG_INSTALL          = [$BORG_INSTALL]"
+echo "OPENSSL_INSTALL       = [$OPENSSL_INSTALL]"
+echo "SSH_INSTALL           = [$SSH_INSTALL]"
 
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)

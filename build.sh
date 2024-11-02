@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.2 14.10.2024
+# Version 2.3.3 02.11.2024
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -27,7 +27,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.2
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.3
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -290,6 +290,7 @@ usage()
   echo "-lang=<lang>     specify Linux glibc language pack to install (e.g. de,it,fr). Multiple languages separated by comma"
   echo "-pull            always try to pull a newer base image version"
   echo "-openssl         adds OpenSSL to Domino image"
+  echo "-ssh             adds OpenSSL client to Domino image (-borg option always includes SSH client)"
   echo "-borg            adds borg client and Domino Borg Backup integration to image"
   echo "-verse           adds Verse to a Domino image"
   echo "-nomad           adds the Nomad server to a Domino image"
@@ -1063,6 +1064,7 @@ build_domino()
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
     --build-arg LinuxYumUpdate=$LinuxYumUpdate \
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
+    --build-arg SSH_INSTALL="$iSSH_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg TIKA_INSTALL="$TIKA_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
@@ -3386,8 +3388,12 @@ for a in "$@"; do
       OPENSSL_INSTALL=yes
       ;;
 
-   -noopenssl)
+    -noopenssl)
       OPENSSL_INSTALL=no
+      ;;
+
+    -ssh)
+      SSH_INSTALL=yes
       ;;
 
     -k8s-runas)
