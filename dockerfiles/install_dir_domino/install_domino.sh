@@ -608,6 +608,9 @@ install_capi()
   header "Install gcc and gcc++ compilers"
   install_packages gcc g++ gcc-c++ make binutils
 
+  header "Install C/C++ linter"
+  install_packages clang-tools-extra
+
   # Install OpenSSL developement required packages
   install_package openssl
 
