@@ -55,6 +55,7 @@
       "NSF_BUFFER_POOL_SIZE_MB": "256",
       "SERVER_RESTART_DELAY": "1",
       "FT_FLY_INDEX_OFF": "1",
+      "FT_SUPPRESS_AUTO_UPDATING": "1",
       "UPDATE_FULLTEXT_THREAD": "1",
       "FTG_USE_SYS_MEMORY": "1"
     },
@@ -68,6 +69,7 @@
   },
 
   "autoConfigPreferences": {
+    "deleteInputFileAfterProcessing": true,
     "startServerAfterConfiguration": true 
   },
 

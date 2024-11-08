@@ -53,6 +53,7 @@
       "NSF_BUFFER_POOL_SIZE_MB": "256",
       "SERVER_RESTART_DELAY": "1",
       "FT_FLY_INDEX_OFF": "1",
+      "FT_SUPPRESS_AUTO_UPDATING": "1",
       "UPDATE_FULLTEXT_THREAD": "1",
       "NOMAD_WEB_HOST": "{{ SERVERSETUP_NETWORK_HOSTNAME }}",
       "FTG_USE_SYS_MEMORY": "1"
@@ -95,7 +96,9 @@
   },
 
   "autoConfigPreferences": {
-    "startServerAfterConfiguration": true 
+    "startServerAfterConfiguration": true,
+    "deleteInputFileAfterProcessing": true
+
   },
 
   "appConfiguration": {
@@ -210,6 +213,7 @@
               "Form": "LoginMap",
               "LF_LoginForm": "$$LoginUserForm",
               "LF_LoginFormDB": "domcfg.nsf",
+
               "LF_ServerType": "0",
               "LF_IP": "",
               "$PublicAccess": "1"
