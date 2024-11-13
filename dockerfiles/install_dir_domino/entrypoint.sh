@@ -101,6 +101,21 @@ log()
   echo
 }
 
+log_delim()
+{
+   echo "--------------------------------------------------------------------------------"
+}
+
+header()
+{
+   echo
+   log_delim
+   echo "$@"
+   log_delim
+   echo
+}
+
+
 run_external_script()
 {
   if [ -z "$1" ]; then
@@ -266,6 +281,37 @@ cleanup_setup_env()
   history -c
 }
 
+start_node_exporter()
+{
+  local NODE_EXPORTER_BIN=/opt/prometheus/node_exporter/node_exporter
+
+  if [ ! -x "$NODE_EXPORTER_BIN" ]; then
+     return 0;
+  fi
+
+  if [ -z "$DOMINO_PROM_STATS_DIR" ]; then
+    export DOMINO_PROM_STATS_DIR=/local/notesdata/domino
+
+  else
+    # Use default if no other option is specified and the stats dir is set
+    if [ -z "$NODE_EXPORTER_OPTIONS" ]; then
+       $NODE_EXPORTER_OPTIONS=default
+    fi
+  fi
+
+  if [ -z "$NODE_EXPORTER_OPTIONS" ]; then
+    return 0;
+  fi
+
+  if [ "$NODE_EXPORTER_OPTIONS" = "default" ]; then
+    NODE_EXPORTER_OPTIONS="--collector.disable-defaults --collector.textfile --collector.textfile.directory=$DOMINO_PROM_STATS_DIR"
+  fi
+
+  header "Starting Prometheus Node Exporter"
+
+  # Start node exporter in background logging errors to container STDOUT/STDERR
+  "$NODE_EXPORTER_BIN" $NODE_EXPORTER_OPTIONS &
+}
 
 # Ensure security limits don't have more than 1024*1024 open files. This can cause high CPU usage for LSOF used by NSD
 
@@ -384,6 +430,9 @@ if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
     $DOMINO_START_SCRIPT cmd "restart server"
   fi
 fi
+
+
+start_node_exporter
 
 
 # Wait for shutdown signal. This loop should never terminate, because it would

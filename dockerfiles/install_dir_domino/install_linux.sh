@@ -319,6 +319,46 @@ list_installed_packages()
 }
 
 
+install_node_exporter()
+{
+  if [ -z "$NODE_EXPORTER_INSTALL" ]; then
+    return 0
+  fi
+
+ local NODE_EXPORTER_DIR="/opt/prometheus/node_exporter"
+
+  mkdir -p "$NODE_EXPORTER_DIR"
+
+  header "Installing requested Prometheus Node Exporter version $NODE_EXPORTER_INSTALL"
+
+  get_download_name node_exporter "$NODE_EXPORTER_INSTALL"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find requested Prometheus Node Exporter version $NODE_EXPORTER_INSTALL"
+    return 0
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$NODE_EXPORTER_DIR"
+
+  local NODE_EXPORTER_BIN=$(find "$NODE_EXPORTER_DIR" -type f -name "node_exporter")
+
+  if [ -z "$NODE_EXPORTER_BIN" ]; then
+     echo "Node Exporter not found"
+     exit 1
+  fi
+
+  # Remove version directory
+  local NODE_EXPORTER_INST_DIR=$(dirname $NODE_EXPORTER_BIN)
+
+  if [ "opt/prometheus/node_exporter" = "$NODE_EXPORTER_INST_DIR" ]; then
+    return 0
+  fi
+
+  mv "$NODE_EXPORTER_INST_DIR/"* "$NODE_EXPORTER_DIR"
+  remove_directory "$NODE_EXPORTER_INSTL_DIR"
+}
+
+
 # Main logic to update Linux and install Linux packages
 
 
@@ -416,6 +456,8 @@ else
   if [ "$MSSQL_INSTALL" = "yes" ]; then
     install_mssql_client
   fi
+
+  install_node_exporter
 
   # Install custom Linux packages requested by admin into Linux layer
 

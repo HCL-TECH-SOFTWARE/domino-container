@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.3 02.11.2024
+# Version 2.3.4 14.11.2024
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -27,7 +27,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.3
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.4
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -301,6 +301,7 @@ usage()
   echo "-restapi         adds the Domino REST API to the image"
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
   echo "-tika            updates the Tika server to the Domino server"
+  echo "-node_exporter   Installs Prometheus node_exporter into the container"
   echo "-k8s-runas       adds K8s runas user support"
   echo "-linuxpkg=<pkg>  add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-startscript=x   installs specified start script version from software repository"
@@ -375,6 +376,7 @@ dump_config()
   echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
   echo "BORG_INSTALL         : [$BORG_INSTALL]"
   echo "TIKA_INSTALL         : [$TIKA_INSTALL]"
+  echo "NODE_EXPORTER_INSTALL: [$NODE_EXPORTER_INSTALL]"
   echo "LINUX_PKG_ADD        : [$LINUX_PKG_ADD]"
   echo "STARTSCRIPT_VER      : [$STARTSCRIPT_VER]"
   echo "CUSTOM_ADD_ONS       : [$CUSTOM_ADD_ONS]"
@@ -896,7 +898,11 @@ check_exposed_ports()
   EXPOSED_PORTS="1352 25 80 110 143 389 443 636 993 995 63148 63149"
 
   if [ -n "$NOMAD_VERSION" ]; then
-    EXPOSED_PORTS="1352 25 80 110 143 389 443 636 993 995 9443 63148 63149"
+    EXPOSED_PORTS="$EXPOSED_PORTS 9443"
+  fi
+
+  if [ -n "$NODE_EXPORTER_INSTAL" ]; then
+    EXPOSED_PORTS="$EXPOSED_PORTS 9100"
   fi
 
   return 0
@@ -1067,6 +1073,7 @@ build_domino()
     --build-arg SSH_INSTALL="$iSSH_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg TIKA_INSTALL="$TIKA_INSTALL" \
+    --build-arg NODE_EXPORTER_INSTALL="$NODE_EXPORTER_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
     --build-arg NOMAD_VERSION="$NOMAD_VERSION" \
     --build-arg TRAVELER_VERSION="$TRAVELER_VERSION" \
@@ -1758,6 +1765,11 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$NODE_EXPORTER_INSTALL" ]; then
+      if [ ! "$NODE_EXPORTER_INSTALL" = "yes" ]; then
+        check_software_file "node_exporter" "$NODE_EXPORTER_INSTALL"
+      fi
+    fi
 
   else
     echo
@@ -1897,6 +1909,12 @@ check_software_status()
     if [ -n "$TIKA_INSTALL" ]; then
       if [ ! "$TIKA_INSTALL" = "yes" ]; then
         check_software_file "tika" "$TIKA_INSTALL"
+      fi
+    fi
+
+    if [ -n "$NODE_EXPORTER_INSTALL" ]; then
+      if [ ! "$NODE_EXPORTER_INSTALL" = "yes" ]; then
+        check_software_file "node_exporter" "$NODE_EXPORTER_INSTALL"
       fi
     fi
 
@@ -2419,6 +2437,7 @@ load_conf()
   get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
   get_current_addon_version borg SELECT_BORG
   get_current_addon_version tika SELECT_TIKA
+  get_current_addon_version node_expoter SELECT_NODE_EXPORTER
 
   if [ "$LATESTSEL" = "$VERSE_VERSION" ];    then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
   if [ "$LATESTSEL" = "$TRAVELER_VERSION" ]; then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
@@ -3383,6 +3402,19 @@ for a in "$@"; do
         TIKA_INSTALL=yes
       fi
       ;;
+
+    -node_exporter|-node_exporter=*|+node_exporter|+=node_exporter*)
+      NODE_EXPORTER_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$NODE_EXPORTER_INSTALL" ]; then
+        get_current_addon_version node_exporter NODE_EXPORTER_INSTALL
+      fi
+
+      if [ -z "$NODE_EXPORTER_INSTALL" ]; then
+        NODE_EXPORTER_INSTALL=yes
+      fi
+      ;;
+
 
     -openssl)
       OPENSSL_INSTALL=yes
