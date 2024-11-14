@@ -63,7 +63,7 @@ A container is a lightweight virtualization environment mapping resources from h
 
 ### Domino containers uses user/group 1000:1000
 
-The Domino container uses Linux user id and group id `1000` mapped to user and group `notes:notes`.
+The Domino container uses Linux user id (`uid:1000`) and group id (`gid:1000`) mapped to user and group `notes:notes`.
 User and group are often written in this `uid:gid` notation. `1000:1000` is a recommended convention used for containers.
 Running as root is generally avoided and not supported by Domino also for native Linux/UNIX environments.
 
@@ -74,6 +74,22 @@ The mapping between host and containers is based on ID level not by name.
 This means the owner of all mounted native data volumes must be `1000:1000`.
 
 A common practice is to use the same user name on host and container level for `1000:1000`.
+
+
+### Special considerations for SELinux
+
+[SELinux](https://en.wikipedia.org/wiki/Security-Enhanced_Linux) provides another layer of security, which even prevents `root` executing certain operations if not authorized.
+If a Linux host enforces SELinux and the container run-time is configured with a SELinux policy, those policy also affect resources used inside the container.
+
+When specifying a container volume ensure to append the `:Z` label if SELinux is enabled.
+
+For details see [Docker documentation Configure the selinux label](https://docs.docker.com/engine/storage/bind-mounts/#configure-the-selinux-label).
+
+Example:
+
+```
+-v /local/notesdata:/local/notesdata:Z
+```
 
 
 ## Troubleshooting Native Volumes
@@ -104,6 +120,13 @@ uid=1000(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu),4(adm),27(sudo)
 id notes
 uid=1002(notes) gid=1002(notes) groups=1002(notes)
 ```
+
+### Checking mounted volumes
+
+The `docker inspect container-name` command can be used to dump information about the running container and it's configuration.
+In the JSON output data a whole section represents the mount information.
+To find out more details and to explain your current configuration for troubleshooting, share the output of the `docker inspect` command.
+
 
 ### Changing owner of container data
 
