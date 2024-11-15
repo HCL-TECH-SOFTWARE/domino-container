@@ -40,6 +40,11 @@ The simple directory mapping ins the `/local` mapping.
 
 For a larger server the container image supports mounting separate volumes for `notesdata`, `translog`, `NIF` and `FT`.
 
+The right side of the mapping before the `:` is the name inside the container.
+The left side of the mapping defines the host part of the mapping.
+
+A container is a very lightweight Linux based virtualization. The security of volumes is based on standard Linux technology. The mapping of the user id must match.
+
 ### Examples:
 
 Docker volume for /local
@@ -53,13 +58,14 @@ This type of configuration should be a good starting point for first Domino cont
 Native volume for /local/notesdata mapping to the host directory
 
 ```
--v /local/notesdata:/local/notesdata
+-v /container-data/notesdata:/local/notesdata
 ```
 
 ## Owner and Permissions for Native Volumes
 
 In contrast to the container volumes, native volumes are mapped enforcing their Linux level security.
 A container is a lightweight virtualization environment mapping resources from host to a container.
+
 
 ### Domino containers uses user/group 1000:1000
 
@@ -96,13 +102,14 @@ Example:
 
 ### Find out about the user and group mapped to
 
-The first example shows a the 1:1 mapping between host.
+The first example shows the `notes:notes` one-on-one mapping between the host and the Docker container.
 In the second example you can see that the user and group `notes:notes` are not mapped to `1000:1000`.
 
 The `id` command is very helpful to find out the mapping. But you can also look directly into `/etc/passwd` and `/etc/group` where the user and group mapping is defined.
 Changing the `uid:gid` by hand is not recommended. But the `usermod` and `groupmod` commands could be used to change it.
+
 But if you have a mismatch and want to change it, you should first check with your Linux administration team.
-The names don't need to match, but the `uid:gid` has to match.
+The names don't need to match, but the `uid:gid` has to match. The security is based on the uid - not the name.
 
 In the example below `1000:1000` is mapped to `ubuntu:ubuntu`, which is a common setup in some environments.
 
