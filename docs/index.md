@@ -36,8 +36,8 @@ See how to [download software](howto_download-software.md) for details.
 
 ## How to download this project
 
-The recommended method is to clone the download the GitHub project directly via git is the .  
-An alternate way is to download the project via ZIP file from the repository page.
+The recommended method is to clone the download the GitHub project directly via git.  
+An alternate way is to download the project via as a tar file from the repository page.
 
 See Howto [Get Domino Container GitHub Repo](howto_github.md) for details.
 
@@ -57,9 +57,8 @@ The process will perform all required actions to create the image in the version
 
 ## Building an image with additional add-ons
 
-The community image offers building an image with additional add-on, which can be simply added to the build step. In previous versions HCL Traveler and Domino Leap have been implemented as add-on images on top of the Domino image in a layered approach.
-
-Now all add-on software can be directly added in a single build step.
+The community image offers building an image with additional add-on, which can be simply added to the build step. In previous versions HCL Traveler and Domino Leap have been implemented as add-on images on top of the Domino image in a layered approach.  
+All add-on software can be directly added in a single build step.
 
 ```
 -verse
@@ -88,7 +87,7 @@ Just select all desired components and start the build process via pressing a `b
 HCL Domino Container Community Image
 ------------------------------------
 
- (D)  HCL Domino          [X]  14.0
+ (D)  HCL Domino          [X]  14.0FP3
  (O)  OnTime              [ ]
  (V)  Verse               [ ]
  (T)  Traveler            [ ]

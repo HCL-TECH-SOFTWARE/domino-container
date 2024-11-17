@@ -34,19 +34,37 @@ cd /local/github
 
 Clone the repository and switch to the directory
 
-```bash
+```
 git clone https://github.com/HCL-TECH-SOFTWARE/domino-container.git 
 cd domino-container
 ```
 
-## Downloading behind a proxy
+### Download as a tar file
+
+When downloading the GitHub repository avoid the ZIP download link.
+because the ZIP format does not preserve file permissions.
+
+A better way is to download the GitHub repository as a so called **tarball**.
+The resulting tar file can be extracted preserving file system permissions.
+
+When downloading via browser, Git generates a file name for you. The URL would look like this: 
+
+https://github.com/HCL-TECH-SOFTWARE/domino-container/tarball/main
+
+For a command-line download curl is the recommended way as listed below.
+
+```
+curl -sL https://github.com/HCL-TECH-SOFTWARE/domino-container/tarball/main -o domino-container.tar.gz
+```
+
+
+### Downloading behind a proxy
 
 In a corporate environment a direct connection to the internet might not be an option.
 The Git client uses the standard Linux proxy settings when connecting to the internet.
 
 
 Note:  
-Leveraging Git repositories directly does allow to update the repository via `git pull`.  
+Leveraging Git repositories directly allows to update the repository via `git pull`.  
 Git also allows to switch between different branches of the project.  
 The project uses a main and a develop branch. The develop branch should be only used by experienced administrators.
-

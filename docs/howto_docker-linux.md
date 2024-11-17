@@ -14,19 +14,17 @@ Docker installations depend on the platform your are running.
 Some platforms like Redhat have moved to [Podman](https://podman.io/) as their primary container build and run-time environment.  
 The Domino Container project works with both platforms and auto detects, which container run-time is installed.
 
-Some platforms still have up to date Docker versions in their software repositories.
+To install Docker use the official Docker documentation to ensure to get a recent version.
+Docker provides repositories for most distributions.
+Follow the steps for [Install Docker Engine](https://docs.docker.com/engine/install/).
 
-The (Docker installation page)[https://docs.docker.com/engine/install/] lists how to install the Docker server on most popular distributions.
+An alternate way to install is to use the Docker convenience script provided by Docker.
+It can be automatically downloaded and executed.
 
-Docker provides a script to install Docker on Linux with one command.
-The following command, downloads the script and runs it in a bash.
 
 ```
-curl -sfL https://get.docker.com | bash -
+curl -fsSL https://get.docker.com | bash -
 ```
-
-On SUSE SLES and Leap you can use `zypper install docker` to install Docker.
-On Ubuntu after updating to a current version `apt install docker.io` installs a current Docker server.
 
 ## Check the Docker Client and Server Version
 

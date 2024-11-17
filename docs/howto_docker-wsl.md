@@ -71,25 +71,35 @@ sudo su -
 
 ## Update Ubuntu
 
-The installed WSL Linux instance is not up to date after installtion.
+The installed WSL Linux instance is not up to date after installation.
 
 ```
 apt update
-apt uprade
+apt upgrade
 ```
 
 ## Install Docker Server
 
-Once updated the repository contains the Docker server.
-Install the server using the following command.
+Ubuntu does not provide the latest Docker versions.
+
+It is recommended to use the official Docker documentation to ensure to get a recent version.
+Follow the steps for [Install Docker Engine](https://docs.docker.com/engine/install/).
+
+An alternate way to install is to use the Docker convenience script provided by Docker.
+It can be automatically downloaded and executed.
 
 ```
-apt install docker.io
+curl -fsSL https://get.docker.com | bash -
 ```
 
-Linux distributions running on WSL don't provide systemd by default.  
-Therfore the Docker daemon is not started automatically.
+Many Linux distributions running on WSL don't provide systemd  
+If no systemd is available the Docker daemon is not started automatically.
 The Domino Container script provides an option to start/stop the Docker server.
+
+```
+dominoctl docker start
+```
+
 
 ## Install JQ
 
