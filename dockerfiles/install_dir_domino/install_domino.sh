@@ -301,7 +301,7 @@ install_domino()
   fi
 
   if [ -n "$INST_HF" ]; then
-    header "Installing IF/HF INST_HF"
+    header "Installing IF/HF $INST_HF"
 
     log_space "Running Domino Iterimsfix/Hotfix Silent Install -- This takes a while ..."
 
