@@ -1,69 +1,66 @@
 ---
 layout: default
-title: "Run via dominoctl"
-nav_order: 2
-description: "Howto run a container via dominoctl"
+title: "Run on Docker"
+nav_order: 1
+description: "Howto run Domino Container Images on Docker"
 parent: "Run Image"
 has_children: false
 ---
 
-# About dominoctl
+## How run this image on Docker
 
-[Dominoctl](https://nashcom.github.io/domino-startscript/dominoctl/) is not part of the Domino Container project.
-It is part of the Nash!Com start script project, which is used for the HCL Domino container project.
+When a new container is created from the HCL Domino Container image, it takes [environment variables](reference_environment-vars.md) into account for auto-configuring the Domino server.
+Details on how to use those variables can be found [here](reference_environment-vars.md)
 
-Similar to the Domino Start Script the **dominoctl** is intended to simplify configuration, start, stop and all other container operations.
-If you are running a Domino container on Docker or Podman this script is a very good choice.
-Please refer to the Nash!Com start script project for detailed information.
+The Domino data directory needs to be a persistent volume. On Docker it will be automatically created.
+You can also use an existing volume. All volume types your container infrastructure supports can be used.
 
-## How to configure and start a container
+### Creating a new container from an image manually
 
-First install **dominoctl** as documented [here]([Dominoctl](https://nashcom.github.io/domino-startscript/dominoctl/)).
+Run a new Domino server with the configuration details of your choice.
+Make sure to specify the base image name at the very end of this command.
 
-Once installed all container operations can be performed using **dominoctl**.
+Note: For values containing blanks use quotes around the whole env parameter!
 
-### Configure the container
-
-The default container configuration should work for most first setups.
-But opening the configuration might help understanding the settings.
-
-By default the configuration scripts use `vi`. 
-The editor can be changed in the configuration via `EDIT_COMMAND` variable or exporting `export EDIT_COMMAND=nano` for example.
-
-```
-dominoctl cfg
-```
-
-### Configure the Domino server
-
-The Container image supports Domino OTS in multiple ways.
-You can mount a OTS JSON file, download the file from remote.
-The file can be a so called OTS template with placeholders for OTS setup variables.
-
-**dominoctl** supports to interactively replace the variables.
-Each variable is prompted with a default value.
-
-```
-dominoctl setup
-```
-
-To edit the generated OTS JSON file, invoke the command again.
-
-
-### Start the Domino server
-
-Now the server can be started using the start command.
-The command issues a `docker run` command to create and start a new container and waits for the container to be started to issue a`docker cp` command to inject the OTS JSON file.
-The container image is prepared to wait a couple of seconds for OTS files to be available before switching to listening mode for remote setup if no configuration is provided.
-
-
-```
-dominoctl start
+```bash
+docker run -it -d \
+     -e SetupAutoConfigure=1 \
+     -e SERVERSETUP_SERVER_TYPE=first \
+     -e SERVERSETUP_ADMIN_FIRSTNAME=John \
+     -e SERVERSETUP_ADMIN_LASTNAME=Doe \
+     -e SERVERSETUP_ADMIN_PASSWORD=domino4ever \
+     -e SERVERSETUP_ADMIN_IDFILEPATH=admin.id \
+     -e SERVERSETUP_ORG_CERTIFIERPASSWORD=domino4ever \
+     -e SERVERSETUP_SERVER_DOMAINNAME=DominoDemo \
+     -e SERVERSETUP_ORG_ORGNAME=Domino-Demo \
+     -e SERVERSETUP_SERVER_NAME=domino-demo-v12 \
+     -e SERVERSETUP_NETWORK_HOSTNAME=domino.acme.com \
+    -h domino.acme.com \
+    -p 80:80 \
+    -p 1352:1352 \
+    -v dominodata_demo:/local/notesdata \
+    --stop-timeout=60 \
+    --cap-add=SYS_PTRACE \
+    --cap-add=NET_BIND_SERVICE \
+    --name domino12 \
+    hclcom/domino:latest
 ```
 
-### Jump into the running container
+## Runtime configuration
 
-```
-dominoctl bash
-```
+During ```docker run``` you can setup a volume that mounts property files into `/local/notesdata`
 
+### Stopping the Application Server gracefully
+
+Stopping a Domino server takes longer than the time a Docker server would expect by default (**10 seconds**), the recommended way is to add the parameter `--stop-timeout` already when starting the container.
+If the container was started with the parameter ```--stop-timeout=``` then you may stop the container using the following command:
+
+```docker stop <container-name>```
+
+If the container was started without specifying the parameter `--stop-timeout=` then use the following command to stop the container gracefully
+
+```docker stop --time=<timeout> <container-name>```
+
+Example:
+
+```docker stop --time=60 test```
