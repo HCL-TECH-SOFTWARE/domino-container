@@ -23,6 +23,7 @@ Ensure you run at least
 - Windows 10 version 2004 or higher
 - Windows 11
 - Windows 2022
+- Windows 2025
 
 # Install WSL2
 

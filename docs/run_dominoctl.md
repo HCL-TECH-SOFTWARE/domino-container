@@ -7,7 +7,7 @@ parent: "Run Image"
 has_children: false
 ---
 
-# About dominoctl
+## About dominoctl
 
 [Dominoctl](https://nashcom.github.io/domino-startscript/dominoctl/) is not part of the Domino Container project.
 It is part of the Nash!Com start script project, which is used for the HCL Domino container project.

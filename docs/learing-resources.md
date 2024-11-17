@@ -8,11 +8,11 @@ has_children: false
 
 # Learning Resources
 
-The Domino container project provides a lot of useful information to get the container image built and run Domino servers.
+The Domino container project provides a lot of useful information to get the container image built and run containerized Domino servers.
 It is still very important to understand the basic concepts of the underlaying container technology.
 The referenced material is a good starting point to look at the underlaying technology.
 
-Because this is a fast moving technology, please make sure to look into up to date information and avoid older documentation and blog posts.
+Because containers are a fast moving technology, please make sure to look into up to date information and avoid older documentation and older blog posts.
 
 
 # Recommended Docker YouTube Videos
@@ -43,11 +43,11 @@ There is a separate HCL Open Source project  [Domino One Touch Setup (OTS)](http
 OpenNTF Webinars are monthly 90 minute online webinars about current Domino topics.
 They are are a great resource presented by HCL Ambassadors and other experts from the community.
 
-- Domino Containers - The Next Step, 19. September 2024 by Martijn de Jong  
+- **Domino Containers - The Next Step**, 19. September 2024 by Martijn de Jong  
 [Presentation](https://www.openntf.org/Public/presentations.nsf/0/32AB753020CE35EC86258B9E004CFE61/$FILE/Domino_Containers_The_Next_Step_OpenNTF.pdf),
 [Video](https://youtu.be/6tCRHbWhOfA)
 
-- Unleash the Power of OTS (One Touch Setup) 26. September 2024 by Daniel Nashed  
+- **Unleash the Power of OTS (One Touch Setup)**, 26. September 2024 by Daniel Nashed  
 [Presentation](https://www.openntf.org/Public/presentations.nsf/0/B89491D386C4039B86258BA500584079/$FILE/openntf2024_domino_one_touch_setup.pdf),
 [Video](https://youtu.be/VD09FwfsyiM)
 
