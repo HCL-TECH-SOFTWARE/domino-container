@@ -4,7 +4,7 @@ domino-14.5|14.5EA1
 traveler|14.0FP1
 volt|1.0.5.15
 leap|1.1.5
-verse|3.2.2
+verse|3.2.3
 capi|14.0
 safelinx|1.4.2
 nomadweb|1.0.13
