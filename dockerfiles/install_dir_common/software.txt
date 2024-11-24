@@ -68,6 +68,7 @@ borg|1.2.7|borg-linuxnew64-1.2.7,https://github.com/borgbackup/borg/releases/dow
 borg|1.2.8|borg-linuxnew64-1.2.8,https://github.com/borgbackup/borg/releases/download/1.2.8/borg-linuxnew64|x|85847a2ceb27d4a6c0ca0c0fb92d31bb2c1fcf6c77df1b2275b3f6f161d3571c
 tika|2.9.1|tika-server-standard-2.9.1.jar,https://dlcdn.apache.org/tika/2.9.1/tika-server-standard-2.9.1.jar|x|4e38d309c9396892ae14b4337cdf13f90f83da81b3b8123d72fde08fea2120bd
 tika|2.9.2|tika-server-standard-2.9.2.jar,https://dlcdn.apache.org/tika/2.9.2/tika-server-standard-2.9.2.jar|x|379cdb319b80618d166057beecdb445b677d099c438ec026e5810239c1cd03d5
+tika|3.0.0|tika-server-standard-3.0.0.jar,https://dlcdn.apache.org/tika/3.0.0/tika-server-standard-3.0.0.jar|x|53851c4f326c0bdd7e1a9ba77bb35193d431d9dc1898e263e0b7bb337f03e2c1
 safelinx|1.4.1|HCL-SafeLinx-1410-x86_64.tar.gz|AbiYxUssdE1MT0GtR4gH8|c8c207f810343c7ab47997c1006e144998d0717080241ea6e6f2644191499c31
 safelinx|1.4.2|HCL-SafeLinx-1420-x86_64.tar.gz|75sNbH9gws5m6nZ3M5yR6|dfe9244848fd2ad3367db002de5dcdbf6b577ad8d240db75298b411b03c04ef0
 nomadweb|1.0.11|HCL_Nomad_web_1.0.11_20240305-18_for_HCL_SafeLinx.zip|y2cf6x3wcUpgtAI3Gldbi|e7484c7d42f8357cf79d609363c13fb08da0baee445e0d4bebb71497dfd99bbc
