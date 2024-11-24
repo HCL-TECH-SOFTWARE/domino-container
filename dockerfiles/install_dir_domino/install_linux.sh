@@ -329,12 +329,12 @@ install_node_exporter()
 
   mkdir -p "$NODE_EXPORTER_DIR"
 
-  header "Installing requested Prometheus Node Exporter version $NODE_EXPORTER_INSTALL"
+  header "Installing requested Prometheus Node Exporter $NODE_EXPORTER_INSTALL"
 
   get_download_name node_exporter "$NODE_EXPORTER_INSTALL"
 
   if [ -z "$DOWNLOAD_NAME" ]; then
-    log_error "Cannot find requested Prometheus Node Exporter version $NODE_EXPORTER_INSTALL"
+    log_error "Cannot find requested Prometheus Node Exporter $NODE_EXPORTER_INSTALL"
     return 0
   fi
 

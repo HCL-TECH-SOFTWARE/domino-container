@@ -726,6 +726,26 @@ install_domino_restapi()
 }
 
 
+install_domprom()
+{
+  if [ -z "$DOMPROM_INSTALL" ]; then
+    return 0
+  fi
+
+  header "Installing requested Domino Prometheus Stats $DOMPROM_INSTALL"
+
+  get_download_name domprom "$DOMPROM_INSTALL"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find requested Domino Prometheus Stats version $DOMPROM_INSTALL"
+    return 0
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory"
+  ln -s "$LOTUS/bin/tools/startup" "$LOTUS/bin/domprom"
+}
+
+
 container_set_timezone()
 {
   if [ -z "$DOCKER_TZ" ]; then
@@ -1183,7 +1203,8 @@ echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
 echo "SPECIAL_CURL_ARGS     = [$SPECIAL_CURL_ARGS]"
 echo "BUILD_SCRIPT_OPTIONS  = [$BUILD_SCRIPT_OPTIONS]"
 echo "BORG_INSTALL          = [$BORG_INSTALL]"
-echo "OPENSSL_INSTALL       = [$OPENSSL_INSTALL]"
+echo "DOMPROM_INSTALL"      = [$DOMPROM_INSTALL]"
+echo "OPENSSL_INSTALL"      = [$OPENSSL_INSTALL]"
 echo "SSH_INSTALL           = [$SSH_INSTALL]"
 
 
@@ -1319,6 +1340,8 @@ install_traveler "$TRAVELER_VERSION"
 # Install Domino Leap if requested
 install_leap "$LEAP_VERSION"
 
+# Install Domino Prometheus servertask
+install_domprom
 
 remove_perl
 

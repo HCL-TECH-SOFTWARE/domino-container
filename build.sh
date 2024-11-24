@@ -302,6 +302,8 @@ usage()
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
   echo "-tika            updates the Tika server to the Domino server"
   echo "-node_exporter   Installs Prometheus node_exporter into the container"
+  echo "-domprom         Installs Domino Prometheus statistics exporter"
+  echo "-prometheus/prom Installs Domino Prometheus statistics exporter & Node Exporter"
   echo "-k8s-runas       adds K8s runas user support"
   echo "-linuxpkg=<pkg>  add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-startscript=x   installs specified start script version from software repository"
@@ -377,6 +379,7 @@ dump_config()
   echo "BORG_INSTALL         : [$BORG_INSTALL]"
   echo "TIKA_INSTALL         : [$TIKA_INSTALL]"
   echo "NODE_EXPORTER_INSTALL: [$NODE_EXPORTER_INSTALL]"
+  echo "DOMPROM_INSTALL      : [$DOMPROM_INSTALL]"
   echo "LINUX_PKG_ADD        : [$LINUX_PKG_ADD]"
   echo "STARTSCRIPT_VER      : [$STARTSCRIPT_VER]"
   echo "CUSTOM_ADD_ONS       : [$CUSTOM_ADD_ONS]"
@@ -1074,6 +1077,7 @@ build_domino()
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg TIKA_INSTALL="$TIKA_INSTALL" \
     --build-arg NODE_EXPORTER_INSTALL="$NODE_EXPORTER_INSTALL" \
+    --build-arg DOMPROM_INSTALL="$DOMPROM_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
     --build-arg NOMAD_VERSION="$NOMAD_VERSION" \
     --build-arg TRAVELER_VERSION="$TRAVELER_VERSION" \
@@ -1771,6 +1775,12 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$DOMPROM_INSTALL" ]; then
+      if [ ! "$DOMPROM_INSTALL" = "yes" ]; then
+        check_software_file "domprom" "$DOMPROM_INSTALL"
+      fi
+    fi
+
   else
     echo
 
@@ -1915,6 +1925,12 @@ check_software_status()
     if [ -n "$NODE_EXPORTER_INSTALL" ]; then
       if [ ! "$NODE_EXPORTER_INSTALL" = "yes" ]; then
         check_software_file "node_exporter" "$NODE_EXPORTER_INSTALL"
+      fi
+    fi
+
+    if [ -n "$DOMPROM_INSTALL" ]; then
+      if [ ! "$DOMPROM_INSTALL" = "yes" ]; then
+        check_software_file "domprom" "$DOMPROM_INSTALL"
       fi
     fi
 
@@ -2438,16 +2454,19 @@ load_conf()
   get_current_addon_version borg SELECT_BORG
   get_current_addon_version tika SELECT_TIKA
   get_current_addon_version node_expoter SELECT_NODE_EXPORTER
+  get_current_addon_version domprom SELECT_DOMPROM
 
-  if [ "$LATESTSEL" = "$VERSE_VERSION" ];    then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
-  if [ "$LATESTSEL" = "$TRAVELER_VERSION" ]; then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
-  if [ "$LATESTSEL" = "$NOMAD_VERSION" ];    then NOMAD_VERSION=$SELECT_NOMAD_VERSION; fi
-  if [ "$LATESTSEL" = "$LEAP_VERSION" ];     then LEAP_VERSION=$SELECT_LEAP_VERSION; fi
-  if [ "$LATESTSEL" = "$DOMRESTAPI_VER" ];   then DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER; fi
-  if [ "$LATESTSEL" = "$CAPI_VERSION" ];     then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
-  if [ "$LATESTSEL" = "$ONTIME_VERSION" ];   then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
-  if [ "$LATESTSEL" = "$BORG_INSTALL" ];     then BORG_INSTALL=$SELECT_BORG; fi
-  if [ "$LATESTSEL" = "$TIKA_INSTALL" ];     then TIKA_INSTALL=$SELECT_TIKA; fi
+  if [ "$LATESTSEL" = "$VERSE_VERSION" ];         then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
+  if [ "$LATESTSEL" = "$TRAVELER_VERSION" ];      then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
+  if [ "$LATESTSEL" = "$NOMAD_VERSION" ];         then NOMAD_VERSION=$SELECT_NOMAD_VERSION; fi
+  if [ "$LATESTSEL" = "$LEAP_VERSION" ];          then LEAP_VERSION=$SELECT_LEAP_VERSION; fi
+  if [ "$LATESTSEL" = "$DOMRESTAPI_VER" ];        then DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER; fi
+  if [ "$LATESTSEL" = "$CAPI_VERSION" ];          then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
+  if [ "$LATESTSEL" = "$ONTIME_VERSION" ];        then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
+  if [ "$LATESTSEL" = "$BORG_INSTALL" ];          then BORG_INSTALL=$SELECT_BORG; fi
+  if [ "$LATESTSEL" = "$TIKA_INSTALL" ];          then TIKA_INSTALL=$SELECT_TIKA; fi
+  if [ "$LATESTSEL" = "$NODE_EXPORTER_INSTALL" ]; then NODE_EXPORTER_INSTALL=$SELECT_NODE_EXPORTER; fi
+  if [ "$LATESTSEL" = "$DOMPROM_INSTALL" ];       then DOMPROM_INSTALL=$SELECT_DOMPROM; fi
 
   if [ -n "$FROM_IMAGE_SELECT" ];     then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
   if [ -n "$DOCKER_TZ_SELECT" ];      then DOCKER_TZ=$DOCKER_TZ_SELECT; fi
@@ -2457,6 +2476,8 @@ load_conf()
   if [ -n "$CUSTOM_ADD_ONS_SELECT" ]; then CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS_SELECT; fi
   if [ -n "$BORG_SELECT" ];           then BORG_INSTALL=$BORG_SELECT; fi
   if [ -n "$TIKA_SELECT" ];           then TIKA_INSTALL=$TIKA_SELECT; fi
+
+  if [ -n "$NODE_EXPORTER_INSTALL" ] && [ -n "$DOMPROM_INSTALL" ]; then PROM_INSTALL=yes; fi
 
   if [ -n "$ONTIME_VERSION" ]; then
      DominoResponseFile=domino14_ontime_install.properties
@@ -2503,12 +2524,15 @@ write_conf()
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
   # Additional parameters only configurable on command line
-  if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"         >> "$BUILD_CONF"; fi
-  if [ -n "$LINUX_PKG_ADD" ];    then echo "LINUX_PKG_ADD=$LINUX_PKG_ADD"   >> "$BUILD_CONF"; fi
-  if [ -n "$CUSTOM_ADD_ONS" ];   then echo "CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS" >> "$BUILD_CONF"; fi
-  if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"           >> "$BUILD_CONF"; fi
-  if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"         >> "$BUILD_CONF"; fi
-  if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"       >> "$BUILD_CONF"; fi
+  if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"           >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_PKG_ADD" ];    then echo "LINUX_PKG_ADD=$LINUX_PKG_ADD"     >> "$BUILD_CONF"; fi
+  if [ -n "$CUSTOM_ADD_ONS" ];   then echo "CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS"   >> "$BUILD_CONF"; fi
+  if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"             >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"           >> "$BUILD_CONF"; fi
+  if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"         >> "$BUILD_CONF"; fi
+  if [ -n "$DOMPROM_INSTALL" ];  then echo "DOMPROM_INSTALL=$DOMPROM_INSTALL" >> "$BUILD_CONF"; fi
+
+  if [ -n "$NODE_EXPORTER_INSTALL" ]; then echo "NODE_EXPORTER_INSTALL=$NODE_EXPORTER_INSTALL" >> "$BUILD_CONF"; fi
 
   # Parameters only stored in conf file
   echo "CONTAINER_MAINTAINER=$CONTAINER_MAINTAINER"                 >> "$BUILD_CONF"
@@ -2599,6 +2623,7 @@ select_software()
   local SELECT_DOMRESTAPI_VER=
   local SELECT_DOMLP_LANG=
   local SELECT_BORG=
+  local SELECT_PROM=
 
   local X="X"
   local Z=" "
@@ -2615,6 +2640,7 @@ select_software()
   local I=$Z
   local O=$Z
   local G=$Z
+  local M=$Z
 
   load_conf
 
@@ -2634,6 +2660,7 @@ select_software()
     if [ -n "$LEAP_VERSION" ];     then P=$X; else P=$Z; fi
     if [ -n "$ONTIME_VERSION" ];   then O=$X; else O=$Z; fi
     if [ -n "$BORG_INSTALL" ];     then G=$X; else G=$Z; fi
+    if [ -n "$PROM_INSTALL" ];     then M=$X; else M=$Z; fi
 
     if [ "$AutoTestImage" = "yes" ]; then I=$X; else I=$Z; fi
 
@@ -2641,6 +2668,12 @@ select_software()
       DISPLAY_LP=
     else
        DISPLAY_LP="$DISPLAY_DOMLP ($DOMLP_LANG)"
+    fi
+
+    if [ "$PROM_INSTALL" = "yes" ]; then
+      DISPLAY_PROM="domprom $DOMPROM_INSTALL & Node Exporter $NODE_EXPORTER_INSTALL"
+    else
+      DISPLAY_PROM=
     fi
 
     clear
@@ -2668,6 +2701,8 @@ select_software()
     print_select "R" "REST-API"       "$R" "$DOMRESTAPI_VER"
     print_select "A" "C-API SDK"      "$A" "$CAPI_VERSION"
     print_select "P" "Domino Leap"    "$P" "$LEAP_VERSION"
+    echo
+    print_select "M" "Prometheus"     "$M" "$DISPLAY_PROM"
     print_select "G" "Borg Backup"    "$G" "$BORG_INSTALL"
 
     echo
@@ -2759,6 +2794,25 @@ select_software()
           CAPI_VERSION=$SELECT_CAPI_VERSION
         else
           CAPI_VERSION=
+        fi
+        ;;
+
+      m)
+        if [ -z "$PROM_INSTALL" ]; then
+          PROM_INSTALL=yes
+
+          if [ -z "$NODE_EXPORTER_INSTALL" ]; then
+            get_current_addon_version node_exporter NODE_EXPORTER_INSTALL
+          fi
+
+          if [ -z "$DOMPROM_INSTALL" ]; then
+            get_current_addon_version domprom DOMPROM_INSTALL
+          fi
+
+        else
+          PROM_INSTALL=
+	  DOMPROM_INSTALL=
+          NODE_EXPORTER_INSTALL=
         fi
         ;;
 
@@ -3415,6 +3469,38 @@ for a in "$@"; do
       fi
       ;;
 
+    -domprom|-domprom=*|+domprom|+=domprom*)
+      DOMPROM_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$DOMPROM_INSTALL" ]; then
+        get_current_addon_version domprom DOMPROM_INSTALL
+      fi
+
+      if [ -z "$DOMPROM_INSTALL" ]; then
+        DOMPROM_INSTALL=yes
+      fi
+      ;;
+
+    -prometheus|-prom)
+
+      PROM_INSTALL=yes
+
+      if [ -z "$DOMPROM_INSTALL" ]; then
+        get_current_addon_version domprom DOMPROM_INSTALL
+      fi
+
+      if [ -z "$DOMPROM_INSTALL" ]; then
+        DOMPROM_INSTALL=yes
+      fi
+
+      if [ -z "$NODE_EXPORTER_INSTALL" ]; then
+        get_current_addon_version node_exporter NODE_EXPORTER_INSTALL
+      fi
+
+      if [ -z "$NODE_EXPORTER_INSTALL" ]; then
+        NODE_EXPORTER_INSTALL=yes
+      fi
+      ;;
 
     -openssl)
       OPENSSL_INSTALL=yes
