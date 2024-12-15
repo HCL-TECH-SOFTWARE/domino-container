@@ -137,10 +137,10 @@ STATUS LNPUBLIC DumpNotesIntlSettings ()
 }
 
 
-
 int main (int argc, char *argv[])
 {
     STATUS error = NOERROR;
+    int  a = 0;
     char szBuild[MAXSPRINTF+1] = {0};
 
     error = NotesInitExtended (argc, argv);
@@ -151,37 +151,34 @@ int main (int argc, char *argv[])
         return error;
     }
 
-    /* LATER: Enhance logic for argument processing */
-    if (argc <= 1)
+    for (a=1; a<argc; a++)
     {
-        AddInFormatError (szBuild, 1);
-        printf ("DominoVersion=%s\n", szBuild);
-	goto Done;
+        if ('=' == *argv[a])
+        {
+            /* pass this directly to Domino for specifying the notes.ini */
+        }
+
+        else if (0 == strcmp (argv[a], "-intl"))
+        {
+            DumpLangInfoAll ();
+            DumpLangOsLangStuff();
+            error = DumpNotesIntlSettings();
+
+            goto  Done;
+        }
+        else
+        {
+            printf ("Invalid option [%s]\n", argv[a]);
+            goto Done;
+        }
     }
 
-    if ('=' == *argv[1])
-    {
-        AddInFormatError (szBuild, 1);
-        printf ("DominoVersion=%s\n", szBuild);
-	goto Done;
-    }
-
-    if (0 == strcmp (argv[1], "-intl"))
-    {
-        DumpLangInfoAll ();
-        DumpLangOsLangStuff();
-        error = DumpNotesIntlSettings();
-
-	goto Done;
-    }
-    else
-    {
-        printf ("Invalid option [%s]\n", argv[1]);
-	goto Done;
-    }
-
+    /* by default print version if no other options beside the notes.ini are specified */
+    AddInFormatError (szBuild, 1);
+    printf ("DominoVersion=%s\n", szBuild);
 
 Done:
+
     NotesTerm();
     return error;
 }
