@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.4 14.11.2024
+# Version 2.3.5 18.12.2024
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -27,7 +27,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.4
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.5
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -2195,8 +2195,8 @@ parse_domino_version()
     PROD_FP=FP${FP}
 
     if [ -n "$IF" ]; then
-      FULL_PROD_IF=${PROD_FP}IF${IF}
-      PROD_IF=IF${IF}
+      FULL_PROD_HF=${PROD_FP}IF${IF}
+      PROD_HF=IF${IF}
     fi
 
     if [ -n "$HF" ]; then
@@ -2208,8 +2208,8 @@ parse_domino_version()
 
     PROD_FP=
     if [ -n "$IF" ]; then
-      FULL_PROD_IF=${PROD_VER}IF${IF}
-      PROD_IF=IF${IF}
+      FULL_PROD_HF=${PROD_VER}IF${IF}
+      PROD_HF=IF${IF}
     fi
 
     if [ -n "$HF" ]; then
