@@ -3012,7 +3012,6 @@ install_domino_native()
 SOFTWARE_PORT=7777
 SOFTWARE_FILE_NAME=software.txt
 SOFTWARE_CONTAINER=hclsoftware
-CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 
 VERSION_FILE_NAME=current_version.txt
 DOMDOWNLOAD_BIN=/usr/local/bin/domdownload
@@ -3062,6 +3061,7 @@ else
   fi
 fi
 
+CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
 # If version file isn't found check standard location (check might lead to the same directory if standard location already)

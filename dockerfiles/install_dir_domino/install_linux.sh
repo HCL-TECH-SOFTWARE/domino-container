@@ -359,10 +359,34 @@ install_node_exporter()
 }
 
 
+check_ubuntu_repos()
+{
+  UBUNTU_CODENAME=$(grep '^UBUNTU_CODENAME=' /etc/os-release | cut -f2 -d'=' | xargs)
+
+  if [ "$UBUNTU_CODENAME" = "noble" ]; then
+    if [ -e /etc/apt/sources.list.d/ubuntu.sources ]; then
+      if [ -e "$INSTALL_DIR/custom/ubuntu_noble.sources" ]; then
+        header "Replacing Ubuntu Nobel repositories"
+        cp -f "$INSTALL_DIR/custom/ubuntu_noble.sources" /etc/apt/sources.list.d/ubuntu.sources
+      fi
+    fi
+  fi
+}
+
+
+check_custom_software_repositories()
+{
+  if [ -n "$(grep '^NAME=' /etc/os-release | grep 'Ubuntu')" ]; then
+    check_ubuntu_repos
+  fi
+}
+
 # Main logic to update Linux and install Linux packages
 
 
 list_installed_packages "$LINUX_PACKAGE_LIST_BASEIMAGE"
+
+check_custom_software_repositories
 
 # Check for Linux updates if requested first
 

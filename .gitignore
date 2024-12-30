@@ -4,3 +4,4 @@ software/*.gz
 software/*.zip
 !*.md
 /dockerfiles/volt/install_dir/demopack.zip
+/dockerfiles/install_dir_domino/custom/*.sources
