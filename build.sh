@@ -557,27 +557,36 @@ http_head_check()
   fi
 }
 
+get_current_version_txt()
+{
+  # Use cached data and not load it very time
+  if [ -z "$CURRENT_VERSION_TXT" ]; then
+
+    if [ -n "$DOWNLOAD_FROM" ]; then
+      DOWNLOAD_FILE="$DOWNLOAD_FROM/$VERSION_FILE_NAME"
+      http_head_check "$DOWNLOAD_FILE"
+      if [ "$?" = "1" ]; then
+        DOWNLOAD_VERSION_FILE="$DOWNLOAD_FILE"
+      fi
+    fi
+
+    if [ -n "$DOWNLOAD_VERSION_FILE" ]; then
+      CURRENT_VERSION_TXT=$($CURL_CMD --silent "$DOWNLOAD_VERSION_FILE")
+    else
+      if [ ! -r "$VERSION_FILE" ]; then
+        echo "No current version file found! [$VERSION_FILE]"
+      else
+       CURRENT_VERSION_TXT=$(cat "$VERSION_FILE")
+      fi
+    fi
+  fi
+}
+
+
 get_current_version()
 {
-  if [ -n "$DOWNLOAD_FROM" ]; then
-
-    DOWNLOAD_FILE=$DOWNLOAD_FROM/$VERSION_FILE_NAME
-
-    http_head_check "$DOWNLOAD_FILE"
-    if [ "$?" = "1" ]; then
-      DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
-    fi
-  fi
-
-  if [ -n "$DOWNLOAD_VERSION_FILE" ]; then
-    LINE=$($CURL_CMD --silent $DOWNLOAD_VERSION_FILE | grep "^$1|")
-  else
-    if [ ! -r "$VERSION_FILE" ]; then
-      echo "No current version file found! [$VERSION_FILE]"
-    else
-      LINE=$(grep "^$1|" $VERSION_FILE)
-    fi
-  fi
+  get_current_version_txt
+  LINE=$(echo "$CURRENT_VERSION_TXT" | grep "^$1|")
 
   if [ -z "$2" ]; then
     PROD_VER=$(echo $LINE|cut -d'|' -f2)
@@ -591,35 +600,19 @@ get_current_version()
   return 0
 }
 
+
 get_current_addon_version()
 {
   local S1=$2
   local S2=${!2}
 
-  if [ -n "$DOWNLOAD_FROM" ]; then
-
-    DOWNLOAD_FILE=$DOWNLOAD_FROM/$VERSION_FILE_NAME
-
-    http_head_check "$DOWNLOAD_FILE"
-    if [ "$?" = "1" ]; then
-      DOWNLOAD_VERSION_FILE=$DOWNLOAD_FILE
-    fi
-  fi
-
-  if [ -n "$DOWNLOAD_VERSION_FILE" ]; then
-    LINE=$($CURL_CMD --silent $DOWNLOAD_VERSION_FILE | grep "^$1|")
-  else
-    if [ ! -r "$VERSION_FILE" ]; then
-      echo "No current version file found! [$VERSION_FILE]"
-    else
-      LINE=$(grep "^$1|" $VERSION_FILE)
-    fi
-  fi
-
+  get_current_version_txt
+  LINE=$(echo "$CURRENT_VERSION_TXT" | grep "^$1|")
   export $2=$(echo $LINE|cut -d'|' -f2 -s)
 
   return 0
 }
+
 
 copy_config_file()
 {
