@@ -569,6 +569,7 @@ install_capi()
 {
   local ADDON_NAME=capi
   local ADDON_VER=$1
+  local BASH_PROFILE=/etc/bashrc
 
   if [ -z "$ADDON_VER" ]; then
     return 0
@@ -622,16 +623,15 @@ install_capi()
     install_packages glibc-devel
   fi
 
-  # Update notes user's profile
-  local NOTES_BASH_PROFIL=/home/notes/.bashrc
-  echo >> $NOTES_BASH_PROFIL
-  echo "# -- Begin Notes C-API environment vars --" >> $NOTES_BASH_PROFIL
-  echo "export LOTUS=$LOTUS" >> $NOTES_BASH_PROFIL
-  echo "export Notes_ExecDirectory=$LOTUS/notes/latest/linux" >> $NOTES_BASH_PROFIL
-  echo "export LD_LIBRARY_PATH=$Notes_ExecDirectory" >> $NOTES_BASH_PROFIL
-  echo "export INCLUDE=$LOTUS/notesapi/include" >> $NOTES_BASH_PROFIL
-  echo "# -- End Notes C-API environment vars --" >> $NOTES_BASH_PROFIL
-  echo >> $NOTES_BASH_PROFIL
+  # Update global profile
+  echo >> $BASH_PROFILE
+  echo "# -- Begin Notes C-API environment vars --" >> $BASH_PROFILE
+  echo "export LOTUS=$LOTUS" >> $BASH_PROFILE
+  echo "export Notes_ExecDirectory=$LOTUS/notes/latest/linux" >> $BASH_PROFILE
+  echo "export LD_LIBRARY_PATH=$Notes_ExecDirectory" >> $BASH_PROFILE
+  echo "export INCLUDE=$LOTUS/notesapi/include" >> $BASH_PROFILE
+  echo "# -- End Notes C-API environment vars --" >> $BASH_PROFILE
+  echo >> $BASH_PROFILE
 
   echo
   echo Installed $ADDON_NAME
@@ -1231,11 +1231,11 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
 
   # Set user local if configured
   if [ -n "$DOMINO_LANG" ]; then
-    echo "export LANG=$DOMINO_LANG" >> /home/$DOMINO_USER/.bash_profile
+    echo "export LANG=$DOMINO_LANG" >> /etc/bashrc
   fi
 
   # This alias is really missing ..
-  echo "alias ll='ls -l'" >> /home/$DOMINO_USER/.bashrc
+  echo "alias ll='ls -l'" >> /etc/bashrc
 
 else
 
