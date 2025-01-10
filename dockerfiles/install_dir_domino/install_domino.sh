@@ -54,6 +54,10 @@ check_install_tika()
 
 install_domino()
 {
+
+  # Disable X11 to ensure installer does not require X11 libs (not really used for containers but native installers)
+  export DISPLAY=
+
   local KERNEL_VERSION=$(uname -r)
 
   #On Ubuntu & Debian Domino 14 requires to disable requirements checks
