@@ -30,6 +30,7 @@ CONTAINER_ENV_FILE=
 DOMINO_SHUTDOWN_TIMEOUT=120
 USER="full admin"
 PASSWORD="domino4ever"
+KEEP_API_URL="http://automation.notes.lab:8880"
 
 # CONTAINER_PORTS="-p 1352:1352 -p 80:80 -p 443:443"
 # CONTAINER_NETWORK_NAME=host
@@ -560,36 +561,48 @@ do
   case "$ADDON_NAME" in
 
     traveler)
+      TRAVELER_IMAGE_VERSION="$ADDON_VERSION"
+
       if [ -z "$traveler_binary" ]; then
         ERROR_MSG="$ADDON_NAME binary not found"
       fi
       ;;
 
     nomad)
+      NOMAD_IMAGE_VERSION="$ADDON_VERSION"
+
       if [ -z "$nomad_binary" ]; then
         ERROR_MSG="$ADDON_NAME binary not found"
       fi
       ;;
 
     domrestapi)
+      KEEP_IMAGE_VERSION=$(echo "$ADDON_VERSION" | cut -f1 -d'-')
+
       if [ -z "$domrestapi_binary" ]; then
         ERROR_MSG="$ADDON_NAME binary not found"
       fi
       ;;
 
     verse)
+      VERSE_IMAGE_VERSION="$ADDON_VERSION"
+
       if [ -z "$verse_jar" ]; then
         ERROR_MSG="$ADDON_NAME main jar not found"
       fi
       ;;
 
     leap)
+      LEAP_IMAGE_VERSION="$ADDON_VERSION"
+
       if [ -z "$dleap_jar" ]; then
         ERROR_MSG="$ADDON_NAME main jar not found"
       fi
       ;;
 
     capi)
+      CAPI_IMAGE_VERSION="$ADDON_VERSION"
+
       if [ -z "$capi_lib" ] || [ -z "$capi_include" ]; then
         ERROR_MSG="$$ADDON_NAME not found"
       fi
@@ -604,6 +617,8 @@ do
       ;;
 
     ontime)
+      ONTIME_IMAGE_VERSION="$ADDON_VERSION"
+
       if [ -z "$ontime_binary" ]; then
         ERROR_MSG="$ADDON_NAME binary not found"
       fi
@@ -830,10 +845,10 @@ if [ -n "$domrestapi_binary" ]; then
 
   header "$Verifying Verifying Domino REST-API"
 
-  wait_for_string $CONSOLE_LOG "Domino Rest API Initialization complete." 50
+  wait_for_string $CONSOLE_LOG "REST API: Started" 50
   sleep 5
 
-  restapi_response=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -sL 'http://automation.notes.lab:8880/api' 2>&1)
+  restapi_response=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -sL $KEEP_API_URL/api 2>&1)
 
   restapi_check=$(echo "$restapi_response" | grep "HCL Domino REST API")
 
@@ -845,6 +860,57 @@ if [ -n "$domrestapi_binary" ]; then
   fi
 
   test_result "restapi.server.available" "Domino REST-API available" "" "$ERROR_MSG"
+
+  dump_var "Domino REST-API Response" "$restapi_response"
+
+  # Check authentication and version
+
+  ERROR_MSG=
+
+  KEEP_AUTH_RESULT=$($CONTAINER_CMD exec $CONTAINER_NAME curl -s -X POST --header "Content-Type: application/json" $KEEP_API_URL/api/v1/auth -d "{\"username\": \"$USER\",\"password\": \"$PASSWORD\"}")
+  KEEP_AUTH_TOKEN=$(echo "$KEEP_AUTH_RESULT" | jq -r .bearer)
+
+  if [ -z "$KEEP_AUTH_TOKEN" ]; then
+    ERROR_MSG="No authentication token returned"
+    dump_var "Domino REST-API Authentication Response" "$KEEP_AUTH_RESULT"
+  fi
+
+  test_result "restapi.server.authentication" "Domino REST-API authentication OK" "" "$ERROR_MSG"
+
+  ERROR_MSG=
+
+  if [ -z "$KEEP_AUTH_TOKEN" ]; then
+    ERROR_MSG="No authentication token returned. Cannot query version"
+  else
+
+    KEEP_INFO=$($CONTAINER_CMD exec $CONTAINER_NAME curl -s --header "Content-Type: application/json"  -H "Authorization: Bearer $KEEP_AUTH_TOKEN"  $KEEP_API_URL/api/v1/info)
+    KEEP_VERSION=$(echo "$KEEP_INFO" | jq .KeepProperties.version)
+
+    if [ -z "$KEEP_INFO" ]; then
+      ERROR_MSG="No keep info returned"
+
+    elif [ -z "$KEEP_VERSION" ]; then
+      ERROR_MSG="No keep version returned"
+
+    else
+      case "$KEEP_VERSION" in
+
+        *v$KEEP_IMAGE_VERSION*)
+          echo "RESTAPI matches expected version: [$KEEP_VERSION]"
+          ;;
+
+        *)
+          ERROR_MSG="Wrong RESTAPI Version returned"
+          ;;
+      esac
+    fi
+  fi
+
+  dump_var "Keep Info" "$KEEP_INFO"
+  dump_var "Keep Version" "$KEEP_VERSION"
+
+  test_result "restapi.server.version" "Domino REST-API version OK" "" "$ERROR_MSG"
+
 fi
 
 
