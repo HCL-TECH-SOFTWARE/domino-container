@@ -569,11 +569,23 @@ install_traveler()
 }
 
 
+update_capi_env()
+{
+  echo >> "$1"
+  echo "# -- Begin Notes C-API environment vars --" >> "$1"
+  echo "export LOTUS=$LOTUS" >> "$1"
+  echo "export Notes_ExecDirectory=$LOTUS/notes/latest/linux" >> "$1"
+  echo "export LD_LIBRARY_PATH=$Notes_ExecDirectory" >> "$1"
+  echo "export INCLUDE=$LOTUS/notesapi/include" >> "$1"
+  echo "# -- End Notes C-API environment vars --" >> "$1"
+  echo >> "$1"
+}
+
+
 install_capi()
 {
   local ADDON_NAME=capi
   local ADDON_VER=$1
-  local BASH_PROFILE=/etc/bashrc
 
   if [ -z "$ADDON_VER" ]; then
     return 0
@@ -628,14 +640,9 @@ install_capi()
   fi
 
   # Update global profile
-  echo >> $BASH_PROFILE
-  echo "# -- Begin Notes C-API environment vars --" >> $BASH_PROFILE
-  echo "export LOTUS=$LOTUS" >> $BASH_PROFILE
-  echo "export Notes_ExecDirectory=$LOTUS/notes/latest/linux" >> $BASH_PROFILE
-  echo "export LD_LIBRARY_PATH=$Notes_ExecDirectory" >> $BASH_PROFILE
-  echo "export INCLUDE=$LOTUS/notesapi/include" >> $BASH_PROFILE
-  echo "# -- End Notes C-API environment vars --" >> $BASH_PROFILE
-  echo >> $BASH_PROFILE
+
+  update_capi_env /root/.bashrc
+  update_capi_env /home/notes/.bashrc
 
   echo
   echo Installed $ADDON_NAME
