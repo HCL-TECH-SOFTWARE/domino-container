@@ -1693,3 +1693,47 @@ install_mssql_client()
   log_space Installed $ADDON_NAME
 }
 
+
+install_trusted_root()
+{
+  if [ -z "$1" ]; then
+     return 0
+  fi
+
+  # In case OpenSSL is not installed in base image
+  if [ ! -e "/usr/bin/openssl" ]; then
+    install_package openssl
+  fi
+
+  header "Install trusted root on Linux level"
+
+  if [ ! -e "$1" ]; then
+    log_error "Cannot find specified trusted root: [$1]"
+    return 0
+  fi
+
+  # Dump certificate in PEM and text
+  header "Root Certificate Information"
+  openssl x509 -in "$1" -text -noout
+
+  header "Root Certificate in PEM format"
+  openssl x509 -in "$1"
+
+  echo
+  echo
+
+  if [ -x /usr/bin/zypper ]; then
+    cp -f "$1" /usr/share/pki/trust/anchors
+    update-ca-certificates
+
+  elif [ -x /usr/bin/apt-get ]; then
+    install_package ca-certificates
+    cp -f "$1" /usr/local/share/ca-certificates
+    update-ca-certificates
+
+  else
+    cp -f "$1" /etc/pki/ca-trust/source/anchors
+    update-ca-trust
+  fi
+}
+

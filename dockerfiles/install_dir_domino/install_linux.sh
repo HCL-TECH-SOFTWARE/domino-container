@@ -72,6 +72,9 @@ install_linux_packages()
     # Installing the German locale might fail if UBI systems is running on machine without Redhat subscription
     install_package glibc-langpack-de
 
+    # Might not be installed in all RedHat based container environments
+    install_package util-linux
+
   fi
 
   # PhotonOS
@@ -359,25 +362,34 @@ install_node_exporter()
 }
 
 
-check_ubuntu_repos()
+check_custom_software_repositories()
 {
-  UBUNTU_CODENAME=$(grep '^UBUNTU_CODENAME=' /etc/os-release | cut -f2 -d'=' | xargs)
+  VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -f2 -d'=' | xargs)
 
-  if [ "$UBUNTU_CODENAME" = "noble" ]; then
+  if [ "$VERSION_CODENAME" = "noble" ]; then
     if [ -e /etc/apt/sources.list.d/ubuntu.sources ]; then
       if [ -e "$INSTALL_DIR/custom/ubuntu_noble.sources" ]; then
         header "Replacing Ubuntu Nobel repositories"
         cp -f "$INSTALL_DIR/custom/ubuntu_noble.sources" /etc/apt/sources.list.d/ubuntu.sources
       fi
     fi
+
+  elif [ "$VERSION_CODENAME" = "bookworm" ]; then
+    if [ -e /etc/apt/sources.list.d/debian.sources ]; then
+      if [ -e "$INSTALL_DIR/custom/debian_bookworm.sources" ]; then
+        header "Replacing Debian Bookworm repositories"
+        cp -f "$INSTALL_DIR/custom/debian_bookworm.sources" /etc/apt/sources.list.d/debian.sources
+      fi
+    fi
   fi
 }
 
 
-check_custom_software_repositories()
+check_install_trusted_root()
 {
-  if [ -n "$(grep '^NAME=' /etc/os-release | grep 'Ubuntu')" ]; then
-    check_ubuntu_repos
+
+  if [ -e "$INSTALL_DIR/custom/trusted_root.pem" ]; then
+    install_trusted_root "$INSTALL_DIR/custom/trusted_root.pem"
   fi
 }
 
@@ -412,6 +424,8 @@ else
   if [ -x /usr/bin/apt ]; then
      install_package apt-utils
   fi
+
+  check_install_trusted_root
 
   install_linux_packages
 

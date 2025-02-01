@@ -84,6 +84,10 @@ For local connections I had to modify the build logic to exclude the NGINX local
 Curl in the currently used versions in most distributions does not yet allow to exclude IP ranges.
 Therefore only the IP address of the NGINX instance is excluded.
 
+In a local environment you might have local resources which can't use the proxy.
+To exclude targets by domain specify the no proxy setting as well as shown in the examples below.
+
+
 Edit the Docker systemd file `/usr/lib/systemd/system/docker.service` to update the environments variables.
 
 ```
@@ -95,6 +99,7 @@ vi /usr/lib/systemd/system/docker.service
 ```
 Environment=https_proxy=http://192.168.96.99:3128
 Environment=http_proxy=http://192.168.96.99:3128
+Environment=no_proxy=notes.lab
 ```
 
 ## Reload the systemd configuration and restart Docker
@@ -118,12 +123,13 @@ Specify the proxy configuration like shown in this example.
 
 ```
 {
-"proxies": {
- "default": {
-   "httpProxy": "http://192.168.96.99:3128",
-   "httpsProxy": "http://192.168.96.99:3128"
- }
-}
+  "proxies": {
+    "default": {
+      "httpProxy": "http://192.168.96.99:3128",
+      "httpsProxy": "http://192.168.96.99:3128",
+      "noProxy": "notes.lab"
+     }
+  }
 }
 ```
 
@@ -135,6 +141,7 @@ But if it is not generally set, you can export the proxy using environment varia
 ```
 export https_proxy=http://192.168.96.99:3128
 export http_proxy=http://192.168.96.99:3128
+export no_proxy=notes.lab
 ```
 
 

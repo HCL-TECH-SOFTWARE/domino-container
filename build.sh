@@ -1,11 +1,11 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2024  - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2025  - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.5 18.12.2024
+# Version 2.3.6 01.02.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -27,7 +27,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.5
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.6
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -42,6 +42,17 @@ if [ "$1" == "--version" ]; then
 fi
 
 # ----------------------------------------
+
+
+ClearScreen()
+{
+  if [ "$DISABLE_CLEAR_SCREEN" = "yes" ]; then
+    return 0
+  fi
+
+  clear
+}
+
 
 log_error_exit()
 {
@@ -690,17 +701,17 @@ check_from_image()
 
   case "$FROM_IMAGE" in
 
-    centos8)
-      LINUX_NAME="CentOS Stream 8"
-      BASE_IMAGE=quay.io/centos/centos:stream8
-      ;;
-
     centos|centos9)
       LINUX_NAME="CentOS Stream 9"
       BASE_IMAGE=quay.io/centos/centos:stream9
       ;;
 
-    rocky)
+   centos10)
+      LINUX_NAME="CentOS Stream 10 (Coughlan)"
+      BASE_IMAGE=quay.io/centos/centos:stream10
+      ;;
+
+    rocky|rocky9)
       LINUX_NAME="Rocky Linux 9"
       BASE_IMAGE=docker.io/rockylinux/rockylinux:9
       ;;
@@ -710,7 +721,7 @@ check_from_image()
       BASE_IMAGE=docker.io/rockylinux/rockylinux:8
       ;;
 
-    alma)
+    alma|alma9)
       LINUX_NAME="Alma Linux 9"
       BASE_IMAGE=almalinux:9
       ;;
@@ -765,14 +776,24 @@ check_from_image()
       BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
       ;;
 
-    ubuntu)
-      LINUX_NAME="Ubuntu 24.04 LTS"
+    ubuntu|ubuntu24)
+      LINUX_NAME="Ubuntu 24.04 LTS (Noble Numbat)"
       BASE_IMAGE=ubuntu
       ;;
 
     ubuntu22)
-      LINUX_NAME="Ubuntu 22.04 LTS"
+      LINUX_NAME="Ubuntu 22.04 LTS (Jammy Jellyfish)"
       BASE_IMAGE=ubuntu:jammy
+      ;;
+
+    debian|debian12)
+      LINUX_NAME="Debian 12 (Bookworm)"
+      BASE_IMAGE=debian:12
+      ;;
+
+    debian11)
+      LINUX_NAME="Debian 11 (Bullseye)"
+      BASE_IMAGE=debian:11
       ;;
 
     leap)
@@ -2285,7 +2306,7 @@ select_language_pack()
   local LP_NL="Dutch"
   local LP_JA="Japanese"
 
-  clear
+  ClearScreen
   echo
   echo "Domino Language Pack"
   echo "--------------------"
@@ -2354,7 +2375,7 @@ select_domino_version()
   get_current_version domino-12.0.2 VER_1202
   get_current_version domino-14.5 VER_145
 
-  clear
+  ClearScreen
   echo
   echo "HCL Domino Version"
   echo "------------------"
@@ -2669,7 +2690,7 @@ select_software()
       DISPLAY_PROM=
     fi
 
-    clear
+    ClearScreen
     echo
 
     if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
@@ -2730,7 +2751,7 @@ select_software()
         ;;
 
       0|q)
-        clear
+        ClearScreen
 	echo
         exit 0
         ;;
@@ -2897,9 +2918,8 @@ build_menu()
 {
   # Ensure to always read from terminal even stdin was redirected
   exec < /dev/tty
-
   select_software
-  clear
+  ClearScreen
   echo
 
   if [ -n "$ONTIME_VER" ]; then

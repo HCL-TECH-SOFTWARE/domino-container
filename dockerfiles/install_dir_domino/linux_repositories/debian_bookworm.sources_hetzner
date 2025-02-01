@@ -1,0 +1,14 @@
+# Hetzner Debian 12 (Bookworm) repositories
+
+Types: deb
+URIs: https://mirror.hetzner.com/debian/packages
+Suites: bookworm bookworm-updates
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: https://mirror.hetzner.com/debian/packages
+Suites: bookworm-security
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
