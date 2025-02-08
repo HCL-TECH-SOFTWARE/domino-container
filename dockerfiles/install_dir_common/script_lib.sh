@@ -1322,6 +1322,8 @@ install_package()
     log_error "No package manager found!"
     exit 1
   fi
+
+  echo "$@" >> /tmp/install_package.log
 }
 
 install_packages()
@@ -1358,6 +1360,8 @@ remove_package()
   elif [ -x /sbin/apk ]; then
       /sbin/apk del "$@"
   fi
+
+  echo "$@" >> /tmp/remove_package.log
 }
 
 remove_packages()

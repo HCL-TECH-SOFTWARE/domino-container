@@ -1670,19 +1670,25 @@ check_software_file()
     SEARCH_STR="^$1|$2|"
   fi
 
-  if [ -z "$DOWNLOAD_SOFTWARE_FILE" ]; then
+  # Read software buffer once. Either from local or remote download software.txt
 
-    while read LINE
-    do
-      check_software $LINE
-      FOUND="TRUE"
-    done < <(grep "$SEARCH_STR" $SOFTWARE_FILE)
-  else
-    while read LINE
-    do
-      check_software $LINE
-      FOUND="TRUE"
-    done < <($CURL_CMD --silent $DOWNLOAD_SOFTWARE_FILE | grep "$SEARCH_STR")
+  if [ -z "$DOWNLOAD_SOFTWARE_BUFFER" ]; then
+
+    if [ -z "$DOWNLOAD_SOFTWARE_FILE" ]; then
+      DOWNLOAD_SOFTWARE_BUFFER=$(cat $SOFTWARE_FILE)
+    else
+      DOWNLOAD_SOFTWARE_BUFFER=$($CURL_CMD --silent $DOWNLOAD_SOFTWARE_FILE)
+    fi
+
+  fi
+
+  # Check if line is found for search string in buffer
+
+  LINE=$(echo -e "$DOWNLOAD_SOFTWARE_BUFFER" | grep "$SEARCH_STR")
+
+  if [ -n "$LINE" ]; then
+    check_software $(echo $LINE |grep "$SEARCH_STR")
+    FOUND="TRUE"
   fi
 
   if [ -z "$PROD_NAME" ]; then
