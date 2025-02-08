@@ -711,9 +711,14 @@ check_from_image()
       BASE_IMAGE=quay.io/centos/centos:stream10
       ;;
 
-    rocky|rocky9)
+    rocky9)
       LINUX_NAME="Rocky Linux 9"
       BASE_IMAGE=docker.io/rockylinux/rockylinux:9
+      ;;
+
+    rocky|rocky-minimal|rocky9-minimal)
+      LINUX_NAME="Rocky Linux 9"
+      BASE_IMAGE=docker.io/rockylinux/rockylinux:9-minimal
       ;;
 
     rocky8)
@@ -2142,7 +2147,13 @@ trivy_scan_image()
 {
   header "Running Trivy Scan on $DOCKER_IMAGE ..."
 
-  if [ ! -x /usr/bin/trivy ]; then
+  if [ -x /usr/bin/trivy ]; then
+    TRIVY_BIN=/usr/bin/trivy
+  elif [ -x /usr/local/bin/trivy ]; then
+    TRIVY_BIN=/usr/local/bin/trivy
+  fi
+
+  if [ -z "$TRIVY_BIN" ]; then
     log "Trivy is not installed! Skipping scan"
     return 0
   fi
@@ -2154,7 +2165,7 @@ trivy_scan_image()
 
   # If no output file is specified, just run the scan with standard output
   if [ -z  "$1" ]; then
-    /usr/bin/trivy image "$DOCKER_IMAGE" --scanners vuln
+    $TRIVY_BIN image "$DOCKER_IMAGE" --scanners vuln
     echo
     return 0
   fi
@@ -2163,7 +2174,7 @@ trivy_scan_image()
 
     *.json)
 
-      /usr/bin/trivy image "$DOCKER_IMAGE" -o "$1" -f json --scanners vuln
+      $TRIVY_BIN image -o "$1" -f json "$DOCKER_IMAGE"
 
       if [ ! -x /usr/bin/jq ]; then
         log "Scan completed: $1"
@@ -2177,7 +2188,7 @@ trivy_scan_image()
       ;;
 
     *)
-      /usr/bin/trivy image "$DOCKER_IMAGE" -o "$1" --scanners vuln
+      $TRIVY_BIN image "$DOCKER_IMAGE" -o "$1"
       header "Trivy Scan Result"
       cat "$1"
       log "Output file: [$1]"
