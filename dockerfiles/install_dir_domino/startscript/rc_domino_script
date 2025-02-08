@@ -3,9 +3,9 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version  3.9.3 16.07.2024                                               #
+# Version  4.0.2 04.01.2025                                               #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2024                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2025                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -21,9 +21,11 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=3.9.3
+DOMINO_SCRIPT_VERSION=4.0.2
 
-VERBOSE_INFO="yes"
+if [ -z "$DOMINO_SCRIPT_VERBOSE_INFO" ]; then
+  DOMINO_SCRIPT_VERBOSE_INFO="yes"
+fi
 
 # Reset
 ColorOff='\033[0m'
@@ -68,7 +70,7 @@ DOMINO_DEFAULT_CONFIG_FILE=/etc/sysconfig/rc_domino_config
 if [ -r "$DOMINO_DEFAULT_CONFIG_FILE" ]; then
   . $DOMINO_DEFAULT_CONFIG_FILE
 
-  if [ "$VERBOSE_INFO" = "yes" ]; then
+  if [ "$DOMINO_SCRIPT_VERBOSE_INFO" = "yes" ]; then
     echo "Using Domino config File [$DOMINO_DEFAULT_CONFIG_FILE]"
   fi
 fi
@@ -76,8 +78,8 @@ fi
 # Include server specific config file if a exists and is readable
 if [ -r "$DOMINO_CONFIG_FILE" ]; then
   . $DOMINO_CONFIG_FILE
-  
-  if [ "$VERBOSE_INFO" = "yes" ]; then
+
+  if [ "$DOMINO_SCRIPT_VERBOSE_INFO" = "yes" ]; then
     echo "Using Domino config File [$DOMINO_CONFIG_FILE]"
   fi
 fi
@@ -85,13 +87,13 @@ fi
 # Reading environment variable file (variables defined in config file overwrirte environment)
 if [ -r "$DOMINO_ENV_FILE" ]; then
   . $DOMINO_ENV_FILE
-  if [ "$VERBOSE_INFO" = "yes" ]; then
+  if [ "$DOMINO_SCRIPT_VERBOSE_INFO" = "yes" ]; then
     echo "Using environment File [$DOMINO_ENV_FILE]"
   fi
 fi
 
 if [ -z "$DOMINO_CONFIGURED" ]; then
-  # Configuraiton is either loaded from external config file /etc/sysconfig/rc_domino_config.
+  # Configuration is either loaded from external config file /etc/sysconfig/rc_domino_config.
   # or defined in environment variables (not recommended).
 
   echo "Domino Server for '$DOMINO_USER' not configured"
@@ -162,12 +164,6 @@ fi
 
 if [ -z "$DOMINO_TIKA_SHUTDOWN_TERM_SECONDS" ]; then
   DOMINO_TIKA_SHUTDOWN_TERM_SECONDS=30
-fi
-
-# -- systemd service name used for configuration --
-
-if [ -z "$DOMINO_SYSTEMD_NAME" ]; then
-  DOMINO_SYSTEMD_NAME=domino.service
 fi
 
 # -- by default use server -c ... to send server command  --
@@ -301,7 +297,7 @@ if [ -z "$DOMINO_PID_FILE" ]; then
 fi
 
 DOMINO_INI_PATH=$DOMINO_DATA_PATH/notes.ini
-PATH=$DOMINO_DATA_PATH:$LOTUS/bin:$Notes_ExecDirectory:$Notes_ExecDirectory/res/C:$PATH 
+PATH=$DOMINO_DATA_PATH:$LOTUS/bin:$Notes_ExecDirectory:$Notes_ExecDirectory/res/C:$PATH
 
 # Check if log path has been already set. else set it based on user-name and base directory.
 
@@ -321,6 +317,35 @@ if [ "$DOMINO_USE_JAVA_CONTROLLER" = "yes" ]; then
   JAVA_CONTROLLER_STRING="-jc -c"
 fi
 
+if [ -e "$DOMINO_PID_FILE" ]; then
+  DOMINO_PID=$(cat "$DOMINO_PID_FILE")
+
+else
+    DOMINO_PID=
+fi
+
+
+# Find out if server is running via systemd and determine the service name for the running server
+
+DOMINO_SYSTEMD_NAME=
+
+if [ ${LARCH} = "linux" ]; then
+  if [ -n "$(ps --no-headers -o comm 1 | grep systemd)" ]; then
+    if [ -z "$DOMINO_PID" ]; then
+      DOMINO_SYSTEMD_NAME=
+    else
+      DOMINO_SYSTEMD_NAME=$(/usr/bin/ps -o'unit' --no-headers "$DOMINO_PID")
+    fi
+
+  else
+    case "$DOMINO_PID_FILE" in
+      /run/*)
+        DOMINO_PID_FILE=/tmp/domino.pid
+        ;;
+    esac
+  fi
+fi
+
 
 # Export all variables that might be useful for other scripts
 
@@ -330,6 +355,9 @@ export PLATFORM_NAME
 export Notes_ExecDirectory
 export PATH
 
+export DOMINO_PID
+export DOMINO_PID_FILE
+export DOMINO_SYSTEMD_NAME
 export DOMINO_SERVER
 export DOMINO_DATA_PATH
 export DOMINO_USER
@@ -375,8 +403,8 @@ export DOMINO_DOMLOG_DB_BACKUP_DIR
 #DOMINO_LOG_START_COMPACT_OPTIONS="-C -W7 log.nsf"
 
 # -- Fixup Options --
-#DOMINO_START_FIXUP_OPTIONS="-f -j systemdbs.ind" 
-#DOMINO_FIXUP_OPTIONS="-f -j systemdbs.ind" 
+#DOMINO_START_FIXUP_OPTIONS="-f -j systemdbs.ind"
+#DOMINO_FIXUP_OPTIONS="-f -j systemdbs.ind"
 
 # -- DBMT Compact Options Domino 9.x --
 #DOMINO_COMPACT_TASK="dbmt"
@@ -395,7 +423,7 @@ export DOMINO_DOMLOG_DB_BACKUP_DIR
 # Special Parameters
 
 # TN 1249226 / SPR DMAT6DTTHH / D7.0.x In certain cases, running NSD manually can cause a Domino server to crash on Unix 3systems.
-# This crash can occur when a process such as the Agent Manager (AMGR) or Web Server (HTTP) is executing Java code. 
+# This crash can occur when a process such as the Agent Manager (AMGR) or Web Server (HTTP) is executing Java code.
 # This parameter prevents the crash.
 AMQ_NO_SIGWAIT_SIGTRAP=1
 export AMQ_NO_SIGWAIT_SIGTRAP
@@ -403,7 +431,7 @@ export AMQ_NO_SIGWAIT_SIGTRAP
 
 # --- Helper functions ---
 
-DebugText ()
+DebugText()
 {
   if [ "$DOMINO_DEBUG_MODE" = "yes" ]; then
 
@@ -413,13 +441,13 @@ DebugText ()
       echo "$(date '+%F %T') Debug:" $@ >> $DOMINO_DEBUG_FILE
     fi
 
-  fi 
+  fi
 
   return 0
 }
 
 
-errmsg ()
+errmsg()
 {
   echo $1 >&2
 
@@ -427,13 +455,13 @@ errmsg ()
 }
 
 
-errmsg_and_exit ()
+errmsg_and_exit()
 {
   errmsg "$1"
   exit 1
 }
 
-print_delim ()
+print_delim()
 {
   echo "--------------------------------------------------------------------------------"
 }
@@ -454,7 +482,7 @@ log_space()
   echo
 }
 
-nsd_check_set_posix_locale ()
+nsd_check_set_posix_locale()
 {
   if [ "$NSD_SET_POSIX_LC" = "yes" ]; then
    LANG=POSIX
@@ -464,7 +492,7 @@ nsd_check_set_posix_locale ()
   return 0
 }
 
-stop_monitor ()
+stop_monitor()
 {
   DebugText "stoping_monitor for MONITOR_PID:" [$MONITOR_PID]
   kill -9 $MONITOR_PID > /dev/null 2>&1
@@ -479,7 +507,29 @@ stop_monitor ()
   exit 0
 }
 
-remove_file ()
+get_domino_process_list()
+{
+
+  if [ ${LARCH} = "linux" ]; then
+
+    if [ -z "$DOMINO_SYSTEMD_NAME" ]; then
+
+      # Old style of getting process list for none systemd
+      $PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep"
+
+    else
+
+      # New way filtering processes by systemd service name
+      ps -e -ouser,pid,ppid,stime,time,unit,cmd | grep "$DOMINO_SYSTEMD_NAME"
+
+    fi
+
+  else
+    $PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep"
+  fi
+}
+
+remove_file()
 {
   if [ -z "$1" ]; then
     return 1
@@ -493,7 +543,7 @@ remove_file ()
   return 0
 }
 
-remove_tempfiles_default ()
+remove_tempfiles_default()
 {
   if [ ! -z "$DOMINO_DATA_PATH" ]; then
     if [ -w "$DOMINO_DATA_PATH" ]; then
@@ -512,7 +562,7 @@ remove_tempfiles_default ()
    fi
   fi
 
-  return 0 
+  return 0
 }
 
 wait_time_or_string()
@@ -559,31 +609,31 @@ wait_time_or_string()
   done
 }
 
-show_version ()
+show_version()
 {
   echo "Nash!Com Linux/Unix Start Script Version ($DOMINO_SCRIPT_VERSION)"
   return 0
 }
 
-get_notes_ini_var () 
-{ 
-  # $1 = filename 
-  # $2 = ini.variable 
+get_notes_ini_var()
+{
+  # $1 = filename
+  # $2 = ini.variable
 
-  ret_ini_var="" 
-  if [ -z "$1" ]; then 
-    return 0 
-  fi 
+  ret_ini_var=""
+  if [ -z "$1" ]; then
+    return 0
+  fi
 
-  if [ -z "$2" ]; then 
-    return 0 
-  fi 
+  if [ -z "$2" ]; then
+    return 0
+  fi
 
   ret_ini_var=$(awk -F '(=| =)' -v SEARCH_STR="$2" '{if (tolower($1) == tolower(SEARCH_STR)) print $2}' $1 | xargs)
-  return 0 
+  return 0
 }
 
-edit_config_file ()
+edit_config_file()
 {
   if [ -z "$1" ]; then
     if [ -r "$DOMINO_CONFIG_FILE" ]; then
@@ -613,7 +663,7 @@ edit_debug_file()
   if [ ! -r "$DOMINO_DEBUG_FILE" ]; then
     return 0
   fi
-  
+
   if [ -z "$1" ]; then
     $EDIT_COMMAND "$DOMINO_DEBUG_FILE"
   else
@@ -621,50 +671,42 @@ edit_debug_file()
   fi
 }
 
-list_config_file ()
+list_config_file()
 {
   if [ -z "$1" ]; then
     if [ -r "$DOMINO_CONFIG_FILE" ]; then
-      cat "$DOMINO_CONFIG_FILE" | grep . | grep -v "^#" 
+      cat "$DOMINO_CONFIG_FILE" | grep . | grep -v "^#"
     else
       if [ -r "$DOMINO_DEFAULT_CONFIG_FILE" ]; then
-        cat $DOMINO_DEFAULT_CONFIG_FILE | grep . | grep -v "^#" 
+        cat $DOMINO_DEFAULT_CONFIG_FILE | grep . | grep -v "^#"
       fi
     fi
   elif [ "$1" = "default" ]; then
     if [ -r "$DOMINO_DEFAULT_CONFIG_FILE" ]; then
-      cat "$DOMINO_DEFAULT_CONFIG_FILE" | grep . | grep -v "^#" 
+      cat "$DOMINO_DEFAULT_CONFIG_FILE" | grep . | grep -v "^#"
     else
       echo "Config file not found"
     fi
   elif  [ "$1" = "server" ]; then
     if [ -r "$DOMINO_CONFIG_FILE" ]; then
-      cat "$DOMINO_CONFIG_FILE" | grep . | grep -v "^#" 
+      cat "$DOMINO_CONFIG_FILE" | grep . | grep -v "^#"
     else
       echo "Config file not found"
     fi
   elif  [ -r "$1" ]; then
-    cat "$1" | grep . | grep -v "^#" 
+    cat "$1" | grep . | grep -v "^#"
   else
     echo "Wrong config list option [$1] specified"
   fi
 }
 
-edit_systemd_cfg ()
+edit_systemd_cfg()
 {
-  if [ ! -z "$DOMINO_SYSTEMD_NAME" ]; then
-    SYSTEMD_NAME=/etc/systemd/system/$DOMINO_SYSTEMD_NAME
-  	
-    if [ -r "$SYSTEMD_NAME" ]; then
-      $EDIT_COMMAND $SYSTEMD_NAME
-    else
-      echo "systemd not configured!"
-    fi
-  fi
+    systemctl edit "domino.service"
 }
 
 
-show_log ()
+show_log()
 {
   if [ -z "$1" ]; then
     CURRENT_SHOW_LOG_COMMAND=$SHOW_LOG_COMMAND
@@ -675,37 +717,37 @@ show_log ()
   $CURRENT_SHOW_LOG_COMMAND $REAL_OUTPUT_FILE
 }
 
-run_external_script ()
+run_external_script()
 {
   if [ -z "$1" ]; then
     return 0
   fi
-  
+
   if [ ! -x $1 ]; then
     echo "Cannot execute script " [$1]
     return 0
   fi
-  
+
   if [ -z "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
-    DebugText "not checking script owner for [$1]" 
+    DebugText "not checking script owner for [$1]"
   else
     SCRIPT_OWNER=$(stat -c %U $1)
     if [ "$SCRIPT_OWNER" = "$EXECUTE_SCRIPT_CHECK_OWNER" ]; then
-      DebugText "execution check script [$1] OK -- Owner: $SCRIPT_OWNER" 
+      DebugText "execution check script [$1] OK -- Owner: $SCRIPT_OWNER"
     else
-      echo "Wrong owner for script -- not executing" [$1] 
+      echo "Wrong owner for script -- not executing" [$1]
       return 0
     fi
   fi
-  
+
   DebugText "BEGIN $2 " [$1]
   $1
   DebugText "END $2 " [$1]
-  
+
   return 0
 }
 
-remove_tempfile_check ()
+remove_tempfile_check()
 {
   if [ "$DOMINO_REMOVE_TEMPFILES" = "yes" ]; then
 
@@ -717,19 +759,19 @@ remove_tempfile_check ()
   fi
 }
 
-clear_backup_logs ()
+clear_backup_logs()
 {
   DebugText "clear_backup_logs PARAM: '$1' '$2'"
   if [ -z "$1" ]; then
- 
+
     if [ -z "$DOMINO_LOG_BACKUP_CLEAR_DAYS" ]; then
       return 0
     fi
- 
+
     DebugText "log clear days from config:" $DOMINO_LOG_BACKUP_CLEAR_DAYS
- 
+
   else
-    DOMINO_LOG_BACKUP_CLEAR_DAYS=$1  
+    DOMINO_LOG_BACKUP_CLEAR_DAYS=$1
     DebugText "log clear days from parameter:" $DOMINO_LOG_BACKUP_CLEAR_DAYS
   fi
 
@@ -739,31 +781,31 @@ clear_backup_logs ()
     if [ -w "$DOMINO_DATA_PATH" ]; then
       DebugText "Removing old log backup files from : $DOMINO_DATA_PATH"
       echo "Removing old log-files from data dir: [$DOMINO_DATA_PATH/$DOMINO_SERVER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
-      find "$DOMINO_DATA_PATH" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_SERVER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
+      find "$DOMINO_DATA_PATH" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_SERVER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \;
     fi
   else
     if [ -w "$DOMINO_LOG_BACKUP_DIR" ]; then
       DebugText "Removing files from : $DOMINO_LOG_BACKUP_DIR"
       echo "Removing log-files from backup dir: [$DOMINO_LOG_BACKUP_DIR/$DOMINO_SERVER_*.log.gz - days: $DOMINO_LOG_BACKUP_CLEAR_DAYS]"
-      find "$DOMINO_LOG_BACKUP_DIR" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_SERVER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \; 
+      find "$DOMINO_LOG_BACKUP_DIR" -maxdepth 1 -type f -mtime +$DOMINO_LOG_BACKUP_CLEAR_DAYS -name "$DOMINO_SERVER_*.log.gz" -exec $REMOVE_COMMAND_CLEANUP {} \;
     fi
   fi
 }
 
-clear_logs ()
+clear_logs()
 {
   DebugText "clear_logs PARAM: '$1' '$2'"
-  
+
   if [ -z "$1" ]; then
- 
+
     if [ -z "$DOMINO_LOG_CLEAR_DAYS" ]; then
       return 0
     fi
- 
+
     DebugText "log clear days from config: $DOMINO_LOG_CLEAR_DAYS"
- 
+
   else
-    DOMINO_LOG_CLEAR_DAYS=$1  
+    DOMINO_LOG_CLEAR_DAYS=$1
     DebugText "log clear days from parameter: $DOMINO_LOG_CLEAR_DAYS"
   fi
 
@@ -773,7 +815,7 @@ clear_logs ()
     if [ -w "$DOMINO_LOG_PATH" ]; then
       DebugText "Removing files from : $DOMINO_LOG_PATH"
       echo "Removing log-files: [$DOMINO_LOG_PATH/* - days: $DOMINO_LOG_CLEAR_DAYS]"
-      find "$DOMINO_LOG_PATH" -type f -mtime +$DOMINO_LOG_CLEAR_DAYS -exec $REMOVE_COMMAND_CLEANUP {} \; 
+      find "$DOMINO_LOG_PATH" -type f -mtime +$DOMINO_LOG_CLEAR_DAYS -exec $REMOVE_COMMAND_CLEANUP {} \;
     fi
   fi
 
@@ -781,39 +823,39 @@ clear_logs ()
     if [ -w "$DOMINO_IBM_TECHNICAL_SUPPORT_DIR" ]; then
       DebugText "Removing files from : $DOMINO_IBM_TECHNICAL_SUPPORT_DIR"
       echo "Removing log-files: [$DOMINO_IBM_TECHNICAL_SUPPORT_DIR/* - days: $DOMINO_LOG_CLEAR_DAYS]"
-      find "$DOMINO_IBM_TECHNICAL_SUPPORT_DIR" -type f -mtime +$DOMINO_LOG_CLEAR_DAYS -exec $REMOVE_COMMAND_CLEANUP {} \; 
+      find "$DOMINO_IBM_TECHNICAL_SUPPORT_DIR" -type f -mtime +$DOMINO_LOG_CLEAR_DAYS -exec $REMOVE_COMMAND_CLEANUP {} \;
     fi
   fi
 
   return 0
 }
 
-clear_custom_logs ()
+clear_custom_logs()
 {
   DebugText "clear_custom_logs PARAM: '$1' '$2'"
 
   if [ -z "$1" ]; then
- 
+
     if [ -z "$DOMINO_CUSTOM_LOG_CLEAR_DAYS" ]; then
       return 0
     fi
- 
+
     DebugText "custom-log clear days from config: $DOMINO_CUSTOM_LOG_CLEAR_DAYS"
- 
+
   else
     DOMINO_CUSTOM_LOG_CLEAR_DAYS=$1
     DebugText "custom-log clear days from parameter: $DOMINO_CUSTOM_LOG_CLEAR_DAYS"
   fi
 
   if [ -z "$2" ]; then
- 
+
     if [ -z "$DOMINO_CUSTOM_LOG_CLEAR_PATH" ]; then
       echo "No custom-log clear path specified"
       return 0
     fi
- 
+
     DebugText "custom-log clear path from config: $DOMINO_CUSTOM_LOG_CLEAR_PATH"
- 
+
   else
     DOMINO_CUSTOM_LOG_CLEAR_PATH=$2
     DebugText "custom-log clear path from parameter: $DOMINO_CUSTOM_LOG_CLEAR_PATH"
@@ -824,14 +866,14 @@ clear_custom_logs ()
 
       DebugText "Removing custom-log files - days: $DOMINO_CUSTOM_LOG_CLEAR_DAYS path: $DOMINO_CUSTOM_LOG_CLEAR_PATH"
       echo "Removing log-files: [$DOMINO_CUSTOM_LOG_CLEAR_PATH - days: $DOMINO_CUSTOM_LOG_CLEAR_DAYS]"
-      find "$DOMINO_CUSTOM_LOG_CLEAR_PATH" -type f -mtime +$DOMINO_CUSTOM_LOG_CLEAR_DAYS -exec $REMOVE_COMMAND_CLEANUP {} \; 
+      find "$DOMINO_CUSTOM_LOG_CLEAR_PATH" -type f -mtime +$DOMINO_CUSTOM_LOG_CLEAR_DAYS -exec $REMOVE_COMMAND_CLEANUP {} \;
     fi
   fi
- 
+
   return 0
 }
 
-log_clear_operations ()
+log_clear_operations()
 {
   if [ -z "$DOMINO_CUSTOM_LOG_CLEAR_SCRIPT" ]; then
     clear_logs "$1"
@@ -840,11 +882,11 @@ log_clear_operations ()
   else
     run_external_script "$DOMINO_CUSTOM_LOG_CLEAR_SCRIPT" "custom log clear script"
   fi
-   
+
   return 0
 }
 
-startup_remove_file_check ()
+startup_remove_file_check()
 {
   DOMINO_LOADMON_FILE=$DOMINO_DATA_PATH/loadmon.ncf
 
@@ -853,13 +895,13 @@ startup_remove_file_check ()
   if [ "$DOMINO_RESET_LOADMON" = "yes" ]; then
     if [ -w $DOMINO_LOADMON_FILE ]; then
       rm $DOMINO_LOADMON_FILE
-      
+
       if [ $? -eq 0 ]; then
         echo "Removed LoadMon-Data '$DOMINO_LOADMON_FILE'"
       else
         echo "Cannot remove LoadMon-Data '$DOMINO_LOADMON_FILE'"
       fi
-     
+
     fi
   fi
 
@@ -873,7 +915,7 @@ startup_remove_file_check ()
   return 0
 }
 
-check_create_dir ()
+check_create_dir()
 {
   if [ -z "$1" ]; then
     return 0
@@ -895,7 +937,7 @@ check_create_dir ()
   return 0
 }
 
-check_create_directories ()
+check_create_directories()
 {
   DebugText "check create for DOMINO_VIEW_REBUILD_DIR" [$DOMINO_VIEW_REBUILD_DIR]
   check_create_dir "$DOMINO_VIEW_REBUILD_DIR" "View Rebuild Dir"
@@ -908,7 +950,7 @@ check_create_directories ()
 
   DebugText "check create for DOMINO_LOG_DIR" [$DOMINO_LOG_DIR]
   check_create_dir "$DOMINO_LOG_DIR" "Domino Log Dir"
-  
+
   DebugText "check create for DOMINO_LOG_BACKUP_DIR" [$DOMINO_LOG_BACKUP_DIR]
   check_create_dir "$DOMINO_LOG_BACKUP_DIR" "Domino Log Backup Dir"
 
@@ -1020,7 +1062,7 @@ move_database()
     if [ -e "$2" ]; then
       DebugText "Removing old $2"
 
-      echo "--- Removing old $2 ---" >> $DOMINO_OUTPUT_LOG 
+      echo "--- Removing old $2 ---" >> $DOMINO_OUTPUT_LOG
       echo "Removing old '$2' "
 
       rm -f "$2"
@@ -1028,7 +1070,7 @@ move_database()
   fi
 
   if [ -e "$2" ]; then
-    echo "--- Error renaming log database -- Cannot remove existing file [$1 -> $2] ---" >> $DOMINO_OUTPUT_LOG 
+    echo "--- Error renaming log database -- Cannot remove existing file [$1 -> $2] ---" >> $DOMINO_OUTPUT_LOG
     echo "Error renaming log database -- Cannot remove existing file [$1 -> $2]"
     return 1
   fi
@@ -1036,12 +1078,12 @@ move_database()
   directory=$(dirname $2)
   DebugText "dirname for rename [$directory]"
   check_create_dir "$directory" "Database Log Dir"
-  
+
   if [ ! -w "$directory" ]; then
-    echo "--- Error renaming log database. Cannot write to directory '$directory' [$1 -> $2] ---" >> $DOMINO_OUTPUT_LOG 
+    echo "--- Error renaming log database. Cannot write to directory '$directory' [$1 -> $2] ---" >> $DOMINO_OUTPUT_LOG
     echo "Error renaming log database. Cannot write to directory '$directory' [$1 -> $2]"
     return 1
-  fi 
+  fi
 
   if [ "$2" = "DELETEDB" ]; then
     rm -f "$1"
@@ -1050,11 +1092,11 @@ move_database()
   fi
 
   if [ -e "$1" ]; then
-    echo "--- Error renaming log database [$1 -> $2] ---" >> $DOMINO_OUTPUT_LOG 
+    echo "--- Error renaming log database [$1 -> $2] ---" >> $DOMINO_OUTPUT_LOG
     echo "Error renaming log database [$1 -> $2]"
     return 1
   fi
-   
+
   return 0
 }
 
@@ -1076,7 +1118,7 @@ check_log_db_rename()
       DebugText "No log.nsf - Skip move"
       return 0
     fi
-    
+
     if [ -z "$DOMINO_LOG_DB_BACKUP" ]; then
 
       if [ -z "$DOMINO_LOG_DB_BACKUP_DIR" ]; then
@@ -1115,34 +1157,34 @@ check_domlog_db_rename()
       DebugText "No domlog.nsf - Skip move"
       return 0
     fi
-    
+
     if [ -z "$DOMINO_DOMLOG_DB_BACKUP" ]; then
-      
+
       if [ -z "$DOMINO_DOMLOG_DB_BACKUP_DIR" ]; then
         DOMINO_DOMLOG_DB_BACKUP_DIR=$DOMINO_DATA_PATH/log_backup
       fi
 
       check_create_dir "$DOMINO_DOMLOG_DB_BACKUP_DIR" "Domino LogDbBackup Dir"
-      
+
       DOMINO_DOMLOG_DB_BACKUP="$DOMINO_DOMLOG_DB_BACKUP_DIR/log_"$(LANG=C date +"%Y%m%d")".nsf"
     else
       # create directory anyway if configured. log file might need it
       check_create_dir "$DOMINO_DOMLOG_DB_BACKUP_DIR" "Domino LogDbBackup Dir"
     fi
-   
+
     move_database $DOMINO_DOMLOG_DB $DOMINO_DOMLOG_DB_BACKUP
   fi
 
   return 0
 }
 
-domino_is_running ()
+domino_is_running()
 {
-  DOMINO_RUNNING=$($PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep "server" | grep -v " -jc")
-  local LOGASIO_RUNNING=$($PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep "logasio")
+  DOMINO_RUNNING=$(get_domino_process_list | grep "$LOTUS_BIN_DIR" | grep "server" | grep -v " -jc")
+  local LOGASIO_RUNNING=$(get_domino_process_list | grep "$LOTUS_BIN_DIR" | grep "logasio")
 
-  DebugText "DOMINO_USER:" $DOMINO_USER 
-  DebugText "DOMINO_RUNNING:" $DOMINO_RUNNING 
+  DebugText "DOMINO_USER:" $DOMINO_USER
+  DebugText "DOMINO_RUNNING:" $DOMINO_RUNNING
   DebugText "LOGASIO_RUNNING:" $LOGASIO_RUNNING
 
   if [ -n "$LOGASIO__RUNNING" ]; then
@@ -1162,13 +1204,13 @@ domino_is_running ()
   return 0
 }
 
-get_tika_status ()
+get_tika_status()
 {
-  TIKA_PROCESS=$($PS_COMMAND -fu $DOMINO_USER | grep "$Notes_ExecDirectory/jvm/bin/java" | grep "tika-server.jar" | awk '{ print $2 }')
+  TIKA_PROCESS=$(get_domino_process_list | grep "$Notes_ExecDirectory/jvm/bin/java" | grep "tika-server.jar" | awk '{ print $2 }')
   DebugText "Tika-Process: [$TIKA_PROCESS]"
 }
 
-tika_server ()
+tika_server()
 {
   get_tika_status
 
@@ -1181,7 +1223,7 @@ tika_server ()
       else
         echo "Stopping Tika processes"
 
-	for pid in $($PS_COMMAND -fu $DOMINO_USER | grep "$Notes_ExecDirectory/jvm/bin/java" | grep "tika-server.jar" | awk '{ print $2 }'); do
+    for pid in $(get_domino_process_list | grep "$Notes_ExecDirectory/jvm/bin/java" | grep "tika-server.jar" | awk '{ print $2 }'); do
           echo "Killing Tika pid #" $pid
           kill -s 15 $pid
         done
@@ -1189,17 +1231,17 @@ tika_server ()
       ;;
 
     kill)
- 
+
       if [ -z "$TIKA_PROCESS" ]; then
         DebugText "Tika process not running (kill)"
       else
         echo "Terminating Tika processes"
 
-	for pid in $($PS_COMMAND -fu $DOMINO_USER | grep "$Notes_ExecDirectory/jvm/bin/java" | grep "tika-server.jar" | awk '{ print $2 }'); do
+    for pid in $(get_domino_process_list | grep "$Notes_ExecDirectory/jvm/bin/java" | grep "tika-server.jar" | awk '{ print $2 }'); do
           echo "Killing Tika pid #" $pid
           kill -9 $pid
         done
-      fi 
+      fi
       ;;
 
      "")
@@ -1218,8 +1260,8 @@ tika_server ()
 
 check_domino_status()
 {
-  local LOGASIO_RUNNING=$($PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep "logasio")
-  local DOMINO_RUNNING=$($PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep "server" | grep -v " -jc")
+  local LOGASIO_RUNNING=$(get_domino_process_list | grep "$LOTUS_BIN_DIR" | grep "logasio")
+  local DOMINO_RUNNING=$(get_domino_process_list | grep "$LOTUS_BIN_DIR" | grep "server" | grep -v " -jc")
 
 
   if [ -z "$DOMINO_RUNNING" ]; then
@@ -1252,7 +1294,7 @@ check_shutdown_delayed_commands()
 {
   if [ -n "$DOMINO_TIKA_SHUTDOWN_TERM_SECONDS" ]; then
     if [ "$1" -ge "$DOMINO_TIKA_SHUTDOWN_TERM_SECONDS" ]; then
-      tika_server kill 
+      tika_server kill
     fi
   fi
 
@@ -1272,11 +1314,11 @@ check_shutdown_delayed_commands()
 }
 
 
-domino_status_check ()
+domino_status_check()
 {
   domino_is_running
   if [ $? -eq 1 ]; then
- 
+
     if [ "$1" = "display" ]; then
       echo "[ ON  ] - $DOMINO_SERVER"
     else
@@ -1299,9 +1341,9 @@ domino_status_check ()
   return 0
 }
 
-java_controller_is_running ()
+java_controller_is_running()
 {
-  JAVA_CONTROLLER_RUNNING=$($PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep " -jc" | grep -v "grep")
+  JAVA_CONTROLLER_RUNNING=$(get_domino_process_list | grep "$LOTUS_BIN_DIR" | grep " -jc" | grep -v "grep")
 
   if [ -n "$JAVA_CONTROLLER_RUNNING" ]; then
     DebugText "Java Controller is running"
@@ -1314,7 +1356,7 @@ java_controller_is_running ()
   return 0
 }
 
-archive_logs ()
+archive_logs()
 {
   echo
   cd $DOMINO_DATA_PATH
@@ -1324,7 +1366,7 @@ archive_logs ()
   else
     LOG_NAME_INFO="_"$1
   fi
-  
+
   # Move log-file and compress it
   LOG_NAME=$(echo "$DOMINO_OUTPUT_LOG" |cut -d. -f1)
   LOG_EXTENSION=$(echo "$DOMINO_OUTPUT_LOG" |cut -d. -f2)
@@ -1351,21 +1393,21 @@ archive_logs ()
 
     domino_is_running
     if [ $? -eq 1 ]; then
-      # copy log file 
+      # copy log file
       cp $DOMINO_OUTPUT_LOG $DOMINO_OUTPUT_LOG_BACKUP >/dev/null
-      
-      # empty log file 
+
+      # empty log file
       cat /dev/null > $DOMINO_OUTPUT_LOG
     else
       mv $DOMINO_OUTPUT_LOG $DOMINO_OUTPUT_LOG_BACKUP
     fi
 
     echo "--- Moved log file to '$DOMINO_OUTPUT_LOG_BACKUP' ---" >> $DOMINO_OUTPUT_LOG
-      
+
     # compress log file
 
     if [ "$DOMINO_ARCHIVE_LOG_BACKGROUND" = "yes" ]; then
-      DebugText "archiving logs in background to '$DOMINO_OUTPUT_LOG_BACKUP'" 
+      DebugText "archiving logs in background to '$DOMINO_OUTPUT_LOG_BACKUP'"
       $COMPRESS_COMMAND $DOMINO_OUTPUT_LOG_BACKUP >/dev/null &
     else
       DebugText "archiving logs to '$DOMINO_OUTPUT_LOG_BACKUP'"
@@ -1434,7 +1476,7 @@ pre_status_operations()
   return 0
 }
 
-run_monitor ()
+run_monitor()
 {
   if [ ! -r "$REAL_OUTPUT_FILE" ]; then
     errmsg_and_exit "Cannot read server-log ($REAL_OUTPUT_FILE) - exiting"
@@ -1448,13 +1490,13 @@ run_monitor ()
   if [ ! -w "$DOMINO_INPUT_FILE" ]; then
     errmsg_and_exit "Cannot write server-input-file ($DOMINO_INPUT_FILE) - exiting"
   fi
-  
-  echo 
+
+  echo
   echo "--- Live Console for $DOMINO_SERVER ---"
-  echo 
+  echo
   echo "To close console, always type 'close' or 'stop'."
-  echo 
-  echo 
+  echo
+  echo
   sleep 2
 
   if [ "$1" = "filter" ]; then
@@ -1477,11 +1519,11 @@ run_monitor ()
 
   MONITOR_PID=$!
   DebugText "MONITOR_PID:" [$MONITOR_PID]
- 
+
   trap "stop_monitor" 1 2 3 4 6 9 13 15 19 23
 
   # avoid expansion of wildcards like star
-  set -f 
+  set -f
 
   var=dummy
   while true
@@ -1489,13 +1531,13 @@ run_monitor ()
     lastvar=$var
     var="PIPE-DEAD"
     read var
-    
+
     if [ "$var" = "PIPE-DEAD" ]; then
       echo "Terminating live console - Input Pipe is dead!"
       stop_monitor
       exit 0
     fi
-    
+
     CHARS=$(echo "$var" | wc -m)
     if [ "$CHARS" -lt 5 ]; then # includes the new line -> means commands 3 chars or less
       if [ "$var" = "$lastvar" ]; then
@@ -1540,7 +1582,7 @@ run_monitor ()
   return 0
 }
 
-check_for_crashed_server ()
+check_for_crashed_server()
 {
   nsd_status=$($TAIL_CMD -n 5000 $REAL_OUTPUT_FILE |grep "NSD is in progress" | wc -l)
 
@@ -1571,7 +1613,7 @@ check_for_crashed_server ()
   return 1
 }
 
-dump_configuration ()
+dump_configuration()
 {
   DebugText "DOMINO_CONFIGURED:" [$DOMINO_CONFIGURED]
   DebugText "LOTUS:" [$LOTUS]
@@ -1582,6 +1624,9 @@ dump_configuration ()
   DebugText "DOMINO_SHUTDOWN_TIMEOUT:" [$DOMINO_SHUTDOWN_TIMEOUT]
   DebugText "DOMINO_REMOVE_TEMPFILES:" [$DOMINO_REMOVE_TEMPFILES]
   DebugText "DOMINO_RESET_LOADMON:" [$DOMINO_RESET_LOADMON]
+  DebugText "DOMINO_PID_FILE: [$DOMINO_PID_FILE]"
+  DebugText "DOMINO_PID: [$DOMINO_PID]"
+  DebugText "DOMINO_SYSTEMD_NAME: [$DOMINO_SYSTEMD_NAME]"
 
   DebugText "SCRIPT_NAME:" [$SCRIPT_NAME]
   DebugText "PARAM1:" [$PARAM1]
@@ -1594,7 +1639,7 @@ dump_configuration ()
   return 0
 }
 
-usage_extension_commands ()
+usage_extension_commands()
 {
   if [ ! -z "$DOMINO_CUSTOM_COMMAND_BASEPATH" ]; then
     if [ -x "$DOMINO_CUSTOM_COMMAND_BASEPATH" ]; then
@@ -1620,9 +1665,9 @@ usage_extension_commands ()
 }
 
 
-usage ()
+usage()
 {
-  echo 
+  echo
   show_version
   echo
   echo "Usage: $(basename $SCRIPT_NAME) { start | stop | restart | status | console (monitor) | quit}"
@@ -1641,7 +1686,7 @@ usage ()
   return 0
 }
 
-help ()
+help()
 {
   usage
   echo
@@ -1651,8 +1696,8 @@ help ()
   echo "console          invoke live console"
   echo "monitor          invoke live console"
   echo "quit             stop server but leave server controller running"
-  
-  echo 
+
+  echo
   echo "start live       start server with live console"
   echo "stop live        stop server with live console"
   echo "restart live     restart server with live console"
@@ -1662,7 +1707,7 @@ help ()
   echo "version          print start script version"
   echo "about|about+     show machine info. With 'About' or 'about+' also show info from https://ipinfo.io/"
   echo "cmd <cmd> <n>    run command server command and optinally print last <n> console log lines"
-  
+
   echo
   echo "Diag Commands"
   echo
@@ -1675,7 +1720,7 @@ help ()
   echo "hang             use if hanging servers. run 3 NSDs -stacks + one full NSD"
   echo "kill             runs NSD - kill"
   echo "cleanup          cleanup all server resources"
-  
+
   echo
   echo "Log Commands"
   echo
@@ -1732,19 +1777,19 @@ help ()
   return 0
 }
 
-cleanup_domino_server_os_level ()
+cleanup_domino_server_os_level()
 {
   pre_cleanup_operations
-  
+
   # Kill all domino processes including java server controller
-  for pid in $($PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
+  for pid in $(get_domino_process_list | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
     echo "Killing pid #" $pid
     kill -9 $pid
   done
 
   # Kill 3rd party Domino processes started from other directories
-  
-  
+
+
   if [ -z "$DOMINO_3RD_PARTY_BIN_DIRS" ]; then
     DebugText "No 3rd Party Bin Dirs specified"
   else
@@ -1752,12 +1797,12 @@ cleanup_domino_server_os_level ()
     for j in $DOMINO_3RD_PARTY_BIN_DIRS; do
       if [ -n "$j" ]; then
        DebugText "Killing 3rd Party Processes for" $j
-    
-       for pid in $($PS_COMMAND -fu $DOMINO_USER | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
+
+       for pid in $(get_domino_process_list | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
          echo "Killing 3rd-party process - pid #" $pid
          kill -9 $pid
        done
-      fi 
+      fi
     done
   fi
 
@@ -1773,14 +1818,14 @@ cleanup_domino_server_os_level ()
     echo "Removing .jsc_lock"
     rm -f $DOMINO_DATA/.jsc_lock
   fi
-  
+
   # Remove PID file if present
-  if [ -e $DOMINO_PID_FILE ]; then
+  if [ -e "$DOMINO_PID_FILE" ]; then
     echo "Removing $DOMINO_PID_FILE"
-    rm $DOMINO_PID_FILE
+    remove_file "$DOMINO_PID_FILE"
   fi
-  
-  # Remove shared mem, semaphores and message-queues 
+
+  # Remove shared mem, semaphores and message-queues
   if [ ${LARCH} = "ibmpow" ]; then
     mems=$(ipcs -m | grep " $DOMINO_USER " | grep ^m | awk '{ print $2 }')
     sems=$(ipcs -s | grep " $DOMINO_USER " | grep ^s | awk '{ print $2 }')
@@ -1797,21 +1842,21 @@ cleanup_domino_server_os_level ()
     if [ -n "$j" ]; then
       echo "Removing shared memory handle #" $j
       ipcrm -m $j
-    fi 
+    fi
   done
 
   for j in $sems; do
     if [ -n "$j" ]; then
       echo "Removing semaphore #" $j
       ipcrm -s $j
-    fi 
+    fi
   done
 
   for j in $mqs; do
     if [ -n "$j" ]; then
       echo "Removing message queue #" $j
       ipcrm -q $j
-    fi 
+    fi
   done
 
   post_cleanup_operations
@@ -1819,11 +1864,11 @@ cleanup_domino_server_os_level ()
   return 0
 }
 
-show_domino_resources_short ()
+show_domino_resources_short()
 {
   echo "--- Process List ---"
 
-  for pid in $($PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
+  for pid in $(get_domino_process_list | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
     echo "pid #" $pid
   done
   echo
@@ -1836,11 +1881,11 @@ show_domino_resources_short ()
 
     for j in $DOMINO_3RD_PARTY_BIN_DIRS; do
       if [ -n "$j" ]; then
-    
-         for pid in $($PS_COMMAND -fu $DOMINO_USER | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
+
+         for pid in $(get_domino_process_list | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
          echo "3rd-party - pid #" $pid
        done
-      fi 
+      fi
     done
   fi
 
@@ -1862,23 +1907,23 @@ show_domino_resources_short ()
   for j in $mems; do
     if [ -n "$j" ]; then
       echo "#" $j
-    fi 
+    fi
   done
   echo
- 
+
   echo "--- Semaphores ---"
   for j in $sems; do
     if [ -n "$j" ]; then
       echo "#" $j
-    fi 
+    fi
   done
   echo
- 
+
   echo "--- MQs ---"
   for j in $mqs; do
     if [ -n "$j" ]; then
       echo "mq #" $j
-    fi 
+    fi
   done
   echo
 
@@ -1897,11 +1942,11 @@ show_domino_resources_short ()
 }
 
 
-show_domino_resources ()
+show_domino_resources()
 {
   echo "--- Process List ---"
 
-  $PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep"
+  get_domino_process_list | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep"
   echo
 
   echo "--- 3rd Party Process List ---"
@@ -1911,7 +1956,7 @@ show_domino_resources ()
   else
 
     for j in $DOMINO_3RD_PARTY_BIN_DIRS; do
-      $PS_COMMAND -fu $DOMINO_USER | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep"
+      get_domino_process_list | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep"
     done
   fi
 
@@ -1953,11 +1998,11 @@ show_domino_resources ()
   if [ -e $DOMINO_PID_FILE ]; then
     echo "Domino Server Process-ID file exists ($DOMINO_PID_FILE)"
   fi
- 
+
   return 0
 }
 
-show_lastlog ()
+show_lastlog()
 {
   if [ -z "$1" ]; then
     LAST_LOG_LINES=100
@@ -1981,20 +2026,20 @@ log_status()
         echo "Log Compact Options: $DOMINO_LOG_COMPACT_OPTIONS"
   echo
 
-  
+
   return 0
 }
 
-cleanup_domino_server ()
+cleanup_domino_server()
 {
   cd $DOMINO_DATA_PATH
-  
+
   if [ "$DOMINO_NSD_BEFORE_KILL" = "yes" ]; then
     echo " ... running NSD before killing the server"
     nsd_check_set_posix_locale
     $NSD_BIN
   fi
-  
+
   nsd_check_set_posix_locale
   pre_kill_operations
   $NSD_BIN -kill
@@ -2002,10 +2047,10 @@ cleanup_domino_server ()
   return 0
 }
 
-cleanup_java_controller ()
+cleanup_java_controller()
 {
   # Kill java controller process
-  for pid in $($PS_COMMAND -fu $DOMINO_USER | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep" | grep " -jc" | awk '{ print $2 }'); do
+  for pid in $(get_domino_process_list | grep "$LOTUS_BIN_DIR" | grep -v "$SCRIPT_NAME" | grep -v "grep" | grep " -jc" | awk '{ print $2 }'); do
     kill -9 $pid
   done
 
@@ -2016,44 +2061,44 @@ cleanup_java_controller ()
   return 0
 }
 
-compact_dbs ()
+compact_dbs()
 {
-	cd $DOMINO_DATA_PATH
+    cd $DOMINO_DATA_PATH
 
   if [ ! -z "$DOMINO_COMPACT_OPTIONS" ]; then
-  	echo "Running $DOMINO_COMPACT_TASK $DOMINO_COMPACT_OPTIONS"
+    echo "Running $DOMINO_COMPACT_TASK $DOMINO_COMPACT_OPTIONS"
     echo "---- Compact Output for $DOMINO_COMPACT_TASK $DOMINO_COMPACT_OPTIONS ----" >> $DOMINO_OUTPUT_LOG
     $DOMINO_COMPACT_BIN $DOMINO_COMPACT_OPTIONS >> $DOMINO_OUTPUT_LOG 2>&1
     echo "---- Compact Finished ----" >> $DOMINO_OUTPUT_LOG
   else
-  	echo "No Compact Options configured"
+    echo "No Compact Options configured"
   fi
 
   return 0
 }
 
-compact_log ()
+compact_log()
 {
-	cd $DOMINO_DATA_PATH
+    cd $DOMINO_DATA_PATH
 
   if [ ! -z "$DOMINO_LOG_COMPACT_OPTIONS" ]; then
-  	echo "Running $DOMINO_COMPACT_TASK $DOMINO_LOG_COMPACT_OPTIONS"
+    echo "Running $DOMINO_COMPACT_TASK $DOMINO_LOG_COMPACT_OPTIONS"
     echo "---- Compact Output for $DOMINO_COMPACT_TASK $DOMINO_LOG_COMPACT_OPTIONS ----" >> $DOMINO_OUTPUT_LOG
     $DOMINO_COMPACT_BIN $DOMINO_LOG_COMPACT_OPTIONS >> $DOMINO_OUTPUT_LOG 2>&1
     echo "---- Compact Finished ----" >> $DOMINO_OUTPUT_LOG
   else
-  	echo "No Log Compact Options configured"
+    echo "No Log Compact Options configured"
   fi
 
   return 0
 }
 
-fixup_dbs ()
+fixup_dbs()
 {
-	cd $DOMINO_DATA_PATH
+    cd $DOMINO_DATA_PATH
 
   if [ ! -z "$DOMINO_FIXUP_OPTIONS" ]; then
-  	echo "Running fixup $DOMINO_FIXUP_OPTIONS"
+    echo "Running fixup $DOMINO_FIXUP_OPTIONS"
 
     echo "---- Fixup Output for Fixup $DOMINO_FIXUP_OPTIONS ----" >> $DOMINO_OUTPUT_LOG
 
@@ -2061,16 +2106,16 @@ fixup_dbs ()
 
     echo "---- Fixup terminated ----" >> $DOMINO_OUTPUT_LOG
   else
-  	echo "No Fixup Options configured"
+    echo "No Fixup Options configured"
   fi
 }
 
-pre_shutdown_command ()
+pre_shutdown_command()
 {
   if [ -z "$DOMINO_PRE_SHUTDOWN_COMMAND" ]; then
     return 0
   fi
-  
+
   cd $DOMINO_DATA_PATH
   $DOMINO_BIN -c "$DOMINO_PRE_SHUTDOWN_COMMAND" >> $DOMINO_OUTPUT_LOG 2>&1 &
   echo "Running pre shutdown command '$DOMINO_PRE_SHUTDOWN_COMMAND'"
@@ -2085,7 +2130,7 @@ pre_shutdown_command ()
   return 0
 }
 
-shutdown_domino_server ()
+shutdown_domino_server()
 {
   domino_is_running
 
@@ -2094,9 +2139,9 @@ shutdown_domino_server ()
     return 0
   fi
 
-  pre_shutdown_command 
+  pre_shutdown_command
   pre_shutdown_operations
-  
+
   cd $DOMINO_DATA_PATH
   $DOMINO_BIN -q >> $DOMINO_OUTPUT_LOG 2>&1 &
 
@@ -2122,24 +2167,21 @@ shutdown_domino_server ()
       echo " ... now for the ungraceful method"
       cleanup_domino_server
       echo "Domino Server ($DOMINO_SERVER) TERMINATED"
-   
+
       if [ "$DOMINO_DEBUG_MODE" = "yes" ]; then
         domino_is_running
         if [ $? -eq 1 ]; then
           echo "Domino Server Binaries are still running after termination via NSD!"
         fi
       fi
-   
+
       return 1
     fi
     domino_is_running
   done
 
   # Remove PID file if present
-  if [ -e $DOMINO_PID_FILE ]; then
-    rm $DOMINO_PID_FILE
-  fi
-
+  remove_file "$DOMINO_PID_FILE"
 
   if [ "$DOMINO_ARCHIVE_LOGS_SHUTDOWN" = "yes" ]; then
     archive_logs
@@ -2152,7 +2194,7 @@ shutdown_domino_server ()
   return 0
 }
 
-shutdown_java_controller ()
+shutdown_java_controller()
 {
   java_controller_is_running
 
@@ -2160,26 +2202,26 @@ shutdown_java_controller ()
     echo "Server Controller not running - No Shutdown needed"
     return 0
   fi
-  
+
   echo y | $DOMINO_BIN -jc -q -y >> $DOMINO_OUTPUT_LOG 2>&1 &
   echo $DOMINO_BIN -jc -q
   count=0
   java_controller_is_running
-  
+
   while [ $? -eq 1 ]; do
     sleep 10
     count=$(expr $count + 1)
     if [ $count -ge 10 ]; then
       # kill java controller and lock file
       cleanup_java_controller
-    fi      
+    fi
     java_controller_is_running
   done
 
   return 0
 }
 
-shutdown_broadcast_message ()
+shutdown_broadcast_message()
 {
   if [ "$DOMINO_BROADCAST_SHUTDOWN_MESSAGE" = "yes" ]; then
     $DOMINO_BIN -c ' BROADCAST "(!) Domino Server will be stopped now"' >> $DOMINO_OUTPUT_LOG 2>&1
@@ -2193,9 +2235,9 @@ check_path_from_ini_writable()
   get_notes_ini_var "$DOMINO_INI_PATH" "$1"
   DebugText "Check Notes.ini [$1] = '$ret_ini_var'"
   if [ ! -z "$ret_ini_var" ]; then
-  
+
     case "$ret_ini_var" in
-    /*) 
+    /*)
       CHECK_PATH="$ret_ini_var"
       ;;
     *)
@@ -2204,7 +2246,7 @@ check_path_from_ini_writable()
     esac
 
     DebugText "Check Notes.ini [$1] = '$CHECK_PATH'"
-  
+
     if [ ! -w $CHECK_PATH ]; then
       echo "Warning: Cannot write to [$1] '$ret_ini_var' ($CHECK_PATH)"
     fi
@@ -2244,7 +2286,7 @@ check_res_file_warnings()
 
 checkset_startcompact_options()
 {
-  case "$1" in 
+  case "$1" in
     on)
       echo
       if [ -e $DOMINO_NEXTSTART_COMPACT_STATUSFILE ]; then
@@ -2255,7 +2297,7 @@ checkset_startcompact_options()
       fi
       echo
       ;;
-    
+
     off)
 
       echo
@@ -2277,7 +2319,7 @@ checkset_startcompact_options()
         echo "Comact Task        : $DOMINO_COMPACT_TASK"
         echo "Compact Options    : $DOMINO_COMPACT_OPTIONS"
         echo "Log Compact Options: $DOMINO_LOG_COMPACT_OPTIONS"
-        
+
       else
         echo "Compact next start : OFF"
       fi
@@ -2295,7 +2337,7 @@ check_startup_warnings()
   check_path_from_ini_writable "view_rebuild_dir"
   check_path_from_ini_writable "notes_tempdir"
   check_path_from_ini_writable "FTBasePath"
-  
+
   # check translog writable
   get_notes_ini_var "$DOMINO_INI_PATH" "translog_status"
   if [ ! -z "$ret_ini_var" ]; then
@@ -2311,7 +2353,7 @@ check_startup_warnings()
       check_path_from_ini_writable "DAOSBASEPATH"
     fi
   fi
- 
+
   get_notes_ini_var "$DOMINO_INI_PATH" "LAST_DOMINO_TIME_ABORT"
   if [ ! -z "$ret_ini_var" ]; then
     echo "Warning: Notes.ini LAST_DOMINO_TIME_ABORT set to '$ret_ini_var'"
@@ -2331,11 +2373,11 @@ check_server_start_abort_error()
   # the following notes.ini settings are involoved in this functionality
   # if the time interval is elapsed at restart your server will not start and you see
   # no error message on console, just a new notes.ini entry LAST_DOMINO_TIME_ABORT
-  
+
   # Restart_Time_Action=1
   # Restart_Time_Interval=3600 (in seconds, smallest value is 3600)
-  # LAST_DOMINO_TIME_ABORT=16.07.2014 09:56:49 Startup aborted: Excess restart time interval. 
-  
+  # LAST_DOMINO_TIME_ABORT=16.07.2014 09:56:49 Startup aborted: Excess restart time interval.
+
   get_notes_ini_var "$DOMINO_INI_PATH" "Restart_Time_Action"
   if [ -z "$ret_ini_var" ]; then
     DebugText "Notes.ini Restart_Time_Action not set"
@@ -2346,7 +2388,7 @@ check_server_start_abort_error()
     return 0
   fi
 
-  echo "Waiting if server started .. (5 seconds)" 
+  echo "Waiting if server started .. (5 seconds)"
   sleep 5
   echo
 
@@ -2367,7 +2409,7 @@ check_server_start_abort_error()
     return 1
   else
     echo "Please check Server manually"
-    echo  
+    echo
   fi
 
   echo
@@ -2425,6 +2467,7 @@ check_one_touch_setup()
   if [ -z "$DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE" ]; then
     DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE=$DOMINO_DATA_PATH/DominoAutoConfigTemplate.json
   fi
+
 
   # Replace template file variables only if no configuration file present
   if [ ! -e "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
@@ -2555,6 +2598,20 @@ domino_start()
   echo "---- umask ----" >> $DOMINO_OUTPUT_LOG
   echo >> $DOMINO_OUTPUT_LOG
   umask >> $DOMINO_OUTPUT_LOG
+  echo >> $DOMINO_OUTPUT_LOG
+
+
+  echo "---- time info ----" >> $DOMINO_OUTPUT_LOG
+  echo >> $DOMINO_OUTPUT_LOG
+
+  if [ ${LARCH} = "linux" ]; then
+    if [ -n "$(ps --no-headers -o comm 1 | grep systemd)" ] || [ -x /usr/bin/timedatectl ]; then
+      /usr/bin/timedatectl >> $DOMINO_OUTPUT_LOG
+    else
+      echo "timezone: $(date +"%Z %z")" >> $DOMINO_OUTPUT_LOG
+    fi
+    echo >> $DOMINO_OUTPUT_LOG
+  fi
 
   if [ ${LARCH} = "ibmpow" ]; then
 
@@ -2574,6 +2631,7 @@ domino_start()
     echo "---- no info ----" >> $DOMINO_OUTPUT_LOG
     echo >> $DOMINO_OUTPUT_LOG
     no -a >> $DOMINO_OUTPUT_LOG
+    echo >> $DOMINO_OUTPUT_LOG
   fi
 
   if [ ${LARCH} = "linux" ]; then
@@ -2587,6 +2645,7 @@ domino_start()
     echo "---- ulimit hard info ----" >> $DOMINO_OUTPUT_LOG
     echo >> $DOMINO_OUTPUT_LOG
     ulimit -a -H >> $DOMINO_OUTPUT_LOG
+    echo >> $DOMINO_OUTPUT_LOG
   fi
 
   echo >> $DOMINO_OUTPUT_LOG
@@ -2973,7 +3032,7 @@ domino_setup()
     case $(echo "$SELECTED" | awk '{print tolower($0)}') in
 
       "")
-	;;
+    ;;
 
       0|q)
         echo
@@ -2981,7 +3040,7 @@ domino_setup()
         ;;
 
       c)
-	remove_file "$DOMINO_AUTO_CONFIG_JSON_FILE"
+    remove_file "$DOMINO_AUTO_CONFIG_JSON_FILE"
         domino_ots local
         wait_for_key
         ;;
@@ -2997,7 +3056,7 @@ domino_setup()
         ;;
 
       r)
-	remove_file "$DOMINO_AUTO_CONFIG_JSON_FILE"
+    remove_file "$DOMINO_AUTO_CONFIG_JSON_FILE"
         domino start
         wait_for_key
         return 0
@@ -3089,7 +3148,7 @@ menu()
     case $(echo "$SELECTED" | awk '{print tolower($0)}') in
 
       "")
-	;;
+    ;;
 
       0|q)
         clear
@@ -3100,15 +3159,15 @@ menu()
       s)
         domino_is_running
         if [ $? -eq 1 ]; then
-	  echo
-	  echo "Domino server already started"
-	  echo
-	else
-	  echo
+      echo
+      echo "Domino server already started"
+      echo
+    else
+      echo
           domino start
-	fi
+    fi
 
-	sleep 3
+    sleep 3
         ;;
 
       i)
@@ -3119,16 +3178,16 @@ menu()
         ;;
 
       t)
-	log_space "Waiting for server shutdown, please wait ..."
+    log_space "Waiting for server shutdown, please wait ..."
         domino stop
         ;;
 
       w)
         log_space "Waiting for server shutdown, please wait ..."
         domino stop &
-	sleep 3
-	domino_shutdown_monitor
-	wait_for_key
+    sleep 3
+    domino_shutdown_monitor
+    wait_for_key
         ;;
 
       p)
@@ -3140,10 +3199,10 @@ menu()
         if [ "$DOMINO_STATUS" = "Running" ]; then
           DOMINO_CONSOLE_NO_EXIT=yes
           run_monitor
-	else
-	  log_space "Server live console not available in status: $DOMINO_STATUS"
-	  wait_for_key
-	fi
+    else
+      log_space "Server live console not available in status: $DOMINO_STATUS"
+      wait_for_key
+    fi
         ;;
 
       l)
@@ -3160,7 +3219,7 @@ menu()
         ;;
 
       n)
-	run_nsd
+    run_nsd
         ;;
 
       g)
@@ -3172,7 +3231,7 @@ menu()
         ;;
 
       k)
-	 echo
+     echo
          read -p " Really kill and cleanup Domino server: (yes/no) ? " QUESTION
 
          if [ "$QUESTION" = "yes" ] || [ "$QUESTION" = "y" ]; then
@@ -3187,7 +3246,7 @@ menu()
         ;;
 
       a)
-	archive_logs "$PARAM2"
+    archive_logs "$PARAM2"
         wait_for_key
         ;;
 
@@ -3274,7 +3333,7 @@ fi
 if [ ${LARCH} = "linux" ]; then
 
   # Linux platform tuning parameters
-      
+
   if [ -n "$DOMINO_SHARED_DPOOLSIZE" ]; then
     Notes_SHARED_DPOOLSIZE=$DOMINO_SHARED_DPOOLSIZE
     export Notes_SHARED_DPOOLSIZE
@@ -3304,24 +3363,24 @@ dump_configuration
 DebugText "ALL PARAMETERS:" $@
 
 case "$PARAM1" in
-	  
+
   start)
 
     domino_start
     ;;
 
   archivelog)
-  
+
     archive_logs "$PARAM2"
-      
+
     echo
     ;;
 
   clearlog)
-  
+
     echo
     log_clear_operations "$PARAM2" "$PARAM3"
-       
+
     # Remember status and be verbose
     echo
     ;;
@@ -3332,28 +3391,28 @@ case "$PARAM1" in
     ;;
 
   monitor)
-  
+
     echo
     run_monitor filter
     echo
     ;;
 
   live)
-  
+
     echo
     run_monitor filter
     echo
     ;;
 
   console)
-  
+
     echo
     run_monitor
     echo
     ;;
 
   restart)
-  
+
     # Stop the service and regardless of whether it was running or not, start it again.
     $0 stop "$2" "$3"
     $0 start "$2" "$3"
@@ -3446,16 +3505,16 @@ case "$PARAM1" in
       cd $DOMINO_DATA_PATH
       $DOMINO_BIN -c "$PARAM2" >> $DOMINO_OUTPUT_LOG 2>&1 &
       echo $DOMINO_BIN -c "'$PARAM2'"
-   
+
       if [ ! -z "$PARAM3" ]; then
-        sleep 5 
-        echo 
+        sleep 5
+        echo
         echo " --- Console Output for " $PARAM2 " ---"
         $TAIL_CMD -n $PARAM3 $REAL_OUTPUT_FILE
-        echo 
+        echo
         echo "--- End of Console Output ---"
-        echo 
-      fi 
+        echo
+      fi
     else
       echo "Error - no command specified"
     fi
@@ -3463,7 +3522,7 @@ case "$PARAM1" in
     ;;
 
   lastlog)
-  
+
     echo
     show_lastlog "$PARAM2" "$PARAM3" "$PARAM4"
     echo
@@ -3471,7 +3530,7 @@ case "$PARAM1" in
     ;;
 
   logstatus)
-  
+
     echo
     log_status "$PARAM2" "$PARAM3" "$PARAM4"
     echo
@@ -3479,7 +3538,7 @@ case "$PARAM1" in
     ;;
 
   log)
-  
+
     echo
     show_log "$PARAM2" "$PARAM3" "$PARAM4"
     echo
@@ -3487,7 +3546,7 @@ case "$PARAM1" in
     ;;
 
   systemdcfg)
-  
+
     echo
     edit_systemd_cfg "$PARAM2" "$PARAM3" "$PARAM4"
     echo
@@ -3495,7 +3554,7 @@ case "$PARAM1" in
     ;;
 
   check)
-  
+
     echo
     check_startup_warnings "$PARAM2"
     echo
@@ -3503,40 +3562,40 @@ case "$PARAM1" in
     ;;
 
   memdump|memcheck)
-  
+
     # Write Memory Dump
     run_memcheck
     exit 0
     ;;
-    
+
   fullnsd|nsd)
-  
+
     # Run NSD
     run_nsd
     exit 0
     ;;
 
   nsdnomem)
-  
+
     # Run NSD -nomemcheck
     echo
     echo "Running NSD -nomemcheck for ($DOMINO_SERVER)"
     cd $DOMINO_DATA_PATH
     nsd_check_set_posix_locale
-    
+
     $NSD_BIN -nomemcheck "$PARAM2" "$PARAM3" "$PARAM4" "$PARAM5" "$PARAM6"
     echo
     exit 0
     ;;
 
   hang)
-  
+
     run_nsd_hang
     exit 0
     ;;
 
   stacks)
-  
+
     # Run NSD stacks only
     cd $DOMINO_DATA_PATH
     nsd_check_set_posix_locale
@@ -3550,9 +3609,9 @@ case "$PARAM1" in
     echo
     exit 0
     ;;
- 
+
   info)
-  
+
     # Run NSD -info
     echo
     echo "Running NSD -info for ($DOMINO_SERVER)"
@@ -3562,28 +3621,28 @@ case "$PARAM1" in
     echo
     exit 0
     ;;
-    
+
   kill)
-  
+
     # Run NSD -kill
     run_nsd_kill
     exit 0
     ;;
 
   cleanup)
-  
+
     # Cleanup Server on OS Level
     domino_cleanup
     exit 0
     ;;
-  
+
   resources|res)
 
     # Show the resources the server is using (processes, shared mem, MQs, SEMs)
     domino_resources
     exit 0
     ;;
-     
+
   status)
 
     pre_status_operations
@@ -3593,7 +3652,7 @@ case "$PARAM1" in
     ;;
 
   setenv)
-  
+
     # Just set the environment and exit
     # needs to be sourced to keep the environment changes
     # sourced scripts need return instead of exit
@@ -3605,7 +3664,7 @@ case "$PARAM1" in
     ;;
 
   version)
-  
+
     # print the script version
     echo
     show_version
@@ -3614,7 +3673,7 @@ case "$PARAM1" in
     ;;
 
   inivar)
-  
+
     # print notes.ini variable
     echo
     if [ ! -z "$PARAM2" ]; then
@@ -3624,9 +3683,9 @@ case "$PARAM1" in
     echo
     exit 0
     ;;
-  
+
   ini)
-  
+
     # edit notes.ini
     echo
     $EDIT_COMMAND "$DOMINO_INI_PATH"
@@ -3636,7 +3695,7 @@ case "$PARAM1" in
 
 
   listini)
-  
+
     # dump notes.ini
     echo
     cat "$DOMINO_INI_PATH"
@@ -3644,7 +3703,7 @@ case "$PARAM1" in
     ;;
 
   config|cfg)
-  
+
     # edit start script config
     echo
     edit_config_file "$PARAM2"
@@ -3670,7 +3729,7 @@ case "$PARAM1" in
 
  tika)
 
-    # tika check and stop 
+    # tika check and stop
     echo
     tika_server "$PARAM2"
     echo
@@ -3718,7 +3777,7 @@ case "$PARAM1" in
     ;;
 
   help)
-  
+
     echo
     help
     echo
@@ -3726,7 +3785,7 @@ case "$PARAM1" in
     ;;
 
    -\?)
-  
+
     echo
     help
     echo
@@ -3745,12 +3804,12 @@ case "$PARAM1" in
       fi
       exit 9
     fi
-  
+
     if [ -z "$DOMINO_CUSTOM_COMMAND_BASEPATH" ]; then
       DebugText "Invalid PARAM1:" [$PARAM1]
-      echo 
+      echo
       echo "Invalid command:" [$PARAM1]
-      usage 
+      usage
       exit 9
     fi
 
@@ -3765,12 +3824,12 @@ case "$PARAM1" in
 
     else
       DebugText "Invalid PARAM1:" [$PARAM1]
-      echo 
+      echo
       echo "Invalid command:" [$PARAM1]
-      usage 
+      usage
       exit 9
     fi
-    echo 
+    echo
     exit 0
     ;;
 

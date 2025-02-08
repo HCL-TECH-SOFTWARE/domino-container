@@ -66,6 +66,11 @@ domino_uptime()
 
 print_infos()
 {
+
+  if [ "$(uname)" = "Darwin" ]; then
+    echo "No OS infos for MacOS"
+  fi
+
   if [ -r  /etc/os-release ]; then
     get_entry LINUX_VERSION /etc/os-release "VERSION_ID=" "="
     get_entry LINUX_PRETTY_NAME /etc/os-release "PRETTY_NAME=" "="
@@ -73,6 +78,7 @@ print_infos()
   fi
 
   LINUX_KERNEL=$(uname -r)
+  LINUX_GLIBC_VERSION=$(ldd --version| head -1 | rev | cut -f1 -d' ' | rev 2> /dev/null)
   LINUX_ARCH==$(uname -m)
   LINUX_UPTIME=$( awk '{x=$1/86400;y=($1%86400)/3600;z=($1%3600)/60} {printf("%d day, %d hour %d min\n",x,y,z)}' /proc/uptime )
   LINUX_LOAD_AVG=$(awk -F " " '{printf $1 "  " $2 "  " $3}' /proc/loadavg)
@@ -96,6 +102,9 @@ print_infos()
   get_entry CPU_MHZ /proc/cpuinfo "cpu MHz"
   get_entry CPU_CACHE_SIZE /proc/cpuinfo "cache size"
 
+  CPU_COUNT=$(grep "^model name" /proc/cpuinfo | wc -l)
+  CPU_INFO=$(grep "^model name"  /proc/cpuinfo | cut -f2 -d":" | sort | uniq -c | xargs)
+
   get_entry MEM_TOTAL  /proc/meminfo "MemTotal"     ":" mem
   get_entry MEM_AVAIL  /proc/meminfo "MemAvailable" ":" mem
   get_entry MEM_CACHED /proc/meminfo "Cached"       ":" mem
@@ -113,6 +122,9 @@ print_infos()
   printf "Linux OS      :      $LINUX_PRETTY_NAME\n"
   printf "Linux Version :      $LINUX_VERSION\n"
   printf "Kernel        :      $LINUX_KERNEL\n"
+  printf "GNU libc      :      $LINUX_GLIBC_VERSION\n"
+  printf "Timezone      :      $(date +"%Z %z")\n"
+
 
   if [ -n "$LINUX_VIRT" ]; then
     printf "Virt          :      $LINUX_VIRT\n"
@@ -124,30 +136,41 @@ print_infos()
 
   local CONTAINER_STR=
 
-  if [ -x /usr/bin/podman ]; then
-    CONTAINER_STR=$(podman -v | head -1)
+  CONTAINER_STR=$(podman -v 2> /dev/null | head -1)
+
+  if [ -n "$CONTAINER_STR" ]; then
+    CONTAINER_STR=$(podman -v 2> /dev/null | head -1)
     PODMAN_RUNTIME_VERSION=$(echo $CONTAINER_STR | awk -F'version ' '{print $2 }')
     printf "Podman        :      $PODMAN_RUNTIME_VERSION\n"
   fi
 
   if [ -x "/usr/bin/docker" ]; then
     # only check if docker is a binary and not a podman script
-    if [ -n "$(file /usr/bin/docker | grep ELF)" ]; then
+    if [ -n "$(file /usr/bin/docker 2> /dev/null | grep ELF)" ]; then
       CONTAINER_STR=$(docker -v | head -1)
       DOCKER_RUNTIME_VERSION=$(echo $CONTAINER_STR | awk -F'version ' '{print $2 }'|cut -d"," -f1)
       printf "Docker        :      $DOCKER_RUNTIME_VERSION\n"
     fi
   fi
 
-  if [ -n "$(which nerdctl 2> /dev/null)" ]; then
-      CONTAINER_STR=$(nerdctl -v | head -1)
+  CONTAINER_STR=$(nerdctl -v 2> /dev/null | head -1)
+
+  if [ -n "$CONTAINER_STR" ]; then
       DOCKER_RUNTIME_VERSION=$(echo $CONTAINER_STR | awk -F'version ' '{print $2 }'|cut -d"," -f1)
       printf "Nerdctl       :      $DOCKER_RUNTIME_VERSION\n"
   fi
 
+  DOMINO_DOWNLOAD_VER=$(domdownload --version 2> /dev/null)
+
+  if [ -n "$DOMINO_DOWNLOAD_VER" ]; then
+      printf "DomDownload   :      $DOMINO_DOWNLOAD_VER\n"
+  else
+      printf "DomDownload   :      [not installed]\n"
+  fi
+
   printf "\n"
 
-  printf "CPU Model     :      $CPU_MODEL\n"
+  printf "CPU Info      :      $CPU_INFO\n"
   printf "CPU MHz       :      $CPU_MHZ\n"
   printf "CPU Cache     :      $CPU_CACHE_SIZE\n"
 

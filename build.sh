@@ -5,7 +5,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.6 01.02.2025
+# Version 2.3.7 08.02.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -27,7 +27,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.6
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.7
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -816,9 +816,20 @@ check_from_image()
       BASE_IMAGE=registry.suse.com/bci/bci-base:15.6
       ;;
 
+    tumbleweed)
+      LINUX_NAME="SUSE Tumbleweed (experimental)"
+      BASE_IMAGE=opensuse/tumbleweed
+      ;;
+
+    fedora)
+      LINUX_NAME="Fedora (experimental)"
+      BASE_IMAGE=fedora:latest
+      ;;
+
     archlinux)
       LINUX_NAME="Arch Linux (experimental)"
       BASE_IMAGE=docker.io/archlinux
+       log_error_exit "Cannot build on Arch Linux because it is a  rolling Linux distribution not compatibile with Domino"
       ;;
 
     kali)
@@ -3584,6 +3595,10 @@ check_container_environment
 # Invoke build menu asking for Domino image details
 if [ "$BUILD_MENU" = "yes" ] || [ -n "$CONF_FILE" ] ; then
   build_menu
+fi
+
+if [ -z "$PROD_NAME" ]; then
+  PROD_NAME="domino"
 fi
 
 check_for_hcl_image
