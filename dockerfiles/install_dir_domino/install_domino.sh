@@ -182,6 +182,11 @@ install_domino()
 
     INSTALL_LOG=$(find $LOTUS -name "HCL_Domino_Install_*.log")
 
+    if [ -z "$INSTALL_LOG" ]; then
+      log_error "Domino Installation failed - Cannot find installer log"
+      exit 1
+    fi
+
     mv "$INSTALL_LOG" "$INST_DOM_LOG"
     check_file_str "$INST_DOM_LOG" "$DOM_V12_STRING_OK"
 
@@ -319,7 +324,7 @@ install_domino()
 
     if [ "$?" = "1" ]; then
       echo
-      log_ok "InterimsFix/HotFix installed successfully"
+      log_ok "InterimFix/HotFix installed successfully"
 
       # Store Domino Interimsfix/Hotfix Information
       set_domino_version hf
@@ -327,7 +332,7 @@ install_domino()
     else
 
       dump_file hf.log
-      log_error "InterimsFix/HotFix Installation failed!!!"
+      log_error "InterimFix/HotFix Installation failed!!!"
 
       exit 1
     fi

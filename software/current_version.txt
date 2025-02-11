@@ -6,7 +6,7 @@ volt|1.0.5.15
 leap|1.1.5
 verse|3.2.3
 capi|14.0
-safelinx|1.4.2
+safelinx|1.4.3
 nomadweb|1.0.14
 nomad|1.0.14
 domrestapi|1.1.1

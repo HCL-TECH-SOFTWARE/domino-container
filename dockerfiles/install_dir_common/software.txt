@@ -77,9 +77,10 @@ tika|2.9.2|tika-server-standard-2.9.2.jar,https://dlcdn.apache.org/tika/2.9.2/ti
 tika|3.0.0|tika-server-standard-3.0.0.jar,https://dlcdn.apache.org/tika/3.0.0/tika-server-standard-3.0.0.jar|x|53851c4f326c0bdd7e1a9ba77bb35193d431d9dc1898e263e0b7bb337f03e2c1
 safelinx|1.4.1|HCL-SafeLinx-1410-x86_64.tar.gz|AbiYxUssdE1MT0GtR4gH8|c8c207f810343c7ab47997c1006e144998d0717080241ea6e6f2644191499c31
 safelinx|1.4.2|HCL-SafeLinx-1420-x86_64.tar.gz|75sNbH9gws5m6nZ3M5yR6|dfe9244848fd2ad3367db002de5dcdbf6b577ad8d240db75298b411b03c04ef0
+safelinx|1.4.3|HCL-SafeLinx-1430-x86_64.tar.gz|TL3PxKUv8svOiXIAr8OCE|1351abfe47aed5f2e3a7cb6b6696f51d7c0a69b18b2755ff3f7806592a5c909e
 nomadweb|1.0.11|HCL_Nomad_web_1.0.11_20240305-18_for_HCL_SafeLinx.zip|y2cf6x3wcUpgtAI3Gldbi|e7484c7d42f8357cf79d609363c13fb08da0baee445e0d4bebb71497dfd99bbc
 nomadweb|1.0.13|HCL_Nomad_web_1.0.13_20240904-48_for_HCL_SafeLinx.zip|hDVwqcVmy8qy0zNOu0pUh|238865877ae87dab498ca5207b8b0042abc18a6d8d7b7edf9aea4760bc1a5efe
-nomadweb|1.0.14|HCL_Nomad_web_1.0.14_20241204-63_for_HCL_SafeLinx.zip| fD8GtEpBT2mmHpINKLvIW|0aa4153d801164ce1fe59ce32e3f47b080c054f342a1c374a20588d7216e07a
+nomadweb|1.0.14|HCL_Nomad_web_1.0.14_20241204-63_for_HCL_SafeLinx.zip|fD8GtEpBT2mmHpINKLvIW|0aa4153d801164ce1fe59ce32e3f47b080c054f342a1c374a20588d7216e07a0
 nomad|1.0.10-12.0.2|nomad-server-1.0.10-for-domino-12.0.2-linux.tgz|HNOTAeDGS3XuHtVFloF9N|0ec34d38e1794499c5b29611e70a4c31eb8e803c22c0a8beadca3342a1778706
 nomad|1.0.10IF1-12.0.2|nomad-server-1.0.10-1-for-domino-12.0.2-linux.tgz|zpwVtTlGPATmB5GV3wtX0|6c9d0f13ff0a01ee2134ee72f9c244bef982262d3a4a37e6274c5627d7b29ac6
 nomad|1.0.11-12.0.2|nomad-server-1.0.11-for-domino-12.0.2-linux.tgz|INBy0N3YrWjawuG1kU6EE|1c38b349b002d0d45a7f5efc9a3d78cab7a72178f94ae43ae14dda7688d09a03

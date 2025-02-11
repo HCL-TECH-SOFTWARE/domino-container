@@ -1,11 +1,9 @@
-#!/bin/bash
-
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2025  - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.7 08.02.2025
+# Version 2.3.8 11.02.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -27,7 +25,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.7
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.8
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -274,9 +272,11 @@ usage()
   echo "-(no)check       checks if files exist (default: yes)"
   echo "-(no)verify      checks downloaded file checksum (default: no)"
   echo "-(no)url         shows all download URLs, even if file is downloaded (default: no)"
-  echo "-(no)linuxupd    updates container Linux  while building image (default: yes)"
+  echo "-(no)linuxupd    updates container Linux while building image (default: yes)"
   echo "cfg|config       edits config file (either in current directory or if created in home dir)"
   echo "cpcfg            copies standard config file to config directory (default: $CONFIG_FILE)"
+  echo "-cfgdir=<dir>    manually specify configuration directory (Default: ~/.DominoContainer)"
+
   echo
   echo "-tag=<image>     additional image tag"
   echo "-push=<image>    tag and push image to registry"
@@ -2190,8 +2190,7 @@ trivy_scan_image()
     *)
       $TRIVY_BIN image "$DOCKER_IMAGE" -o "$1"
       header "Trivy Scan Result"
-      cat "$1"
-      log "Output file: [$1]"
+      log "See details in output file: [$1]. No stable result format available currently."
       ;;
 
   esac
@@ -3027,17 +3026,18 @@ install_domino_native()
     fi
   fi
 
-  if [ -n "$DownloadFrom" ]; then
-    log "Getting software from: $DownloadFrom"
-    export DownloadFrom=file://$SOFTWARE_DIR
+  if [ -n "$DOWNLOAD_FROM" ]; then
+    export DownloadFrom="$DOWNLOAD_FROM"
 
   else
     if [ -z "$SOFTWARE_DIR" ]; then
       SOFTWARE_DIR=/local/software
     fi
-    export DownloadFrom=file://$SOFTWARE_DIR
-    log "Getting software from: $DownloadFrom"
+
+    export DownloadFrom="file://$SOFTWARE_DIR"
   fi
+
+  log "Getting software from: $DownloadFrom"
 
   $(pwd)/install_linux.sh
   $(pwd)/install_domino.sh
@@ -3071,9 +3071,13 @@ fi
 
 if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
 
-  # Check for legacy config else use new location in user home
+  # Check for legacy config else use new location in user home. But first check if the local directory has a configuration
 
-  if [ -r /local/cfg/build_config ]; then
+  if [ -r .DominoContainer ]; then
+    DOMINO_DOCKER_CFG_DIR=.DominoContainer
+    CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_CFG_FILE
+
+  elif [ -r /local/cfg/build_config ]; then
     DOMINO_DOCKER_CFG_DIR=/local/cfg
     CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/build_config
 
@@ -3089,6 +3093,10 @@ if [ -z "$DOMINO_DOCKER_CFG_DIR" ]; then
     DOMINO_DOCKER_CFG_DIR=~/.DominoContainer
     CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_CFG_FILE
   fi
+else
+    if [ -z "$CONFIG_FILE" ]; then
+      CONFIG_FILE=$DOMINO_DOCKER_CFG_DIR/$BUILD_CFG_FILE
+    fi
 fi
 
 # Use a config file if present
@@ -3251,7 +3259,7 @@ for a in "$@"; do
       ;;
 
     -download=*)
-      DownloadFrom=$(echo "$a" | cut -f2 -d= -s)
+      DOWNLOAD_FROM=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -imagename=*)
@@ -3460,6 +3468,10 @@ for a in "$@"; do
 
       load_conf "$TEMP"
       TEMP=
+      ;;
+
+    -cfgdir=*|-configdir=*)
+      DOMINO_DOCKER_CFG_DIR=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -autotest)
