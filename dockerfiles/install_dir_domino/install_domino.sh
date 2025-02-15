@@ -914,12 +914,6 @@ install_startscript()
     ./install_script
   fi
 
-  if [ -n "$BORG_INSTALL" ]; then
-    header "Installing Domino Borg Backup integration"
-    # Install Borg Backup scripts
-    ./install_borg
-  fi
-
   cd $INSTALL_DIR
   remove_directory domino-startscript
 
