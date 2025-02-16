@@ -1727,7 +1727,13 @@ install_linux_trusted_root()
 
   header "Updating Linux Certs"
 
-  if [ -x /usr/bin/zypper ]; then
+  if [ -e /etc/photon-release ]; then
+    # Photon OS requires uses a different mechanism
+    install_package openssl-c_rehash
+    cp -f "$1" /etc/ssl/certs/
+    rehash_ca_certificates.sh
+
+  elif [ -x /usr/bin/zypper ]; then
     cp -f "$1" /usr/share/pki/trust/anchors
     update-ca-certificates
 

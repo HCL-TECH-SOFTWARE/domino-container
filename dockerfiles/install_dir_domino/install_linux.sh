@@ -387,7 +387,6 @@ check_custom_software_repositories()
 
 check_install_trusted_root()
 {
-
   if [ -e "$INSTALL_DIR/custom/trusted_root.pem" ]; then
     install_linux_trusted_root "$INSTALL_DIR/custom/trusted_root.pem"
   fi

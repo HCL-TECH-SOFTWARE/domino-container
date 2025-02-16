@@ -1184,7 +1184,7 @@ create_notes_user_and_group()
 check_install_trusted_root()
 {
   if [ -e "$INSTALL_DIR/custom/trusted_root.pem" ]; then
-    install_domino_trusted_root "$INSTALL_DIR/custom/trusted_root.pem"
+    install_domino_trusted_root "$INSTALL_DIR/custom/trusted_domino_root.pem"
   fi
 }
 
