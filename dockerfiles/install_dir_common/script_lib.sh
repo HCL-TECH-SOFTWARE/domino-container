@@ -1698,7 +1698,7 @@ install_mssql_client()
 }
 
 
-install_trusted_root()
+install_linux_trusted_root()
 {
   if [ -z "$1" ]; then
      return 0
@@ -1724,7 +1724,8 @@ install_trusted_root()
   openssl x509 -in "$1"
 
   echo
-  echo
+
+  header "Updating Linux Certs"
 
   if [ -x /usr/bin/zypper ]; then
     cp -f "$1" /usr/share/pki/trust/anchors
@@ -1733,11 +1734,53 @@ install_trusted_root()
   elif [ -x /usr/bin/apt-get ]; then
     install_package ca-certificates
     cp -f "$1" /usr/local/share/ca-certificates
+
+    # Certs must have the .crt extension
+    mv /usr/local/share/ca-certificates/*.pem /usr/local/share/ca-certificates/*.crt
     update-ca-certificates
 
   else
     cp -f "$1" /etc/pki/ca-trust/source/anchors
     update-ca-trust
   fi
+
+  echo
+}
+
+
+install_domino_trusted_root()
+{
+  if [ -z "$1" ]; then
+     return 0
+  fi
+
+  local DOMINO_TRUSTED_ROOT_NAME="Custom Domino Container imported Root"
+
+  # Dump certificate in PEM and text
+  header "Root Certificate Information"
+  openssl x509 -in "$1" -text -noout
+
+  header "Root Certificate in PEM format"
+  openssl x509 -in "$1"
+  echo
+  echo
+
+  # Import cert into Domino trusted roots
+  echo  >> $DOMINO_DATA_PATH/cacert.pem
+  echo "$DOMINO_TRUSTED_ROOT_NAME" >> $DOMINO_DATA_PATH/cacert.pem
+
+  echo "=====================================" >> $DOMINO_DATA_PATH/cacert.pem
+  openssl x509 -in "$1" >> $DOMINO_DATA_PATH/cacert.pem
+  echo
+  echo
+
+  header "Import cert into Domino JVM trust store"
+  # Import cert into Domino Java trusted roots
+  "$Notes_ExecDirectory/jvm/bin/keytool" -import -trustcacerts -noprompt -keystore "$Notes_ExecDirectory/jvm/lib/security/cacerts" -storepass changeit -alias "$DOMINO_TRUSTED_ROOT_NAME" -file "$1"
+  echo
+  echo
+
+  # Log trusted root imported
+  openssl x509 -in "$1" -text >> $DOMDOCK_DIR/DominoImportedTrustedRoots.pem
 }
 

@@ -1181,6 +1181,23 @@ create_notes_user_and_group()
 }
 
 
+check_install_trusted_root()
+{
+  if [ -e "$INSTALL_DIR/custom/trusted_root.pem" ]; then
+    install_domino_trusted_root "$INSTALL_DIR/custom/trusted_root.pem"
+  fi
+}
+
+
+create_borg_user_and_group()
+{
+    if [ -z "$BORG_INSTALL" ]; then
+        return 0
+    fi
+
+    useradd borg -U -m
+}
+
 # --- Main Install Logic ---
 
 export DOMINO_USER=notes
@@ -1255,6 +1272,8 @@ else
   # Don't install perl for Domino installer
   NO_PERL_INSTALL=yes
 fi
+
+create_borg_user_and_group
 
 # Allow world full access to the main directories to ensure all mounts work.
 # Those directories might get replaced with mount points or re-created on startup of the container when /local mount is used.
@@ -1353,11 +1372,13 @@ install_leap "$LEAP_VERSION"
 # Install Domino Prometheus servertask
 install_domprom
 
-remove_perl
+# Install Custom Trusted Root if specified
+check_install_trusted_root
 
 # Install Custom Add-Ons if requested
 install_custom_add_ons
 
+remove_perl
 
 # Install Setup Files and Docker Entrypoint
 header "Final Steps & Configuration"

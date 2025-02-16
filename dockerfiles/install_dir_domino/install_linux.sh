@@ -389,7 +389,7 @@ check_install_trusted_root()
 {
 
   if [ -e "$INSTALL_DIR/custom/trusted_root.pem" ]; then
-    install_trusted_root "$INSTALL_DIR/custom/trusted_root.pem"
+    install_linux_trusted_root "$INSTALL_DIR/custom/trusted_root.pem"
   fi
 }
 
