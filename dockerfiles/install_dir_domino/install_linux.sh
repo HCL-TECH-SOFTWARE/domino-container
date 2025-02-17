@@ -364,7 +364,7 @@ install_node_exporter()
 
 check_custom_software_repositories()
 {
-  VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -f2 -d'=' | xargs)
+  VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -f2 -d'=')
 
   if [ "$VERSION_CODENAME" = "noble" ]; then
     if [ -e /etc/apt/sources.list.d/ubuntu.sources ]; then

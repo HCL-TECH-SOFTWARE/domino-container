@@ -783,7 +783,7 @@ check_from_image()
 
     ubuntu|ubuntu24)
       LINUX_NAME="Ubuntu 24.04 LTS (Noble Numbat)"
-      BASE_IMAGE=ubuntu
+      BASE_IMAGE=ubuntu:noble
       ;;
 
     ubuntu22)
@@ -843,7 +843,7 @@ check_from_image()
       ;;
 
     *)
-      LINUX_NAME="Manual specified base image"
+      LINUX_NAME=$FROM_IMAGE
       BASE_IMAGE=$FROM_IMAGE
       echo "Info: Manual specified base image used! [$FROM_IMAGE]"
       ;;
@@ -1089,6 +1089,7 @@ build_domino()
     --label DominoContainer.buildtime="$BUILDTIME" \
     --label DominoContainer.addons="$CONTAINER_DOMINO_ADDONS" \
     --label DominoContainer.custom-addons="$CONTAINER_DOMINO_CUSTOM_ADDONS" \
+    --label DominoContainer.baseimage="$BASE_IMAGE" \
     --build-arg PROD_NAME=$PROD_NAME \
     --build-arg PROD_VER=$PROD_VER \
     --build-arg DOMLP_VER=$DOMLP_VER \
@@ -2576,12 +2577,12 @@ write_conf()
   if [ -n "$NODE_EXPORTER_INSTALL" ]; then echo "NODE_EXPORTER_INSTALL=$NODE_EXPORTER_INSTALL" >> "$BUILD_CONF"; fi
 
   # Parameters only stored in conf file
-  echo "CONTAINER_MAINTAINER=$CONTAINER_MAINTAINER"                 >> "$BUILD_CONF"
-  echo "CONTAINER_VENDOR=$CONTAINER_VENDOR"                         >> "$BUILD_CONF"
-  echo "CONTAINER_DOMINO_NAME=$CONTAINER_DOMINO_NAME"               >> "$BUILD_CONF"
-  echo "CONTAINER_DOMINO_DESCRIPTION=$CONTAINER_DOMINO_DESCRIPTION" >> "$BUILD_CONF"
-  echo "CONTAINER_IMAGE_VERSION=$CONTAINER_IMAGE_VERSION"           >> "$BUILD_CONF"
-  echo "CONTAINER_IMAGE_NAME=$CONTAINER_IMAGE_NAME"                 >> "$BUILD_CONF"
+  echo "CONTAINER_MAINTAINER=\"$CONTAINER_MAINTAINER\""                 >> "$BUILD_CONF"
+  echo "CONTAINER_VENDOR=\"$CONTAINER_VENDOR\""                         >> "$BUILD_CONF"
+  echo "CONTAINER_DOMINO_NAME=\"$CONTAINER_DOMINO_NAME\""               >> "$BUILD_CONF"
+  echo "CONTAINER_DOMINO_DESCRIPTION=\"$CONTAINER_DOMINO_DESCRIPTION\"" >> "$BUILD_CONF"
+  echo "CONTAINER_IMAGE_VERSION=\"$CONTAINER_IMAGE_VERSION\""           >> "$BUILD_CONF"
+  echo "CONTAINER_IMAGE_NAME=\"$CONTAINER_IMAGE_NAME\""                 >> "$BUILD_CONF"
 
   echo
   echo
@@ -2627,7 +2628,7 @@ edit_conf()
 }
 
 
-display_custom_add-ons()
+display_custom_add_ons()
 {
   local TXT=
   local ADD_ON=
@@ -2758,7 +2759,7 @@ select_software()
     print_select "H" "Help"
     echo
 
-    display_custom_add-ons
+    display_custom_add_ons
     if [ -n "$TIKA_INSTALL" ]; then
       echo " Tika Server: $TIKA_INSTALL"
     fi
