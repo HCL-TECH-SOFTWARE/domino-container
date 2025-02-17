@@ -2627,7 +2627,7 @@ edit_conf()
 }
 
 
-display_custom_add-ons()
+display_custom_add_ons()
 {
   local TXT=
   local ADD_ON=
@@ -2758,7 +2758,7 @@ select_software()
     print_select "H" "Help"
     echo
 
-    display_custom_add-ons
+    display_custom_add_ons
     if [ -n "$TIKA_INSTALL" ]; then
       echo " Tika Server: $TIKA_INSTALL"
     fi
