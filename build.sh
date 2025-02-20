@@ -52,6 +52,14 @@ ClearScreen()
 }
 
 
+log_error()
+{
+  echo
+  echo $@
+  echo
+}
+
+
 log_error_exit()
 {
   echo
@@ -2018,7 +2026,18 @@ check_all_software()
 }
 
 
-check_custom_software()
+log_custom_software_ok()
+{
+  echo "[OK] $@"
+}
+
+log_custom_software_error()
+{
+  echo "$@"
+}
+
+
+check_one_custom_software_file()
 {
   local DOWNLOAD_STR=$1
   local CHECK_FILE=
@@ -2045,13 +2064,14 @@ check_custom_software()
     DOWNLOAD_FILE=$SOFTWARE_DIR/$CHECK_FILE
 
     if [ ! -e "$DOWNLOAD_FILE" ]; then
-      log_error_exit "Cannot find software file: [$DOWNLOAD_FILE]"
-      exit 1
+       log_custom_software_error "[NA] $CHECK_FILE"
+       return 1
     fi
 
     if [ "$CHECK_HASH" = "yes" ]; then
       HASH=$(sha256sum -b "$DOWNLOAD_FILE"| cut -d" " -f1)
     else
+      log_custom_software_ok "$CHECK_FILE"
       return 0
     fi
 
@@ -2060,13 +2080,14 @@ check_custom_software()
     http_head_check "$DOWNLOAD_FILE"
 
     if [ "$?" = "0" ]; then
-      log_error_exit "Cannot find file: [$DOWNLOAD_FILE]"
-      exit 1
+      log_custom_software_error "[NA] $CHECK_FILE"
+      1
     fi
 
     if [ "$CHECK_HASH" = "yes" ]; then
       HASH=$($CURL_CMD -s $DOWNLOAD_FILE | sha256sum -b | cut -d" " -f1)
     else
+      log_custom_software_ok "$CHECK_FILE"
       return 0
     fi
   fi
@@ -2076,10 +2097,41 @@ check_custom_software()
   fi
 
   if [ "$HASH" = "$EXPECTED_HASH" ]; then
+    log_custom_software_ok "$CHECK_FILE"
     return 0
   fi
 
-  log_error_exit "Hash does not match for: [$DOWNLOAD_FILE]"
+   log_custom_software_error "[CR] $CHECK_FILE"
+   return 1
+}
+
+
+check_custom_software()
+{
+  local entry=
+  local lines=
+  local failed=0
+
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  header "Checking custom software"
+
+  lines=$(echo "$1" | tr ',' '\n')
+
+  while read entry; do
+    check_one_custom_software_file "$entry"
+    if [ "$?" != "0" ]; then
+      failed=$(expr $failed + 1)
+    fi
+  done <<< "$lines"
+
+  if [ "$failed" != "0" ]; then
+	  log_error_exit "Custom software check failed - Please correct $failed error(s) and retry"
+  fi
+
+  echo
 }
 
 
@@ -3743,6 +3795,12 @@ fi
 
 
 if [ "$CHECK_SOFTWARE" = "yes" ]; then
+
+
+  if [ -n "$CUSTOM_ADD_ONS" ]; then
+    check_custom_software "$CUSTOM_ADD_ONS"
+  fi
+
   check_all_software
 
   if [ ! "$CHECK_SOFTWARE_STATUS" = "0" ]; then
@@ -3750,9 +3808,6 @@ if [ "$CHECK_SOFTWARE" = "yes" ]; then
     exit 0
   fi
 
-  if [ -n "$CUSTOM_ADD_ONS" ]; then
-    check_custom_software "$CUSTOM_ADD_ONS"
-  fi
 fi
 
 if [ "$BUILD_IMAGE" = "no" ]; then
