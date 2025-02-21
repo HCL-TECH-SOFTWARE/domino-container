@@ -1980,7 +1980,7 @@ show_domino_resources()
   else
 
     for j in $DOMINO_3RD_PARTY_BIN_DIRS; do
-      get_domino_process_list | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep"
+      get_unfiltered_process_list | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep"
     done
   fi
 
