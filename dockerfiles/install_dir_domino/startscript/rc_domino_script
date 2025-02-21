@@ -529,6 +529,30 @@ get_domino_process_list()
   fi
 }
 
+
+get_unfiltered_process_list()
+{
+
+  if [ ${LARCH} = "linux" ]; then
+
+    if [ -z "$DOMINO_SYSTEMD_NAME" ]; then
+
+      # Old style of getting process list for none systemd
+      $PS_COMMAND -fu $DOMINO_USER | grep -v "$SCRIPT_NAME" | grep -v "grep"
+
+    else
+
+      # New way filtering processes by systemd service name
+      ps -e -ouser,pid,ppid,stime,time,unit,cmd | grep "$DOMINO_SYSTEMD_NAME"
+
+    fi
+
+  else
+    $PS_COMMAND -fu $DOMINO_USER | grep -v "$SCRIPT_NAME" | grep -v "grep"
+  fi
+}
+
+
 remove_file()
 {
   if [ -z "$1" ]; then
@@ -1798,7 +1822,7 @@ cleanup_domino_server_os_level()
       if [ -n "$j" ]; then
        DebugText "Killing 3rd Party Processes for" $j
 
-       for pid in $(get_domino_process_list | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
+       for pid in $(get_unfiltered_process_list | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
          echo "Killing 3rd-party process - pid #" $pid
          kill -9 $pid
        done
@@ -1882,7 +1906,7 @@ show_domino_resources_short()
     for j in $DOMINO_3RD_PARTY_BIN_DIRS; do
       if [ -n "$j" ]; then
 
-         for pid in $(get_domino_process_list | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
+         for pid in $(get_unfiltered_process_list | grep "$j" | grep -v "$SCRIPT_NAME" | grep -v "grep" | awk '{ print $2 }'); do
          echo "3rd-party - pid #" $pid
        done
       fi
