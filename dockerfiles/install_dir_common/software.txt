@@ -108,6 +108,8 @@ domrestapi|1.1-12|Domino_REST_API_V1.1_R12_Installer.tar.gz|AcYz2HbFEtVKyFBYh6oj
 domrestapi|1.1.1-12|Domino_REST_API_V1.1.1_R12_Installer.tar.gz|PJZR8bRQsxADqYxlcVjCy|f9f28a2c1d5dc9e632cfeafe7c63ad3b186352df4fa0e9839dbe45580e00ccd6
 domrestapi|1.1-14|Domino_REST_API_V1.1_R14_Installer.tar.gz|WaAVquPQpD1ESIkoyRwDi|0a1329a6620bd3114c0c4089048229b2c17f5fef9fb6920f32d238e6fe3e3e54
 domrestapi|1.1.1-14|Domino_REST_API_V1.1.1_R14_Installer.tar.gz|Pvy6Plydn9QB8gSR9Q9yF|19758b0162af98aa027a4f7a13ebacbde2c2f11ea7fbbc238dcd2d67bcb1a98d
+domrestapi|1.1.2-12|Domino_REST_API_V1.1.2_R12_Installer.tar.gz|ay9ICczuYNlAgUESc1yEt|7ac576a4247c3f6aa63b727dd63dfa64d3d2be546f1cf0bb6491fb03b1360231
+domrestapi|1.1.2-14|Domino_REST_API_V1.1.2_R14_Installer.tar.gz|0YKmS4cmEH8N8kfaq56zd|86b41f5b53079bb054bfc164baeaf295f50da929c24222266947c39bef38187e
 node_exporter|1.8.2|node_exporter-1.8.2.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz|x|6809dd0b3ec45fd6e992c19071d6b5253aed3ead7bf0686885a51d85c6643c66
 domprom|0.9.2|domprom-0.9.2-linux-amd64.taz,https://github.com/nashcom/domino-grafana/raw/main/exporter/bin/linux64/domprom-0.9.2-linux-amd64.taz|x|07b0feea9b0674a868f885052d9bef8f60f5c762623329190e37c9f9fba6fb3f
 

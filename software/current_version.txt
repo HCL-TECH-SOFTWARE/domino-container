@@ -9,7 +9,7 @@ capi|14.0
 safelinx|1.4.3
 nomadweb|1.0.14
 nomad|1.0.14
-domrestapi|1.1.1
+domrestapi|1.1.2
 tika|3.0.0
 borg|1.2.8
 node_exporter|1.8.2
