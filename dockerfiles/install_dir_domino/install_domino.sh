@@ -33,6 +33,7 @@ INST_RESTAPI_LOG=$DOMDOCK_LOG_DIR/install_restapi.log
 
 DOMINO_CUSTOM_DATA_PATH=/tmp/customdata
 
+
 check_install_tika()
 {
   if [ -z "$TIKA_INSTALL" ]; then
@@ -51,6 +52,35 @@ check_install_tika()
   remove_file "$Notes_ExecDirectory/tika-server.jar"
   download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory" "$Notes_ExecDirectory/tika-server.jar"
 }
+
+
+check_install_iqsuite()
+{
+  if [ -z "$IQSUITE_INSTALL" ]; then
+    return 0
+  fi
+
+  header "Installing requested GBS iQ.Suite version  $TIKA_INSTALL"
+
+  get_download_name iqsuite "$IQSUITE_INSTALL"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find requested IQ suite version $IQSUITE_INSTALL"
+    exit 1
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "/opt"
+
+  IQSUITE_DIR=$(find /opt -name "iQ.Suite-*")
+
+  if [ -z "$IQSUITE_DIR" ]; then
+    log_error "IQ Suite installation failed. Cannot find it in /opt"
+    exit 1
+  fi
+
+  ln -s "$IQSUITE_DIR" /opt/iqsuite
+}
+
 
 install_domino()
 {
@@ -342,6 +372,7 @@ install_domino()
   fi
 
   check_install_tika
+  check_install_iqsuite
 
   # Switch back sh shell if changed /bin/sh for Ubuntu/Debian from /bin/dash to /bin/bash
   if [ -n "$ORIG_SHELL_LINK" ]; then

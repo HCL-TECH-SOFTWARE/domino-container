@@ -320,6 +320,7 @@ usage()
   echo "-restapi         adds the Domino REST API to the image"
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
   echo "-tika            updates the Tika server to the Domino server"
+  echo "-iqsuite         adds GBS iQ.Suite to the container image under /opt"
   echo "-node_exporter   Installs Prometheus node_exporter into the container"
   echo "-domprom         Installs Domino Prometheus statistics exporter"
   echo "-prometheus/prom Installs Domino Prometheus statistics exporter & Node Exporter"
@@ -397,6 +398,7 @@ dump_config()
   echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
   echo "BORG_INSTALL         : [$BORG_INSTALL]"
   echo "TIKA_INSTALL         : [$TIKA_INSTALL]"
+  echo "IQSUITE_INSTALL      : [$IQSUITE_INSTALL]"
   echo "NODE_EXPORTER_INSTALL: [$NODE_EXPORTER_INSTALL]"
   echo "DOMPROM_INSTALL      : [$DOMPROM_INSTALL]"
   echo "LINUX_PKG_ADD        : [$LINUX_PKG_ADD]"
@@ -942,7 +944,7 @@ check_exposed_ports()
     EXPOSED_PORTS="$EXPOSED_PORTS 9443"
   fi
 
-  if [ -n "$NODE_EXPORTER_INSTAL" ]; then
+  if [ -n "$NODE_EXPORTER_INSTALL" ]; then
     EXPOSED_PORTS="$EXPOSED_PORTS 9100"
   fi
 
@@ -1058,6 +1060,10 @@ check_addon_label()
   if [ -n "$LEAP_VERSION" ]; then
     add_addon_label "leap" "$LEAP_VERSION"
   fi
+
+  if [ -n "$IQSUITE_INSTALL" ]; then
+    add_addon_label "iqsuite" "$IQSUITE_INSTALL"
+  fi
 }
 
 build_domino()
@@ -1115,6 +1121,7 @@ build_domino()
     --build-arg SSH_INSTALL="$iSSH_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
     --build-arg TIKA_INSTALL="$TIKA_INSTALL" \
+    --build-arg IQSUITE_INSTALL="$IQSUITE_INSTALL" \
     --build-arg NODE_EXPORTER_INSTALL="$NODE_EXPORTER_INSTALL" \
     --build-arg DOMPROM_INSTALL="$DOMPROM_INSTALL" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
@@ -1814,6 +1821,10 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$IQSUITE_INSTALL" ]; then
+      check_software_file "iqsuite" "$IQSUITE_INSTALL"
+    fi
+
     if [ -n "$NODE_EXPORTER_INSTALL" ]; then
       if [ ! "$NODE_EXPORTER_INSTALL" = "yes" ]; then
         check_software_file "node_exporter" "$NODE_EXPORTER_INSTALL"
@@ -1965,6 +1976,10 @@ check_software_status()
       if [ ! "$TIKA_INSTALL" = "yes" ]; then
         check_software_file "tika" "$TIKA_INSTALL"
       fi
+    fi
+
+    if [ -n "$IQSUITE_INSTALL" ]; then
+      check_software_file "iqsuite" "$IQSUITE_INSTALL"
     fi
 
     if [ -n "$NODE_EXPORTER_INSTALL" ]; then
@@ -2514,6 +2529,7 @@ load_conf()
   local CUSTOM_ADD_ONS_SELECT=$CUSTOM_ADD_ONS
   local BORG_SELECT=$BORG_INSTALL
   local TIKA_SELECT=$TIKA_INSTALL
+  local IQSUITE_SELECT=$IQSUITE_INSTALL
 
   if [ -n "$1" ]; then
     BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$1
@@ -2547,6 +2563,7 @@ load_conf()
   get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
   get_current_addon_version borg SELECT_BORG
   get_current_addon_version tika SELECT_TIKA
+  get_current_addon_version iqsuite SELECT_IQSUITE
   get_current_addon_version node_expoter SELECT_NODE_EXPORTER
   get_current_addon_version domprom SELECT_DOMPROM
 
@@ -2559,6 +2576,7 @@ load_conf()
   if [ "$LATESTSEL" = "$ONTIME_VERSION" ];        then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
   if [ "$LATESTSEL" = "$BORG_INSTALL" ];          then BORG_INSTALL=$SELECT_BORG; fi
   if [ "$LATESTSEL" = "$TIKA_INSTALL" ];          then TIKA_INSTALL=$SELECT_TIKA; fi
+  if [ "$LATESTSEL" = "$IQSUITE_INSTALL" ];       then IQSUITE_INSTALL=$SELECT_IQSUITE; fi
   if [ "$LATESTSEL" = "$NODE_EXPORTER_INSTALL" ]; then NODE_EXPORTER_INSTALL=$SELECT_NODE_EXPORTER; fi
   if [ "$LATESTSEL" = "$DOMPROM_INSTALL" ];       then DOMPROM_INSTALL=$SELECT_DOMPROM; fi
 
@@ -2570,6 +2588,7 @@ load_conf()
   if [ -n "$CUSTOM_ADD_ONS_SELECT" ]; then CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS_SELECT; fi
   if [ -n "$BORG_SELECT" ];           then BORG_INSTALL=$BORG_SELECT; fi
   if [ -n "$TIKA_SELECT" ];           then TIKA_INSTALL=$TIKA_SELECT; fi
+  if [ -n "$IQSUITE_SELECT" ];        then IQSUITE_INSTALL=$IQSUITE_SELECT; fi
 
   if [ -n "$NODE_EXPORTER_INSTALL" ] && [ -n "$DOMPROM_INSTALL" ]; then PROM_INSTALL=yes; fi
 
@@ -2614,6 +2633,7 @@ write_conf()
   if [ -n "$DOMLP_LANG" ];       then echo "DOMLP_LANG=$DOMLP_LANG"      >> "$BUILD_CONF"; fi
   if [ -n "$BORG_INSTALL" ];     then echo "BORG_INSTALL=$LATESTSEL"     >> "$BUILD_CONF"; fi
   if [ -n "$TIKA_INSTALL" ];     then echo "TIKA_INSTALL=$LATESTSEL"     >> "$BUILD_CONF"; fi
+  if [ -n "$IQSUITE_INSTALL" ];  then echo "IQSUITE_INSTALL=$LATESTSEL"  >> "$BUILD_CONF"; fi
 
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
@@ -2675,6 +2695,7 @@ edit_conf()
   FROM_IMAGE=
   BORG_INSTALL=
   TIKA_INSTALL=
+  IQSUITE_INSTALL=
 
   load_conf
 }
@@ -2814,6 +2835,10 @@ select_software()
     display_custom_add_ons
     if [ -n "$TIKA_INSTALL" ]; then
       echo " Tika Server: $TIKA_INSTALL"
+    fi
+
+    if [ -n "$IQSUITE_INSTALL" ]; then
+      echo " IQ Suite   : $IQSUITE_INSTALL"
     fi
 
     if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
@@ -3055,6 +3080,7 @@ install_domino_native()
   export PROD_FP
   export PROD_HF
   export TIKA_INSTALL
+  export IQSUITE_INSTALL
   export VERSE_VERSION
   export NOMAD_VERSION
   export TRAVELER_VERSION
@@ -3562,6 +3588,15 @@ for a in "$@"; do
         TIKA_INSTALL=yes
       fi
       ;;
+
+    -iqsuite|-iqsuite=*|+iqsuite|+iqsuite=*)
+      IQSUITE_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$IQSUITE_INSTALL" ]; then
+        get_current_addon_version iqsuite IQSUITE_INSTALL
+      fi
+      ;;
+
 
     -node_exporter|-node_exporter=*|+node_exporter|+=node_exporter*)
       NODE_EXPORTER_INSTALL=$(echo "$a" | cut -f2 -d= -s)
