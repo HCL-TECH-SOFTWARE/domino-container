@@ -3766,7 +3766,7 @@ if [ -n "$NOMAD_VERSION" ]; then
       ;;
 
     # For now make it a special case before we phase out older Nomad versions
-    1.0.13*|1.0.14*)
+    1.0.13*|1.0.14*|1.0.15*|1.0.16*|1.0.17*)
       ;;
 
     *)
