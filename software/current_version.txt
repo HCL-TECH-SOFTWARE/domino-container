@@ -3,7 +3,7 @@ domino-12.0.2|12.0.2|FP5|IF2
 domino-14.5|14.5EA2
 traveler|14.0FP2
 volt|1.0.5.15
-leap|1.1.5
+leap|1.1.6
 verse|3.2.3
 capi|14.0
 safelinx|1.4.3
