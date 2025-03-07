@@ -10,7 +10,7 @@ safelinx|1.4.3
 nomadweb|1.0.15
 nomad|1.0.15
 domrestapi|1.1.2
-tika|3.0.0
+tika|3.1.0
 borg|1.2.8
 node_exporter|1.8.2
 domprom|0.9.2

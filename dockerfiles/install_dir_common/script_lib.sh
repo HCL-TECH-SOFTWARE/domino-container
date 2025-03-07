@@ -1294,6 +1294,28 @@ set_ini_var_if_not_set()
 
 install_package()
 {
+
+  # Ensure only packages are installed which are not on the skip or remove list
+  local PACKAGE=
+
+  for PACKAGE in $LINUX_PKG_REMOVE; do
+    case "$@" in
+      ${PACKAGE}*)
+	echo "Skipping package install: $@"
+        return 0;
+        ;;
+    esac
+  done
+
+  for PACKAGE in $LINUX_PKG_SKIP; do
+    case "$@" in
+      ${PACKAGE}*)
+        echo "Skipping package install: $@"
+        return 0;
+        ;;
+    esac
+  done
+
   if [ -x /usr/bin/zypper ]; then
     /usr/bin/zypper install -y "$@"
 

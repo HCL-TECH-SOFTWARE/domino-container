@@ -503,6 +503,13 @@ else
     install_packages "$LINUX_PKG_ADD"
   fi
 
+   # Remove packages remove Linux base image
+
+  if [ -n "LINUX_PKG_REMOVE" ]; then
+    header "Removing packages: $LINUX_PKG_REMOVE"
+    remove_packages "$LINUX_PKG_REMOVE"
+  fi
+
 fi
 
 # Cleanup repository cache to save space

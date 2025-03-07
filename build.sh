@@ -325,10 +325,13 @@ usage()
   echo "-domprom         Installs Domino Prometheus statistics exporter"
   echo "-prometheus/prom Installs Domino Prometheus statistics exporter & Node Exporter"
   echo "-k8s-runas       adds K8s runas user support"
-  echo "-linuxpkg=<pkg>  add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-startscript=x   installs specified start script version from software repository"
   echo "-custom-addon=x  specify a tar file with additional Domino add-on sofware to install format: (https://)file.taz#sha256checksum"
   echo "-software=<dir>  explicitly specify SOFTWARE_DIR and override cfg file "
+  echo
+  echo "-linuxpkg=<pkg>       add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
+  echo "-linuxpkgskip=<pkg>   skip adding on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
+  echo "-linuxpkgremove=<pkg> remove on or more Linux packages from the container image. Multiple pgks are separated by blank and require quotes"
   echo
   echo SafeLinx options
   echo
@@ -402,6 +405,8 @@ dump_config()
   echo "NODE_EXPORTER_INSTALL: [$NODE_EXPORTER_INSTALL]"
   echo "DOMPROM_INSTALL      : [$DOMPROM_INSTALL]"
   echo "LINUX_PKG_ADD        : [$LINUX_PKG_ADD]"
+  echo "LINUX_PKG_REMOVE     : [$LINUX_PKG_REMOVE]"
+  echo "LINUX_PKG_SKIP       : [$LINUX_PKG_SKIP]"
   echo "STARTSCRIPT_VER      : [$STARTSCRIPT_VER]"
   echo "CUSTOM_ADD_ONS       : [$CUSTOM_ADD_ONS]"
   echo "EXPOSED_PORTS        : [$EXPOSED_PORTS]"
@@ -1131,6 +1136,8 @@ build_domino()
     --build-arg CAPI_VERSION="$CAPI_VERSION" \
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
     --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
+    --build-arg LINUX_PKG_REMOVE="$LINUX_PKG_REMOVE" \
+    --build-arg LINUX_PKG_SKIP="$LINUX_PKG_SKIP" \
     --build-arg MSSQL_INSTALL="$MSSQL_INSTALL" \
     --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
     --build-arg CUSTOM_ADD_ONS="$CUSTOM_ADD_ONS" \
@@ -2526,6 +2533,8 @@ load_conf()
   local LINUX_LANG_SELECT=$LINUX_LANG
   local DOMINO_LANG_SELECT=$DOMINO_LANG
   local LINUX_PKG_ADD_SELECT=$LINUX_PKG_ADD
+  local LINUX_PKG_REMOVE_SELECT=$LINUX_PKG_REMOVE
+  local LINUX_PKG_SKIP_SELECT=$LINUX_PKG_SKIP
   local CUSTOM_ADD_ONS_SELECT=$CUSTOM_ADD_ONS
   local BORG_SELECT=$BORG_INSTALL
   local TIKA_SELECT=$TIKA_INSTALL
@@ -2580,15 +2589,17 @@ load_conf()
   if [ "$LATESTSEL" = "$NODE_EXPORTER_INSTALL" ]; then NODE_EXPORTER_INSTALL=$SELECT_NODE_EXPORTER; fi
   if [ "$LATESTSEL" = "$DOMPROM_INSTALL" ];       then DOMPROM_INSTALL=$SELECT_DOMPROM; fi
 
-  if [ -n "$FROM_IMAGE_SELECT" ];     then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
-  if [ -n "$DOCKER_TZ_SELECT" ];      then DOCKER_TZ=$DOCKER_TZ_SELECT; fi
-  if [ -n "$LINUX_LANG_SELECT" ];     then LINUX_LANG=$LINUX_LANG_SELECT; fi
-  if [ -n "$DOMINO_LANG_SELECT" ];    then DOMINO_LANG=$DOMINO_LANG_SELECT; fi
-  if [ -n "$LINUX_PKG_ADD_SELECT" ];  then LINUX_PKG_ADD=$LINUX_PKG_ADD_SELECT; fi
-  if [ -n "$CUSTOM_ADD_ONS_SELECT" ]; then CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS_SELECT; fi
-  if [ -n "$BORG_SELECT" ];           then BORG_INSTALL=$BORG_SELECT; fi
-  if [ -n "$TIKA_SELECT" ];           then TIKA_INSTALL=$TIKA_SELECT; fi
-  if [ -n "$IQSUITE_SELECT" ];        then IQSUITE_INSTALL=$IQSUITE_SELECT; fi
+  if [ -n "$FROM_IMAGE_SELECT" ];        then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
+  if [ -n "$DOCKER_TZ_SELECT" ];         then DOCKER_TZ=$DOCKER_TZ_SELECT; fi
+  if [ -n "$LINUX_LANG_SELECT" ];        then LINUX_LANG=$LINUX_LANG_SELECT; fi
+  if [ -n "$DOMINO_LANG_SELECT" ];       then DOMINO_LANG=$DOMINO_LANG_SELECT; fi
+  if [ -n "$LINUX_PKG_ADD_SELECT" ];     then LINUX_PKG_ADD=$LINUX_PKG_ADD_SELECT; fi
+  if [ -n "$LINUX_PKG_REMOVE_SELECT" ];  then LINUX_PKG_REMOVE=$LINUX_PKG_REMOVE_SELECT; fi
+  if [ -n "$LINUX_PKG_SKIP_SELECT" ];    then LINUX_PKG_SKIP=$LINUX_PKG_SKIP_SELECT; fi
+  if [ -n "$CUSTOM_ADD_ONS_SELECT" ];    then CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS_SELECT; fi
+  if [ -n "$BORG_SELECT" ];              then BORG_INSTALL=$BORG_SELECT; fi
+  if [ -n "$TIKA_SELECT" ];              then TIKA_INSTALL=$TIKA_SELECT; fi
+  if [ -n "$IQSUITE_SELECT" ];           then IQSUITE_INSTALL=$IQSUITE_SELECT; fi
 
   if [ -n "$NODE_EXPORTER_INSTALL" ] && [ -n "$DOMPROM_INSTALL" ]; then PROM_INSTALL=yes; fi
 
@@ -2638,13 +2649,15 @@ write_conf()
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
   # Additional parameters only configurable on command line
-  if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"           >> "$BUILD_CONF"; fi
-  if [ -n "$LINUX_PKG_ADD" ];    then echo "LINUX_PKG_ADD=$LINUX_PKG_ADD"     >> "$BUILD_CONF"; fi
-  if [ -n "$CUSTOM_ADD_ONS" ];   then echo "CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS"   >> "$BUILD_CONF"; fi
-  if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"             >> "$BUILD_CONF"; fi
-  if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"           >> "$BUILD_CONF"; fi
-  if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"         >> "$BUILD_CONF"; fi
-  if [ -n "$DOMPROM_INSTALL" ];  then echo "DOMPROM_INSTALL=$DOMPROM_INSTALL" >> "$BUILD_CONF"; fi
+  if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"             >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_PKG_ADD" ];    then echo "LINUX_PKG_ADD=$LINUX_PKG_ADD"       >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_PKG_REMOVE" ]; then echo "LINUX_PKG_REMOVE=$LINUX_PKG_REMOVE" >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_PKG_SKIP" ];   then echo "LINUX_PKG_SKIP=$LINUX_PKG_SKIP"     >> "$BUILD_CONF"; fi
+  if [ -n "$CUSTOM_ADD_ONS" ];   then echo "CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS"     >> "$BUILD_CONF"; fi
+  if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"               >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"             >> "$BUILD_CONF"; fi
+  if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"           >> "$BUILD_CONF"; fi
+  if [ -n "$DOMPROM_INSTALL" ];  then echo "DOMPROM_INSTALL=$DOMPROM_INSTALL"   >> "$BUILD_CONF"; fi
 
   if [ -n "$NODE_EXPORTER_INSTALL" ]; then echo "NODE_EXPORTER_INSTALL=$NODE_EXPORTER_INSTALL" >> "$BUILD_CONF"; fi
 
@@ -3315,6 +3328,14 @@ for a in "$@"; do
 
    -linuxpkg=*|+linuxpkg=*)
       LINUX_PKG_ADD=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+   -linuxpkgrm=*|+linuxpkgrm=*|-linuxpkgremove=*|+linuxpkgremove=*)
+      LINUX_PKG_REMOVE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+   -linuxpkgskip=*|+linuxpkgskip=*)
+      LINUX_PKG_SKIP=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -startscript=*|+startscript=*)

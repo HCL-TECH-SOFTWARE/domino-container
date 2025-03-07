@@ -342,7 +342,7 @@ install_domino()
   if [ -n "$INST_HF" ]; then
     header "Installing IF/HF $INST_HF"
 
-    log_space "Running Domino Iterimsfix/Hotfix Silent Install -- This takes a while ..."
+    log_space "Running Domino InterimFix/Hotfix Silent Install -- This takes a while ..."
 
     CURRENT_DIR=$(pwd)
     cd domino_hf/linux64
