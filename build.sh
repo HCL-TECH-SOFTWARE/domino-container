@@ -2258,8 +2258,16 @@ trivy_scan_image()
       fi
 
       header "Trivy Scan Summary"
-      cat "$1" | jq -r '.Results[].Vulnerabilities[].Severity' 2> /dev/null | sort | uniq -c
-      log "JSON Output file: [$1]"
+
+      cat "$1" | jq -r '.Results[0].Target'
+      echo "--------------------"
+      cat "$1" | jq -r '.Results[0].Vulnerabilities[].Severity' 2> /dev/null | sort | uniq -c
+      echo
+
+      cat "$1" | jq -r '.Results[1].Target'
+      echo "--------------------"
+      cat "$1" | jq -r '.Results[1].Vulnerabilities[].Severity' 2> /dev/null | sort | uniq -c
+      echo
       ;;
 
     *)
