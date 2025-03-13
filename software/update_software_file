@@ -1,0 +1,36 @@
+#!/bin/bash
+
+############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
+############################################################################
+
+SCRIPT_NAME=$0
+PARAM1=$1
+
+update_file()
+{
+  SOURCE_FILE=$1
+  TARGET_FILE=$2
+
+  if [ ! -r "$SOURCE_FILE" ]; then
+    echo "source file does not exist or is not readable"
+    return 0
+  fi
+
+  if [ -e "$TARGET_FILE" ]; then
+    cmp -s "$SOURCE_FILE" "$TARGET_FILE"
+    if [ $? -eq 0 ]; then
+      return 0
+    fi
+  fi
+  
+  echo "Updating [$TARGET_FILE]"
+  cp -f "$SOURCE_FILE" "$TARGET_FILE"
+
+  return 0
+}
+
+update_file software.txt ../dockerfiles/install_dir_common/software.txt
+
+
