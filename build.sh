@@ -1,9 +1,10 @@
+#!/bin/bash
 ############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2025  - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.8 11.02.2025
+# Version 2.3.9 15.03.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -25,7 +26,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.8
+CONTAINER_BUILD_SCRIPT_VERSION=2.3.9
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1
@@ -2103,7 +2104,7 @@ check_one_custom_software_file()
 
     if [ "$?" = "0" ]; then
       log_custom_software_error "[NA] $CHECK_FILE"
-      1
+      return 1
     fi
 
     if [ "$CHECK_HASH" = "yes" ]; then
