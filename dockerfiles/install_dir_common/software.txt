@@ -100,6 +100,7 @@ nomad|1.0.13IF1|nomad-server-1.0.13-IF1-linux.tar.gz|c3sHgxMiwVVGkrBBV6cJ2|97364
 nomad|1.0.13IF2|nomad-server-1.0.13-IF2-linux.tar.gz|5BPCenCx7Bu5NEYhc1PIM|6812af2b71d6c956387162a7bf5df03f05a044466ca956f301789441f8e8eec4
 nomad|1.0.14|nomad-server-1.0.14-linux.tar.gz|JAneQRBJX0MsyZ1YpoJ0r|1a31194e99611d31bbc33617e310439e7da9fee870c019d76e250ee79b061765
 nomad|1.0.15|HCL_Nomad_server_1.0.15_linux.tar.gz,nomad-server-1.0.15-linux.tar.gz|eIJRTrDPRqGGzevzYRcFe|f34da6a47461d98338307ed08967df60995bb01d4eb65ab0fba99451aac930ef
+nomad|1.0.15IF1|HCL_Nomad_server_1.0.15-IF1_linux.tar.gz|b8upAL5L6uL9Fo8mS9xa0|8c63db6e18c4dcc23fd2ca5db025e445644751f323372c20cecb631dd0484eb9
 domrestapi|1.0.10-12|Domino_REST_API_V1.0.10_R12_Installer.tar.gz|CMHEUOzmCNPAJj2quzHGz|9401c0262360c5ed7ece092d60ee06550df24e3e88b85a179442b4263003d123
 domrestapi|1.0.10-14|Domino_REST_API_V1.0.10_R14_Installer.tar.gz|tCI44Ccfv8unzfkD8ariR|33178942c9b2f5a21553f0304f6939f39a1b17982512182f5fb33d1349676ff8
 domrestapi|1.0.11-12|Domino_REST_API_V1.0.11_R12_Installer.tar.gz|TT1k4cJaNa8F1iL72NDBB|0ae41f3deb098760abb5a16f25b73a33eee8da02a1282b03b582f11e201df708

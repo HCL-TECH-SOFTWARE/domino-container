@@ -4,7 +4,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.3.9 15.03.2025
+# Version 2.4.0 22.03.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -26,7 +26,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.3.9
+CONTAINER_BUILD_SCRIPT_VERSION=2.4.0
 
 # OnTime version
 SELECT_ONTIME_VERSION=1.11.1

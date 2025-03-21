@@ -1,6 +1,6 @@
 #!/bin/bash
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2025 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -1156,9 +1156,12 @@ create_link ()
 
 install_res_links()
 {
-  DOMINO_RES_DIR=$Notes_ExecDirectory/res
-  GERMAN_LOCALE="de_DE.UTF-8"
-  ENGLISH_LOCALE="en_US.UTF-8"
+  local DOMINO_RES_DIR=$Notes_ExecDirectory/res
+  local GERMAN_LOCALE="de_DE"
+  local ENGLISH_LOCALE="en_US"
+  local GERMAN_LOCALE_UTF8="${GERMAN_LOCALE}.UTF-8"
+  local ENGLISH_LOCALE_UTF8="${ENGLISH_LOCALE}.UTF-8"
+  local CURRENT_DIR=$(pwd)
 
   cd $DOMINO_RES_DIR
 
@@ -1177,6 +1180,17 @@ install_res_links()
     ln -s C $ENGLISH_LOCALE
   fi
 
+  if [ ! -e "$DOMINO_RES_DIR/$GERMAN_LOCALE_UTF8" ]; then
+    echo "Creating symbolic link for German res files ($GERMAN_LOCALE_UTF8)"
+    ln -s C $GERMAN_LOCALE_UTF8
+  fi
+
+  if [ ! -e "$DOMINO_RES_DIR/$ENGLISH_LOCALE_UTF8" ]; then
+    echo "Creating symbolic link for English res files ($ENGLISH_LOCALE_UTF8)"
+    ln -s C $ENGLISH_LOCALE_UTF8
+  fi
+
+  cd "$CURRENT_DIR"
   return 0
 }
 

@@ -1205,6 +1205,44 @@ echo "TIKA_VERSION: [$TIKA_VERSION]"
 test_result "tikaserver.available" "Check if Tika Server can be started" "" "$ERROR_MSG"
 
 
+header "Security check"
+
+# Check if no binary has SUID set for root
+
+ERROR_MSG=
+
+SUID_BIN_COUNT=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt -perm -4000 -type f -user root 2>/dev/null | wc -l)
+
+if [ "$SUID_BIN_COUNT" != "0" ]; then
+  ERROR_MSG="$SUID_BIN_COUNT binaries have SUID set for root"
+  header "Files with SUID for root"
+  $CONTAINER_CMD exec $CONTAINER_NAME find /opt -perm -4000 -type f -user root
+fi
+
+test_result "security.no-suid-bin" "Ensure not binaries have SUID set for root" "" "$ERROR_MSG"
+
+
+# Ensure /opt/hcl is not writable
+
+ERROR_MSG=
+
+CHECK_DIR=/opt/hcl
+
+WRITABLE_BIN_COUNT=$($CONTAINER_CMD exec $CONTAINER_NAME find "$CHECK_DIR" -writable 2>/dev/null | wc -l)
+
+if [ "$WRITABLE_BIN_COUNT" != "0" ]; then
+  ERROR_MSG="$WRITABLE_BIN_COUNT file in $CHECK_DIR are writable"
+  header "Writable files in $CHECK_DIR"
+  $CONTAINER_CMD exec $CONTAINER_NAME find "$CHECK_DIR" -writable
+  echo
+fi
+
+# Work in progress for now don't fail only report
+ERROR_MSG=
+
+test_result "security.domino.bin.readonly" "Ensure $CHECK_DIR is not writable" "" "$ERROR_MSG"
+
+
 # Run custom commands 
 
 if [ -n "$CUSTOM_AUTOMATION_CHECK_SCRIPT" ]; then

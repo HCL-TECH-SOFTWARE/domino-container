@@ -122,7 +122,7 @@ if [ -n "$HEALTH_CHECK_PORT_FILE" ]; then
   fi
 fi
 
-if [ -n "HEALTH_CHECK_PORT" ]; then
+if [ -n "$HEALTH_CHECK_PORT" ]; then
 
   timeout 10 bash -c "</dev/tcp/$HEALTH_SERVER_NAME/$HEALTH_CHECK_PORT" 2> /dev/null
 

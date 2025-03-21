@@ -392,6 +392,16 @@ check_install_trusted_root()
   fi
 }
 
+
+harden_linux_bins()
+{
+  header "Hardening Linux base image"
+
+  # remove SUID for all processes running with root
+  find / -perm -4000 -type f -user root -exec chmod -s {} \; 2>/dev/null
+}
+
+
 # Main logic to update Linux and install Linux packages
 
 
@@ -514,6 +524,8 @@ fi
 
 # Cleanup repository cache to save space
 clean_linux_repo_cache
+
+harden_linux_bins
 
 # List all installed packages after installing all Linux packages 
 

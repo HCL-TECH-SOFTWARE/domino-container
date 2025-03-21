@@ -1,6 +1,6 @@
 #!/bin/bash
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2024 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2025 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -1084,8 +1084,14 @@ harden_binary_dir()
   header "Hardening binary directory"
 
   chmod 555 $Notes_ExecDirectory/bindsock
-  setcap 'cap_net_bind_service=+ep' $Notes_ExecDirectory/bindsock
+  setcap 'cap_net_bind_service=+ep' "$Notes_ExecDirectory/bindsock"
+
+  if [ -e "$Notes_ExecDirectory/autoinstall" ]; then
+    chmod 555 $Notes_ExecDirectory/autoinstall
+  fi
+
 }
+
 
 check_build_options()
 {
@@ -1291,6 +1297,9 @@ if [ "$FIRST_TIME_SETUP" = "1" ]; then
   if [ -n "$DOMINO_LANG" ]; then
     echo "export LANG=$DOMINO_LANG" >> /etc/bashrc
   fi
+
+  # Set the umask in profile users bashing into the container
+  echo "umask 0027" >> /etc/bashrc
 
   # This alias is really missing ..
   echo "alias ll='ls -l'" >> /etc/bashrc
