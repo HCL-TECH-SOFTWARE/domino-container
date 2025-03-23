@@ -395,10 +395,41 @@ check_install_trusted_root()
 
 harden_linux_bins()
 {
+
+  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+    return 0
+  fi
+
   header "Hardening Linux base image"
 
-  # remove SUID for all processes running with root
+  # Remove SUID for all processes running with root
   find / -perm -4000 -type f -user root -exec chmod -s {} \; 2>/dev/null
+}
+
+
+check_build_options()
+{
+
+  local NoHardenBinDir=
+
+  for b in $BUILD_SCRIPT_OPTIONS; do
+
+    case "$b" in
+      -NoHardenBinDir)
+        export NoHardenBinDir=yes
+        ;;
+
+      *)
+        log_error "Invalid build option [$b] specified!"
+        exit 1
+        ;;
+    esac
+
+  done
+
+  harden_linux_bins
+
+  return 0
 }
 
 
@@ -522,10 +553,11 @@ else
 
 fi
 
+check_build_options
+
 # Cleanup repository cache to save space
 clean_linux_repo_cache
 
-harden_linux_bins
 
 # List all installed packages after installing all Linux packages 
 

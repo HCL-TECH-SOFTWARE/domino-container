@@ -1081,15 +1081,26 @@ install_k8s_runas_user_support()
 
 harden_binary_dir()
 {
+
+  if [ "$NoHardenBinDir" = "yes" ]; then
+    echo "Info: Not hardening for binary directory!"
+    return 0
+  fi
+
   header "Hardening binary directory"
 
   chmod 555 $Notes_ExecDirectory/bindsock
   setcap 'cap_net_bind_service=+ep' "$Notes_ExecDirectory/bindsock"
 
+  # Container only hardening
+
+  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+    return 0
+  fi
+
   if [ -e "$Notes_ExecDirectory/autoinstall" ]; then
     chmod 555 $Notes_ExecDirectory/autoinstall
   fi
-
 }
 
 
@@ -1102,7 +1113,7 @@ check_build_options()
 
     case "$b" in
       -NoHardenBinDir)
-        NoHardenBinDir=yes
+        export NoHardenBinDir=yes
         ;;
 
       *)
@@ -1113,11 +1124,7 @@ check_build_options()
 
   done
 
-  if [ "$NoHardenBinDir" = "yes" ]; then
-   echo "Info: Not hardening for binary directory!"
-  else
-    harden_binary_dir
-  fi
+  harden_binary_dir
 
   return 0
 }

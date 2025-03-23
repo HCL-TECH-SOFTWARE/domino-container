@@ -2629,7 +2629,7 @@ domino_start()
   echo >> $DOMINO_OUTPUT_LOG
 
   if [ ${LARCH} = "linux" ]; then
-    if [ -n "$(ps --no-headers -o comm 1 | grep systemd)" ] || [ -x /usr/bin/timedatectl ]; then
+    if [ -n "$(ps --no-headers -o comm 1 | grep systemd)" ] && [ -x /usr/bin/timedatectl ]; then
       /usr/bin/timedatectl >> $DOMINO_OUTPUT_LOG
     else
       echo "timezone: $(date +"%Z %z")" >> $DOMINO_OUTPUT_LOG
