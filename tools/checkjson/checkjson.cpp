@@ -1,7 +1,7 @@
 /*
    JSON schema validation tool
    ---------------------------
-   Copyright Nash!Com, Daniel Nashed 2022-2024 - APACHE 2.0 see LICENSE
+   Copyright Nash!Com, Daniel Nashed 2022-2025 - APACHE 2.0 see LICENSE
 
    Syntax: %s file.json [schema.json] [pretty.json] -default uses the standard HCL OneTouch setup JSON schema located in Domino binary directory
  */
@@ -131,7 +131,7 @@ int ProcessJSON (const char *pszInfile, const char *pszSchema, const char *pszOu
             pszStr = GetParseError_En (jDoc.GetParseError());
 
             if (pszStr)
-               printf ("JSON file parsing error, offset: %lu: %s\n", jDoc.GetErrorOffset(), pszStr);
+               fprintf (stderr, "JSON file parsing error, offset: %lu: %s\n", jDoc.GetErrorOffset(), pszStr);
             else
                fprintf (stderr, "Cannot parse JSON file\n");
 
@@ -165,7 +165,7 @@ int ProcessJSON (const char *pszInfile, const char *pszSchema, const char *pszOu
             {
                 pszStr = GetParseError_En (jSchemaDoc.GetParseError());
                 if (pszStr)
-                    printf ("JSON schema file parsing error, offset: %lu: %s\n", jSchemaDoc.GetErrorOffset(), pszStr);
+                    fprintf (stderr, "JSON schema file parsing error, offset: %lu: %s\n", jSchemaDoc.GetErrorOffset(), pszStr);
 
                 ret = CHECKJSON_STATUS_INVALID;
                 goto Done;
@@ -185,13 +185,13 @@ int ProcessJSON (const char *pszInfile, const char *pszSchema, const char *pszOu
                 rapidjson::StringBuffer jStrBuf;
                 jValidator.GetInvalidSchemaPointer().StringifyUriFragment (jStrBuf);
 
-                printf ("Invalid schema: %s\n", jStrBuf.GetString());
-                printf ("Invalid keyword: %s\n", jValidator.GetInvalidSchemaKeyword());
+                fprintf (stderr, "Invalid schema: %s\n", jStrBuf.GetString());
+                fprintf (stderr, "Invalid keyword: %s\n", jValidator.GetInvalidSchemaKeyword());
 
                 jStrBuf.Clear();
 
                 jValidator.GetInvalidDocumentPointer().StringifyUriFragment (jStrBuf);
-                printf ("Invalid document: %s\n", jStrBuf.GetString());
+                 fprintf (stderr, "Invalid document: %s\n", jStrBuf.GetString());
 
                 ret = CHECKJSON_STATUS_NOT_MATCHNING_SCHEMA;
                 goto Done;
@@ -199,7 +199,7 @@ int ProcessJSON (const char *pszInfile, const char *pszSchema, const char *pszOu
 
             if (jValidator.IsValid())
             {
-                printf ("JSON file [%s] validated according to schema [%s]!\n", pszInfile, pszSchema);
+                fprintf (stderr, "JSON file [%s] validated according to schema [%s]!\n", pszInfile, pszSchema);
                 ret = CHECKJSON_STATUS_VALID;
             }
         }
@@ -291,6 +291,6 @@ int main (int argc, char *argv[])
 
 InvalidSyntax:
 
-    printf ("\nSyntax: %s file.json [schema.json] [pretty.json]\n\n", argv[0]);
+    fprintf (stderr, "\nSyntax: %s file.json [schema.json] [pretty.json]\n\n", argv[0]);
     return ret;
 }

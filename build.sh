@@ -3116,6 +3116,7 @@ install_domino_native()
   export INSTALL_DOMINO_NATIVE
   export DOMINO_INSTALL_DATA_TAR
   export LinuxYumUpdate
+  export SPECIAL_CURL_ARGS
 
   export SkipDominoMoveInstallData=yes
   export DOMDOCK_LOG_DIR=/tmp
