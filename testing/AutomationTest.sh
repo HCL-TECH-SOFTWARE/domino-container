@@ -1237,10 +1237,10 @@ if [ "$WRITABLE_BIN_COUNT" != "0" ]; then
   echo
 fi
 
-# Work in progress for now don't fail only report
-ERROR_MSG=
-
-test_result "security.domino.bin.readonly" "Ensure $CHECK_DIR is not writable" "" "$ERROR_MSG"
+# Work in progress for now don't fail only report if all are read-only. Else the code above lists all files not read only
+if [ -z "$ERROR_MSG" ]; then
+  test_result "security.domino.bin.readonly" "Ensure $CHECK_DIR is not writable" "" "$ERROR_MSG"
+fi
 
 
 # Run custom commands 

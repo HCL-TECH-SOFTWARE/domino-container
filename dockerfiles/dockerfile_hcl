@@ -1,10 +1,10 @@
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2023 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2025 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
 # Build a base image for Linux with all required packages
-FROM registry.access.redhat.com/ubi9/ubi:9.1 AS linux_image
+FROM registry.access.redhat.com/ubi9/ubi:9.5 AS linux_image
 
 # External arguments with a default value
 ARG LinuxYumUpdate=
