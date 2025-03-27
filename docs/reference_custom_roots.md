@@ -7,7 +7,7 @@ description: "Custom Trusted Roots"
 has_children: false
 ---
 
-# Custom Linux tusted root certificate
+# Custom Linux trusted root certificate
 
 Depending on the required configuration, it might be needed to add custom trusted roots to Linux and/or Domino.
 Specially on Linux level root certificates might be needed to verify corporate certificates, which are not trusted out of the box.
@@ -30,7 +30,7 @@ trusted_root.pem
 ```
 
 
-# Custom Domino tusted root certificate
+# Custom Domino trusted root certificate
 
 A second root certficate (or the same) can also be imported into Domino trust stores later in the image build logic when Domino is installed.
 

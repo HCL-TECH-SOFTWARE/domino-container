@@ -1542,6 +1542,7 @@ find "$Notes_ExecDirectory/data1_bck" -type d -exec chmod 755 {} \; 2>/dev/null
 # --- Cleanup Routines to reduce image size ---
 
 # Remove Fixpack/Hotfix backup files
+find $Notes_ExecDirectory -maxdepth 1 -type d -name "145**" -exec rm -rf {} \; 2>/dev/null
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "140**" -exec rm -rf {} \; 2>/dev/null
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "120**" -exec rm -rf {} \; 2>/dev/null
 find $Notes_ExecDirectory -maxdepth 1 -type d -name "110**" -exec rm -rf {} \; 2>/dev/null
