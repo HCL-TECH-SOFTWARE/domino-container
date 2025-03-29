@@ -15,7 +15,7 @@ Docker provides multiple networking options to enable communication between cont
 Two primary networking modes in Docker are
 
 - **Bridge Networking** (container networking) 
-- and **Host Networking** (native networking).
+- **Host Networking** (native networking).
 
 Each mode has its advantages and trade-offs, making it crucial to choose the appropriate one based on the use case.
 
@@ -93,6 +93,16 @@ Host networking mode removes the network isolation between the container and the
 | **Use Case**      | Multi-container apps, cloud deployments | High-performance, low-latency applications |
 | **Security**      | More secure due to namespace isolation | Less secure, exposed to host vulnerabilities |
 
+
+## How to configure both network modes
+
+- For host network specify: `--network host` when launching the container with native Docker/Podman commands.
+- When using the container runtime script **dominoctl** set `CONTAINER_NETWORK_NAME=host` (via dominoctl cfg)
+
+- For bridged networking specify the exported ports via `-p host-port:container_port` for example: `-p 443:443` at Docker command line
+- When using **dominoctl** specify the ports in the same format via `CONTAINER_PORTS=` (via dominoctl cfg)
+
+
 ---
 
 ## Key Takeaways
@@ -101,4 +111,6 @@ Host networking mode removes the network isolation between the container and the
 - **Use Host Networking** when performance and direct access to the host’s network are required.
 - Be cautious with **port conflicts** and **security implications** when using host mode.
 - Choosing the right networking mode depends on the specific application needs, performance requirements, and security considerations.
+- The default configuration using Docker/Podman out of the box is bridge networking and needs explicitly publish ports
+- The default whe using **dominoctl** is host networking, which does not need any separate configuration
 
