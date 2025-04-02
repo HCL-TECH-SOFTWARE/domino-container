@@ -29,7 +29,7 @@ The Domino Container project fully supports both.
 You should just not install both at the same time - unless you really know what you are doing.
 
 
-# **Podman vs. Docker: Key Differences with a Focus on Daemon and Per-User Management**  
+# Podman vs. Docker
 
 
 ## **Daemon-Based vs. Daemonless Architecture**  
@@ -37,6 +37,7 @@ You should just not install both at the same time - unless you really know what 
   - The daemon runs as a background service, and all Docker commands interact with it.  
   - Since everything is managed centrally, containers and images are shared across all users by default.  
   - If `dockerd` is stopped, all managed containers are stoppped.  
+
 
 - **Podman**: Is **daemonless**, meaning each container runs as a separate process managed by the user invoking the command.  
   - There is no single background service managing all containers, making Podman more modular.  
@@ -48,6 +49,7 @@ You should just not install both at the same time - unless you really know what 
 Since Docker has a long-running daemon, it includes built-in support for automatic container startup:  
   - **Restart Policies (`--restart`)**: When `dockerd` starts, it automatically restarts containers based on policies like `always`, `on-failure`, or `unless-stopped`.  
   - Containers are managed within the daemon, so the auto-restart mechanism is tightly integrated.  
+
 
 Podman does not have a persistent background process, so it relies on **systemd** for container auto-start:  
   - Containers must be registered as **systemd services**.  
@@ -62,6 +64,7 @@ Podman does not have a persistent background process, so it relies on **systemd*
   - Since `dockerd` runs as a root-controlled process, all users on the system share the same container and image storage.  
   - If one user pulls an image or starts a container, all other users can see and use it (unless access is restricted manually).  
 
+
 - **Podman**:
   - Uses a **per-user storage** model. Each user has their own container and image storage located in their home directory (`$HOME/.local/share/containers`).  
   - **Images and containers are isolated per user**, meaning one user's containers or images are not visible to another user by default.  
@@ -70,6 +73,7 @@ Podman does not have a persistent background process, so it relies on **systemd*
 
 
 ## **CLI Differences and Multi-Container Management**  
+
 
 - **Docker**:
   - Uses a **single, unified CLI (`docker`)** for managing images, containers, and volumes.  
@@ -81,6 +85,7 @@ Podman does not have a persistent background process, so it relies on **systemd*
   - Multi-container applications can also be deployed using **Kubernetes YAML files** (`podman play kube`).  
 
 ---
+
 
 # **Summary Table**  
 
