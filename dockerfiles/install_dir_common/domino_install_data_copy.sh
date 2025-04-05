@@ -75,13 +75,13 @@ copy_files()
   fi
 
   if [ ! -e "$2" ]; then
-    log_file "taget directory does not exist [$2]"
+    log_file "target directory does not exist [$2]"
     return 2
   fi
 
   log_file "Copying files [$1] --> [$2]"
 
-  # Without a star the directory name is added to the traget directory path name
+  # Without a star the directory name is added to the target directory path name
   cp -rvf "$1/"* -t "$2" >> $LOG_FILE
 
   return 0
