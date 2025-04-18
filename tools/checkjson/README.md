@@ -8,7 +8,7 @@ To ensure compatibility with the HCL validjson, the command-line tool also suppo
 In addition the tool can pretty format JSON output after validation.
 If you want to use it without validating JSON with the schema specify an empty string `""` or a single dot for the schema.
 
-The program supports stdin and STDOUT for the JSON input and output file. For STDIN/STDOUT specify a single dash.
+The program supports STDIN and STDOUT for the JSON input and output file. For STDIN/STDOUT specify a single dash.
 
 
 ## Syntax
@@ -55,31 +55,22 @@ curl -sL https://myserver.lab/software.json | ./checkjson - . -
 
 ### Install GNU C++ compiler and RapidJSON development package
 
-
-RedHat and all yum based systems (you might want to replace it with `dnf` in future)
+Ubuntu
 
 ```
-yum install -y gcc rapidjson-devel
+apt install -y make gcc g++ rapidjson-dev
 ```
+
 
 SUSE SLES/Leap
 
 ```
-zypper install -y gcc rapidjson-devel
-```
-
-Ubuntu
-
-```
-apt install -y rapidjson-dev
+zypper install -y make gcc gcc-c++ rapidjson-devel
 ```
 
 ### Build binary
 
 Switch to the `tools/checkjson` directory and run make.
-
-Known issue: Warning messages during compile, depending on compiler: `warning: jump to label 'Done' / crosses initialization`.
-This has no impact on the build process. The binary builds and is fully functional.
 
 
 ```
