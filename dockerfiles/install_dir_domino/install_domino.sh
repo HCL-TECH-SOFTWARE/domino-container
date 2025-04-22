@@ -639,17 +639,32 @@ install_capi()
   cd $ADDON_NAME
   echo "Unzipping files .."
 
-  # Domino 14 C-API ZIP has different structure
-  if [ "$ADDON_VER" = "14.0" ]; then
-    mkdir -p "$LOTUS/notesapi14"
-    unzip -o -q -d "$LOTUS/notesapi14" *.zip
-    mkdir -p "$LOTUS/notesapi14/lib/linux64"
-    mv "$LOTUS/notesapi14/lib/"*.o "$LOTUS/notesapi14/lib/linux64"
+  # Domino 14+ C-API ZIP has different structure
 
-  else
-    unzip -o -q -d "$LOTUS" *.zip */include/*
-    unzip -o -q -d "$LOTUS" *.zip */lib/linux64/*
-  fi
+  case "$ADDON_VER" in
+
+    14.0*)
+
+      mkdir -p "$LOTUS/notesapi14"
+      unzip -o -q -d "$LOTUS/notesapi14" *.zip
+      mkdir -p "$LOTUS/notesapi14/lib/linux64"
+      mv "$LOTUS/notesapi14/lib/"*.o "$LOTUS/notesapi14/lib/linux64"
+      ;;
+
+    14.5*)
+
+      mkdir -p "$LOTUS/notesapi145"
+      unzip -o -q -d "$LOTUS/notesapi145" *.zip
+      mkdir -p "$LOTUS/notesapi145/lib/linux64"
+      mv "$LOTUS/notesapi145/lib/"*.o "$LOTUS/notesapi145/lib/linux64"
+      ;;
+
+    *)
+      unzip -o -q -d "$LOTUS" *.zip */include/*
+      unzip -o -q -d "$LOTUS" *.zip */lib/linux64/*
+      ;;
+
+  esac
 
   rm -f *.zip
   cd $LOTUS
