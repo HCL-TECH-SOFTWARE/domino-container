@@ -1503,11 +1503,11 @@ check_domdownload()
 
   # if MHS fileID is specified don't search but directly download from MHS
   if [ -n "$2" ]; then
-    $DOMDOWNLOAD_BIN "-filename=$1" "-fileid=$2" "-hash=$3" "-dir=$SOFTWARE_DIR" -silent
+    $DOMDOWNLOAD_BIN "-filename=$1" "-fileid=$2" "-hash=$3" "-dir=$SOFTWARE_DIR"
     return 0
   fi
 
-  $DOMDOWNLOAD_BIN "$1" "-dir=$SOFTWARE_DIR" -silent
+  $DOMDOWNLOAD_BIN "$1" "-dir=$SOFTWARE_DIR"
 }
 
 check_software()
