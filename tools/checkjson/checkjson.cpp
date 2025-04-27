@@ -82,8 +82,7 @@ int ProcessJSON (const char *pszInfile, const char *pszSchema, const char *pszOu
 
        if (0 == stat (szSchemaFile, &fStat))
        {
-           if (S_ISREG (fStat.st_mode))
-               pszSchema = szSchemaFile;
+            pszSchema = szSchemaFile;
        }
     }
 
@@ -131,7 +130,7 @@ int ProcessJSON (const char *pszInfile, const char *pszSchema, const char *pszOu
             pszStr = GetParseError_En (jDoc.GetParseError());
 
             if (pszStr)
-               fprintf (stderr, "JSON file parsing error, offset: %lu: %s\n", jDoc.GetErrorOffset(), pszStr);
+               fprintf (stderr, "JSON file parsing error, offset: %zu: %s\n", jDoc.GetErrorOffset(), pszStr);
             else
                fprintf (stderr, "Cannot parse JSON file\n");
 
@@ -165,7 +164,7 @@ int ProcessJSON (const char *pszInfile, const char *pszSchema, const char *pszOu
             {
                 pszStr = GetParseError_En (jSchemaDoc.GetParseError());
                 if (pszStr)
-                    fprintf (stderr, "JSON schema file parsing error, offset: %lu: %s\n", jSchemaDoc.GetErrorOffset(), pszStr);
+                    fprintf (stderr, "JSON schema file parsing error, offset: %zu: %s\n", jSchemaDoc.GetErrorOffset(), pszStr);
 
                 ret = CHECKJSON_STATUS_INVALID;
                 goto Done;
