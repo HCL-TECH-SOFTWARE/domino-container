@@ -431,7 +431,7 @@ IMAGE_BUILDTIME="$($CONTAINER_CMD inspect --format "{{ .Config.Labels.buildtime 
 IMAGE_DOMINO_VERSION="$($CONTAINER_CMD inspect --format "{{ index .Config.Labels \"DominoDocker.version\" }}" $CONTAINER_IMAGE 2>/dev/null)"
 IMAGE_SIZE="$($CONTAINER_CMD inspect --format "{{ .Size }}" $CONTAINER_IMAGE 2>/dev/null)"
 
-CONTAINER_DOMINO_ADDONS="$(docker inspect --format "{{ index .Config.Labels \"DominoContainer.addons\" }}" $CONTAINER_IMAGE 2>/dev/null)"
+CONTAINER_DOMINO_ADDONS="$($CONTAINER_CMD inspect --format "{{ index .Config.Labels \"DominoContainer.addons\" }}" $CONTAINER_IMAGE 2>/dev/null)"
 
 $CONTAINER_CMD run -d -it $CONTAINER_PORTS --hostname=$CONTAINER_HOSTNAME --name $CONTAINER_NAME $CONTAINER_NETWORK $CONTAINER_ENV_FILE_OPTION $CONTAINER_NOTES_UID_OPTION $CONTAINER_VOLUMES --stop-timeout=$DOMINO_SHUTDOWN_TIMEOUT --cap-add=SYS_PTRACE --cap-add=NET_BIND_SERVICE $CONTAINER_HEALTH_CHECK $CONTAINER_IMAGE
 
@@ -758,7 +758,7 @@ if [ -n "$capi_include" ]; then
   header "$Verifying C-API SDK"
 
   $CONTAINER_CMD cp makefile $CONTAINER_NAME:/tmp
-  docker cp nshver.cpp $CONTAINER_NAME:/tmp
+  $CONTAINER_CMD cp nshver.cpp $CONTAINER_NAME:/tmp
   sleep 1
 
   capi_result=$($CONTAINER_CMD exec -it -w /tmp $CONTAINER_NAME /usr/bin/bash -i -l -c "make test | tail -1" 2>&1)
