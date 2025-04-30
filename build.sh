@@ -334,11 +334,15 @@ usage()
   echo "-linuxpkgskip=<pkg>   skip adding on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-linuxpkgremove=<pkg> remove on or more Linux packages from the container image. Multiple pgks are separated by blank and require quotes"
   echo
-  echo SafeLinx options
+  echo "SafeLinx options:"
   echo
   echo "-nomadweb        adds the latest Nomad Web version to a SafeLinx image"
   echo "-mysql           adds the MySQL client to the SafeLinx image"
   echo "-mssql           adds the Mircosoft SQL Server client to the SafeLinx image"
+  echo
+  echo "Build container:"
+  echo
+  echo " -apline_build_env create a Alpine based build container image for compiling C/C++ applications (nashcom/alpine_build_env)"
   echo
   echo "Special commands:"
   echo
@@ -486,6 +490,27 @@ build_squid_image()
   $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION -f dockerfile_squid -t $SQUID_IMAGE_NAME --build-arg SQUID_BASE_IMAGE=$SQUID_BASE_IMAGE .
 
   cd ..
+
+}
+
+
+build_alpine_build_env()
+{
+
+  NASHCOM_ALPINE_BUILD_IMAGE_NAME=nashcom/alpine_build_env
+
+  header "Building $NASHCOM_ALPINE_BUILD_IMAGE_NAME ..."
+
+  # Switch to directory containing the dockerfiles
+  cd dockerfiles
+
+  export BUILDAH_FORMAT
+
+  $CONTAINER_CMD build --no-cache -f dockerfile_alpine_build_environment -t $NASHCOM_ALPINE_BUILD_IMAGE_NAME .
+
+  cd ..
+  echo
+  print_runtime
 
 }
 
@@ -3496,6 +3521,11 @@ for a in "$@"; do
       exit 0
       ;;
 
+    apline_build_env)
+      build_alpine_build_env
+      exit 0
+      ;;
+
     -checkonly)
       BUILD_IMAGE=no
       CHECK_SOFTWARE=yes
@@ -3627,7 +3657,6 @@ for a in "$@"; do
         get_current_addon_version iqsuite IQSUITE_INSTALL
       fi
       ;;
-
 
     -node_exporter|-node_exporter=*|+node_exporter|+=node_exporter*)
       NODE_EXPORTER_INSTALL=$(echo "$a" | cut -f2 -d= -s)
