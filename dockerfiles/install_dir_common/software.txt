@@ -82,6 +82,7 @@ capi|14.0|CAPIToolkit_1400_Linux.zip|zpJqVq44zayvOhEsiGbKq|02fc99bd6e0233352756f
 capi|14.5EA3|CAPIToolkit_1450_Linux_EA3.zip|NAqLjvXy4ApTx57C3B4cy|da59872bb133ab77512e7a833c7212f52884e34138099a20e8e992af47d37492
 borg|1.2.7|borg-linuxnew64-1.2.7,https://github.com/borgbackup/borg/releases/download/1.2.7/borg-linuxnew64|x|d8d3313ebaf48ba135001b7f230b494259f112e56adf0d5f952af999742e1190
 borg|1.2.8|borg-linuxnew64-1.2.8,https://github.com/borgbackup/borg/releases/download/1.2.8/borg-linuxnew64|x|85847a2ceb27d4a6c0ca0c0fb92d31bb2c1fcf6c77df1b2275b3f6f161d3571c
+domborg|0.9.6|nshborg-0.9.6,https://github.com/nashcom/domino-borg/releases/download/v0.9.6/nshborg-0.9.6|x|14d3ad2bf44e95c1354dc01a5e1d73a2936902b6ba3e0df9fe7149a320abd1d8
 tika|3.0.0|tika-server-standard-3.0.0.jar,https://dlcdn.apache.org/tika/3.0.0/tika-server-standard-3.0.0.jar|x|53851c4f326c0bdd7e1a9ba77bb35193d431d9dc1898e263e0b7bb337f03e2c1
 tika|3.1.0|tika-server-standard-3.1.0.jar,https://dlcdn.apache.org/tika/3.1.0/tika-server-standard-3.1.0.jar|x|9e975f14abc005c5bec38494493b6abcfa5496d73b285fb78c3b3d6a4ae157a6
 safelinx|1.4.1|HCL-SafeLinx-1410-x86_64.tar.gz|AbiYxUssdE1MT0GtR4gH8|c8c207f810343c7ab47997c1006e144998d0717080241ea6e6f2644191499c31

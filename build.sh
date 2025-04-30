@@ -405,6 +405,7 @@ dump_config()
   echo "MYSQL_INSTALL        : [$MYSQL_INSTALL]"
   echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
   echo "BORG_INSTALL         : [$BORG_INSTALL]"
+  echo "DOMBORG_INSTALL      : [$DOMBORG_INSTALL]"
   echo "TIKA_INSTALL         : [$TIKA_INSTALL]"
   echo "IQSUITE_INSTALL      : [$IQSUITE_INSTALL]"
   echo "NODE_EXPORTER_INSTALL: [$NODE_EXPORTER_INSTALL]"
@@ -1151,6 +1152,7 @@ build_domino()
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg SSH_INSTALL="$iSSH_INSTALL" \
     --build-arg BORG_INSTALL="$BORG_INSTALL" \
+    --build-arg DOMBORG_INSTALL="$DOMBORG_INSTALL" \
     --build-arg TIKA_INSTALL="$TIKA_INSTALL" \
     --build-arg IQSUITE_INSTALL="$IQSUITE_INSTALL" \
     --build-arg NODE_EXPORTER_INSTALL="$NODE_EXPORTER_INSTALL" \
@@ -1848,6 +1850,12 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$DOMBORG_INSTALL" ]; then
+      if [ ! "$DOMBORG_INSTALL" = "yes" ]; then
+        check_software_file "domborg" "$DOMBORG_INSTALL"
+      fi
+    fi
+
     if [ -n "$TIKA_INSTALL" ]; then
       if [ ! "$TIKA_INSTALL" = "yes" ]; then
         check_software_file "tika" "$TIKA_INSTALL"
@@ -2002,6 +2010,12 @@ check_software_status()
     if [ -n "$BORG_INSTALL" ]; then
       if [ ! "$BORG_INSTALL" = "yes" ]; then
         check_software_file "borg" "$BORG_INSTALL"
+      fi
+    fi
+
+    if [ -n "$DOMBORG_INSTALL" ]; then
+      if [ ! "$DOMBORG_INSTALL" = "yes" ]; then
+        check_software_file "domborg" "$DOMBORG_INSTALL"
       fi
     fi
 
@@ -3833,6 +3847,11 @@ if [ -n "$NOMAD_VERSION" ]; then
       NOMAD_VERSION=$NOMAD_VERSION-$PROD_VER
       ;;
   esac
+fi
+
+# If borgbackup is installed, also install Domino Borg
+if [ -n "$BORG_INSTALL" ]; then
+  get_current_addon_version domborg DOMBORG_INSTALL
 fi
 
 

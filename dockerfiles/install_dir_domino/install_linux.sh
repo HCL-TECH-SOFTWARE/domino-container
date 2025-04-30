@@ -511,6 +511,22 @@ else
       chmod 755 /usr/bin/borg
   fi
 
+  if [ -n "$DOMBORG_INSTALL" ]; then
+
+    header "Installing Domino Borg"
+
+    cd "$INSTALL_DIR"
+    get_download_name domborg $DOMBORG_INSTALL
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "/usr/bin" "nshborg"
+
+    if [ ! -e /usr/bin/nshborg ]; then
+      log_error "Domino Borg installation failed!"
+      exit 1
+    fi
+
+    chmod 755 /usr/bin/nshborg
+  fi
+
   if [ "$SSH_INSTALL" = "yes" ]; then
     if [ ! -e /usr/bin/ssh ]; then
       header "Installing SSH client"
