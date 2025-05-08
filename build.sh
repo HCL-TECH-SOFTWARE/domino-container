@@ -320,6 +320,7 @@ usage()
   echo "-domlp=xx        adds the specified Language Pack to the image"
   echo "-restapi         adds the Domino REST API to the image"
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
+  echo "-domiq           adds the Domino IQ server run-time to the image"
   echo "-tika            updates the Tika server to the Domino server"
   echo "-iqsuite         adds GBS iQ.Suite to the container image under /opt"
   echo "-node_exporter   Installs Prometheus node_exporter into the container"
@@ -402,6 +403,7 @@ dump_config()
   echo "LEAP_VERSION         : [$LEAP_VERSION]"
   echo "CAPI_VERSION         : [$CAPI_VERSION]"
   echo "NOMADWEB_VERSION     : [$NOMADWEB_VERSION]"
+  echo "DOMIQ                : [$DOMIQ]"
   echo "MYSQL_INSTALL        : [$MYSQL_INSTALL]"
   echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
   echo "BORG_INSTALL         : [$BORG_INSTALL]"
@@ -1089,6 +1091,10 @@ check_addon_label()
     add_addon_label "capi" "$CAPI_VERSION"
   fi
 
+  if [ -n "$DOMIQ_VERSION" ]; then
+    add_addon_label "domiq" "$DOMIQ_VERSION"
+  fi
+
   if [ -n "$LEAP_VERSION" ]; then
     add_addon_label "leap" "$LEAP_VERSION"
   fi
@@ -1162,6 +1168,7 @@ build_domino()
     --build-arg TRAVELER_VERSION="$TRAVELER_VERSION" \
     --build-arg LEAP_VERSION="$LEAP_VERSION" \
     --build-arg CAPI_VERSION="$CAPI_VERSION" \
+    --build-arg DOMIQ_VERSION="$DOMIQ_VERSION" \
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
     --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
     --build-arg LINUX_PKG_REMOVE="$LINUX_PKG_REMOVE" \
@@ -1511,6 +1518,10 @@ check_all_domdownload()
   if [ -n "$CAPI_VERSION" ]; then
     $DOMDOWNLOAD_BIN -product=capi -platform=linux -ver=$CAPI_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
+
+  if [ -n "$DOMIQ_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=domiq -platform=linux -ver=$DOMIQ_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
 }
 
 get_download_link()
@@ -1840,6 +1851,10 @@ check_software_status()
       check_software_file "capi" "$CAPI_VERSION"
     fi
 
+    if [ -n "$DOMIQ_VERSION" ]; then
+      check_software_file "domiq" "$DOMIQ_VERSION"
+    fi
+
     if [ -n "$STARTSCRIPT_VER" ]; then
       check_software_file "startscript" "$STARTSCRIPT_VER"
     fi
@@ -2001,6 +2016,10 @@ check_software_status()
 
     if [ -n "$CAPI_VERSION" ]; then
       check_software_file "capi" "$CAPI_VERSION"
+    fi
+
+    if [ -n "$DOMIQ_VERSION" ]; then
+      check_software_file "domiq" "$DOMIQ_VERSION"
     fi
 
     if [ -n "$STARTSCRIPT_VER" ]; then
@@ -2569,6 +2588,10 @@ select_domino_version()
 
   # Select corresponding C-API version
   SELECT_CAPI_VERSION=$PROD_VER
+
+  # Select corresponding Domino IQ  version
+  SELECT_DOMIQ_VERSION=$PROD_VER
+
 }
 
 
@@ -2617,6 +2640,7 @@ load_conf()
   get_current_addon_version traveler SELECT_TRAVELER_VERSION
   get_current_addon_version leap SELECT_LEAP_VERSION
   get_current_addon_version capi SELECT_CAPI_VERSION
+  get_current_addon_version domiq SELECT_DOMIQ_VERSION
   get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
   get_current_addon_version borg SELECT_BORG
   get_current_addon_version tika SELECT_TIKA
@@ -2630,6 +2654,7 @@ load_conf()
   if [ "$LATESTSEL" = "$LEAP_VERSION" ];          then LEAP_VERSION=$SELECT_LEAP_VERSION; fi
   if [ "$LATESTSEL" = "$DOMRESTAPI_VER" ];        then DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER; fi
   if [ "$LATESTSEL" = "$CAPI_VERSION" ];          then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
+  if [ "$LATESTSEL" = "$DOMIQ_VERSION" ];         then DOMIQ_VERSION=$SELECT_DOMIQ_VERSION; fi
   if [ "$LATESTSEL" = "$ONTIME_VERSION" ];        then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
   if [ "$LATESTSEL" = "$BORG_INSTALL" ];          then BORG_INSTALL=$SELECT_BORG; fi
   if [ "$LATESTSEL" = "$TIKA_INSTALL" ];          then TIKA_INSTALL=$SELECT_TIKA; fi
@@ -2687,6 +2712,7 @@ write_conf()
   if [ -n "$NOMAD_VERSION" ];    then echo "NOMAD_VERSION=$LATESTSEL"    >> "$BUILD_CONF"; fi
   if [ -n "$DOMRESTAPI_VER" ];   then echo "DOMRESTAPI_VER=$LATESTSEL"   >> "$BUILD_CONF"; fi
   if [ -n "$CAPI_VERSION" ];     then echo "CAPI_VERSION=$LATESTSEL"     >> "$BUILD_CONF"; fi
+  if [ -n "$DOMIQ_VERSION" ];    then echo "DOMIQ_VERSION=$LATESTSEL"    >> "$BUILD_CONF"; fi
   if [ -n "$LEAP_VERSION" ];     then echo "LEAP_VERSION=$LATESTSEL"     >> "$BUILD_CONF"; fi
   if [ -n "$ONTIME_VERSION" ];   then echo "ONTIME_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
   if [ -n "$DOMLP_LANG" ];       then echo "DOMLP_LANG=$DOMLP_LANG"      >> "$BUILD_CONF"; fi
@@ -2796,6 +2822,7 @@ select_software()
 
   local SELECT_LEAP_VERSION=
   local SELECT_CAPI_VERSION=
+  local SELECT_DOMIQ_VERSION=
   local SELECT_DOMRESTAPI_VER=
   local SELECT_DOMLP_LANG=
   local SELECT_BORG=
@@ -2817,6 +2844,7 @@ select_software()
   local O=$Z
   local G=$Z
   local M=$Z
+  local J=$Z
 
   load_conf
 
@@ -2833,6 +2861,7 @@ select_software()
     if [ -n "$DOMLP_LANG" ];       then L=$X; else L=$Z; fi
     if [ -n "$DOMRESTAPI_VER" ];   then R=$X; else R=$Z; fi
     if [ -n "$CAPI_VERSION" ];     then A=$X; else A=$Z; fi
+    if [ -n "$DOMIQ_VERSION" ];    then J=$X; else J=$Z; fi
     if [ -n "$LEAP_VERSION" ];     then P=$X; else P=$Z; fi
     if [ -n "$ONTIME_VERSION" ];   then O=$X; else O=$Z; fi
     if [ -n "$BORG_INSTALL" ];     then G=$X; else G=$Z; fi
@@ -2877,6 +2906,7 @@ select_software()
     print_select "R" "REST-API"       "$R" "$DOMRESTAPI_VER"
     print_select "A" "C-API SDK"      "$A" "$CAPI_VERSION"
     print_select "P" "Domino Leap"    "$P" "$LEAP_VERSION"
+    print_select "J" "Domino IQ"      "$J" "$DOMIQ_VERSION"
     echo
     print_select "M" "Prometheus"     "$M" "$DISPLAY_PROM"
     print_select "G" "Borg Backup"    "$G" "$BORG_INSTALL"
@@ -2974,6 +3004,14 @@ select_software()
           CAPI_VERSION=$SELECT_CAPI_VERSION
         else
           CAPI_VERSION=
+        fi
+        ;;
+
+      j)
+        if [ -z "$DOMIQ_VERSION" ]; then
+          DOMIQ_VERSION=$SELECT_DOMIQ_VERSION
+        else
+          DOMIQ_VERSION=
         fi
         ;;
 
@@ -3147,6 +3185,7 @@ install_domino_native()
   export TRAVELER_VERSION
   export LEAP_VERSION
   export CAPI_VERSION
+  export DOMIQ_VERSION
   export CUSTOM_ADD_ONS
   export DOMINO_LANG
   export LINUX_LANG
@@ -3372,6 +3411,14 @@ for a in "$@"; do
 
       if [ -z "$CAPI_VERSION" ]; then
         get_current_addon_version capi CAPI_VERSION
+      fi
+      ;;
+
+    -domiq*|+domiq*)
+      DOMIQ_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$DOMIQ_VERSION" ]; then
+        get_current_addon_version domiq DOMIQ_VERSION
       fi
       ;;
 

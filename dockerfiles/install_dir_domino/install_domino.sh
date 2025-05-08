@@ -454,6 +454,39 @@ install_nomad()
 }
 
 
+install_domiq()
+{
+  local ADDON_NAME=domiq
+  local ADDON_VER=$1
+
+  if [ -z "$ADDON_VER" ]; then
+    return 0
+  fi
+
+  header "$ADDON_NAME Installation"
+
+  get_download_name $ADDON_NAME $ADDON_VER
+
+  header "Installing $ADDON_NAME $ADDON_VER"
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+
+  cd "$ADDON_NAME"
+
+  echo "Unzipping files ..."
+  unzip -o -q -d "$Notes_ExecDirectory" *.zip
+
+  cd ..
+  remove_directory "$ADDON_NAME"
+
+  chmod 555 "$Notes_ExecDirectory/llama-server"
+  # It's OK to set all *.so files to 555
+  chmod 555 "$Notes_ExecDirectory/*.so"
+
+  log_space Installed $ADDON_NAME
+}
+
+
 install_leap()
 {
   local ADDON_NAME=leap
@@ -666,7 +699,9 @@ install_capi()
 
   esac
 
-  rm -f *.zip
+  cd ..
+  remove_directory "$ADDON_NAME"
+
   cd $LOTUS
 
   # sym link current sdk
@@ -1104,7 +1139,9 @@ harden_binary_dir()
 
   header "Hardening binary directory"
 
-  chmod 555 $Notes_ExecDirectory/bindsock
+  chmod -R a-w "$Notes_ExecDirectory"
+
+  chmod 555 "$Notes_ExecDirectory/bindsock"
   setcap 'cap_net_bind_service=+ep' "$Notes_ExecDirectory/bindsock"
 
   # Container only hardening
@@ -1113,6 +1150,7 @@ harden_binary_dir()
     return 0
   fi
 
+  # Remove SUID
   if [ -e "$Notes_ExecDirectory/autoinstall" ]; then
     chmod 555 $Notes_ExecDirectory/autoinstall
   fi
@@ -1282,6 +1320,7 @@ echo "NOMAD_VERSION         = [$NOMAD_VERSION]"
 echo "TRAVELER_VERSION      = [$TRAVELER_VERSION]"
 echo "LEAP_VERSION          = [$LEAP_VERSION]"
 echo "CAPI_VERSION          = [$CAPI_VERSION]"
+echo "DOMIQ_VERSION         = [$DOMIQ_VERSION]"
 echo "LINUX_PKG_ADD         = [$LINUX_PKG_ADD]"
 echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
 echo "CUSTOM_ADD_ONS        = [$CUSTOM_ADD_ONS]"
@@ -1431,6 +1470,9 @@ install_traveler "$TRAVELER_VERSION"
 
 # Install Domino Leap if requested
 install_leap "$LEAP_VERSION"
+
+# Install Domino IQ if requested
+install_domiq "$DOMIQ_VERSION"
 
 # Install Domino Prometheus servertask
 install_domprom
