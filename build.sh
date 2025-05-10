@@ -2723,15 +2723,15 @@ write_conf()
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
   # Additional parameters only configurable on command line
-  if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"             >> "$BUILD_CONF"; fi
-  if [ -n "$LINUX_PKG_ADD" ];    then echo "LINUX_PKG_ADD=$LINUX_PKG_ADD"       >> "$BUILD_CONF"; fi
-  if [ -n "$LINUX_PKG_REMOVE" ]; then echo "LINUX_PKG_REMOVE=$LINUX_PKG_REMOVE" >> "$BUILD_CONF"; fi
-  if [ -n "$LINUX_PKG_SKIP" ];   then echo "LINUX_PKG_SKIP=$LINUX_PKG_SKIP"     >> "$BUILD_CONF"; fi
-  if [ -n "$CUSTOM_ADD_ONS" ];   then echo "CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS"     >> "$BUILD_CONF"; fi
-  if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"               >> "$BUILD_CONF"; fi
-  if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"             >> "$BUILD_CONF"; fi
-  if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"           >> "$BUILD_CONF"; fi
-  if [ -n "$DOMPROM_INSTALL" ];  then echo "DOMPROM_INSTALL=$DOMPROM_INSTALL"   >> "$BUILD_CONF"; fi
+  if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"                 >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_PKG_ADD" ];    then echo "LINUX_PKG_ADD=\"$LINUX_PKG_ADD\""       >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_PKG_REMOVE" ]; then echo "LINUX_PKG_REMOVE=\"$LINUX_PKG_REMOVE\"" >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_PKG_SKIP" ];   then echo "LINUX_PKG_SKIP=\"$LINUX_PKG_SKIP\""     >> "$BUILD_CONF"; fi
+  if [ -n "$CUSTOM_ADD_ONS" ];   then echo "CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS"         >> "$BUILD_CONF"; fi
+  if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"                   >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"                 >> "$BUILD_CONF"; fi
+  if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"               >> "$BUILD_CONF"; fi
+  if [ -n "$DOMPROM_INSTALL" ];  then echo "DOMPROM_INSTALL=$DOMPROM_INSTALL"       >> "$BUILD_CONF"; fi
 
   if [ -n "$NODE_EXPORTER_INSTALL" ]; then echo "NODE_EXPORTER_INSTALL=$NODE_EXPORTER_INSTALL" >> "$BUILD_CONF"; fi
 

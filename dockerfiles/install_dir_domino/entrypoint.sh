@@ -313,6 +313,53 @@ start_node_exporter()
   "$NODE_EXPORTER_BIN" $NODE_EXPORTER_OPTIONS &
 }
 
+
+get_json_value()
+{
+  sed -n "s/.*\"$2\": *\"\([^\"]*\)\".*/\1/p" "$1"
+}
+
+
+replace_str_in_file()
+{
+  sed -i "s|$2|$3|g" "$1"
+}
+
+
+get_value_after_prefix()
+{
+  echo "$1" | awk -F"$2" 'NF > 1 { print $2 }'
+}
+
+
+ots_read_replace_server_id_base64()
+{
+    if [ -z "$1" ]; then
+      return 0
+    fi
+
+    local SERVER_ID_FILEPATH="$DOMINO_DATA_PATH/server.id"
+    local ELEMENT_VALUE=$(get_json_value "$1" "IDFilePath")
+
+    if [ -z "$ELEMENT_VALUE" ]; then
+      return 0
+    fi
+
+    local BASE64DATA=$(get_value_after_prefix "$ELEMENT_VALUE" "@Base64:")
+
+    if [ -z "$BASE64DATA" ]; then
+      return 0
+    fi
+
+    log "Storing Base64 encoded server.id to: [$SERVER_ID_FILEPATH]"
+
+    echo "$BASE64DATA" | base64 -d > "$SERVER_ID_FILEPATH"
+    replace_str_in_file "$1" "$ELEMENT_VALUE" "$SERVER_ID_FILEPATH"
+
+    return 1
+}
+
+
 # Ensure security limits don't have more than 1024*1024 open files. This can cause high CPU usage for LSOF used by NSD
 
 CONTAINER_ORIGINAL_NOFILES_LIMIT=$(ulimit -n)
@@ -375,6 +422,8 @@ elif [ -n "$SetupAutoConfigure" ]; then
 
 elif [ -r "$DOMINO_DATA_PATH/DominoAutoConfig.json" ]; then
   log "Running Domino One-Touch setup via StartScript"
+
+  ots_read_replace_server_id_base64 "$DOMINO_DATA_PATH/DominoAutoConfig.json"
 
 else
 
