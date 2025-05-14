@@ -17,6 +17,45 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <langinfo.h>
+#include <reg.h>
+
+
+
+STATUS LNPUBLIC DumpIDInfo (const char *pszFilename)
+{
+    STATUS error = NOERROR;
+    WORD   wLen = 0;
+    char   szUsername[MAXUSERNAME+1] = {0};
+
+    if (NULL == pszFilename)
+    {
+        error = SECKFMGetUserName (szUsername);
+
+        if (error)
+        {
+            AddInLogMessageText ("Cannot get current username", error);
+            goto Done;
+        }
+    }
+    else
+    {
+        error = REGGetIDInfo ((char *)pszFilename, REGIDGetName, szUsername, sizeof(szUsername)-1, &wLen);
+
+        if (error)
+        {
+            AddInLogMessageText ("Cannot get username for [%s]", error, pszFilename);
+            goto Done;
+        }
+
+        szUsername[wLen] = '\0';
+    }
+
+    printf ("Username=%s\n", szUsername);
+
+Done:
+
+    return error;
+}
 
 
 STATUS LNPUBLIC DumpLangInfoItem (const char *pszLangItemConst, nl_item LangItemEnum)
@@ -38,15 +77,15 @@ STATUS LNPUBLIC DumpLangInfoAll()
 
     AddInLogMessageText ("--- OS-Level nl_langinfo ---", 0, "");
 
-    DumpLangInfoItem ("CODESET", CODESET);
-    DumpLangInfoItem ("D_T_FMT", D_T_FMT);
-    DumpLangInfoItem ("D_FMT", D_FMT);
-    DumpLangInfoItem ("T_FMT", T_FMT);
+    DumpLangInfoItem ("CODESET",   CODESET);
+    DumpLangInfoItem ("D_T_FMT",   D_T_FMT);
+    DumpLangInfoItem ("D_FMT",     D_FMT);
+    DumpLangInfoItem ("T_FMT",     T_FMT);
     DumpLangInfoItem ("RADIXCHAR", RADIXCHAR);
-    DumpLangInfoItem ("THOUSEP", THOUSEP);
-    DumpLangInfoItem ("YESEXPR", YESEXPR);
-    DumpLangInfoItem ("NOEXPR", NOEXPR);
-    DumpLangInfoItem ("CRNCYSTR", CRNCYSTR);
+    DumpLangInfoItem ("THOUSEP",   THOUSEP);
+    DumpLangInfoItem ("YESEXPR",   YESEXPR);
+    DumpLangInfoItem ("NOEXPR",    NOEXPR);
+    DumpLangInfoItem ("CRNCYSTR",  CRNCYSTR);
 
     return error;
 }
@@ -166,6 +205,21 @@ int main (int argc, char *argv[])
 
             goto  Done;
         }
+
+        else if (0 == strcmp (argv[a], "-idinfo"))
+        {
+            if (a<argc)
+            {
+		a++;
+                error = DumpIDInfo (argv[a]);
+	    }
+            else
+            {
+                error = DumpIDInfo (NULL);
+	    }
+            goto  Done;
+        }
+
         else
         {
             printf ("Invalid option [%s]\n", argv[a]);

@@ -1,0 +1,1 @@
+docker run -it --rm -w /build --entrypoint= -v $(pwd):/build -u 0 -e LOTUS=/opt/hcl/domino -e Notes_ExecDirectory=/opt/hcl/domino/notes/latest/linux -e LD_LIBRARY_PATH=/opt/hcl/domino/notes/latest/linux -e INCLUDE=/opt/hcl/domino/notesapi/include hclcom/domino:build make
