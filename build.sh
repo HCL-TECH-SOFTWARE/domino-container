@@ -1631,6 +1631,7 @@ check_software()
           if [ "$CURRENT_HASH" = "$HASH" ]; then
             CURRENT_STATUS="OK"
           else
+	    echo "$CURRENT_HASH -  $HASH"
             CURRENT_STATUS="CR"
           fi
         fi
