@@ -3369,7 +3369,7 @@ if [ ${LARCH} = "linux" ]; then
 
   if [ "$ORIGINAL_NOFILES_LIMIT" -gt "1048576" ]; then
 
-    log "Info: Changing number of open files from $ORIGINAL_NOFILES_LIMIT to 1048576"
+    log_space "Info: Changing number of open files from $ORIGINAL_NOFILES_LIMIT to 1048576"
     ulimit -n 1048576
   fi
 
