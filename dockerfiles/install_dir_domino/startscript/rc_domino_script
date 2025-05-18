@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version  4.0.2 04.01.2025                                               #
+# Version  4.0.3 30.04.2025                                               #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2025                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=4.0.2
+DOMINO_SCRIPT_VERSION=4.0.3
 
 if [ -z "$DOMINO_SCRIPT_VERBOSE_INFO" ]; then
   DOMINO_SCRIPT_VERBOSE_INFO="yes"
@@ -3362,6 +3362,17 @@ if [ ${LARCH} = "linux" ]; then
     Notes_SHARED_DPOOLSIZE=$DOMINO_SHARED_DPOOLSIZE
     export Notes_SHARED_DPOOLSIZE
   fi
+
+  # Ensure number of files isn't too high for LSOF
+
+  ORIGINAL_NOFILES_LIMIT=$(ulimit -n)
+
+  if [ "$ORIGINAL_NOFILES_LIMIT" -gt "1048576" ]; then
+
+    log "Info: Changing number of open files from $ORIGINAL_NOFILES_LIMIT to 1048576"
+    ulimit -n 1048576
+  fi
+
 fi
 
 # Environment settings needed for Domino servers
