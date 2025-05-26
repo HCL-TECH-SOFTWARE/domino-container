@@ -39,11 +39,13 @@ wsl --install
 
 Once WSL2 is installed, WSL can list all available Linux distributions.
 
+
 ## List available images
 
 ```
 wsl --list --online
 ```
+
 
 ## Example installing Ubuntu
 
@@ -58,6 +60,7 @@ Once Ubuntu is installed, it can be launched in multiple ways:
 - Desktop/taskbar icon
 - `wsl` command line
 - Software like [MobaXterm](https://mobaxterm.mobatek.net/) with WSL integration
+
 
 ## Create a new user
 
@@ -79,6 +82,7 @@ apt update
 apt upgrade
 ```
 
+
 ## Install Docker Server
 
 Ubuntu does not provide the latest Docker versions.
@@ -93,13 +97,8 @@ It can be automatically downloaded and executed.
 curl -fsSL https://get.docker.com | bash -
 ```
 
-Many Linux distributions running on WSL don't provide systemd  
-If no systemd is available the Docker daemon is not started automatically.
-The Domino Container script provides an option to start/stop the Docker server.
-
-```
-dominoctl docker start
-```
+The latest Ubuntu WSL images support systemd. Earlier versions did not support systemd and required work-arounds to start the Docker daemon.
+In current Ubuntu versions The Docker server is installed as a systemd services automatically.
 
 
 ## Install JQ
@@ -118,29 +117,34 @@ apt install jq
 mkdir -p /local/github
 cd /local/github
 git clone https://github.com/HCL-TECH-SOFTWARE/domino-container.git 
-cd domino-container
 ```
 
-## Install Nash!Com Domino Container Script
+## Clone Start Script project & Install Nash!Com Domino Container Control Script
+
+**dominoctl** provides an easy way to configure, run and manage Domino containers.
+Check [Domino container control (dominoctl)](https://nashcom.github.io/domino-startscript/dominoctl/) documentation for details.
+
+
+To clone the GitHub project invoke the following command:
 
 ```
-./start_script/install_domino_container
+cd /local/github
+git clone https://github.com/nashcom/domino-startscript.git
 ```
 
-
-## Start the Docker server 
-
-Once installed the `domino_container` script can start and stop the Docker server for you.
+To install or update dominoctl run the following command
 
 ```
-domino_container docker start
+/local/github/domino-startscript/install_dominoctl
 ```
+
 
 ## Check the Docker Client and Server Version
 
 ```
 docker version
 ```
+
 
 ## Next Steps
 
@@ -152,3 +156,4 @@ Contine with [Quickstart](quickstart.md) to build and run your first container.
 ## Reference
 
 [Microsoft WSL2 install documentation](https://docs.microsoft.com/en-us/windows/wsl/install).
+
