@@ -1562,6 +1562,13 @@ run_monitor()
       exit 0
     fi
 
+    # Ensure to terminate when terminal is closed
+    if ! [ -t 0 ]; then
+      echo "Terminating live console - Input Pipe is dead!"
+      stop_monitor
+      exit 0
+    fi
+
     CHARS=$(echo "$var" | wc -m)
     if [ "$CHARS" -lt 5 ]; then # includes the new line -> means commands 3 chars or less
       if [ "$var" = "$lastvar" ]; then
@@ -3036,6 +3043,13 @@ domino_setup()
 
   while [ 1 ];
   do
+
+    # Ensure to terminate when terminal is closed
+    if ! [ -t 0 ]; then
+      echo "Cannot read from stdin"
+      return 0
+    fi
+
     clear
     echo
     echo "HCL Domino Server Configuration"
@@ -3129,6 +3143,13 @@ menu()
 
   while [ 1 ];
   do
+
+    # Ensure to terminate when terminal is closed
+    if ! [ -t 0 ]; then
+      echo "Cannot read from stdin"
+      return 0
+    fi
+
     check_domino_status
     clear
     echo
