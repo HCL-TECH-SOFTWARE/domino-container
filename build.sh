@@ -3241,7 +3241,11 @@ DOMDOWNLOAD_BIN=/usr/local/bin/domdownload
 # Use vi if no other editor specified in config
 
 if [ -z "$EDIT_COMMAND" ]; then
-  EDIT_COMMAND="vi"
+  if [ -n "$EDITOR" ]; then
+    EDIT_COMMAND="$EDITOR"
+  else
+    EDIT_COMMAND="vi"
+  fi
 fi
 
 # Default config directory. Can be overwritten by environment

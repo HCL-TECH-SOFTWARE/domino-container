@@ -2,9 +2,9 @@
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version  4.0.1 07.08:2024                                               #
+# Version  4.0.3 30.04.2025                                               #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2024                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2025                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -32,7 +32,7 @@ DOMINO_DOCKER_SCRIPT=entrypoint.sh
 DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
 DONT_TOUCH_THIS_STANDARD_USER=notes
 
-DOMINO_SCRIPT_VERSION=4.0.1
+DOMINO_SCRIPT_VERSION=4.0.3
 
 # if you really really need to, change this and all files will be patched
 
@@ -348,6 +348,7 @@ install_file "$START_SCRIPT_DIR/rc_domino_script" "$DOMINO_START_SCRIPT_DIR/rc_d
 install_file "$START_SCRIPT_DIR/rc_domino_readme.txt" "$DOMINO_START_SCRIPT_DIR/rc_domino_readme.txt" "$DOMINO_USER" "$DOMINO_GROUP" 644
 
 install_file "$START_SCRIPT_DIR/nshinfo.sh" "$DOMINO_START_SCRIPT_DIR/nshinfo.sh" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/nshdiag.sh" "$DOMINO_START_SCRIPT_DIR/nshdiag.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/DominoOneTouchSetup.sh" "$DOMINO_START_SCRIPT_DIR/DominoOneTouchSetup.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/nshcfg.sh" "$DOMINO_START_SCRIPT_DIR/nshcfg.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/domino.cfg" "$DOMINO_START_SCRIPT_DIR/domino-example.cfg" $ROOT_USER $ROOT_GROUP 755
