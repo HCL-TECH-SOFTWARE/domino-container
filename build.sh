@@ -805,14 +805,14 @@ check_from_image()
       BASE_IMAGE=registry.access.redhat.com/ubi9
       ;;
 
-    ubi8)
-      LINUX_NAME="RedHat UBI 8"
-      BASE_IMAGE=registry.access.redhat.com/ubi8
-      ;;
-
     ubi9)
       LINUX_NAME="RedHat UBI 9"
       BASE_IMAGE=registry.access.redhat.com/ubi9
+      ;;
+
+    ubi10)
+      LINUX_NAME="RedHat UBI 10"
+      BASE_IMAGE=registry.access.redhat.com/ubi10
       ;;
 
     ubi-minimal)
@@ -823,6 +823,11 @@ check_from_image()
     ubi9-minimal)
       LINUX_NAME="RedHat UBI 9 minimal"
       BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
+      ;;
+
+    ubi10-minimal)
+      LINUX_NAME="RedHat UBI 10 minimal"
+      BASE_IMAGE=registry.access.redhat.com/ubi10/ubi-minimal
       ;;
 
     ubuntu|ubuntu24)
