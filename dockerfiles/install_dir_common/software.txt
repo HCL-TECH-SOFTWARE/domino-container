@@ -91,7 +91,8 @@ safelinx|1.4.3|HCL-SafeLinx-1430-x86_64.tar.gz|TL3PxKUv8svOiXIAr8OCE|1351abfe47a
 nomadweb|1.0.11|HCL_Nomad_web_1.0.11_20240305-18_for_HCL_SafeLinx.zip|y2cf6x3wcUpgtAI3Gldbi|e7484c7d42f8357cf79d609363c13fb08da0baee445e0d4bebb71497dfd99bbc
 nomadweb|1.0.13|HCL_Nomad_web_1.0.13_20240904-48_for_HCL_SafeLinx.zip|hDVwqcVmy8qy0zNOu0pUh|238865877ae87dab498ca5207b8b0042abc18a6d8d7b7edf9aea4760bc1a5efe
 nomadweb|1.0.14|HCL_Nomad_web_1.0.14_20241204-63_for_HCL_SafeLinx.zip|fD8GtEpBT2mmHpINKLvIW|0aa4153d801164ce1fe59ce32e3f47b080c054f342a1c374a20588d7216e07a0
-nomadweb|1.0.15|HCL_Nomad_web_1.0.15_for_HCL_SafeLinx.zip|173659794|cd18f45d2684efb3632c6f0c9fb155271c3a906da827c9883bc375a0de543284
+nomadweb|1.0.15|HCL_Nomad_web_1.0.15_for_HCL_SafeLinx.zip|mNuHoM6NKOOkj7RgUhnhZ|cd18f45d2684efb3632c6f0c9fb155271c3a906da827c9883bc375a0de543284
+nomadweb|1.0.16|HCL_Nomad_web_1.0.16_for_HCL_SafeLinx.zip|8B0kfPixyPZn9mYmzAaCA|67a289657adffea88684c59d5f5a8e98049e3abb70ee2b2b4ac405f46eceb7e7
 nomad|1.0.10-12.0.2|nomad-server-1.0.10-for-domino-12.0.2-linux.tgz|HNOTAeDGS3XuHtVFloF9N|0ec34d38e1794499c5b29611e70a4c31eb8e803c22c0a8beadca3342a1778706
 nomad|1.0.10IF1-12.0.2|nomad-server-1.0.10-1-for-domino-12.0.2-linux.tgz|zpwVtTlGPATmB5GV3wtX0|6c9d0f13ff0a01ee2134ee72f9c244bef982262d3a4a37e6274c5627d7b29ac6
 nomad|1.0.11-12.0.2|nomad-server-1.0.11-for-domino-12.0.2-linux.tgz|INBy0N3YrWjawuG1kU6EE|1c38b349b002d0d45a7f5efc9a3d78cab7a72178f94ae43ae14dda7688d09a03
@@ -108,6 +109,7 @@ nomad|1.0.13IF2|nomad-server-1.0.13-IF2-linux.tar.gz|5BPCenCx7Bu5NEYhc1PIM|6812a
 nomad|1.0.14|nomad-server-1.0.14-linux.tar.gz|JAneQRBJX0MsyZ1YpoJ0r|1a31194e99611d31bbc33617e310439e7da9fee870c019d76e250ee79b061765
 nomad|1.0.15|HCL_Nomad_server_1.0.15_linux.tar.gz,nomad-server-1.0.15-linux.tar.gz|eIJRTrDPRqGGzevzYRcFe|f34da6a47461d98338307ed08967df60995bb01d4eb65ab0fba99451aac930ef
 nomad|1.0.15IF1|HCL_Nomad_server_1.0.15-IF1_linux.tar.gz|b8upAL5L6uL9Fo8mS9xa0|8c63db6e18c4dcc23fd2ca5db025e445644751f323372c20cecb631dd0484eb9
+nomad|1.0.16|HCL_Nomad_server_1.0.16_linux.tar.gz|FV38xlVSRI4lsheRurBIB|99288096ab617eca1b650bed4773b7e1b75a09346925b4813e631de971ddd4e0
 domrestapi|1.0.10-12|Domino_REST_API_V1.0.10_R12_Installer.tar.gz|CMHEUOzmCNPAJj2quzHGz|9401c0262360c5ed7ece092d60ee06550df24e3e88b85a179442b4263003d123
 domrestapi|1.0.10-14|Domino_REST_API_V1.0.10_R14_Installer.tar.gz|tCI44Ccfv8unzfkD8ariR|33178942c9b2f5a21553f0304f6939f39a1b17982512182f5fb33d1349676ff8
 domrestapi|1.0.11-12|Domino_REST_API_V1.0.11_R12_Installer.tar.gz|TT1k4cJaNa8F1iL72NDBB|0ae41f3deb098760abb5a16f25b73a33eee8da02a1282b03b582f11e201df708
