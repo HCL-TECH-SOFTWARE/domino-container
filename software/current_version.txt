@@ -1,5 +1,5 @@
 domino|14.0|FP4
-domino-12.0.2|12.0.2|FP5|IF2
+domino-12.0.2|12.0.2|FP6
 domino-14.5|14.5EA3
 domiq|14.5EA3
 traveler|14.0FP2
