@@ -15,6 +15,19 @@ The container image build supports automatic downloads leveraging the [Domino Do
 Once installed the build.sh script automatically detects the `domdownload` script to download missing software before starting the build process.
 This new option leverages the download API provided by MHS.
 
+## Installing the Domino Download Script (Recap)
+
+```bash
+git clone https://github.com/nashcom/domino-startscript.git
+cd domino-startscript
+chmod +x domdownload.sh
+./domdownload.sh install
+```
+
+This will add the download script to `/usr/local/bin/domdownload` (Note: no `.sh` extension) on your system path and also install, if not found, the command line tools `curl` (network tool, used to fetch files from URLs) and `jq` (JSON commandline processor) 
+
+For the full details or alternate approaches, see [Domino Download Script](https://nashcom.github.io/domino-startscript/domdownload/#how-to-get-started)
+
 
 # Manual download from My HCLSoftware Portal
 
