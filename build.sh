@@ -2656,6 +2656,21 @@ load_conf()
   get_current_addon_version node_expoter SELECT_NODE_EXPORTER
   get_current_addon_version domprom SELECT_DOMPROM
 
+  case "$PROD_VER" in
+
+    14.5)
+      SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
+      ;;
+
+    14*)
+    SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
+      ;;
+
+    *)
+      SELECT_ONTIME_VERSION=
+      ;;
+  esac
+
   if [ "$LATESTSEL" = "$VERSE_VERSION" ];         then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
   if [ "$LATESTSEL" = "$TRAVELER_VERSION" ];      then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
   if [ "$LATESTSEL" = "$NOMAD_VERSION" ];         then NOMAD_VERSION=$SELECT_NOMAD_VERSION; fi
