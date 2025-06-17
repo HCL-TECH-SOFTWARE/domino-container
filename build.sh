@@ -4,7 +4,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.4.0 22.03.2025
+# Version 2.4.1 17.6.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -26,10 +26,11 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.4.0
+CONTAINER_BUILD_SCRIPT_VERSION=2.4.1
 
 # OnTime version
-SELECT_ONTIME_VERSION=1.11.1
+SELECT_ONTIME_VERSION_DOMINO14=1.11.1
+SELECT_ONTIME_VERSION_DOMINO145=2.3.0
 
 # Build kit shortens the output. This isn't really helpful for troubleshooting and following the build process ...
 export BUILDKIT_PROGRESS=plain
@@ -178,7 +179,7 @@ detect_container_environment()
 
 check_container_environment()
 {
-  DOCKER_MINIMUM_VERSION="20.10.0"
+  DOCKER_MINIMUM_VERSION="26.0.0"
   PODMAN_MINIMUM_VERSION="3.3.0"
 
   CONTAINER_ENV_NAME=
@@ -1057,19 +1058,19 @@ check_addon_label()
 
     # HCL container image build and full installer file: Verse, Nomad, OnTime
     if [ -z "$VERSE_VERSION" ]; then
-      add_addon_label "verse" "3.1.0"
+      add_addon_label "verse" "unknown"
     fi
 
     if [ -z "$NOMAD_VERSION" ]; then
-      add_addon_label "nomad" "1.0.9"
+      add_addon_label "nomad" "unknown"
     fi
 
-    add_addon_label "ontime" "11.1.1"
+    add_addon_label "ontime" "$ONTIME_VERSION"
 
   elif [ "$DominoResponseFile" = "domino14_ontime_install.properties" ]; then
 
     # OnTime is added from Domino V14 WebKit
-    add_addon_label "ontime" "11.1.1"
+    add_addon_label "ontime" "$ONTIME_VERSION"
   fi
 
   if [ -n "$DOMLP_LANG" ]; then
@@ -2545,10 +2546,9 @@ select_domino_version()
 
   get_current_version domino VER_LATEST
   VER="$VER_LATEST"
-  VER_140="$VER"
 
   get_current_version domino-12.0.2 VER_1202
-  get_current_version domino-14.5 VER_145
+  get_current_version domino-14.0 VER_140
 
   ClearScreen
   echo
@@ -2557,11 +2557,13 @@ select_domino_version()
   echo
 
   print_ver "1" "$VER_LATEST"
-  print_ver "2" "$VER_1202"
-  print_ver "3" "$VER_145"
+  print_ver "2" "$VER_140"
+  print_ver "3" "$VER_1202"
 
   echo
   read -n1 -p " Select Domino version  [0] to cancel? " VER;
+
+   SELECT_DOMIQ_VERSION=
 
   case "$VER" in
 
@@ -2573,9 +2575,19 @@ select_domino_version()
       DOMINO_VERSION="$VER_LATEST"
       parse_domino_version "$DOMINO_VERSION"
       get_current_addon_version traveler SELECT_TRAVELER_VERSION
+      SELECT_DOMIQ_VERSION=$PROD_VER
+      ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
       ;;
 
     2)
+      DOMINO_VERSION="$VER_140"
+      SELECT_TRAVELER_VERSION="$VER_140"
+      ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
+      parse_domino_version "$DOMINO_VERSION"
+      get_current_addon_version traveler SELECT_TRAVELER_VERSION
+      ;;
+
+    3)
       DOMINO_VERSION="$VER_1202"
       parse_domino_version "$DOMINO_VERSION"
       # Reset OnTime for older releases
@@ -2584,20 +2596,10 @@ select_domino_version()
       get_current_addon_version traveler SELECT_TRAVELER_VERSION
       ;;
 
-    3)
-      DOMINO_VERSION="$VER_145"
-      SELECT_TRAVELER_VERSION="$VER_145"
-      parse_domino_version "$DOMINO_VERSION"
-      ;;
-
   esac
 
   # Select corresponding C-API version
   SELECT_CAPI_VERSION=$PROD_VER
-
-  # Select corresponding Domino IQ  version
-  SELECT_DOMIQ_VERSION=$PROD_VER
-
 }
 
 
@@ -2912,7 +2914,9 @@ select_software()
     print_select "R" "REST-API"       "$R" "$DOMRESTAPI_VER"
     print_select "A" "C-API SDK"      "$A" "$CAPI_VERSION"
     print_select "P" "Domino Leap"    "$P" "$LEAP_VERSION"
-    print_select "J" "Domino IQ"      "$J" "$DOMIQ_VERSION"
+    if [ -n "$SELECT_DOMIQ_VERSION" ]; then
+      print_select "J" "Domino IQ"      "$J" "$DOMIQ_VERSION"
+    fi
     echo
     print_select "M" "Prometheus"     "$M" "$DISPLAY_PROM"
     print_select "G" "Borg Backup"    "$G" "$BORG_INSTALL"
@@ -3072,10 +3076,17 @@ select_software()
       o)
         if [ -z "$ONTIME_VERSION" ]; then
           case "$PROD_VER" in
-            14*)
-              ONTIME_VERSION="$SELECT_ONTIME_VERSION"
+            14.5)
+              ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
               DominoResponseFile=domino14_ontime_install.properties
               ;;
+
+            14*)
+              ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
+              SELECT_DOMIQ_VERSION=
+              DominoResponseFile=domino14_ontime_install.properties
+              ;;
+
             *)
               ONTIME_VERSION=
               DominoResponseFile=
@@ -3560,7 +3571,7 @@ for a in "$@"; do
 
     -ontime|+ontime)
       DominoResponseFile=domino14_ontime_install.properties
-      ONTIME_VERSION=$SELECT_ONTIME_VERSION
+      ONTIME_VERSION=$SELECT_ONTIME_VERSION_DOMINO145
       ;;
 
     _*)

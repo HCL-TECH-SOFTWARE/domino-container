@@ -28,8 +28,6 @@ domino|14.0FP3IF1|140FP3HF9-linux64.tar|SKkU7UWTQwphy6GvTC1tM|dc7d6f0992c9d312c3
 domino|14.0FP3IF2|140FP3HF16-linux64.tar|0UbA8obxuvCDD4FrGlhci|050fd0b0f2215c82c6ede5f3e7ea48089e0abdbdc0b79267b0b06f4c9324a08a
 domino|14.0FP3IF3|140FP3HF34-linux64.tar|IC5EdTU8hIZiY1fjhYkNL|88bc0d504905d71f5b4807eb4ea397715a9080e980a62d546fdbf8eaca594520
 domino|14.0FP4|Domino_1400FP4_Linux.tar|x8i622oMr6anVpqc4PZGa|929435ae37283b2150af9b30c0e2c645b7ab8466348253a4a279db86f7cac47e
-domino|14.5EA2|Domino_14.5_Linux_English_EA2refresh.tar|JDICDMj6VfGld4q7ZsFlj|43b17373714fe89a62e9a78240a94cbd38a5b7f366f31a9f59d5afb63b96cc50
-domino|14.5EA3|Domino_14.5_Linux_English_EA3.tar|G4XZhwHVrpH0M3l4FvCBm|176885ae7892fadd0ffee6f08064dfcd05d536342b2cbd8f325b08c60a084441
 domino|14.5|Domino_14.5_Linux_English.tar|oOwLLqwWywMhzhBkbGJoy|6775d563e826114702fc4aacf20f5f086459bd151c3bf01a9e659eaff47ebe79
 domlp|DE-12.0.2:|Domino_12.0.2_SLP_German.tar|1zzZ8HoOX7SIHWk0yfp5Z|fd319a28366e4650c31fa3d90004d729d7de48d9230413de9663a9f80d2dfdf9
 domlp|ES-12.0.2|Domino_12.0.2_SLP_Spanish.tar|4emFE7XxB5sO9dwkngCvE|33b6fc214c1c6f92e5463c8d6ee91447de6b07a592478838e3e62d5aee39778a
@@ -43,7 +41,12 @@ domlp|ES-14.0|Domino_14.0_SLP_Spanish.tar|2msMVeq770EqW5TrtFmdb|cd9d73fe6a0d0296
 domlp|FR-14.0|Domino_14.0_SLP_French.tar|hiDHbjMm9MY7Q4GgRuWkQ|5ff2c032728c3779161e5da0fe9bbf81506b57b767f7b6bfd1c31f1532827345
 domlp|NL-14.0|Domino_14.0_SLP_Dutch.tar|Tt87alBmRMLM4qF8GCfdS|a203e6424fc58ff62a31221639f023304c11b69825104595816d6fbba7a2104c
 domlp|JA-14.0|Domino_14.0_SLP_Japanese.tar|zSaudKU4SpV6HJIqdHm4N|2c3df5b4b73d0f5699d36dd4788b2c134f8887c814113ed520e21fdb11a05b28
-domlp|DE-14.5EA3|Domino_14.5_SLP_German_EA3.tar|U1T2ggmqOoAcphqML5AJk|a47b9eb2ca3e7240be26b9fdc59c04aa38dc71b03d5f8a269ed46767bde5573a
+domlp|DE-14.5|Domino_14.5_SLP_German.tar|rQebdARkYNPCGdDYa0u3s|a6fde76bf43dc415426f9dbba561b3d9b8b33b2ac0df19b8408d54c358d66e38
+domlp|IT-14.5|Domino_14.5_SLP_Italian.tar|L6aMTKnveOZ0YEhvzM3cY|a8d1ff4aaee7e0f4b6140a975e96db1ccfca134a8a6c75407e79a8f51968497d
+domlp|ES-14.5|Domino_14.5_SLP_Spanish.tar|GI6vyItu1XyHyAfaUJHKu|e2dee14da04ff8f6b928fc41f032be27c6e690316015ea6c85a615af4fce9e97
+domlp|FR-14.5|Domino_14.5_SLP_French.tar|hiDHbjMm9MY7Q4GgRuWkQ|5ff2c032728c3779161e5da0fe9bbf81506b57b767f7b6bfd1c31f1532827345
+domlp|NL-14.5|Domino_14.5_SLP_Dutch.tar|XwBvigfcjVKaBNqFL5his|aa82dfd6045f4d5a77378ebb4c2288d90476abe0845b2660501a7a573ecfb44d
+domlp|JA-14.5|Domino_14.5_SLP_Japanese.tar|nemOtKtjS99JUwzsMY90l|237059f27f7f7740486bc81da4ce2f4c1d3a2a0ec7661e79c3005e09e56f4525
 traveler|12.0.1|Traveler_12.0.1_Linux_ML.tar.gz|lClnJx4W0bATXFo3NVGSy|d8e5ed96e4d58c9e8d4ebc0b2c91b18371b4c4db3423672ac07baeb56880faaa
 traveler|12.0.1FP1|Traveler_12.0.1FP1_Linux_ML.tar.gz|KfHNClJL72ZAV7B9XhjWp|f8106fcf5a480880e61fca778d6aef5f775dcc402f6ca4a32d3c7e1a7cdd0d96
 traveler|12.0.1FP2|Traveler_12.0.1FP2_Linux_ML.tar.gz|BaJOaP1BlmK5XJBvCc5tD|9555122d6cae0605ad482f1bd67af8d143a7026c3c2abaa3d0350c787d695527
@@ -52,7 +55,7 @@ traveler|12.0.2FP1|Traveler_12.0.2FP1_Linux_ML.tar.gz|5uf028p7eJWqcp7Fqoqzj|d670
 traveler|14.0|Traveler_14.0_Linux_ML.tar.gz|h0xrRc7U3NtRTCpsHlaiN|6eb21bb0abf9a11d250b35437ffee1dc5f4531a33eaae5901b4818ec2da8d1fa
 traveler|14.0FP1|Traveler_14.0.0FP1_Linux_ML.tar.gz|zXO2cxMi2AjyXyCRQdnL8|080af5bc897ba058fa8ac04b36b32521648c4342ae40dd5bc80e86d85b97f87d
 traveler|14.0FP2|Traveler_14.0.0FP2_Linux_ML.tar.gz|gllJW1oKmNp0L0G6FcW1B|4487e5f21960965e3d9a760fbbbed3b8ee5cf323513393bb2f5ec48c16026dee
-traveler|14.5EA3|Traveler_14.5_Linux_ML_EA3.tar.gz|KDDdaQzVzR2fbSQ37Yrij|187eb53d3ceb06985407fc3ed07b823bc3198027b6bddec9aa2020cef3701539
+traveler|14.5|Traveler_14.5_Linux_ML.tar.gz|TsbeLGGLmoRmRxKuI3vzS|85a57624da2c60e1b932fcce73dc9ff50ecb05f5579552ff871b55179890226e
 leap|1.1.4|hcl.dleap-1.1.4.3.zip|H1daXmZp1O6Mx1rwceAZU|55cc4bdb5f8dc343259c7c6efb89934d1488236c750fe2173b57e2abc1242271
 leap|1.1.5|hcl.dleap-1.1.5.4.zip|nRQqI1RdppSWdyI55ICWk|61dce3bb8ba71383a506e4f7a3673e4fdd55db12ec204246e4c7c3fc1cf5806e
 leap|1.1.6|hcl.dleap-1.1.6.25.zip|EMMnLUwjXQ2FHJG4zgoRO|f0bafe83f6659d7682ce38febf0d0d64d27f7f8c64de3629ca7fda864ad3ed31
@@ -70,7 +73,7 @@ verse|3.2.4|HCL_Verse_3.2.4.zip|TgTGWeuaONuDQxu0kHXPG|ebe6a77cf70dd75c2819de864b
 capi|12.0|CAPIToolkit_1200_MP.zip|-|545869c8a09c98ac8fde06fdff6f106060f09705e621cc7103acf055baaec037
 capi|12.0.2|CAPIToolkit_1202_MP.zip|aZyOpGR0hXuO6HThl8DdJ|10ef46a999d4da73a1e1f3b1e2a5a7268c2011fdb1dff557f3fc7536a52d8fd3
 capi|14.0|CAPIToolkit_1400_Linux.zip|zpJqVq44zayvOhEsiGbKq|02fc99bd6e0233352756fbf217413bac3088a5eb3698675616a5c412624fb176
-capi|14.5EA3|CAPIToolkit_1450_Linux_EA3.zip|NAqLjvXy4ApTx57C3B4cy|da59872bb133ab77512e7a833c7212f52884e34138099a20e8e992af47d37492
+capi|14.5|CAPIToolkit_1450_Linux.zip|UmQqKopjLqLUTKSppwZhW|46f04a287a33eb4f648c6da3f881d2ede153dba18ea49969802c0eaeaac5e8f8
 borg|1.2.7|borg-linuxnew64-1.2.7,https://github.com/borgbackup/borg/releases/download/1.2.7/borg-linuxnew64|x|d8d3313ebaf48ba135001b7f230b494259f112e56adf0d5f952af999742e1190
 borg|1.2.8|borg-linuxnew64-1.2.8,https://github.com/borgbackup/borg/releases/download/1.2.8/borg-linuxnew64|x|85847a2ceb27d4a6c0ca0c0fb92d31bb2c1fcf6c77df1b2275b3f6f161d3571c
 domborg|0.9.6|nshborg-0.9.6,https://github.com/nashcom/domino-borg/releases/download/v0.9.6/nshborg-0.9.6|x|14d3ad2bf44e95c1354dc01a5e1d73a2936902b6ba3e0df9fe7149a320abd1d8
@@ -98,7 +101,9 @@ domrestapi|1.1.3-12|Domino_REST_API_V1.1.3_R12_Installer.tar.gz|EHulWoPD8kgHmiHL
 domrestapi|1.1.3-14|Domino_REST_API_V1.1.3_R14_Installer.tar.gz|r8TyFaBW8XeoD4k1XMP4O|36b1bad3ae3320c834616fafee47bfe1ead70eed870141ce16ff278d485e5bd0
 domrestapi|1.1.3.1-12|Domino_REST_API_V1.1.3.1_R12_Installer.tar.gz|irDYiQeJx7IyAKSKafjVr|f1eeff909e0cdc2a840a20d50f8564a21dca440330d64f7fc8b38a5f158e47ed
 domrestapi|1.1.3.1-14|Domino_REST_API_V1.1.3.1_R14_Installer.tar.gz|9yAsHLgN13VSZrv5NyMWa|0e371f5eeb06931a24a0f00d3ac19057c7ea6697353d25405d6bf53cc5a40e22
-domiq|14.5EA3|LlamaServer_14.5_Linux_EA3.zip|LMlrnr9p5S9LZNYzhrssx|4f3ad3ca70445fe54103bd45be151a57bb9323f004e61d9ef5da428b5bd95cf6
+domrestapi|1.1.4-12|Domino_REST_API_V1.1.4_R12_Installer.tar.gz|p2dk4APnx0pD9hLSXb2Up|a1455cea3cc9e71db7e790f586c70a2bb0db8cdeae2f65611c31ea5f8e917d5d
+domrestapi|1.1.4-14|Domino_REST_API_V1.1.4_R14_Installer.tar.gz|EQ4r1Fgkq1Y7xvRwmk0vA|a7f222251dfa3476bed5ebf49d92779bef530dc2eea07374afc8522e7230070e
+domiq|14.5|LlamaServerforDominoIQ_14.5_Linux.zip|zUG4vXrpAw8ShLRzJYD1q|8663d1d041c1bfcf19bd8861155bc20a440bb32dfe2c866aafa64a6f1b0a07e1
 node_exporter|1.8.2|node_exporter-1.8.2.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz|x|6809dd0b3ec45fd6e992c19071d6b5253aed3ead7bf0686885a51d85c6643c66
 node_exporter|1.9.1|node_exporter-1.9.1.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz|x|becb950ee80daa8ae7331d77966d94a611af79ad0d3307380907e0ec08f5b4e8
 domprom|0.9.2|domprom-0.9.2-linux-amd64.taz,https://github.com/nashcom/domino-grafana/raw/main/exporter/bin/linux64/domprom-0.9.2-linux-amd64.taz|x|07b0feea9b0674a868f885052d9bef8f60f5c762623329190e37c9f9fba6fb3f
