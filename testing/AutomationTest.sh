@@ -803,7 +803,7 @@ if [ -n "$nomad_binary" ]; then
 
   header "$Verifying Verifying Nomad Server"
 
-  wait_for_string $CONSOLE_LOG "Nomad: Server initialized" 50
+  wait_for_string $CONSOLE_LOG "Listening on 0.0.0.0:9443" 50
   sleep 2
 
   curl_count=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -vs -I https://automation.notes.lab:9443 2>&1 | grep "subject: O=Automation MicroCA Certificate" | wc -l)
