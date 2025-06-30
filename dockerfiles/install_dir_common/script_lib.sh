@@ -475,6 +475,9 @@ download_and_check_hash()
   if [ ! "$FOUND" = "TRUE" ]; then
     log_error "File [$DOWNLOAD_FILE] does not exist"
     echo "CURL returned: [$CURL_RET]"
+    header "Curl Error Information"
+    curl -svIS "$DOWNLOAD_FILE"
+    echo
     exit 1
   fi
 
