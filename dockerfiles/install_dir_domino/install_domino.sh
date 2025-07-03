@@ -108,6 +108,9 @@ install_domino()
      ;;
   esac
 
+  # Just in case for completeness set it for FPs and IFs
+  export NUI_NOTESDIR="$LOTUS"
+
   INST_VER=$PROD_VER
 
   check_installed_version ver $INST_VER
