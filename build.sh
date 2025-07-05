@@ -151,9 +151,20 @@ detect_container_environment()
      return 0
   fi
 
+  if [ -n "$USE_PODMAN" ]; then
+     CONTAINER_CMD=podman
+     return 0
+  fi
+
   CONTAINER_RUNTIME_VERSION_STR=$(podman -v 2> /dev/null | head -1)
   if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
     CONTAINER_CMD=podman
+
+     DOCKER_VERSION_STR=$(docker -v 2> /dev/null | head -1)
+     if [ -n "$DOCKER_VERSION_STR" ]; then
+       DISPLAY_WARNING="Docker & Podman detected - Expert only configuration (Docker is recommended!)"
+     fi
+
     return 0
   fi
 
@@ -2960,6 +2971,12 @@ select_software()
     if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
       echo
       echo " Base Image : $LINUX_NAME"
+
+      if [ -n "$DOCKER_VERSION_STR" ]; then
+	echo
+        echo " $DISPLAY_WARNING"
+     fi
+
     fi
 
     echo
@@ -3827,6 +3844,12 @@ for a in "$@"; do
 
       if [ -x /opt/nashcom/startscript/nshinfo.sh ]; then
         /opt/nashcom/startscript/nshinfo.sh
+
+      elif [ -x "$SCRIPT_DIR/dockerfiles/install_dir_domino/startscript/nshinfo.sh" ]; then
+        "$SCRIPT_DIR/dockerfiles/install_dir_domino/startscript/nshinfo.sh"
+
+      else
+        echo "No Info Script available"
       fi
       exit 0
       ;;
@@ -3835,7 +3858,14 @@ for a in "$@"; do
 
       if [ -x /opt/nashcom/startscript/nshinfo.sh ]; then
         /opt/nashcom/startscript/nshinfo.sh ipinfo
+
+      elif [ -x "$SCRIPT_DIR/dockerfiles/install_dir_domino/startscript/nshinfo.sh" ]; then
+        "$SCRIPT_DIR/dockerfiles/install_dir_domino/startscript/nshinfo.sh"
+
+      else
+        echo "No Info Script available"
       fi
+
       exit 0
       ;;
 
@@ -3863,6 +3893,11 @@ check_container_environment
 # Invoke build menu asking for Domino image details
 if [ "$BUILD_MENU" = "yes" ] || [ -n "$CONF_FILE" ] ; then
   build_menu
+fi
+
+if [ -n "$DISPLAY_WARNING" ]; then
+  log "Warning - $DISPLAY_WARNING"
+  sleep 4
 fi
 
 if [ -z "$PROD_NAME" ]; then
