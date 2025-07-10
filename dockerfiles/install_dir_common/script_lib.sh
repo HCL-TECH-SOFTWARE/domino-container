@@ -70,7 +70,7 @@ if [ -n "$SOFTWARE_REPO_IP" ]; then
   if [ -z "$no_proxy" ]; then
     export no_proxy="$SOFTWARE_REPO_IP"
   else
-    export no_proxy="$no_proxy;$SOFTWARE_REPO_IP"
+    export no_proxy="$no_proxy,$SOFTWARE_REPO_IP"
   fi
 fi
 
