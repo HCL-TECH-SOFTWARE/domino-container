@@ -569,15 +569,6 @@ nginx_start()
     SOFTWARE_REPO_IP=$(hostname --all-ip-addresses | cut -f1 -d" "):$SOFTWARE_PORT
   fi
 
-  # Ignore proxy for local repo IP
-  if [ -n "$SOFTWARE_REPO_IP" ]; then
-    if [ -z "$SPECIAL_CURL_ARGS" ]; then
-      SPECIAL_CURL_ARGS="--noproxy $SOFTWARE_REPO_IP"
-    else
-      SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS --noproxy $SOFTWARE_REPO_IP"
-    fi
-  fi
-
   DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
   echo "Hosting HCL Software repository on $DOWNLOAD_FROM"
   echo
@@ -1171,6 +1162,7 @@ build_domino()
     --build-arg DOCKER_TZ=$DOCKER_TZ \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
+    --build-arg SOFTWARE_REPO_IP=$SOFTWARE_REPO_IP \
     --build-arg LinuxYumUpdate=$LinuxYumUpdate \
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg SSH_INSTALL="$iSSH_INSTALL" \
@@ -1231,6 +1223,7 @@ build_traveler()
     --build-arg PROD_VER="$PROD_VER" \
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
+    --build-arg SOFTWARE_REPO_IP=$SOFTWARE_REPO_IP \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
@@ -1265,6 +1258,7 @@ build_volt()
     --build-arg PROD_VER="$PROD_VER" \
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
+    --build-arg SOFTWARE_REPO_IP=$SOFTWARE_REPO_IP \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
@@ -1299,6 +1293,7 @@ build_leap()
     --build-arg PROD_VER="$PROD_VER" \
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
+    --build-arg SOFTWARE_REPO_IP=$SOFTWARE_REPO_IP \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .
@@ -1334,6 +1329,7 @@ build_safelinx()
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
     --build-arg MSSQL_INSTALL="$MSSQL_INSTALL" \
     --build-arg DownloadFrom="$DOWNLOAD_FROM" \
+    --build-arg SOFTWARE_REPO_IP=$SOFTWARE_REPO_IP \
     --build-arg LinuxYumUpdate="$LinuxYumUpdate" \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg SPECIAL_CURL_ARGS="$SPECIAL_CURL_ARGS" .

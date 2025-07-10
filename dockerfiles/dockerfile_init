@@ -7,6 +7,7 @@ FROM registry.access.redhat.com/ubi9-init:latest
 # External arguments with a default value
 ARG LinuxYumUpdate=
 ARG DownloadFrom=
+ARG SOFTWARE_REPO_IP=
 ARG PROD_NAME=
 ARG PROD_VER=
 ARG PROD_FP=

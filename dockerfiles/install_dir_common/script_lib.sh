@@ -65,6 +65,16 @@ if [ -z "$DIR_PERM" ]; then
   DIR_PERM=770
 fi
 
+# Exclude repo IP if set
+if [ -n "$SOFTWARE_REPO_IP" ]; then
+  if [ -z "$no_proxy" ]; then
+    export no_proxy="$SOFTWARE_REPO_IP"
+  else
+    export no_proxy="$no_proxy;$SOFTWARE_REPO_IP"
+  fi
+fi
+
+
 # Helper Functions
 
 print_delim()
