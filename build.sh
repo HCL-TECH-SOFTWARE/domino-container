@@ -321,6 +321,7 @@ usage()
   echo "-locale=<locale> specify Linux locale to install (e.g. de_DE.UTF-8)"
   echo "-lang=<lang>     specify Linux glibc language pack to install (e.g. de,it,fr). Multiple languages separated by comma"
   echo "-pull            always try to pull a newer base image version"
+  echo "-nginx=<img>     custom image name. if it is not available, it is build from Redhat UBI minimal"
   echo "-openssl         adds OpenSSL to Domino image"
   echo "-ssh             adds OpenSSL client to Domino image (-borg option always includes SSH client)"
   echo "-borg            adds borg client and Domino Borg Backup integration to image"
@@ -363,8 +364,8 @@ usage()
   echo
   echo "Examples:"
   echo
-  echo "  $(basename $SCRIPT_NAME) domino1 14.0 fp2"
-  echo "  $(basename $SCRIPT_NAME) traveler 14.0 fp1"
+  echo "  $(basename $SCRIPT_NAME) domino1 14.0 fp4"
+  echo "  $(basename $SCRIPT_NAME) traveler 14.0 fp4"
   echo
 
   return 0
@@ -476,6 +477,11 @@ check_build_nginx_image()
 
   cd ..
 
+  local IMAGE_ID="$($CONTAINER_CMD inspect --format "{{.ID}}" $NGINX_IMAGE_NAME 2>/dev/null)"
+
+  if [ -z "$IMAGE_ID" ]; then
+    log_error_exit "Cannot find NGINX container image: $NGINX_IMAGE_NAME"
+  fi
 }
 
 
@@ -687,15 +693,19 @@ copy_config_file()
   fi
 }
 
+
 edit_config_file()
 {
   if [ ! -e "$CONFIG_FILE" ]; then
+    echo
     echo "Creating new config file [$CONFIG_FILE]"
+    sleep 3
     copy_config_file
   fi
 
   $EDIT_COMMAND $CONFIG_FILE
 }
+
 
 check_for_hcl_image()
 {
