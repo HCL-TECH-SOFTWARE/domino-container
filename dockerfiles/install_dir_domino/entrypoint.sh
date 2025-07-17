@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2022 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2025 - APACHE 2.0 see LICENSE
 ############################################################################
 
 # This script is the main entry point for Docker container and used instead of rc_domino.
@@ -314,52 +314,6 @@ start_node_exporter()
 }
 
 
-get_json_value()
-{
-  sed -n "s/.*\"$2\": *\"\([^\"]*\)\".*/\1/p" "$1"
-}
-
-
-replace_str_in_file()
-{
-  sed -i "s|$2|$3|g" "$1"
-}
-
-
-get_value_after_prefix()
-{
-  echo "$1" | awk -F"$2" 'NF > 1 { print $2 }'
-}
-
-
-ots_read_replace_server_id_base64()
-{
-    if [ -z "$1" ]; then
-      return 0
-    fi
-
-    local SERVER_ID_FILEPATH="$DOMINO_DATA_PATH/server.id"
-    local ELEMENT_VALUE=$(get_json_value "$1" "IDFilePath")
-
-    if [ -z "$ELEMENT_VALUE" ]; then
-      return 0
-    fi
-
-    local BASE64DATA=$(get_value_after_prefix "$ELEMENT_VALUE" "@Base64:")
-
-    if [ -z "$BASE64DATA" ]; then
-      return 0
-    fi
-
-    log "Storing Base64 encoded server.id to: [$SERVER_ID_FILEPATH]"
-
-    echo "$BASE64DATA" | base64 -d > "$SERVER_ID_FILEPATH"
-    replace_str_in_file "$1" "$ELEMENT_VALUE" "$SERVER_ID_FILEPATH"
-
-    return 1
-}
-
-
 # Ensure security limits don't have more than 1024*1024 open files. This can cause high CPU usage for LSOF used by NSD
 
 CONTAINER_ORIGINAL_NOFILES_LIMIT=$(ulimit -n)
@@ -391,6 +345,8 @@ fi
 CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
 if [ -z "$CHECK_SERVER_SETUP" ]; then
 
+  log "Server is not yet configured. The Domino start script logic takes care of configuring it ..."
+
   run_external_script before_config_script.sh
 
   DOMINO_IS_CONFIGURED=false
@@ -403,47 +359,16 @@ if [ -z "$CHECK_SERVER_SETUP" ]; then
     fi
   fi
 
- run_external_script after_config_script.sh
-
 else
   DOMINO_IS_CONFIGURED=true
-fi
 
-# Check if server is configured or Domino One Touch Setup is requested.
-# Else start remote configuration on port 1352
-
-CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
-if [ -n "$CHECK_SERVER_SETUP" ]; then
   log "Server already setup"
   cleanup_setup_env
-
-elif [ -n "$SetupAutoConfigure" ]; then
-  log "Running Domino One-Touch setup"
-
-elif [ -r "$DOMINO_DATA_PATH/DominoAutoConfig.json" ]; then
-  log "Running Domino One-Touch setup via StartScript"
-
-  ots_read_replace_server_id_base64 "$DOMINO_DATA_PATH/DominoAutoConfig.json"
-
-else
-
-  log "Configuration for automated setup not found - Starting Domino Server in listen mode"
-  log "--- Configuring Domino Server ---"
-
-  cd $DOMINO_DATA_PATH
-
-  if [ -z "$DOMINO_REMOTE_SETUP_PORT" ]; then
-    DOMINO_REMOTE_SETUP_PORT=1352
-  fi
-
-  $LOTUS/bin/server -listen $DOMINO_REMOTE_SETUP_PORT
-
-  log "--- Configuration ended ---"
 fi
 
 run_external_script before_server_start.sh
 
-# Finally start server
+# Finally start server or have the start script configure it
 
 log "--- Starting Domino Server ---"
 
@@ -454,6 +379,8 @@ $DOMINO_START_SCRIPT start
 
 # Check post setup operations after configuration
 if [ "$DOMINO_IS_CONFIGURED" = "false" ]; then
+
+  run_external_script after_config_script.sh
 
   if [ -n "$DominoConfigPostSetupConsoleCmd" ]; then
 

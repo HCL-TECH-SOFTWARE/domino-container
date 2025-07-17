@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version  4.0.3 30.04.2025                                               #
+# Version  4.0.5 18.07.2025                                               #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2025                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=4.0.3
+DOMINO_SCRIPT_VERSION=4.0.5
 
 if [ -z "$DOMINO_SCRIPT_VERBOSE_INFO" ]; then
   DOMINO_SCRIPT_VERBOSE_INFO="yes"
@@ -1710,7 +1710,7 @@ usage()
   echo "{ cmd <command> <n>}"
   echo "{ about(+) |version | help}"
   echo
-  echo "Diag Commands   :  {resources/res | info | stacks  |  nsd  | nsdnomem | memdump | hang | kill | cleanup}"
+  echo "Diag Commands   :  {resources/res | info | stacks  |  nsd  | nsdnomem | memdump | hang | kill | cleanup | diag}"
   echo "Log Commands    :  {archivelog    | clearlog  | lastlog    | log | systemlog}"
   echo "Config Commands :  {inivar | ini  | listini   | config/cfg | systemdcfg}"
   echo "Setup  Commands :  {setup json    | setup env | setup      | setup log [edit] }"
@@ -1755,6 +1755,7 @@ help()
   echo "hang             use if hanging servers. run 3 NSDs -stacks + one full NSD"
   echo "kill             runs NSD - kill"
   echo "cleanup          cleanup all server resources"
+  echo "diag             invoke diagnostics"
 
   echo
   echo "Log Commands"
@@ -1843,21 +1844,26 @@ cleanup_domino_server_os_level()
 
   # Remove Notes lock file
 
-  if [ -e $DOMINO_DATA/~notes.lck ]; then
+  if [ -e "$DOMINO_DATA_PATH/~notes.lck" ]; then
     echo "Removing ~notes.lck"
-    rm -f $DOMINO_DATA/~notes.lck
+    rm -f "$DOMINO_DATA_PATH/~notes.lck"
   fi
 
   # Remove Server Controller lock file
-  if [ -e $DOMINO_DATA/.jsc_lock ]; then
+  if [ -e "$DOMINO_DATA_PATH/.jsc_lock" ]; then
     echo "Removing .jsc_lock"
-    rm -f $DOMINO_DATA/.jsc_lock
+    rm -f "$DOMINO_DATA_PATH/.jsc_lock"
   fi
 
   # Remove PID file if present
   if [ -e "$DOMINO_PID_FILE" ]; then
     echo "Removing $DOMINO_PID_FILE"
     remove_file "$DOMINO_PID_FILE"
+  fi
+
+  if [ -e "$DOMINO_DATA_PATH/pid.nbf" ]; then
+    echo "Removing pid.nbf"
+    rm -f "$DOMINO_DATA_PATH/pid.nbf"
   fi
 
   # Remove shared mem, semaphores and message-queues
@@ -1962,12 +1968,12 @@ show_domino_resources_short()
   done
   echo
 
-  if [ -e $DOMINO_DATA/~notes.lck ]; then
+  if [ -e $DOMINO_DATA_PATH/~notes.lck ]; then
     echo "Lock file exists (~notes.lck)"
   fi
 
   # Remove Server Controller lock file
-  if [ -e $DOMINO_DATA/.jsc_lock ]; then
+  if [ -e $DOMINO_DATA_PATH/.jsc_lock ]; then
     echo "Server controller log file exist (.jsc_lock)"
   fi
 
@@ -2021,12 +2027,11 @@ show_domino_resources()
 
   echo
 
-  if [ -e $DOMINO_DATA/~notes.lck ]; then
+  if [ -e $DOMINO_DATA_PATH/~notes.lck ]; then
     echo "Lock file exists (~notes.lck)"
   fi
 
-  # Remove Server Controller lock file
-  if [ -e $DOMINO_DATA/.jsc_lock ]; then
+  if [ -e $DOMINO_DATA_PATH/.jsc_lock ]; then
     echo "Server controller log file exist (.jsc_lock)"
   fi
 
@@ -2479,6 +2484,57 @@ reset_sametime_logs()
   return 0
 }
 
+
+get_json_value()
+{
+  sed -n "s/.*\"$2\": *\"\([^\"]*\)\".*/\1/p" "$1"
+}
+
+
+replace_str_in_file()
+{
+  sed -i "s|$2|$3|g" "$1"
+}
+
+
+get_value_after_prefix()
+{
+  echo "$1" | awk -F"$2" 'NF > 1 { print $2 }'
+}
+
+
+ots_read_replace_server_id_base64()
+{
+    if [ -z "$1" ]; then
+      return 0
+    fi
+
+    if [ ! -e "$1" ]; then
+      return 0
+    fi
+
+    local SERVER_ID_FILEPATH="$DOMINO_DATA_PATH/server.id"
+    local ELEMENT_VALUE=$(get_json_value "$1" "IDFilePath")
+
+    if [ -z "$ELEMENT_VALUE" ]; then
+      return 0
+    fi
+
+    local BASE64DATA=$(get_value_after_prefix "$ELEMENT_VALUE" "@Base64:")
+
+    if [ -z "$BASE64DATA" ]; then
+      return 0
+    fi
+
+    log "Storing Base64 encoded server.id to: [$SERVER_ID_FILEPATH]"
+
+    echo "$BASE64DATA" | base64 -d > "$SERVER_ID_FILEPATH"
+    replace_str_in_file "$1" "$ELEMENT_VALUE" "$SERVER_ID_FILEPATH"
+
+    return 1
+}
+
+
 check_one_touch_setup()
 {
   echo "Checking OneTouchSetup" >> $DOMINO_OUTPUT_LOG
@@ -2516,6 +2572,10 @@ check_one_touch_setup()
     export SetupAutoConfigureParams=$DOMINO_AUTO_CONFIG_JSON_FILE
     export SetupAutoConfigure=1
     echo Domino One Touch setup via $DOMINO_AUTO_CONFIG_JSON_FILE >> $DOMINO_OUTPUT_LOG
+
+    # Replace server.id in base64 encoding if found
+    ots_read_replace_server_id_base64 "$DOMINO_AUTO_CONFIG_JSON_FILE"
+
     return 1
   fi
 
@@ -2574,6 +2634,16 @@ domino_ots()
   echo
 }
 
+
+run_diagnostics()
+{
+  if [ -x "$SCRIPT_DIR_NAME/nshdiag.sh" ]; then
+    "$SCRIPT_DIR_NAME/nshdiag.sh" "$@"
+  else
+    log_space "Domino Diagnistoc script not available!"
+  fi
+
+}
 
 domino_start()
 {
@@ -3182,7 +3252,7 @@ menu()
     echo "Diagnostic"
     echo
 
-    if [ -x /opt/nashcom/startscript/nshdiag.sh ]; then
+    if [ -x "$SCRIPT_DIR_NAME/nshdiag.sh" ]; then
       echo " (D)   Domino Diagnostics"
     fi
 
@@ -3232,9 +3302,7 @@ menu()
         ;;
 
       d)
-        if [ -x "$SCRIPT_DIR_NAME/nshdiag.sh" ]; then
-          "$SCRIPT_DIR_NAME/nshdiag.sh"
-        fi
+        run_diagnostics
         ;;
 
       t)
@@ -3798,7 +3866,7 @@ case "$PARAM1" in
     exit 0
     ;;
 
- tika)
+  tika)
 
     # tika check and stop
     echo
@@ -3829,6 +3897,18 @@ case "$PARAM1" in
 
   mon)
     domino_shutdown_monitor
+    echo
+    exit 0
+    ;;
+
+  diag)
+    run_diagnostics "$PARAM2" "$PARAM3" "$PARAM4"
+    echo
+    exit 0
+    ;;
+
+  senddiag)
+    run_diagnostics senddiag
     echo
     exit 0
     ;;
