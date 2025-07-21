@@ -160,10 +160,13 @@ detect_container_environment()
   if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
     CONTAINER_CMD=podman
 
-     DOCKER_VERSION_STR=$(docker -v 2> /dev/null | head -1)
-     if [ -n "$DOCKER_VERSION_STR" ]; then
-       DISPLAY_WARNING="Docker & Podman detected - Expert only configuration (Docker is recommended!)"
-     fi
+    DOCKER_VERSION_STR=$(docker -v 2> /dev/null | head -1)
+
+    if [ -n "$DOCKER_VERSION_STR" ]; then
+       if [ "$DOCKER_VERSION_STR" != "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+         DISPLAY_WARNING="Docker & Podman detected - Expert only configuration (Docker is recommended!)"
+       fi
+    fi
 
     return 0
   fi

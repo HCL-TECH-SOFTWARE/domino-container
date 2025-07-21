@@ -585,6 +585,8 @@ install_traveler()
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino1201.properties
   elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120000*")" ]; then
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino12.properties
+  elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "140000*")" ]; then
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino140.properties
   else
     # Assume latest version (No version check and no version specified)
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_hcl.properties
