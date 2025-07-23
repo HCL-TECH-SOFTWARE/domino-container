@@ -350,12 +350,12 @@ if [ -z "$CHECK_SERVER_SETUP" ]; then
   run_external_script before_config_script.sh
 
   DOMINO_IS_CONFIGURED=false
+
+  # Invoke pre setup script to see if any additional logic needs to be performed. This can include SetupAutoConfigure triggered action or OTS files
   if [ -n "$DOMINO_CONTAINER_CFG_SCRIPT" ]; then
     if [ -x "$DOMINO_CONTAINER_CFG_SCRIPT" ]; then
-        if [ -n "$SetupAutoConfigure" ]; then
-            # Ensure variables modified in pre start script are returned
-            . "$DOMINO_CONTAINER_CFG_SCRIPT"
-        fi
+      # Ensure variables modified in pre start script are returned
+      . "$DOMINO_CONTAINER_CFG_SCRIPT"
     fi
   fi
 
