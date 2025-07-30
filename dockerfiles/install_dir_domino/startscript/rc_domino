@@ -4,11 +4,11 @@
 # RC RunLevel Entry Point
 ###########################################################################
 # Start/Stop Script for Domino on Linux & AIX
-# 2005-2024 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
+# 2005-2025 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
 # You may use and distribute the unmodified version of this script.
 # Use at your own risk. No implied or specific warranties are given.
 # You may change it for your own usage only
-# Version 3.9.0 24.04.2024
+# Version 4.0.6 30.07.2025
 ###########################################################################
 # chkconfig: 345 66 19
 # description: HCL Domino Server (notes)
@@ -16,13 +16,13 @@
 ### BEGIN INIT INFO
 # Provides: rc_domino
 # Required-Start: $remote_fs $syslog $network sshd
-# Required-Stop:  $remote_fs $syslog 
+# Required-Stop:  $remote_fs $syslog
 # Default-Start:  3 5
 # Default-Stop:   0 1 2 6
 # Short-Description: HCL Domino Server (notes)
 # Description:       HCL Domino Server (notes)
-#       Start/Stop Script V3.8.0 for Linux & AIX
-#       2005-2023 Copyright by Daniel Nashed (domino_unix@nashcom.de)
+#       Start/Stop Script V4.0.3 for Linux & AIX
+#       2005-2025 Copyright by Daniel Nashed (domino_unix@nashcom.de)
 ### END INIT INFO
 
 # Specify username for this Domino instance.
@@ -111,10 +111,12 @@ SUDO()
 }
 
 
-# If no systemd is running start server directy (Docker, Podman, K8s, WSL)
+# If no systemd is running start server directly (Docker, Podman, K8s, WSL)
 
 if [ "$LARCH" = "linux" ]; then
   if [ -z "$(ps --no-headers -o comm 1 | grep systemd)" ]; then
+
+    export DOMINO_SYSTEMD_NAME=
 
     if [ "$LOGNAME" = "$DOMINO_USER" ]; then
       $DOMINO_START_SCRIPT "$1" "$2" "$3" "$4" "$5" "$6"
@@ -128,7 +130,7 @@ fi
 
 # systemd operations for start/stop
 if [ -e /etc/systemd/system ]; then
-  if [ ! -z "$DOMINO_SYSTEMD_NAME" ]; then
+  if [ -n "$DOMINO_SYSTEMD_NAME" ]; then
 
     if [ "$LOGNAME" = "$DOMINO_USER" ]; then
       SWITCH_MONITOR_COMMAND=""
@@ -150,7 +152,7 @@ if [ -e /etc/systemd/system ]; then
       echo
       echo Stopping systemd "$DOMINO_SYSTEMD_NAME"
       echo
- 
+
       if [ "$2" = "live" ]; then
         SUDO systemctl stop "$DOMINO_SYSTEMD_NAME" &
         echo starting live console
@@ -222,7 +224,7 @@ if [ -e /etc/systemd/system ]; then
         LAST_LOG_LINES="$2"
       fi
 
-      echo 
+      echo
       echo "--- Last System Log Output ($LAST_LOG_LINES) ---"
 
       journalctl -u $DOMINO_SYSTEMD_NAME | tail -$LAST_LOG_LINES
@@ -231,7 +233,7 @@ if [ -e /etc/systemd/system ]; then
 
     elif [ "$1" = "service" ]; then
       echo
-    
+
       case "$2" in
         "")
           echo "Status"
