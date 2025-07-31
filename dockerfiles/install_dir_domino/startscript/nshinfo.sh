@@ -1,9 +1,11 @@
 #!/bin/bash
 
+
 print_delim ()
 {
   echo "------------------------------------------------------------------------------------------"
 }
+
 
 get_entry()
 {
@@ -20,6 +22,7 @@ get_entry()
   fi
 }
 
+
 format_mem()
 {
   if [ -z "$3" ]; then
@@ -28,6 +31,7 @@ format_mem()
     export $1="$(echo "$2" "$3" | awk '{printf "%4.1f GB  (%4.1f)", $1/1024/1024, $1*100/$2}' )"
   fi
 }
+
 
 domino_uptime()
 {
@@ -42,7 +46,7 @@ domino_uptime()
     PARTITION_USER=$DOMINO_USER
   fi
 
-  DOMINO_UID=$(id -u notesx 2>/dev/null)
+  DOMINO_UID=$(id -u notes 2>/dev/null)
 
   if [ -z "$DOMINO_UID" ]; then
     return 0
@@ -64,11 +68,97 @@ domino_uptime()
   fi
 }
 
+
+check_free_space()
+{
+  local DISK_INFO=
+  local DISK_INFO_CMD="df -h --output=target,source,fstype,size,used,avail,pcent"
+  local FORMAT="%-6s %-15s %-12s %-9s %-8s %-8s %-8s %-7s\n"
+  local DIR2CHECK=
+  local PARTS=
+  local DISK="$2"
+  local SHOW_ALL="$3"
+
+  if [ -z "$1" ]; then
+    printf "$FORMAT\n" "Disk" "Mounted on" "Filesystem" "Type" "Size" "Used" "Avail" "Use%"
+    return 0
+  fi
+
+  case "$1" in
+
+    /*)
+     DIR2CHECK="$1"
+     ;;
+
+    *)
+     DIR2CHECK=$(cat "$DOMINO_INI_PATH" | grep -i "$1=" | head -1 | cut -d'=' -f2)
+     ;;
+
+  esac
+
+  if [ -z "$DIR2CHECK" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$DIR2CHECK" ]; then
+    return 0
+  fi
+
+  DISK_INFO=$($DISK_INFO_CMD "$DIR2CHECK" | tail -1)
+
+  IFS=' ' read -r -a PARTS <<< "$DISK_INFO"
+
+  local target=${PARTS[0]}
+  local source=${PARTS[1]}
+  local fstype=${PARTS[2]}
+  local size=${PARTS[3]}
+  local used=${PARTS[4]}
+  local avail=${PARTS[5]}
+  local pcent=${PARTS[6]}
+
+  local DISK_LCASE="$(printf %s "$DISK" | tr '[:upper:]' '[:lower:]')"
+
+  case "$DISK_LCASE" in
+
+    root)
+      DISK_ROOT_TARGET="$target"
+      ;;
+
+    nsf)
+      DISK_DATA_TARGET="$target"
+      ;;
+
+    *)
+       if [ "$target" = "$DISK_ROOT_TARGET" ] || [ "$target" = "$DISK_DATA_TARGET" ]; then
+         if [ -z "$DISK_SPACE_SHOW_ALL" ]; then
+           return 0
+         fi
+       fi
+      ;;
+  esac
+
+  printf "$FORMAT" "$DISK" "$target" "$source" "$fstype" "$size" "$used" "$avail" "$pcent"
+}
+
+
+check_all_disks()
+{
+  check_free_space 
+  check_free_space "/" "Root"
+  check_free_space "Directory" "NSF"
+  check_free_space "TRANSLOG_Path" "TXN"
+  check_free_space "DAOSBasePath" "DAOS"
+  check_free_space "NIFBasePath" "NIF"
+  check_free_space "FTBasePath" "FT"
+}
+
+
 print_infos()
 {
 
   if [ "$(uname)" = "Darwin" ]; then
     echo "No OS infos for MacOS"
+    return 0
   fi
 
   if [ -r  /etc/os-release ]; then
@@ -117,6 +207,7 @@ print_infos()
 
   printf "\n"
   print_delim
+  printf "\n"
 
   printf "Hostname      :      $LINUX_HOSTNAME\n"
   printf "Linux OS      :      $LINUX_PRETTY_NAME\n"
@@ -124,6 +215,7 @@ print_infos()
   printf "Kernel        :      $LINUX_KERNEL\n"
   printf "GNU libc      :      $LINUX_GLIBC_VERSION\n"
   printf "Timezone      :      $(date +"%Z %z")\n"
+  printf "Locale        :      $LANG\n"
 
 
   if [ -n "$LINUX_VIRT" ]; then
@@ -195,13 +287,18 @@ print_infos()
   printf "MemAvailable  :      $MEM_AVAIL_INFO\n"
   printf "MemCached     :      $MEM_CACHED_INFO\n"
   printf "MemFree       :      $MEM_FREE_INFO\n"
+
+  echo
+  echo
+  check_all_disks
+  echo
+
   print_delim
-  printf "\n"
 
   if [ ! "$1" = "ipinfo" ]; then
+    printf "\n"
     return
   fi
-
 
   JQ_VERSION=$(jq --version 2>/dev/null)
 
@@ -238,6 +335,15 @@ print_infos()
   print_delim
   printf "\n"
 }
+
+
+if [ -z "$DOMINO_DATA_PATH" ]; then
+  DOMINO_DATA_PATH=/local/notesdata
+fi
+
+if [ -z "$DOMINO_INI_PATH" ]; then
+  DOMINO_INI_PATH="$DOMINO_DATA_PATH/notes.ini"
+fi
 
 print_infos $@
 
