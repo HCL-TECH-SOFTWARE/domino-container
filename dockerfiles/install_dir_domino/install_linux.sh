@@ -5,7 +5,7 @@
 
 # Installer for Linux layer
 # -------------------------
-# - Updates Linux to latest packages if requrested
+# - Updates Linux to latest packages if requested
 # - Adds packages needed for Domino at run-time
 # - Remporay required packages for installation are installed in Domino install layer
 
@@ -324,7 +324,7 @@ list_installed_packages()
 
 install_node_exporter()
 {
-  if [ -z "$NODE_EXPORTER_INSTALL" ]; then
+  if [ -z "$NODE_EXPORTER_VERSION" ]; then
     return 0
   fi
 
@@ -332,12 +332,12 @@ install_node_exporter()
 
   mkdir -p "$NODE_EXPORTER_DIR"
 
-  header "Installing requested Prometheus Node Exporter $NODE_EXPORTER_INSTALL"
+  header "Installing requested Prometheus Node Exporter $NODE_EXPORTER_VERSION"
 
-  get_download_name node_exporter "$NODE_EXPORTER_INSTALL"
+  get_download_name node_exporter "$NODE_EXPORTER_VERSION"
 
   if [ -z "$DOWNLOAD_NAME" ]; then
-    log_error "Cannot find requested Prometheus Node Exporter $NODE_EXPORTER_INSTALL"
+    log_error "Cannot find requested Prometheus Node Exporter $NODE_EXPORTER_VERSION"
     return 0
   fi
 
@@ -474,13 +474,13 @@ else
   locale -a
   echo
 
-  if [ -n "$BORG_INSTALL" ]; then
+  if [ -n "$BORG_VERSION" ]; then
     OPENSSL_INSTALL=yes
     SSH_INSTALL=yes
     install_package fuse
   fi
 
-  if [ "$BORG_INSTALL" = "yes" ]; then
+  if [ "$BORG_VERSION" = "yes" ]; then
 
     if [ -e /etc/centos-release ]; then
       header "Installing Borg Backup from Linux repository"
@@ -494,13 +494,13 @@ else
       install_package borgbackup
     fi
 
-  elif [ -n "$BORG_INSTALL" ]; then
-      header "Installing Borg Backup $BORG_INSTALL"
+  elif [ -n "$BORG_VERSION" ]; then
+      header "Installing Borg Backup $BORG_VERSION"
 
       download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 
       cd "$INSTALL_DIR"
-      get_download_name borg $BORG_INSTALL
+      get_download_name borg $BORG_VERSION
       download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "/usr/bin" "borg"
 
       if [ ! -e /usr/bin/borg ]; then
@@ -511,12 +511,12 @@ else
       chmod 755 /usr/bin/borg
   fi
 
-  if [ -n "$DOMBORG_INSTALL" ]; then
+  if [ -n "$DOMBORG_VERSION" ]; then
 
     header "Installing Domino Borg"
 
     cd "$INSTALL_DIR"
-    get_download_name domborg $DOMBORG_INSTALL
+    get_download_name domborg $DOMBORG_VERSION
     download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "/usr/bin" "nshborg"
 
     if [ ! -e /usr/bin/nshborg ]; then
@@ -526,6 +526,23 @@ else
 
     chmod 755 /usr/bin/nshborg
   fi
+
+  if [ -n "$NSHMAILX_VERSION" ]; then
+
+    header "Installing Nash!Com nshmailx"
+
+    cd "$INSTALL_DIR"
+    get_download_name nshmailx $NSHMAILX_VERSION
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "/usr/bin" "nshmailx"
+
+    if [ ! -e /usr/bin/nshmailx ]; then
+      log_error "NashCom nshmailx"
+      exit 1
+    fi
+
+    chmod 755 /usr/bin/nshmailx
+  fi
+
 
   if [ "$SSH_INSTALL" = "yes" ]; then
     if [ ! -e /usr/bin/ssh ]; then

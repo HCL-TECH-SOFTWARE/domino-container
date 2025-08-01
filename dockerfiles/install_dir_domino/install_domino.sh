@@ -36,16 +36,16 @@ DOMINO_CUSTOM_DATA_PATH=/tmp/customdata
 
 check_install_tika()
 {
-  if [ -z "$TIKA_INSTALL" ]; then
+  if [ -z "$TIKA_VERSION" ]; then
     return 0
   fi
 
-  header "Installing requested TIKA Sever version $TIKA_INSTALL"
+  header "Installing requested TIKA Sever version $TIKA_VERSION"
 
-  get_download_name tika "$TIKA_INSTALL"
+  get_download_name tika "$TIKA_VERSION"
 
   if [ -z "$DOWNLOAD_NAME" ]; then
-    log_error "Cannot find requested Tika Server version $TIKA_INSTALL"
+    log_error "Cannot find requested Tika Server version $TIKA_VERSION"
     return 0
   fi
 
@@ -56,16 +56,16 @@ check_install_tika()
 
 check_install_iqsuite()
 {
-  if [ -z "$IQSUITE_INSTALL" ]; then
+  if [ -z "$IQSUITE_VERSION" ]; then
     return 0
   fi
 
-  header "Installing requested GBS iQ.Suite version  $TIKA_INSTALL"
+  header "Installing requested GBS iQ.Suite version  $IQSUITE_VERSION"
 
-  get_download_name iqsuite "$IQSUITE_INSTALL"
+  get_download_name iqsuite "$IQSUITE_VERSION"
 
   if [ -z "$DOWNLOAD_NAME" ]; then
-    log_error "Cannot find requested IQ suite version $IQSUITE_INSTALL"
+    log_error "Cannot find requested IQ suite version $IQSUITE_VERSION"
     exit 1
   fi
 
@@ -830,16 +830,16 @@ install_domino_restapi()
 
 install_domprom()
 {
-  if [ -z "$DOMPROM_INSTALL" ]; then
+  if [ -z "$DOMPROM_VERSION" ]; then
     return 0
   fi
 
-  header "Installing requested Domino Prometheus Stats $DOMPROM_INSTALL"
+  header "Installing requested Domino Prometheus Stats $DOMPROM_VERSION"
 
-  get_download_name domprom "$DOMPROM_INSTALL"
+  get_download_name domprom "$DOMPROM_VERSION"
 
   if [ -z "$DOWNLOAD_NAME" ]; then
-    log_error "Cannot find requested Domino Prometheus Stats version $DOMPROM_INSTALL"
+    log_error "Cannot find requested Domino Prometheus Stats version $DOMPROM_VERSION"
     return 0
   fi
 
@@ -1293,7 +1293,7 @@ check_install_trusted_root()
 
 create_borg_user_and_group()
 {
-    if [ -z "$BORG_INSTALL" ]; then
+    if [ -z "$BORG_VERSION" ]; then
         return 0
     fi
 
@@ -1336,9 +1336,9 @@ echo "CUSTOM_ADD_ONS        = [$CUSTOM_ADD_ONS]"
 echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
 echo "SPECIAL_CURL_ARGS     = [$SPECIAL_CURL_ARGS]"
 echo "BUILD_SCRIPT_OPTIONS  = [$BUILD_SCRIPT_OPTIONS]"
-echo "BORG_INSTALL          = [$BORG_INSTALL]"
-echo "DOMBORG_INSTALL       = [$DOMBORG_INSTALL]"
-echo "DOMPROM_INSTALL       = [$DOMPROM_INSTALL]"
+echo "BORG_VERSION          = [$BORG_VERSION]"
+echo "NSHMAILX_VERSION      = [$NSHMAILX_VERSION]"
+echo "DOMPROM_VERSION       = [$DOMPROM_VERSION]"
 echo "OPENSSL_INSTALL       = [$OPENSSL_INSTALL]"
 echo "SSH_INSTALL           = [$SSH_INSTALL]"
 
@@ -1421,7 +1421,7 @@ create_directory /local/ft $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/backup $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 create_directory /local/restore $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 
-if [ -n "$BORG_INSTALL" ]; then
+if [ -n "$BORG_VERSION" ]; then
   create_directory /local/borg $DOMINO_USER $DOMINO_GROUP $DIR_PERM
 fi
 

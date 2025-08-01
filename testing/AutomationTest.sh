@@ -3,11 +3,11 @@
 ###########################################################################
 # Automation Test Script                                                  #
 # ----------------------                                                  #
-# Version 1.0.1 01.09.2022                                                #
+# Version 1.1.0 01.08.2025                                                #
 #                                                                         #
 # This script implements automation testing the Domino Community image    #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2022                                #
+# (C) Copyright Daniel Nashed/NashCom 2022-2025                           #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
 # you may not use this file except in compliance with the License.        #
@@ -134,7 +134,7 @@ check_version()
 
 check_container_environment()
 {
-  DOCKER_MINIMUM_VERSION="20.10.0"
+  DOCKER_MINIMUM_VERSION="26.0.0"
   PODMAN_MINIMUM_VERSION="3.3.0"
 
   CONTAINER_ENV_NAME=
@@ -398,7 +398,7 @@ reset_results
 header "Bring up server environment"
 
 if [ -z "$CONTAINER_NETWORK" ]; then
-   
+
   if [ ! -z "$CONTAINER_NETWORK_NAME" ]; then
     CONTAINER_NETWORK="--network=$CONTAINER_NETWORK_NAME"
   fi
@@ -548,6 +548,24 @@ capi_include=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notesapi
 
 log_addon_detected "$capi_include" "C-API SDK"
 
+domiq_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/llama-server 2>/dev/null)
+log_addon_detected "$domiq_binary" "DominoIQ Server"
+
+domprom_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/domprom 2>/dev/null)
+log_addon_detected "$domprom_binary" "Domino Prom stats exporter"
+
+node_exporter_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/prometheus/node_exporter/node_exporter 2>/dev/null)
+log_addon_detected "$node_exporter_binary" "Prometheus Node Exporter"
+
+nshmailx_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/nshmailx  2>/dev/null)
+log_addon_detected "$nshmailx_binary" "Nash!Com nshmailx"
+
+borg_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/borg 2>/dev/null)
+log_addon_detected "$borg_binary" "Borg Backup"
+
+nshborg_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/nshborg  2>/dev/null)
+log_addon_detected "$borg_binary" "Domino Borg Backup helper"
+
 OLDIFS=$IFS
 IFS=$'\n'
 
@@ -620,6 +638,55 @@ do
       ONTIME_IMAGE_VERSION="$ADDON_VERSION"
 
       if [ -z "$ontime_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    domiq)
+      DOMIQ_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$domiq_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+
+    domprom)
+      DOMPROM_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$domprom_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    node_exporter)
+      NODE_EXPORTER_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$node_exporter_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    nshmailx)
+      NSHMAILX_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$nshmailx_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    borg)
+      BORG_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$borg_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    domborg)
+      DOMBORG_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$domborg_binary" ]; then
         ERROR_MSG="$ADDON_NAME binary not found"
       fi
       ;;
@@ -719,14 +786,14 @@ ERROR_MSG=
 
 header "Download certificate chain"
 
-$CONTAINER_CMD exec $CONTAINER_NAME /opt/hcl/domino/notes/latest/linux/jvm/bin/keytool -printcert -rfc -sslserver automation.notes.lab > "$DOMINO_VOLUME/notesdata/cert.pem" 
+$CONTAINER_CMD exec $CONTAINER_NAME /opt/hcl/domino/notes/latest/linux/jvm/bin/keytool -printcert -rfc -sslserver automation.notes.lab > "$DOMINO_VOLUME/notesdata/cert.pem"
 CURL_OPTIONS="--cacert /local/notesdata/cert.pem"
 
 if [ ! -e "$DOMINO_VOLUME/notesdata/cert.pem" ];then
   ERROR_MSG="No certificate chain downloaded"
 fi
 
-CERTIFCATE_COUNT=$(grep -e "-----END CERTIFICATE-----" "$DOMINO_VOLUME/notesdata/cert.pem" | wc -l) 
+CERTIFCATE_COUNT=$(grep -e "-----END CERTIFICATE-----" "$DOMINO_VOLUME/notesdata/cert.pem" | wc -l)
 
 if [ "$CERTIFCATE_COUNT" != "2" ];then
   ERROR_MSG="Wrong number of certificates found: $CERTIFCATE_COUNT, expected: 2"
@@ -782,7 +849,7 @@ if [ -n "$traveler_binary" ]; then
 
   header "$Verifying Traveler Server"
 
-  wait_for_string $CONSOLE_LOG "Traveler: Server started." 50 
+  wait_for_string $CONSOLE_LOG "Traveler: Server started." 50
   sleep 2
 
   traveler_status=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -u "$USER:$PASSWORD" -sL 'https://automation.notes.lab/traveler?action=getStatus' 2>&1)
@@ -1243,7 +1310,7 @@ if [ -z "$ERROR_MSG" ]; then
 fi
 
 
-# Run custom commands 
+# Run custom commands
 
 if [ -n "$CUSTOM_AUTOMATION_CHECK_SCRIPT" ]; then
   if [ -x "$CUSTOM_AUTOMATION_CHECK_SCRIPT" ]; then

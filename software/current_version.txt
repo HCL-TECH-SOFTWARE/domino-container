@@ -17,3 +17,4 @@ domborg|0.9.6
 node_exporter|1.9.1
 domprom|0.9.2
 iqsuite|27.1.1
+nshmailx|1.1.0

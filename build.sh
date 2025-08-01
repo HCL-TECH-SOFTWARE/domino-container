@@ -4,7 +4,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.4.1 17.6.2025
+# Version 2.4.2 1.8.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -26,7 +26,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.4.1
+CONTAINER_BUILD_SCRIPT_VERSION=2.4.2
 
 # OnTime version
 SELECT_ONTIME_VERSION_DOMINO14=1.11.1
@@ -310,7 +310,7 @@ usage()
   echo "-scan=<file>     scans a container with Trivy and writes the result to a file"
   echo "                 file names ending with .json result in a JSON formatted file (CVE count is written to console)"
   echo "menu             invokes the build menu. the build menu is also invoked when no option is specified"
-  echo "-menu=<file>     uses the specified menu name. Default is no menu file is specfied: default.conf"
+  echo "-menu=<file>     uses the specified menu name. Default is no menu file is specified: default.conf"
   echo
   echo Options
   echo
@@ -320,7 +320,7 @@ usage()
   echo "-imagename=<img> defines the target image name"
   echo "-imagetag=<img>  defines the target image tag"
   echo "-save=<img>      exports the image after build. e.g. -save=domino-container.tgz"
-  echo "-tz=<timezone>   explictly set container timezone during build. by default Linux TZ is used"
+  echo "-tz=<timezone>   explicitly set container timezone during build. by default Linux TZ is used"
   echo "-locale=<locale> specify Linux locale to install (e.g. de_DE.UTF-8)"
   echo "-lang=<lang>     specify Linux glibc language pack to install (e.g. de,it,fr). Multiple languages separated by comma"
   echo "-pull            always try to pull a newer base image version"
@@ -332,19 +332,20 @@ usage()
   echo "-nomad           adds the Nomad server to a Domino image"
   echo "-traveler        adds the Traveler server to a Domino image"
   echo "-leap            adds the Domino Leap to a Domino image"
-  echo "-capi            adds the C-API sdk/toolkit to a Domino image"
+  echo "-capi            adds the C-API SDK/toolkit to a Domino image"
   echo "-domlp=xx        adds the specified Language Pack to the image"
   echo "-restapi         adds the Domino REST API to the image"
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
   echo "-domiq           adds the Domino IQ server run-time to the image"
   echo "-tika            updates the Tika server to the Domino server"
   echo "-iqsuite         adds GBS iQ.Suite to the container image under /opt"
-  echo "-node_exporter   Installs Prometheus node_exporter into the container"
-  echo "-domprom         Installs Domino Prometheus statistics exporter"
-  echo "-prometheus/prom Installs Domino Prometheus statistics exporter & Node Exporter"
+  echo "-nshmailx        installs Nash!Com nshmailx simple mail send tool"
+  echo "-node_exporter   installs Prometheus node_exporter into the container"
+  echo "-domprom         installs Domino Prometheus statistics exporter"
+  echo "-prometheus/prom installs Domino Prometheus statistics exporter & Node Exporter"
   echo "-k8s-runas       adds K8s runas user support"
   echo "-startscript=x   installs specified start script version from software repository"
-  echo "-custom-addon=x  specify a tar file with additional Domino add-on sofware to install format: (https://)file.taz#sha256checksum"
+  echo "-custom-addon=x  specify a tar file with additional Domino add-on software to install format: (https://)file.taz#sha256checksum"
   echo "-software=<dir>  explicitly specify SOFTWARE_DIR and override cfg file "
   echo
   echo "-linuxpkg=<pkg>       add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
@@ -422,12 +423,13 @@ dump_config()
   echo "DOMIQ                : [$DOMIQ]"
   echo "MYSQL_INSTALL        : [$MYSQL_INSTALL]"
   echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
-  echo "BORG_INSTALL         : [$BORG_INSTALL]"
-  echo "DOMBORG_INSTALL      : [$DOMBORG_INSTALL]"
-  echo "TIKA_INSTALL         : [$TIKA_INSTALL]"
-  echo "IQSUITE_INSTALL      : [$IQSUITE_INSTALL]"
-  echo "NODE_EXPORTER_INSTALL: [$NODE_EXPORTER_INSTALL]"
-  echo "DOMPROM_INSTALL      : [$DOMPROM_INSTALL]"
+  echo "BORG_VERSION         : [$BORG_VERSION]"
+  echo "DOMBORG_VERSION      : [$DOMBORG_VERSION]"
+  echo "TIKA_VERSION         : [$TIKA_VERSION]"
+  echo "IQSUITE_VERSION      : [$IQSUITE_VERSION]"
+  echo "NSHMAILX_VERSION     : [$NSHMAILX_VERSION]"
+  echo "NODE_EXPORTER_VERSION: [$NODE_EXPORTER_VERSION]"
+  echo "DOMPROM_VERSION      : [$DOMPROM_VERSION]"
   echo "LINUX_PKG_ADD        : [$LINUX_PKG_ADD]"
   echo "LINUX_PKG_REMOVE     : [$LINUX_PKG_REMOVE]"
   echo "LINUX_PKG_SKIP       : [$LINUX_PKG_SKIP]"
@@ -999,7 +1001,7 @@ check_exposed_ports()
     EXPOSED_PORTS="$EXPOSED_PORTS 9443"
   fi
 
-  if [ -n "$NODE_EXPORTER_INSTALL" ]; then
+  if [ -n "$NODE_EXPORTER_VERSION" ]; then
     EXPOSED_PORTS="$EXPOSED_PORTS 9100"
   fi
 
@@ -1120,10 +1122,28 @@ check_addon_label()
     add_addon_label "leap" "$LEAP_VERSION"
   fi
 
-  if [ -n "$IQSUITE_INSTALL" ]; then
-    add_addon_label "iqsuite" "$IQSUITE_INSTALL"
+  if [ -n "$IQSUITE_VERSION" ]; then
+    add_addon_label "iqsuite" "$IQSUITE_VERSION"
   fi
+
+  if [ -n "$DOMPROM_VERSION" ]; then
+    add_addon_label "domprom" "$DOMPROM_VERSION"
+  fi
+
+  if [ -n "$NODE_EXPORTER_VERSION" ]; then
+    add_addon_label "node_exporter" "$NODE_EXPORTER_VERSION"
+  fi
+
+  if [ -n "$BORG_VERSION" ]; then
+    add_addon_label "borg" "$BORG_VERSION"
+  fi
+
+  if [ -n "$NSHMAILX_VERSION" ]; then
+    add_addon_label "nshmailx" "$NSHMAILX_VERSION"
+  fi
+
 }
+
 
 build_domino()
 {
@@ -1179,18 +1199,19 @@ build_domino()
     --build-arg LinuxYumUpdate=$LinuxYumUpdate \
     --build-arg OPENSSL_INSTALL="$OPENSSL_INSTALL" \
     --build-arg SSH_INSTALL="$iSSH_INSTALL" \
-    --build-arg BORG_INSTALL="$BORG_INSTALL" \
-    --build-arg DOMBORG_INSTALL="$DOMBORG_INSTALL" \
-    --build-arg TIKA_INSTALL="$TIKA_INSTALL" \
-    --build-arg IQSUITE_INSTALL="$IQSUITE_INSTALL" \
-    --build-arg NODE_EXPORTER_INSTALL="$NODE_EXPORTER_INSTALL" \
-    --build-arg DOMPROM_INSTALL="$DOMPROM_INSTALL" \
+    --build-arg BORG_VERSION="$BORG_VERSION" \
+    --build-arg DOMBORG_VERSION="$DOMBORG_VERSION" \
+    --build-arg TIKA_VERSION="$TIKA_VERSION" \
+    --build-arg IQSUITE_VERSION="$IQSUITE_VERSION" \
+    --build-arg NODE_EXPORTER_VERSION="$NODE_EXPORTER_VERSION" \
+    --build-arg DOMPROM_VERSION="$DOMPROM_VERSION" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
     --build-arg NOMAD_VERSION="$NOMAD_VERSION" \
     --build-arg TRAVELER_VERSION="$TRAVELER_VERSION" \
     --build-arg LEAP_VERSION="$LEAP_VERSION" \
     --build-arg CAPI_VERSION="$CAPI_VERSION" \
     --build-arg DOMIQ_VERSION="$DOMIQ_VERSION" \
+    --build-arg NSHMAILX_VERSION="$NSHMAILX_VERSION" \
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
     --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
     --build-arg LINUX_PKG_REMOVE="$LINUX_PKG_REMOVE" \
@@ -1548,12 +1569,22 @@ check_all_domdownload()
   if [ -n "$DOMIQ_VERSION" ]; then
     $DOMDOWNLOAD_BIN -product=domiq -platform=linux -ver=$DOMIQ_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
+
+  if [ -n "$IQSUITE_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=iqsuite -platform=linux -ver=$IQSUITE_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$NSHMAILX_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=nshmailx -platform=linux -ver=$NSHMAILX_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
 }
+
 
 get_download_link()
 {
   CURRENT_DOWNLOAD_URL="https://my.hcltechsw.com/downloads/domino/domino"
 }
+
 
 check_domdownload()
 {
@@ -1620,7 +1651,7 @@ check_software()
             CURRENT_FILE="$CHECK_FILE"
             FOUND=TRUE
             break
-	  else
+    else
 
             if [ "$CURRENT_FILE_ID" != "x" ]; then
               check_domdownload "$CHECK_FILE" "$CURRENT_FILE_ID" "$CURRENT_HASH"
@@ -1657,7 +1688,7 @@ check_software()
           if [ "$CURRENT_HASH" = "$HASH" ]; then
             CURRENT_STATUS="OK"
           else
-	    echo "$CURRENT_HASH -  $HASH"
+        echo "$CURRENT_HASH -  $HASH"
             CURRENT_STATUS="CR"
           fi
         fi
@@ -1886,37 +1917,41 @@ check_software_status()
       check_software_file "startscript" "$STARTSCRIPT_VER"
     fi
 
-    if [ -n "$BORG_INSTALL" ]; then
-      if [ ! "$BORG_INSTALL" = "yes" ]; then
-        check_software_file "borg" "$BORG_INSTALL"
+    if [ -n "$BORG_VERSION" ]; then
+      if [ ! "$BORG_VERSION" = "yes" ]; then
+        check_software_file "borg" "$BORG_VERSION"
       fi
     fi
 
-    if [ -n "$DOMBORG_INSTALL" ]; then
-      if [ ! "$DOMBORG_INSTALL" = "yes" ]; then
-        check_software_file "domborg" "$DOMBORG_INSTALL"
+    if [ -n "$DOMBORG_VERSION" ]; then
+      if [ ! "$DOMBORG_VERSION" = "yes" ]; then
+        check_software_file "domborg" "$DOMBORG_VERSION"
       fi
     fi
 
-    if [ -n "$TIKA_INSTALL" ]; then
-      if [ ! "$TIKA_INSTALL" = "yes" ]; then
-        check_software_file "tika" "$TIKA_INSTALL"
+    if [ -n "$TIKA_VERSION" ]; then
+      if [ ! "$TIKA_VERSION" = "yes" ]; then
+        check_software_file "tika" "$TIKA_VERSION"
       fi
     fi
 
-    if [ -n "$IQSUITE_INSTALL" ]; then
-      check_software_file "iqsuite" "$IQSUITE_INSTALL"
+    if [ -n "$IQSUITE_VERSION" ]; then
+      check_software_file "iqsuite" "$IQSUITE_VERSION"
     fi
 
-    if [ -n "$NODE_EXPORTER_INSTALL" ]; then
-      if [ ! "$NODE_EXPORTER_INSTALL" = "yes" ]; then
-        check_software_file "node_exporter" "$NODE_EXPORTER_INSTALL"
+    if [ -n "$NSHMAILX_VERSION" ]; then
+      check_software_file "nshmailx" "$NSHMAILX_VERSION"
+    fi
+
+    if [ -n "$NODE_EXPORTER_VERSION" ]; then
+      if [ ! "$NODE_EXPORTER_VERSION" = "yes" ]; then
+        check_software_file "node_exporter" "$NODE_EXPORTER_VERSION"
       fi
     fi
 
-    if [ -n "$DOMPROM_INSTALL" ]; then
-      if [ ! "$DOMPROM_INSTALL" = "yes" ]; then
-        check_software_file "domprom" "$DOMPROM_INSTALL"
+    if [ -n "$DOMPROM_VERSION" ]; then
+      if [ ! "$DOMPROM_VERSION" = "yes" ]; then
+        check_software_file "domprom" "$DOMPROM_VERSION"
       fi
     fi
 
@@ -2053,37 +2088,41 @@ check_software_status()
       check_software_file "startscript" "$STARTSCRIPT_VER"
     fi
 
-    if [ -n "$BORG_INSTALL" ]; then
-      if [ ! "$BORG_INSTALL" = "yes" ]; then
-        check_software_file "borg" "$BORG_INSTALL"
+    if [ -n "$BORG_VERSION" ]; then
+      if [ ! "$BORG_VERSION" = "yes" ]; then
+        check_software_file "borg" "$BORG_VERSION"
       fi
     fi
 
-    if [ -n "$DOMBORG_INSTALL" ]; then
-      if [ ! "$DOMBORG_INSTALL" = "yes" ]; then
-        check_software_file "domborg" "$DOMBORG_INSTALL"
+    if [ -n "$DOMBORG_VERSION" ]; then
+      if [ ! "$DOMBORG_VERSION" = "yes" ]; then
+        check_software_file "domborg" "$DOMBORG_VERSION"
       fi
     fi
 
-    if [ -n "$TIKA_INSTALL" ]; then
-      if [ ! "$TIKA_INSTALL" = "yes" ]; then
-        check_software_file "tika" "$TIKA_INSTALL"
+    if [ -n "$TIKA_VERSION" ]; then
+      if [ ! "$TIKA_VERSION" = "yes" ]; then
+        check_software_file "tika" "$TIKA_VERSION"
       fi
     fi
 
-    if [ -n "$IQSUITE_INSTALL" ]; then
-      check_software_file "iqsuite" "$IQSUITE_INSTALL"
+    if [ -n "$IQSUITE_VERSION" ]; then
+      check_software_file "iqsuite" "$IQSUITE_VERSION"
     fi
 
-    if [ -n "$NODE_EXPORTER_INSTALL" ]; then
-      if [ ! "$NODE_EXPORTER_INSTALL" = "yes" ]; then
-        check_software_file "node_exporter" "$NODE_EXPORTER_INSTALL"
+    if [ -n "$NSHMAILX_VERSION" ]; then
+      check_software_file "nshmailx" "$NSHMAILX_VERSION"
+    fi
+
+    if [ -n "$NODE_EXPORTER_VERSION" ]; then
+      if [ ! "$NODE_EXPORTER_VERSION" = "yes" ]; then
+        check_software_file "node_exporter" "$NODE_EXPORTER_VERSION"
       fi
     fi
 
-    if [ -n "$DOMPROM_INSTALL" ]; then
-      if [ ! "$DOMPROM_INSTALL" = "yes" ]; then
-        check_software_file "domprom" "$DOMPROM_INSTALL"
+    if [ -n "$DOMPROM_VERSION" ]; then
+      if [ ! "$DOMPROM_VERSION" = "yes" ]; then
+        check_software_file "domprom" "$DOMPROM_VERSION"
       fi
     fi
 
@@ -2236,7 +2275,7 @@ check_custom_software()
   done <<< "$lines"
 
   if [ "$failed" != "0" ]; then
-	  log_error_exit "Custom software check failed - Please correct $failed error(s) and retry"
+      log_error_exit "Custom software check failed - Please correct $failed error(s) and retry"
   fi
 
   echo
@@ -2583,7 +2622,7 @@ select_domino_version()
   echo
   read -n1 -p " Select Domino version  [0] to cancel? " VER;
 
-   SELECT_DOMIQ_VERSION=
+  SELECT_DOMIQ_VERSION=
 
   case "$VER" in
 
@@ -2635,9 +2674,9 @@ load_conf()
   local LINUX_PKG_REMOVE_SELECT=$LINUX_PKG_REMOVE
   local LINUX_PKG_SKIP_SELECT=$LINUX_PKG_SKIP
   local CUSTOM_ADD_ONS_SELECT=$CUSTOM_ADD_ONS
-  local BORG_SELECT=$BORG_INSTALL
-  local TIKA_SELECT=$TIKA_INSTALL
-  local IQSUITE_SELECT=$IQSUITE_INSTALL
+  local BORG_SELECT=$BORG_VERSION
+  local TIKA_SELECT=$TIKA_VERSION
+  local IQSUITE_SELECT=$IQSUITE_VERSION
 
   if [ -n "$1" ]; then
     BUILD_CONF=$DOMINO_DOCKER_CFG_DIR/$1
@@ -2670,11 +2709,13 @@ load_conf()
   get_current_addon_version capi SELECT_CAPI_VERSION
   get_current_addon_version domiq SELECT_DOMIQ_VERSION
   get_current_addon_version domrestapi SELECT_DOMRESTAPI_VER
-  get_current_addon_version borg SELECT_BORG
-  get_current_addon_version tika SELECT_TIKA
-  get_current_addon_version iqsuite SELECT_IQSUITE
-  get_current_addon_version node_expoter SELECT_NODE_EXPORTER
-  get_current_addon_version domprom SELECT_DOMPROM
+  get_current_addon_version borg SELECT_BORG_VERSION
+  get_current_addon_version domborg SELECT_DOMBORG_VERSION
+  get_current_addon_version tika SELECT_TIKA_VERSION
+  get_current_addon_version iqsuite SELECT_IQSUITE_VERSION
+  get_current_addon_version nshmailx SELECT_NSHMAILX_VERSION
+  get_current_addon_version node_exporter SELECT_NODE_EXPORTER_VERSION
+  get_current_addon_version domprom SELECT_DOMPROM_VERSION
 
   case "$PROD_VER" in
 
@@ -2699,11 +2740,12 @@ load_conf()
   if [ "$LATESTSEL" = "$CAPI_VERSION" ];          then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
   if [ "$LATESTSEL" = "$DOMIQ_VERSION" ];         then DOMIQ_VERSION=$SELECT_DOMIQ_VERSION; fi
   if [ "$LATESTSEL" = "$ONTIME_VERSION" ];        then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
-  if [ "$LATESTSEL" = "$BORG_INSTALL" ];          then BORG_INSTALL=$SELECT_BORG; fi
-  if [ "$LATESTSEL" = "$TIKA_INSTALL" ];          then TIKA_INSTALL=$SELECT_TIKA; fi
-  if [ "$LATESTSEL" = "$IQSUITE_INSTALL" ];       then IQSUITE_INSTALL=$SELECT_IQSUITE; fi
-  if [ "$LATESTSEL" = "$NODE_EXPORTER_INSTALL" ]; then NODE_EXPORTER_INSTALL=$SELECT_NODE_EXPORTER; fi
-  if [ "$LATESTSEL" = "$DOMPROM_INSTALL" ];       then DOMPROM_INSTALL=$SELECT_DOMPROM; fi
+  if [ "$LATESTSEL" = "$BORG_VERSION" ];          then BORG_VERSION=$SELECT_BORG_VERSION; DOMBORG_VERSION=$SELECT_DOMBORG_VERSION; fi
+  if [ "$LATESTSEL" = "$TIKA_VERSION" ];          then TIKA_VERSION=$SELECT_TIKA_VERSION; fi
+  if [ "$LATESTSEL" = "$IQSUITE_VERSION" ];       then IQSUITE_VERSION=$SELECT_IQSUITE_VERSION; fi
+  if [ "$LATESTSEL" = "$NSHMAILX_VERSION" ];      then NSHMAILX_VERSION=$SELECT_NSHMAILX_VERSION; fi
+  if [ "$LATESTSEL" = "$NODE_EXPORTER_VERSION" ]; then NODE_EXPORTER_VERSION=$SELECT_NODE_EXPORTER_VERSION; fi
+  if [ "$LATESTSEL" = "$DOMPROM_VERSION" ];       then DOMPROM_VERSION=$SELECT_DOMPROM_VERSION; fi
 
   if [ -n "$FROM_IMAGE_SELECT" ];        then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
   if [ -n "$DOCKER_TZ_SELECT" ];         then DOCKER_TZ=$DOCKER_TZ_SELECT; fi
@@ -2713,11 +2755,14 @@ load_conf()
   if [ -n "$LINUX_PKG_REMOVE_SELECT" ];  then LINUX_PKG_REMOVE=$LINUX_PKG_REMOVE_SELECT; fi
   if [ -n "$LINUX_PKG_SKIP_SELECT" ];    then LINUX_PKG_SKIP=$LINUX_PKG_SKIP_SELECT; fi
   if [ -n "$CUSTOM_ADD_ONS_SELECT" ];    then CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS_SELECT; fi
-  if [ -n "$BORG_SELECT" ];              then BORG_INSTALL=$BORG_SELECT; fi
-  if [ -n "$TIKA_SELECT" ];              then TIKA_INSTALL=$TIKA_SELECT; fi
-  if [ -n "$IQSUITE_SELECT" ];           then IQSUITE_INSTALL=$IQSUITE_SELECT; fi
+  if [ -n "$BORG_SELECT" ];              then BORG_VERSION=$BORG_SELECT; fi
+  if [ -n "$TIKA_SELECT" ];              then TIKA_VERSION=$TIKA_SELECT; fi
+  if [ -n "$IQSUITE_SELECT" ];           then IQSUITE_VERSION=$IQSUITE_SELECT; fi
+  if [ -n "$NSHMAILX_SELECT" ];          then NSHMAILX_VERSION=$NSHMAILX_SELECT; fi
+  if [ -n "$NODE_EXPORTER_SELECT" ];     then NODE_EXPORTER_VERSION=$NODE_EXPORTER_SELECT; fi
+  if [ -n "$DOMPROM_SELECT" ];           then DOMPROM_VERSION=$DOMPROM_SELECT; fi
 
-  if [ -n "$NODE_EXPORTER_INSTALL" ] && [ -n "$DOMPROM_INSTALL" ]; then PROM_INSTALL=yes; fi
+  if [ -n "$NODE_EXPORTER_VERSION" ] && [ -n "$DOMPROM_VERSION" ]; then PROM_INSTALL=yes; fi
 
   if [ -n "$ONTIME_VERSION" ]; then
      DominoResponseFile=domino14_ontime_install.properties
@@ -2759,9 +2804,10 @@ write_conf()
   if [ -n "$LEAP_VERSION" ];     then echo "LEAP_VERSION=$LATESTSEL"     >> "$BUILD_CONF"; fi
   if [ -n "$ONTIME_VERSION" ];   then echo "ONTIME_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
   if [ -n "$DOMLP_LANG" ];       then echo "DOMLP_LANG=$DOMLP_LANG"      >> "$BUILD_CONF"; fi
-  if [ -n "$BORG_INSTALL" ];     then echo "BORG_INSTALL=$LATESTSEL"     >> "$BUILD_CONF"; fi
-  if [ -n "$TIKA_INSTALL" ];     then echo "TIKA_INSTALL=$LATESTSEL"     >> "$BUILD_CONF"; fi
-  if [ -n "$IQSUITE_INSTALL" ];  then echo "IQSUITE_INSTALL=$LATESTSEL"  >> "$BUILD_CONF"; fi
+  if [ -n "$BORG_VERSION" ];     then echo "BORG_VERSION=$LATESTSEL"     >> "$BUILD_CONF"; fi
+  if [ -n "$TIKA_VERSION" ];     then echo "TIKA_VERSION=$LATESTSEL"     >> "$BUILD_CONF"; fi
+  if [ -n "$IQSUITE_VERSION" ];  then echo "IQSUITE_VERSION=$LATESTSEL"  >> "$BUILD_CONF"; fi
+  if [ -n "$NSHMAILX_VERSION" ]; then echo "NSHMAILX_VERSION=$LATESTSEL" >> "$BUILD_CONF"; fi
 
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
@@ -2774,9 +2820,9 @@ write_conf()
   if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"                   >> "$BUILD_CONF"; fi
   if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"                 >> "$BUILD_CONF"; fi
   if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"               >> "$BUILD_CONF"; fi
-  if [ -n "$DOMPROM_INSTALL" ];  then echo "DOMPROM_INSTALL=$DOMPROM_INSTALL"       >> "$BUILD_CONF"; fi
+  if [ -n "$DOMPROM_VERSION" ];  then echo "DOMPROM_VERSION=$LATESTSEL"             >> "$BUILD_CONF"; fi
 
-  if [ -n "$NODE_EXPORTER_INSTALL" ]; then echo "NODE_EXPORTER_INSTALL=$NODE_EXPORTER_INSTALL" >> "$BUILD_CONF"; fi
+  if [ -n "$NODE_EXPORTER_VERSION" ]; then echo "NODE_EXPORTER_VERSION=$LATESTSEL" >> "$BUILD_CONF"; fi
 
   # Parameters only stored in conf file
   echo "CONTAINER_MAINTAINER=\"$CONTAINER_MAINTAINER\""                 >> "$BUILD_CONF"
@@ -2823,9 +2869,9 @@ edit_conf()
   # Reset certain variables before reload
   CUSTOM_ADD_ONS=
   FROM_IMAGE=
-  BORG_INSTALL=
-  TIKA_INSTALL=
-  IQSUITE_INSTALL=
+  BORG_VERSION=
+  TIKA_VERSION=
+  IQSUITE_VERSION=
 
   load_conf
 }
@@ -2866,28 +2912,29 @@ select_software()
   local SELECT_LEAP_VERSION=
   local SELECT_CAPI_VERSION=
   local SELECT_DOMIQ_VERSION=
+  local SELECT_NSHMAILX_VERSION=
   local SELECT_DOMRESTAPI_VER=
   local SELECT_DOMLP_LANG=
   local SELECT_BORG=
   local SELECT_PROM=
 
-  local X="X"
-  local Z=" "
+  local XX="X"
+  local ZZ=" "
   local DISPLAY_LP=
-  local D=$X
-  local T=$Z
-  local N=$Z
-  local V=$Z
-  local R=$Z
-  local L=$Z
-  local C=$Z
-  local P=$Z
-  local A=$Z
-  local I=$Z
-  local O=$Z
-  local G=$Z
-  local M=$Z
-  local J=$Z
+  local D=$XX
+  local T=$ZZ
+  local N=$ZZ
+  local V=$ZZ
+  local R=$ZZ
+  local L=$ZZ
+  local C=$ZZ
+  local P=$ZZ
+  local A=$ZZ
+  local I=$ZZ
+  local O=$ZZ
+  local G=$ZZ
+  local M=$ZZ
+  local J=$ZZ
 
   load_conf
 
@@ -2898,19 +2945,20 @@ select_software()
     SELECT_DOMLP_LANG=$DOMLP_LANG
     get_language_pack_display_name
 
-    if [ -n "$VERSE_VERSION" ];    then V=$X; else V=$Z; fi
-    if [ -n "$TRAVELER_VERSION" ]; then T=$X; else T=$Z; fi
-    if [ -n "$NOMAD_VERSION" ];    then N=$X; else N=$Z; fi
-    if [ -n "$DOMLP_LANG" ];       then L=$X; else L=$Z; fi
-    if [ -n "$DOMRESTAPI_VER" ];   then R=$X; else R=$Z; fi
-    if [ -n "$CAPI_VERSION" ];     then A=$X; else A=$Z; fi
-    if [ -n "$DOMIQ_VERSION" ];    then J=$X; else J=$Z; fi
-    if [ -n "$LEAP_VERSION" ];     then P=$X; else P=$Z; fi
-    if [ -n "$ONTIME_VERSION" ];   then O=$X; else O=$Z; fi
-    if [ -n "$BORG_INSTALL" ];     then G=$X; else G=$Z; fi
-    if [ -n "$PROM_INSTALL" ];     then M=$X; else M=$Z; fi
+    if [ -n "$VERSE_VERSION" ];    then V=$XX; else V=$ZZ; fi
+    if [ -n "$TRAVELER_VERSION" ]; then T=$XX; else T=$ZZ; fi
+    if [ -n "$NOMAD_VERSION" ];    then N=$XX; else N=$ZZ; fi
+    if [ -n "$DOMLP_LANG" ];       then L=$XX; else L=$ZZ; fi
+    if [ -n "$DOMRESTAPI_VER" ];   then R=$XX; else R=$ZZ; fi
+    if [ -n "$CAPI_VERSION" ];     then A=$XX; else A=$ZZ; fi
+    if [ -n "$DOMIQ_VERSION" ];    then J=$XX; else J=$ZZ; fi
+    if [ -n "$NSHMAILX_VERSION" ]; then X=$XX; else X=$ZZ; fi
+    if [ -n "$LEAP_VERSION" ];     then P=$XX; else P=$ZZ; fi
+    if [ -n "$ONTIME_VERSION" ];   then O=$XX; else O=$ZZ; fi
+    if [ -n "$BORG_VERSION" ];     then G=$XX; else G=$ZZ; fi
+    if [ -n "$PROM_INSTALL" ];     then M=$XX; else M=$ZZ; fi
 
-    if [ "$AutoTestImage" = "yes" ]; then I=$X; else I=$Z; fi
+    if [ "$AutoTestImage" = "yes" ]; then I=$XX; else I=$ZZ; fi
 
     if [ -z "$DOMLP_LANG" ]; then
       DISPLAY_LP=
@@ -2919,7 +2967,7 @@ select_software()
     fi
 
     if [ "$PROM_INSTALL" = "yes" ]; then
-      DISPLAY_PROM="domprom $DOMPROM_INSTALL & Node Exporter $NODE_EXPORTER_INSTALL"
+      DISPLAY_PROM="domprom $DOMPROM_VERSION & Node Exporter $NODE_EXPORTER_VERSION"
     else
       DISPLAY_PROM=
     fi
@@ -2954,7 +3002,8 @@ select_software()
     fi
     echo
     print_select "M" "Prometheus"     "$M" "$DISPLAY_PROM"
-    print_select "G" "Borg Backup"    "$G" "$BORG_INSTALL"
+    print_select "G" "Borg Backup"    "$G" "$BORG_VERSION"
+    print_select "X" "nshmailx"       "$X" "$NSHMAILX_VERSION"
 
     echo
     if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
@@ -2969,12 +3018,12 @@ select_software()
     echo
 
     display_custom_add_ons
-    if [ -n "$TIKA_INSTALL" ]; then
-      echo " Tika Server: $TIKA_INSTALL"
+    if [ -n "$TIKA_VERSION" ]; then
+      echo " Tika Server: $TIKA_VERSION"
     fi
 
-    if [ -n "$IQSUITE_INSTALL" ]; then
-      echo " IQ Suite   : $IQSUITE_INSTALL"
+    if [ -n "$IQSUITE_VERSION" ]; then
+      echo " IQ Suite   : $IQSUITE_VERSION"
     fi
 
     if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
@@ -2982,7 +3031,7 @@ select_software()
       echo " Base Image : $LINUX_NAME"
 
       if [ -n "$DOCKER_VERSION_STR" ]; then
-	echo
+    echo
         echo " $DISPLAY_WARNING"
      fi
 
@@ -2999,7 +3048,7 @@ select_software()
 
       0|q)
         ClearScreen
-	echo
+    echo
         exit 0
         ;;
 
@@ -3011,10 +3060,10 @@ select_software()
                ;;
           esac
 
-          T=$X
+          T=$XX
         else
           TRAVELER_VERSION=
-          T=$Z
+          T=$ZZ
         fi
         ;;
 
@@ -3058,6 +3107,14 @@ select_software()
         fi
         ;;
 
+      x)
+        if [ -z "$NSHMAILX_VERSION" ]; then
+          NSHMAILX_VERSION=$SELECT_NSHMAILX_VERSION
+        else
+          NSHMAILX_VERSION=
+        fi
+        ;;
+
       j)
         if [ -z "$DOMIQ_VERSION" ]; then
           DOMIQ_VERSION=$SELECT_DOMIQ_VERSION
@@ -3070,26 +3127,28 @@ select_software()
         if [ -z "$PROM_INSTALL" ]; then
           PROM_INSTALL=yes
 
-          if [ -z "$NODE_EXPORTER_INSTALL" ]; then
-            get_current_addon_version node_exporter NODE_EXPORTER_INSTALL
+          if [ -z "$NODE_EXPORTER_VERSION" ]; then
+            get_current_addon_version node_exporter NODE_EXPORTER_VERSION
           fi
 
-          if [ -z "$DOMPROM_INSTALL" ]; then
-            get_current_addon_version domprom DOMPROM_INSTALL
+          if [ -z "$DOMPROM_VERSION" ]; then
+            get_current_addon_version domprom DOMPROM_VERSION
           fi
 
         else
           PROM_INSTALL=
-	  DOMPROM_INSTALL=
-          NODE_EXPORTER_INSTALL=
+      DOMPROM_VERSION=
+          NODE_EXPORTER_VERSION=
         fi
         ;;
 
       g)
-        if [ -z "$BORG_INSTALL" ]; then
-          BORG_INSTALL=$SELECT_BORG
+        if [ -z "$BORG_VERSION" ]; then
+          BORG_VERSION=$SELECT_BORG_VERSION
+          DOMBORG_VERSION=$SELECT_DOMBORG_VERSION
         else
-          BORG_INSTALL=
+          BORG_VERSION=
+          DOMBORG_VERSION=
         fi
         ;;
 
@@ -3105,13 +3164,13 @@ select_software()
       d)
         select_domino_version
 
-	if [ -n "$TRAVELER_VERSION" ]; then
+    if [ -n "$TRAVELER_VERSION" ]; then
           case "$PROD_VER" in
             *)
                TRAVELER_VERSION="$SELECT_TRAVELER_VERSION"
                ;;
           esac
-	fi
+    fi
         ;;
 
       o)
@@ -3148,29 +3207,29 @@ select_software()
         ;;
 
       c)
-	edit_config_file
+    edit_config_file
         ;;
 
       w)
-	write_conf
+    write_conf
         ;;
 
       e)
-	edit_conf
+    edit_conf
         ;;
 
       h)
-	usage
+    usage
         read -n1 -p "" SELECTED;
         ;;
 
       *)
-	echo
-	echo
-	echo " Invalid option selected: $SELECTED"
-	echo -n " "
-	sleep 2
-	;;
+    echo
+    echo
+    echo " Invalid option selected: $SELECTED"
+    echo -n " "
+    sleep 2
+    ;;
     esac
 
   done
@@ -3236,14 +3295,15 @@ install_domino_native()
   export DOMRESTAPI_VER
   export PROD_FP
   export PROD_HF
-  export TIKA_INSTALL
-  export IQSUITE_INSTALL
+  export TIKA_VERSION
+  export IQSUITE_VERSION
   export VERSE_VERSION
   export NOMAD_VERSION
   export TRAVELER_VERSION
   export LEAP_VERSION
   export CAPI_VERSION
   export DOMIQ_VERSION
+  export NSHMAILX_VERSION
   export CUSTOM_ADD_ONS
   export DOMINO_LANG
   export LINUX_LANG
@@ -3428,7 +3488,7 @@ for a in "$@"; do
       fi
       ;;
 
-   -nomadweb*|+nomadweb*)
+    -nomadweb*|+nomadweb*)
       NOMADWEB_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$NOMADWEB_VERSION" ]; then
@@ -3444,7 +3504,7 @@ for a in "$@"; do
       fi
       ;;
 
-  -traveler*|+traveler*)
+    -traveler*|+traveler*)
       TRAVELER_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$TRAVELER_VERSION" ]; then
@@ -3452,7 +3512,7 @@ for a in "$@"; do
       fi
       ;;
 
-  -leap*|+leap*)
+    -leap*|+leap*)
       LEAP_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$LEAP_VERSION" ]; then
@@ -3460,15 +3520,15 @@ for a in "$@"; do
       fi
       ;;
 
-   -mysql*|+mysql*)
+    -mysql*|+mysql*)
       MYSQL_INSTALL=yes
       ;;
 
-   -mssql*|+mssql*)
+    -mssql*|+mssql*)
       MSSQL_INSTALL=yes
       ;;
 
-   -capi*|+capi*)
+    -capi*|+capi*)
       CAPI_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$CAPI_VERSION" ]; then
@@ -3484,15 +3544,15 @@ for a in "$@"; do
       fi
       ;;
 
-   -linuxpkg=*|+linuxpkg=*)
+    -linuxpkg=*|+linuxpkg=*)
       LINUX_PKG_ADD=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
-   -linuxpkgrm=*|+linuxpkgrm=*|-linuxpkgremove=*|+linuxpkgremove=*)
+    -linuxpkgrm=*|+linuxpkgrm=*|-linuxpkgremove=*|+linuxpkgremove=*)
       LINUX_PKG_REMOVE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
-   -linuxpkgskip=*|+linuxpkgskip=*)
+    -linuxpkgskip=*|+linuxpkgskip=*)
       LINUX_PKG_SKIP=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
@@ -3545,7 +3605,7 @@ for a in "$@"; do
       ;;
 
     -pull)
-      DOCKER_PULL_OPTION="--pull" 
+      DOCKER_PULL_OPTION="--pull"
       ;;
 
    -tag=*)
@@ -3709,13 +3769,13 @@ for a in "$@"; do
         *.conf)
           ;;
         *)
-	  CONF_FILE=$CONF_FILE.conf
+      CONF_FILE=$CONF_FILE.conf
           ;;
       esac
       ;;
 
     conf|-conf)
-      load_conf default.conf 
+      load_conf default.conf
       ;;
 
     conf=*|-conf=*)
@@ -3750,58 +3810,66 @@ for a in "$@"; do
       ;;
 
     -borg|-borg=*|+borg|+borg=*)
-      BORG_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+      BORG_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
-      if [ -z "$BORG_INSTALL" ]; then
-        get_current_addon_version borg BORG_INSTALL
+      if [ -z "$BORG_VERSION" ]; then
+        get_current_addon_version borg BORG_VERSION
       fi
 
-      if [ -z "$BORG_INSTALL" ]; then
-        BORG_INSTALL=yes
+      if [ -z "$BORG_VERSION" ]; then
+        BORG_VERSION=yes
       fi
       ;;
 
     -tika|-tika=*|+tika|+tika=*)
-      TIKA_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+      TIKA_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
-      if [ -z "$TIKA_INSTALL" ]; then
-        get_current_addon_version tika TIKA_INSTALL
+      if [ -z "$TIKA_VERSION" ]; then
+        get_current_addon_version tika TIKA_VERSION
       fi
 
-      if [ -z "$TIKA_INSTALL" ]; then
-        TIKA_INSTALL=yes
+      if [ -z "$TIKA_VERSION" ]; then
+        TIKA_VERSION=yes
       fi
       ;;
 
     -iqsuite|-iqsuite=*|+iqsuite|+iqsuite=*)
-      IQSUITE_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+      IQSUITE_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
-      if [ -z "$IQSUITE_INSTALL" ]; then
-        get_current_addon_version iqsuite IQSUITE_INSTALL
+      if [ -z "$IQSUITE_VERSION" ]; then
+        get_current_addon_version iqsuite IQSUITE_VERSION
+      fi
+      ;;
+
+    -nshmailx|--nshmailx=*|+-nshmailx|+-nshmailx=*)
+      NSHMAILX_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$NSHMAILX_VERSION" ]; then
+        get_current_addon_version nshmailx NSHMAILX_VERSION
       fi
       ;;
 
     -node_exporter|-node_exporter=*|+node_exporter|+=node_exporter*)
-      NODE_EXPORTER_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+      NODE_EXPORTER_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
-      if [ -z "$NODE_EXPORTER_INSTALL" ]; then
-        get_current_addon_version node_exporter NODE_EXPORTER_INSTALL
+      if [ -z "$NODE_EXPORTER_VERSION" ]; then
+        get_current_addon_version node_exporter NODE_EXPORTER_VERSION
       fi
 
-      if [ -z "$NODE_EXPORTER_INSTALL" ]; then
-        NODE_EXPORTER_INSTALL=yes
+      if [ -z "$NODE_EXPORTER_VERSION" ]; then
+        NODE_EXPORTER_VERSION=yes
       fi
       ;;
 
     -domprom|-domprom=*|+domprom|+=domprom*)
-      DOMPROM_INSTALL=$(echo "$a" | cut -f2 -d= -s)
+      DOMPROM_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
-      if [ -z "$DOMPROM_INSTALL" ]; then
-        get_current_addon_version domprom DOMPROM_INSTALL
+      if [ -z "$DOMPROM_VERSION" ]; then
+        get_current_addon_version domprom DOMPROM_VERSION
       fi
 
-      if [ -z "$DOMPROM_INSTALL" ]; then
-        DOMPROM_INSTALL=yes
+      if [ -z "$DOMPROM_VERSION" ]; then
+        DOMPROM_VERSION=yes
       fi
       ;;
 
@@ -3809,20 +3877,20 @@ for a in "$@"; do
 
       PROM_INSTALL=yes
 
-      if [ -z "$DOMPROM_INSTALL" ]; then
-        get_current_addon_version domprom DOMPROM_INSTALL
+      if [ -z "$DOMPROM_VERSION" ]; then
+        get_current_addon_version domprom DOMPROM_VERSION
       fi
 
-      if [ -z "$DOMPROM_INSTALL" ]; then
-        DOMPROM_INSTALL=yes
+      if [ -z "$DOMPROM_VERSION" ]; then
+        DOMPROM_VERSION=yes
       fi
 
-      if [ -z "$NODE_EXPORTER_INSTALL" ]; then
-        get_current_addon_version node_exporter NODE_EXPORTER_INSTALL
+      if [ -z "$NODE_EXPORTER_VERSION" ]; then
+        get_current_addon_version node_exporter NODE_EXPORTER_VERSION
       fi
 
-      if [ -z "$NODE_EXPORTER_INSTALL" ]; then
-        NODE_EXPORTER_INSTALL=yes
+      if [ -z "$NODE_EXPORTER_VERSION" ]; then
+        NODE_EXPORTER_VERSION=yes
       fi
       ;;
 
@@ -3977,8 +4045,8 @@ if [ -n "$NOMAD_VERSION" ]; then
 fi
 
 # If borgbackup is installed, also install Domino Borg
-if [ -n "$BORG_INSTALL" ]; then
-  get_current_addon_version domborg DOMBORG_INSTALL
+if [ -n "$BORG_VERSION" ]; then
+  get_current_addon_version domborg DOMBORG_VERSION
 fi
 
 
