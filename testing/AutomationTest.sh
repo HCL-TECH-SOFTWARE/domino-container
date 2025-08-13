@@ -354,8 +354,11 @@ if [ -z "$RESULT_FILE_CSV" ]; then
   RESULT_FILE_CSV=$DOMINO_VOLUME/result_autotest.csv
 fi
 
-if [ -z "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
-  DOMINO_AUTO_CONFIG_JSON_FILE=$SCRIPT_DIR/DominoContainerAutoConfig.json
+# Overwrite the standard testing file and only use a automation test specific file
+DOMINO_AUTO_CONFIG_JSON_FILE=$SCRIPT_DIR/DominoContainerAutoConfig.json
+
+if [ -n "$DOMINO_AUTO_CONFIG_TESTING_JSON_FILE" ]; then
+  DOMINO_AUTO_CONFIG_JSON_FILE="$DOMINO_AUTO_CONFIG_TESTING_JSON_FILE"
 fi
 
 TECHNICAL_SUPPORT=$DOMINO_VOLUME/notesdata/IBM_TECHNICAL_SUPPORT
