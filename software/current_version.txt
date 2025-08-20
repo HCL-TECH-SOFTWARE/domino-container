@@ -1,6 +1,6 @@
 domino|14.5
 domino-14.0|14.0|FP4
-domino-12.0.2|12.0.2|FP6
+domino-12.0.2|12.0.2|FP7
 domiq|14.5
 traveler|14.5
 volt|1.0.5.15
