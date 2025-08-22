@@ -295,7 +295,7 @@ start_node_exporter()
   else
     # Use default if no other option is specified and the stats dir is set
     if [ -z "$NODE_EXPORTER_OPTIONS" ]; then
-       $NODE_EXPORTER_OPTIONS=default
+      NODE_EXPORTER_OPTIONS=default
     fi
   fi
 

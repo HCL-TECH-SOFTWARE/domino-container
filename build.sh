@@ -858,6 +858,11 @@ check_from_image()
       BASE_IMAGE=ubuntu:jammy
       ;;
 
+    debian13)
+      LINUX_NAME="Debian 13 (Trixie)"
+      BASE_IMAGE=debian:13
+      ;;
+
     debian|debian12)
       LINUX_NAME="Debian 12 (Bookworm)"
       BASE_IMAGE=debian:12
