@@ -565,7 +565,7 @@ dom_process_explor_cleanup_and_bye()
 }
 
 
-edit_log_file()
+edit_trace_file()
 {
    if [ -z "$LOG_FILE" ]; then
      log_delay " Info: No log file"
@@ -673,7 +673,7 @@ process_explorer_menu()
         ;;
 
       l)
-        edit_log_file
+        edit_trace_file
         ;;
 
       q)
@@ -819,6 +819,7 @@ run_htop()
   fi
 }
 
+
 enable_disable_logfile()
 {
   if [ -z "$LOG_FILE" ]; then
@@ -904,6 +905,8 @@ dom_process_explor_check_for_key()
 
 process_dump()
 {
+  local STACK_TRACE=
+
   if [ -z "$PID" ]; then
     return 0
   fi
@@ -919,17 +922,22 @@ process_dump()
 
   while true; do
 
+    # Get stack trace first before clearing screen
+    if [ -z "$GDB_TID" ]; then
+      STACK_TRACE=$(gdb -batch -nx -ex "thread apply all bt" --pid=$PID 2>/dev/null| grep -E '^(Thread [0-9]+|#|$)')
+    else
+      STACK_TRACE=$(gdb -batch -nx -ex "thread $GDB_TID" -ex "bt" --pid=$PID 2>/dev/null| grep -E '^(Thread [0-9]+|#|$)')
+    fi
+
     if [ -z "$NO_CLEAR_SCRREN" ]; then
       ClearScreen
     fi
 
-    echo
-
     if [ -z "$GDB_TID" ]; then
      if [ -z "$LOG_FILE" ]; then
-        printf "\n<@@ Process $PID  $CMD_LINE @@>\n\n"
+        printf "<@@ Process $PID  $CMD_LINE @@>\n"
       else
-    printf "\n<@@ Process %s  %s  (%s) @@>\n\n" "$PID" "$CMD_LINE" "$(date)" | tee -a "$LOG_FILE"
+        printf "<@@ Process %s  %s  (%s) @@>\n" "$PID" "$CMD_LINE" "$(date)" | tee -a "$LOG_FILE"
       fi
 
     else
@@ -942,26 +950,18 @@ process_dump()
       if [ -z "$LOG_FILE" ]; then
         printf "\n<@@ Thread $DSP_THREAD  $CMD_LINE @@>\n\n"
       else
-    printf "\n<@@ Thread %s  %s  (%s) @@>\n\n" "$DSP_THREAD" "$CMD_LINE" "$(date)" | tee -a "$LOG_FILE"
+        printf "\n<@@ Thread %s  %s  (%s) @@>\n\n" "$DSP_THREAD" "$CMD_LINE" "$(date)" | tee -a "$LOG_FILE"
       fi
     fi
-    echo
 
-    if [ -z "$GDB_TID" ]; then
-      if [ -z "$LOG_FILE" ]; then
-        gdb -batch -nx -ex "thread apply all bt" --pid=$PID 2>/dev/null| grep -v -e "^\[New LWP"
-      else
-        gdb -batch -nx -ex "thread apply all bt" --pid=$PID 2>/dev/null| grep -v -e "^\[New LWP" | tee -a "$LOG_FILE"
-      fi
-    else
-      if [ -z "$LOG_FILE" ]; then
-        gdb -batch -nx -ex "thread $GDB_TID" -ex "bt" --pid=$PID 2>/dev/null| grep -v -e "^\[New LWP"
-      else
-        gdb -batch -nx -ex "thread $GDB_TID" -ex "bt" --pid=$PID 2>/dev/null| grep -v -e "^\[New LWP" | tee -a "$LOG_FILE"
-      fi
+    echo "$STACK_TRACE"
+
+    if [ -n "$LOG_FILE" ]; then
+      echo "$STACK_TRACE" >> "$LOG_FILE"
     fi
 
     dom_process_explor_check_for_key "$READ_TIMEOUT"
+
     if [ $? -eq 1 ]; then
       return 0
     fi
@@ -1067,11 +1067,11 @@ menu()
     get_semdebug_infos
 
     if [ -n "$SEMDEBUG_DISPLAY" ]; then
-      echo " SEM Debug  :  $SEMDEBUG_FILE  [ $SEMDEBUG_DISPLAY ]"
+      echo " SEM Debug  :  $SEMDEBUG_FILE  ($SEMDEBUG_DISPLAY)"
     fi
 
     if [ -n "$LAST_NSD" ] && [ -e "$LAST_NSD" ]; then
-      echo " Latest NSD :  $LAST_NSD"
+      echo " Latest NSD :  $LAST_NSD  ($(du -sh "$LAST_NSD" | cut -f1))"
       echo " NSD age    :  $(get_file_age "$LAST_NSD")"
     fi
 
@@ -1083,7 +1083,7 @@ menu()
     echo
     echo " (N)   Run NSD"
     echo " (L)   Open latest NSD"
-    echo " (X)   Explor Domino processes"
+    echo " (X)   Explore Domino processes"
 
     if [ -n "$SEMDEBUG_DISPLAY" ]; then
       echo " (B)   Open semdebug.txt"
@@ -1099,6 +1099,7 @@ menu()
 
       if [ -n "$DOMINO_DIAG_TRACE_FILE" ] && [ -e "$DOMINO_DIAG_TRACE_FILE" ]; then
         echo " (T)   Send trace file"
+        echo " (F)   Open trace file"
       fi
       echo " (R)   Set recipient"
 
@@ -1188,6 +1189,10 @@ menu()
         fi
 
         send_trace_file
+        ;;
+
+      f)
+        edit_trace_file
         ;;
 
       r)
