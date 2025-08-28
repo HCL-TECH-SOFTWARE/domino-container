@@ -20,7 +20,7 @@ The project uses the official HCL web-kit installers to build container images d
 - All HCL customers with active maintenance should have a download account
 - The [Partner Pack](https://www.hcltechsw.com/resources/partner-connect/resources/partner-pack) provides the same access for HCL Business Partners
 
-See how to [download software](howto_download-software.md) for details.
+See how to [download software](docs/howto_download-software.md) for details.
 
 ## Supported environments
 
