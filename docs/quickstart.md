@@ -138,6 +138,15 @@ dominoctl console
 
 ```
 
+## Export container image for external use
+
+To use the container image on run-time only platforms like a QNAP NAS Docker and Podman can export images to a tar file, which can be imported into any container registry.
+
+See howto [Export or push image to registries](howto_use_externally.md) for details.
+
+For running on QNAP and similar environments check [How to run Domino on a QNAP NAS](howto_qnap.md).
+
+
 ## Domino Container Script Diagram
 
 ![domino_container script diagram](assets/images/svg/containerstartscript.svg)
