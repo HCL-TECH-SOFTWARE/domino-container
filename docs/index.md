@@ -87,17 +87,32 @@ Just select all desired components and start the build process via pressing a `b
 HCL Domino Container Community Image
 ------------------------------------
 
- (D)  HCL Domino          [X]  14.0FP3
+ (D)  HCL Domino          [X]  14.5
  (O)  OnTime              [ ]
- (V)  Verse               [ ]
- (T)  Traveler            [ ]
- (N)  Nomad Server        [ ]
+ (V)  Verse               [X]  3.2.5
+ (T)  Traveler            [X]  14.5
+ (N)  Nomad Server        [X]  1.0.16
  (L)  Language Pack       [ ]
- (R)  REST-API            [ ]
+ (R)  REST-API            [X]  1.1.4
  (A)  C-API SDK           [ ]
- (E)  Domino Leap         [ ]
+ (P)  Domino Leap         [ ]
+ (J)  Domino IQ           [ ]
 
- Select software & Options,  [B] to build,  [0] to cancel?
+ (M)  Prometheus          [X]  domprom 0.9.2 & Node Exporter 1.9.1
+ (G)  Borg Backup         [X]  1.2.8
+ (X)  nshmailx            [X]  1.1.0
+
+ (I)  Test created image  [ ]
+
+ (W)  Write selection
+ (E)  Edit selection
+ (C)  Configuration
+ (H)  Help
+
+
+ Base Image : RedHat UBI 10
+
+ Select software & Options,  [B] to build,  [Q] to cancel?
 
 ```
 
