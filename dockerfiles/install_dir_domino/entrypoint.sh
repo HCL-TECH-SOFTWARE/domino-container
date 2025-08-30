@@ -286,7 +286,12 @@ start_node_exporter()
   local NODE_EXPORTER_BIN=/opt/prometheus/node_exporter/node_exporter
 
   if [ ! -x "$NODE_EXPORTER_BIN" ]; then
-     return 0;
+     return 0
+  fi
+
+  if [ "$NODE_EXPORTER_DISABLED" = "1" ]; then
+    log "Info: Node Exporter is disabled"
+    return 0
   fi
 
   if [ -z "$DOMINO_PROM_STATS_DIR" ]; then
@@ -300,7 +305,7 @@ start_node_exporter()
   fi
 
   if [ -z "$NODE_EXPORTER_OPTIONS" ]; then
-    return 0;
+    return 0
   fi
 
   if [ "$NODE_EXPORTER_OPTIONS" = "default" ]; then

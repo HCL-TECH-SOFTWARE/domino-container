@@ -709,6 +709,9 @@ edit_config_file()
   fi
 
   $EDIT_COMMAND $CONFIG_FILE
+
+  # Apply changes after editing the profile
+  . $CONFIG_FILE
 }
 
 
@@ -3212,15 +3215,15 @@ select_software()
         ;;
 
       c)
-    edit_config_file
+        edit_config_file
         ;;
 
       w)
-    write_conf
+        write_conf
         ;;
 
       e)
-    edit_conf
+        edit_conf
         ;;
 
       h)

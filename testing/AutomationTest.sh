@@ -1267,7 +1267,7 @@ fi
 ERROR_MSG=
 
 if [ -z "$TIKA_VERSION" ]; then
-  ERROR_MSG="Domino server failed to restart"
+  ERROR_MSG="Tika server failed to restart"
 fi
 
 echo "TIKA_VERSION: [$TIKA_VERSION]"
