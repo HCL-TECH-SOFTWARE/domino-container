@@ -1,7 +1,7 @@
 ---
 layout: default
 title: "Domino on QNAP NAS"
-nav_order: 6
+nav_order: 7
 description: "How to run Domino on a QNAP NAS"
 parent: "Howto"
 has_children: false

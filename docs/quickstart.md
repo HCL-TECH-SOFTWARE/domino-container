@@ -1,7 +1,7 @@
 ---
 layout: default
 title: "Quickstart"
-nav_order: 2
+nav_order: 1
 description: "HCL Domino Quickstart"
 has_children: false
 ---
@@ -11,6 +11,19 @@ has_children: false
 The project supports most Linux base environments including [Windows Subsystem for Linux 2 (WSL2)](https://docs.microsoft.com/en-us/windows/wsl/)
 
 For details check [supported run-time and build environments](concept_environments.md)
+
+## Install container environment
+
+In case you never worked with container on your machine, make sure Docker or Podman is installed.
+This project works with Docker and Podman, still our recommendation would be to use Docker, because it takes care about starting containers without creating a separate service per container.
+In addition Docker Compose and other functionality works better on Docker.
+
+For details about installing Docker see howto [Docker on Linux](howto_docker-linux.md)
+
+If you have no container environment there is a easy to use convenience script to install Docker and perform the following scripts automatically.
+
+See the [Domino Start Script GitHub page](https://nashcom.github.io/domino-startscript/install_container_env/) for details.
+
 
 ## Clone this project via Git
 
