@@ -766,40 +766,16 @@ install_domino_restapi()
   # Append the servertask line to notes.ini, because Keep installer needs it to detect the server
   echo "servertasks=" >> notes.ini
 
-  # REST API 1.0.7 and higher supports Domino V14 which switches to Java 17 instead of Java 8.
-  # Therefore two different installers are shipped for Domino 14 and earlier versions
+  # Find out the right installer per Domino version
 
-  if [ -e "$CURRENT_DIR/domino_restapi/restapiInstall.jar" ]; then
-    log_space "Older REST API for Domino 12 detected"
-    REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall.jar
-  else
+  REST_API_INSTALLER=$(find $CURRENT_DIR/domino_restapi -name "restapiInstall*.jar")
 
-    # Check if JVM version is still Java 8
-    local JAVA8_FOUND=$($Notes_ExecDirectory/jvm/bin/java -version 2>&1 | grep "1.8.0")
-
-    if [ -z "$JAVA8_FOUND" ]; then
-      log_space "Domino 14 Java 17 or higher detected"
-      if [ -e "$CURRENT_DIR/domino_restapi/restapiInstall-r14.jar" ]; then
-        REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r14.jar
-      else
-        REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r12.jar
-      fi
-    else
-      log_space "Domino 11/12 Java 8 detected"
-      if [ -e "$CURRENT_DIR/domino_restapi/restapiInstall-r12.jar" ]; then
-        REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall-r12.jar
-      else
-        REST_API_INSTALLER=$CURRENT_DIR/domino_restapi/restapiInstall.jar
-      fi
-    fi
-
-    if [ ! -e "$REST_API_INSTALLER" ]; then
-       log_error "Cannot find Domino REST API Installer [$REST_API_INSTALLER]!!!"
-       echo "-------------------------"
-       ls $CURRENT_DIR/domino_restapi
-       echo "-------------------------"
-       exit 1
-    fi
+  if [ -z "$REST_API_INSTALLER" ]; then
+    log_error "Cannot find Domino REST API Installer !!!"
+    echo "-------------------------"
+    ls $CURRENT_DIR/domino_restapi
+    echo "-------------------------"
+    exit 1
 
   fi
 

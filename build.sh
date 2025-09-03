@@ -4067,6 +4067,10 @@ if [ -n "$DOMRESTAPI_VER" ]; then
       DOMRESTAPI_VER=$DOMRESTAPI_VER-12
       ;;
 
+    14.5*)
+      DOMRESTAPI_VER=$DOMRESTAPI_VER-14.5
+      ;;
+
     *)
       DOMRESTAPI_VER=$DOMRESTAPI_VER-14
       ;;
