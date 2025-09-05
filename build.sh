@@ -337,6 +337,7 @@ usage()
   echo "-restapi         adds the Domino REST API to the image"
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
   echo "-domiq           adds the Domino IQ server run-time to the image"
+  echo "-mysql-jdbc      adds the MySQL JDBC driver to the image"
   echo "-tika            updates the Tika server to the Domino server"
   echo "-iqsuite         adds GBS iQ.Suite to the container image under /opt"
   echo "-nshmailx        installs Nash!Com nshmailx simple mail send tool"
@@ -421,6 +422,7 @@ dump_config()
   echo "CAPI_VERSION         : [$CAPI_VERSION]"
   echo "NOMADWEB_VERSION     : [$NOMADWEB_VERSION]"
   echo "DOMIQ                : [$DOMIQ]"
+  echo "MYSQL_JDBC_VERSION   : [$MYSQL_JDBC_VERSION]"
   echo "MYSQL_INSTALL        : [$MYSQL_INSTALL]"
   echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
   echo "BORG_VERSION         : [$BORG_VERSION]"
@@ -1150,6 +1152,9 @@ check_addon_label()
     add_addon_label "nshmailx" "$NSHMAILX_VERSION"
   fi
 
+  if [ -n "$MYSQL_JDBC_VERSION" ]; then
+    add_addon_label "mysql-jdbc" "$MYSQL_JDBC_VERSION"
+  fi
 }
 
 
@@ -1221,6 +1226,7 @@ build_domino()
     --build-arg DOMIQ_VERSION="$DOMIQ_VERSION" \
     --build-arg NSHMAILX_VERSION="$NSHMAILX_VERSION" \
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
+    --build-arg MYSQL_JDBC_VERSION="$MYSQL_JDBC_VERSION" \
     --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
     --build-arg LINUX_PKG_REMOVE="$LINUX_PKG_REMOVE" \
     --build-arg LINUX_PKG_SKIP="$LINUX_PKG_SKIP" \
@@ -1580,6 +1586,10 @@ check_all_domdownload()
 
   if [ -n "$IQSUITE_VERSION" ]; then
     $DOMDOWNLOAD_BIN -product=iqsuite -platform=linux -ver=$IQSUITE_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$MYSQL_JDBC_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=mysql-jdbc -platform=linux -ver=$MYSQL_JDBC_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
   if [ -n "$NSHMAILX_VERSION" ]; then
@@ -1963,6 +1973,12 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$MYSQL_JDBC_VERSION" ]; then
+      if [ ! "$MYSQL_JDBC_VERSION" = "yes" ]; then
+        check_software_file "mysql-jdbc" "$MYSQL_JDBC_VERSION"
+      fi
+    fi
+
   else
     echo
 
@@ -2131,6 +2147,12 @@ check_software_status()
     if [ -n "$DOMPROM_VERSION" ]; then
       if [ ! "$DOMPROM_VERSION" = "yes" ]; then
         check_software_file "domprom" "$DOMPROM_VERSION"
+      fi
+    fi
+
+    if [ -n "$MYSQL_JDBC_VERSION" ]; then
+      if [ ! "$MYSQL_JDBC_VERSION" = "yes" ]; then
+        check_software_file "mysql-jdbc" "$MYSQL_JDBC_VERSION"
       fi
     fi
 
@@ -2684,6 +2706,7 @@ load_conf()
   local CUSTOM_ADD_ONS_SELECT=$CUSTOM_ADD_ONS
   local BORG_SELECT=$BORG_VERSION
   local TIKA_SELECT=$TIKA_VERSION
+  local MYSQL_JDBC_SELECT=$MYSQL_JDBC_VERSION
   local IQSUITE_SELECT=$IQSUITE_VERSION
 
   if [ -n "$1" ]; then
@@ -2720,6 +2743,7 @@ load_conf()
   get_current_addon_version borg SELECT_BORG_VERSION
   get_current_addon_version domborg SELECT_DOMBORG_VERSION
   get_current_addon_version tika SELECT_TIKA_VERSION
+  get_current_addon_version mysql-jdbc SELECT_MYSQL_JDBC_VERSION
   get_current_addon_version iqsuite SELECT_IQSUITE_VERSION
   get_current_addon_version nshmailx SELECT_NSHMAILX_VERSION
   get_current_addon_version node_exporter SELECT_NODE_EXPORTER_VERSION
@@ -2750,6 +2774,7 @@ load_conf()
   if [ "$LATESTSEL" = "$ONTIME_VERSION" ];        then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
   if [ "$LATESTSEL" = "$BORG_VERSION" ];          then BORG_VERSION=$SELECT_BORG_VERSION; DOMBORG_VERSION=$SELECT_DOMBORG_VERSION; fi
   if [ "$LATESTSEL" = "$TIKA_VERSION" ];          then TIKA_VERSION=$SELECT_TIKA_VERSION; fi
+  if [ "$LATESTSEL" = "$MYSQL_JDBC_VERSION" ];    then MYSQL_JDBC_VERSION=$SELECT_MYSQL_JDBC_VERSION; fi
   if [ "$LATESTSEL" = "$IQSUITE_VERSION" ];       then IQSUITE_VERSION=$SELECT_IQSUITE_VERSION; fi
   if [ "$LATESTSEL" = "$NSHMAILX_VERSION" ];      then NSHMAILX_VERSION=$SELECT_NSHMAILX_VERSION; fi
   if [ "$LATESTSEL" = "$NODE_EXPORTER_VERSION" ]; then NODE_EXPORTER_VERSION=$SELECT_NODE_EXPORTER_VERSION; fi
@@ -2765,6 +2790,7 @@ load_conf()
   if [ -n "$CUSTOM_ADD_ONS_SELECT" ];    then CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS_SELECT; fi
   if [ -n "$BORG_SELECT" ];              then BORG_VERSION=$BORG_SELECT; fi
   if [ -n "$TIKA_SELECT" ];              then TIKA_VERSION=$TIKA_SELECT; fi
+  if [ -n "$MYSQL_JDBC_SELECT" ];        then MYSQL_JDBC_VERSION=$MYSQL_JDBC_SELECT; fi
   if [ -n "$IQSUITE_SELECT" ];           then IQSUITE_VERSION=$IQSUITE_SELECT; fi
   if [ -n "$NSHMAILX_SELECT" ];          then NSHMAILX_VERSION=$NSHMAILX_SELECT; fi
   if [ -n "$NODE_EXPORTER_SELECT" ];     then NODE_EXPORTER_VERSION=$NODE_EXPORTER_SELECT; fi
@@ -2778,6 +2804,7 @@ load_conf()
 
   check_from_image
 }
+
 
 write_conf()
 {
@@ -2820,6 +2847,7 @@ write_conf()
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
   # Additional parameters only configurable on command line
+  if [ -n "$MYSQL_JDBC_VERSION" ]; then echo "MYSQL_JDBC_VERSION=$LATESTSEL"        >> "$BUILD_CONF"; fi
   if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"                 >> "$BUILD_CONF"; fi
   if [ -n "$LINUX_PKG_ADD" ];    then echo "LINUX_PKG_ADD=\"$LINUX_PKG_ADD\""       >> "$BUILD_CONF"; fi
   if [ -n "$LINUX_PKG_REMOVE" ]; then echo "LINUX_PKG_REMOVE=\"$LINUX_PKG_REMOVE\"" >> "$BUILD_CONF"; fi
@@ -2880,6 +2908,7 @@ edit_conf()
   BORG_VERSION=
   TIKA_VERSION=
   IQSUITE_VERSION=
+  MYSQL_JDBC_VERSION=
 
   load_conf
 }
@@ -3172,13 +3201,13 @@ select_software()
       d)
         select_domino_version
 
-    if [ -n "$TRAVELER_VERSION" ]; then
+        if [ -n "$TRAVELER_VERSION" ]; then
           case "$PROD_VER" in
             *)
                TRAVELER_VERSION="$SELECT_TRAVELER_VERSION"
                ;;
           esac
-    fi
+        fi
         ;;
 
       o)
@@ -3304,6 +3333,7 @@ install_domino_native()
   export PROD_FP
   export PROD_HF
   export TIKA_VERSION
+  export MYSQL_JDBC_VERSION
   export IQSUITE_VERSION
   export VERSE_VERSION
   export NOMAD_VERSION
@@ -3525,6 +3555,14 @@ for a in "$@"; do
 
       if [ -z "$LEAP_VERSION" ]; then
         get_current_addon_version leap LEAP_VERSION
+      fi
+      ;;
+
+    -mysql-jdbc*|+mysql-jdbc*)
+      MYSQL_JDBC_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$MYSQL_JDBC_VERSION" ]; then
+        get_current_addon_version mysql-jdbc MYSQL_JDBC_VERSION
       fi
       ;;
 
@@ -4075,6 +4113,12 @@ if [ -n "$DOMRESTAPI_VER" ]; then
       DOMRESTAPI_VER=$DOMRESTAPI_VER-14
       ;;
   esac
+fi
+
+if [ -n "$MYSQL_JDBC_VERSION" ]; then
+  if [ -z "$TRAVELER_VERSION" ]; then
+    log_error_exit "MySQL JDBC Driver can only installed for Traveler"
+  fi
 fi
 
 

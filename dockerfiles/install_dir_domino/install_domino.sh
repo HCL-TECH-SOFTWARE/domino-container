@@ -742,6 +742,7 @@ install_capi()
   cd $CURRENT_DIR
 }
 
+
 install_domino_restapi()
 {
   local ADDON_NAME=domrestapi
@@ -821,6 +822,48 @@ install_domprom()
 
   download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory"
   ln -s "$LOTUS/bin/tools/startup" "$LOTUS/bin/domprom"
+}
+
+
+install_mysql_jdbc()
+{
+  if [ -z "$MYSQL_JDBC_VERSION" ]; then
+    return 0
+  fi
+
+  header "Installing MySQL JDBC driver $MYSQL_JDBC_VERSION"
+
+  if [ ! -e "$Notes_ExecDirectory/Traveler/lib" ]; then
+    log_error "Cannot install MySQL JDBC driver - Traveler server not found"
+    exit 1
+  fi
+
+  cd "$INSTALL_DIR"
+
+  MYSQL_JDBC_DIR=mysql_jdbc_install_dir
+
+  mkdir -p "$MYSQL_JDBC_DIR"
+
+  get_download_name mysql-jdbc "$MYSQL_JDBC_VERSION"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find MySQL JDBC driver $MYSQL_JDBC_VERSION"
+    return 0
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$MYSQL_JDBC_DIR"
+
+  local JDBC_DRIVER_BIN=$(find "$MYSQL_JDBC_DIR" -type f -name "mysql-connector-*.jar")
+
+  if [ -z "$JDBC_DRIVER_BIN" ]; then
+     echo "MySQL JDBC driver not found"
+     exit 1
+  fi
+
+  chmod 555 "$JDBC_DRIVER_BIN"
+  mv "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
+
+  remove_directory "$MYSQL_JDBC_DIR"
 }
 
 
@@ -1314,6 +1357,7 @@ echo "SPECIAL_CURL_ARGS     = [$SPECIAL_CURL_ARGS]"
 echo "BUILD_SCRIPT_OPTIONS  = [$BUILD_SCRIPT_OPTIONS]"
 echo "BORG_VERSION          = [$BORG_VERSION]"
 echo "NSHMAILX_VERSION      = [$NSHMAILX_VERSION]"
+echo "MYSQL_JDBC_VERSION    = [$MYSQL_JDBC_VERSION]"
 echo "DOMPROM_VERSION       = [$DOMPROM_VERSION]"
 echo "OPENSSL_INSTALL       = [$OPENSSL_INSTALL]"
 echo "SSH_INSTALL           = [$SSH_INSTALL]"
@@ -1452,6 +1496,10 @@ install_domino_restapi "$DOMRESTAPI_VER"
 
 # Install Traveler Server if requested
 install_traveler "$TRAVELER_VERSION"
+
+# Install Traveler JDBC drivers if requested
+
+install_mysql_jdbc
 
 # Install Domino Leap if requested
 install_leap "$LEAP_VERSION"

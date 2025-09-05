@@ -358,7 +358,7 @@ install_node_exporter()
   fi
 
   mv "$NODE_EXPORTER_INST_DIR/"* "$NODE_EXPORTER_DIR"
-  remove_directory "$NODE_EXPORTER_INSTL_DIR"
+  remove_directory "$NODE_EXPORTER_INST_DIR"
 }
 
 
@@ -542,7 +542,6 @@ else
 
     chmod 755 /usr/bin/nshmailx
   fi
-
 
   if [ "$SSH_INSTALL" = "yes" ]; then
     if [ ! -e /usr/bin/ssh ]; then
