@@ -567,17 +567,23 @@ install_traveler()
   local ADDON_NAME=traveler
   local ADDON_VER=$1
 
-  if [ -z "$ADDON_VER" ]; then
+  if [ -z "$ADDON_VER" ] && [ -z "$TRAVELER_DOWNLOAD_FILE" ] ; then
     return 0
   fi
 
   header "$ADDON_NAME Installation"
 
-  get_download_name $ADDON_NAME $ADDON_VER
+  # If explicitly specified just download and skip calculating hash
+  if [ -n "$TRAVELER_DOWNLOAD_FILE" ]; then
+    echo "Info: Not checking download hash for [$TRAVELER_DOWNLOAD_FILE]"
+    DOWNLOAD_NAME="$TRAVELER_DOWNLOAD_FILE"
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME" . nohash
+  else
+    get_download_name $ADDON_NAME $ADDON_VER
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+  fi
 
   header "Installing $ADDON_NAME $ADDON_VER"
-
-  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME" 
 
   if [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "120002*")" ]; then
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino1202.properties
@@ -587,6 +593,8 @@ install_traveler()
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino12.properties
   elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "140000*")" ]; then
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino140.properties
+  elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "145000*")" ]; then
+    TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino145.properties
   else
     # Assume latest version (No version check and no version specified)
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_hcl.properties
@@ -1326,41 +1334,45 @@ export DOMINO_GROUP=notes
 
 header "Environment Setup"
 
-echo "INSTALL_DIR           = [$INSTALL_DIR]"
-echo "DownloadFrom          = [$DownloadFrom]"
-echo "SOFTWARE_REPO_IP      = [$SOFTWARE_REPO_IP]"
-echo "http_proxy            = [$http_proxy]"
-echo "https_proxy           = [$https_proxy]"
-echo "no_proxy              = [$no_proxy]"
-echo "Product               = [$PROD_NAME]"
-echo "Version               = [$PROD_VER]"
-echo "Fixpack               = [$PROD_FP]"
-echo "InterimsFix/Hotfix    = [$PROD_HF]"
-echo "DOMLP_VER             = [$DOMLP_VER]"
-echo "DOMRESTAPI_VER        = [$DOMRESTAPI_VER]"
-echo "DominoResponseFile    = [$DominoResponseFile]"
-echo "DominoVersion         = [$DominoVersion]"
-echo "DominoUserID          = [$DominoUserID]"
-echo "LinuxYumUpdate        = [$LinuxYumUpdate]"
-echo "DOMINO_LANG           = [$DOMINO_LANG]"
-echo "VERSE_VERSION         = [$VERSE_VERSION]"
-echo "NOMAD_VERSION         = [$NOMAD_VERSION]"
-echo "TRAVELER_VERSION      = [$TRAVELER_VERSION]"
-echo "LEAP_VERSION          = [$LEAP_VERSION]"
-echo "CAPI_VERSION          = [$CAPI_VERSION]"
-echo "DOMIQ_VERSION         = [$DOMIQ_VERSION]"
-echo "LINUX_PKG_ADD         = [$LINUX_PKG_ADD]"
-echo "STARTSCRIPT_VER       = [$STARTSCRIPT_VER]"
-echo "CUSTOM_ADD_ONS        = [$CUSTOM_ADD_ONS]"
-echo "K8S_RUNAS_USER        = [$K8S_RUNAS_USER_SUPPORT]"
-echo "SPECIAL_CURL_ARGS     = [$SPECIAL_CURL_ARGS]"
-echo "BUILD_SCRIPT_OPTIONS  = [$BUILD_SCRIPT_OPTIONS]"
-echo "BORG_VERSION          = [$BORG_VERSION]"
-echo "NSHMAILX_VERSION      = [$NSHMAILX_VERSION]"
-echo "MYSQL_JDBC_VERSION    = [$MYSQL_JDBC_VERSION]"
-echo "DOMPROM_VERSION       = [$DOMPROM_VERSION]"
-echo "OPENSSL_INSTALL       = [$OPENSSL_INSTALL]"
-echo "SSH_INSTALL           = [$SSH_INSTALL]"
+echo "INSTALL_DIR            = [$INSTALL_DIR]"
+echo "DownloadFrom           = [$DownloadFrom]"
+echo "SOFTWARE_REPO_IP       = [$SOFTWARE_REPO_IP]"
+echo "http_proxy             = [$http_proxy]"
+echo "https_proxy            = [$https_proxy]"
+echo "no_proxy               = [$no_proxy]"
+echo "Product                = [$PROD_NAME]"
+echo "Version                = [$PROD_VER]"
+echo "Fixpack                = [$PROD_FP]"
+echo "InterimsFix/Hotfix     = [$PROD_HF]"
+echo "DOMLP_VER              = [$DOMLP_VER]"
+echo "DOMRESTAPI_VER         = [$DOMRESTAPI_VER]"
+echo "DominoResponseFile     = [$DominoResponseFile]"
+echo "DominoVersion          = [$DominoVersion]"
+echo "DominoUserID           = [$DominoUserID]"
+echo "LinuxYumUpdate         = [$LinuxYumUpdate]"
+echo "DOMINO_LANG            = [$DOMINO_LANG]"
+echo "VERSE_VERSION          = [$VERSE_VERSION]"
+echo "NOMAD_VERSION          = [$NOMAD_VERSION]"
+echo "TRAVELER_VERSION       = [$TRAVELER_VERSION]"
+echo "LEAP_VERSION           = [$LEAP_VERSION]"
+echo "CAPI_VERSION           = [$CAPI_VERSION]"
+echo "DOMIQ_VERSION          = [$DOMIQ_VERSION]"
+echo "PROD_DOWNLOAD_FILE     = [$PROD_DOWNLOAD_FILE]"
+echo "PROD_FP_DOWNLOAD_FILE  = [$PROD_FP_DOWNLOAD_FILE]"
+echo "PROD_HF_DOWNLOAD_FILE  = [$PROD_HF_DOWNLOAD_FILE]"
+echo "TRAVELER_DOWNLOAD_FILE = [$TRAVELER_DOWNLOAD_FILE]"
+echo "LINUX_PKG_ADD          = [$LINUX_PKG_ADD]"
+echo "STARTSCRIPT_VER        = [$STARTSCRIPT_VER]"
+echo "CUSTOM_ADD_ONS         = [$CUSTOM_ADD_ONS]"
+echo "K8S_RUNAS_USER         = [$K8S_RUNAS_USER_SUPPORT]"
+echo "SPECIAL_CURL_ARGS      = [$SPECIAL_CURL_ARGS]"
+echo "BUILD_SCRIPT_OPTIONS   = [$BUILD_SCRIPT_OPTIONS]"
+echo "BORG_VERSION           = [$BORG_VERSION]"
+echo "NSHMAILX_VERSION       = [$NSHMAILX_VERSION]"
+echo "MYSQL_JDBC_VERSION     = [$MYSQL_JDBC_VERSION]"
+echo "DOMPROM_VERSION        = [$DOMPROM_VERSION]"
+echo "OPENSSL_INSTALL        = [$OPENSSL_INSTALL]"
+echo "SSH_INSTALL            = [$SSH_INSTALL]"
 
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)

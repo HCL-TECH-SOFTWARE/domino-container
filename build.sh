@@ -394,59 +394,60 @@ header()
 dump_config()
 {
   header "Build Configuration"
-  echo "Build Environment    : [$CONTAINER_CMD] $CONTAINER_RUNTIME_VERSION"
-  echo "BASE_IMAGE           : [$BASE_IMAGE]"
-  echo "DOWNLOAD_FROM        : [$DOWNLOAD_FROM]"
-  echo "SOFTWARE_DIR         : [$SOFTWARE_DIR]"
-  echo "PROD_NAME            : [$PROD_NAME]"
-  echo "PROD_VER             : [$PROD_VER]"
-  echo "PROD_FP              : [$PROD_FP]"
-  echo "PROD_HF              : [$PROD_HF]"
-  echo "DOMLP_VER            : [$DOMLP_VER]"
-  echo "DOMRESTAPI_VER       : [$DOMRESTAPI_VER]"
-  echo "PROD_DOWNLOAD_FILE   : [$PROD_DOWNLOAD_FILE]"
-  echo "PROD_FP_DOWNLOAD_FILE: [$PROD_FP_DOWNLOAD_FILE]"
-  echo "PROD_HF_DOWNLOAD_FILE: [$PROD_HF_DOWNLOAD_FILE]"
-  echo "PROD_EXT             : [$PROD_EXT]"
-  echo "CHECK_SOFTWARE       : [$CHECK_SOFTWARE]"
-  echo "CHECK_HASH           : [$CHECK_HASH]"
-  echo "DOWNLOAD_URLS_SHOW   : [$DOWNLOAD_URLS_SHOW]"
-  echo "TAG_LATEST           : [$TAG_LATEST]"
-  echo "TAG_IMAGE            : [$TAG_IMAGE]"
-  echo "PUSH_IMAGE           : [$PUSH_IMAGE]"
-  echo "DOCKER_FILE          : [$DOCKER_FILE]"
-  echo "VERSE_VERSION        : [$VERSE_VERSION]"
-  echo "NOMAD_VERSION        : [$NOMAD_VERSION]"
-  echo "TRAVELER_VERSION     : [$TRAVELER_VERSION]"
-  echo "LEAP_VERSION         : [$LEAP_VERSION]"
-  echo "CAPI_VERSION         : [$CAPI_VERSION]"
-  echo "NOMADWEB_VERSION     : [$NOMADWEB_VERSION]"
-  echo "DOMIQ                : [$DOMIQ]"
-  echo "MYSQL_JDBC_VERSION   : [$MYSQL_JDBC_VERSION]"
-  echo "MYSQL_INSTALL        : [$MYSQL_INSTALL]"
-  echo "MSSQL_INSTALL        : [$MSSQL_INSTALL]"
-  echo "BORG_VERSION         : [$BORG_VERSION]"
-  echo "DOMBORG_VERSION      : [$DOMBORG_VERSION]"
-  echo "TIKA_VERSION         : [$TIKA_VERSION]"
-  echo "IQSUITE_VERSION      : [$IQSUITE_VERSION]"
-  echo "NSHMAILX_VERSION     : [$NSHMAILX_VERSION]"
-  echo "NODE_EXPORTER_VERSION: [$NODE_EXPORTER_VERSION]"
-  echo "DOMPROM_VERSION      : [$DOMPROM_VERSION]"
-  echo "LINUX_PKG_ADD        : [$LINUX_PKG_ADD]"
-  echo "LINUX_PKG_REMOVE     : [$LINUX_PKG_REMOVE]"
-  echo "LINUX_PKG_SKIP       : [$LINUX_PKG_SKIP]"
-  echo "STARTSCRIPT_VER      : [$STARTSCRIPT_VER]"
-  echo "CUSTOM_ADD_ONS       : [$CUSTOM_ADD_ONS]"
-  echo "EXPOSED_PORTS        : [$EXPOSED_PORTS]"
-  echo "LinuxYumUpdate       : [$LinuxYumUpdate]"
-  echo "DOMINO_LANG          : [$DOMINO_LANG]"
-  echo "LINUX_LANG           : [$LINUX_LANG]"
-  echo "DOCKER_TZ            : [$DOCKER_TZ]"
-  echo "NAMESPACE            : [$CONTAINER_NAMESPACE]"
-  echo "K8S_RUNAS_USER       : [$K8S_RUNAS_USER_SUPPORT]"
-  echo "SPECIAL_CURL_ARGS    : [$SPECIAL_CURL_ARGS]"
-  echo "DominoResponseFile   : [$DominoResponseFile]"
-  echo "BUILD_SCRIPT_OPTIONS : [$BUILD_SCRIPT_OPTIONS]"
+  echo "Build Environment     : [$CONTAINER_CMD] $CONTAINER_RUNTIME_VERSION"
+  echo "BASE_IMAGE            : [$BASE_IMAGE]"
+  echo "DOWNLOAD_FROM         : [$DOWNLOAD_FROM]"
+  echo "SOFTWARE_DIR          : [$SOFTWARE_DIR]"
+  echo "PROD_NAME             : [$PROD_NAME]"
+  echo "PROD_VER              : [$PROD_VER]"
+  echo "PROD_FP               : [$PROD_FP]"
+  echo "PROD_HF               : [$PROD_HF]"
+  echo "DOMLP_VER             : [$DOMLP_VER]"
+  echo "DOMRESTAPI_VER        : [$DOMRESTAPI_VER]"
+  echo "PROD_DOWNLOAD_FILE    : [$PROD_DOWNLOAD_FILE]"
+  echo "PROD_FP_DOWNLOAD_FILE : [$PROD_FP_DOWNLOAD_FILE]"
+  echo "PROD_HF_DOWNLOAD_FILE : [$PROD_HF_DOWNLOAD_FILE]"
+  echo "TRAVELER_DOWNLOAD_FILE: [$TRAVELER_DOWNLOAD_FILE]"
+  echo "PROD_EXT              : [$PROD_EXT]"
+  echo "CHECK_SOFTWARE        : [$CHECK_SOFTWARE]"
+  echo "CHECK_HASH            : [$CHECK_HASH]"
+  echo "DOWNLOAD_URLS_SHOW    : [$DOWNLOAD_URLS_SHOW]"
+  echo "TAG_LATEST            : [$TAG_LATEST]"
+  echo "TAG_IMAGE             : [$TAG_IMAGE]"
+  echo "PUSH_IMAGE            : [$PUSH_IMAGE]"
+  echo "DOCKER_FILE           : [$DOCKER_FILE]"
+  echo "VERSE_VERSION         : [$VERSE_VERSION]"
+  echo "NOMAD_VERSION         : [$NOMAD_VERSION]"
+  echo "TRAVELER_VERSION      : [$TRAVELER_VERSION]"
+  echo "LEAP_VERSION          : [$LEAP_VERSION]"
+  echo "CAPI_VERSION          : [$CAPI_VERSION]"
+  echo "NOMADWEB_VERSION      : [$NOMADWEB_VERSION]"
+  echo "DOMIQ                 : [$DOMIQ]"
+  echo "MYSQL_JDBC_VERSION    : [$MYSQL_JDBC_VERSION]"
+  echo "MYSQL_INSTALL         : [$MYSQL_INSTALL]"
+  echo "MSSQL_INSTALL         : [$MSSQL_INSTALL]"
+  echo "BORG_VERSION          : [$BORG_VERSION]"
+  echo "DOMBORG_VERSION       : [$DOMBORG_VERSION]"
+  echo "TIKA_VERSION          : [$TIKA_VERSION]"
+  echo "IQSUITE_VERSION       : [$IQSUITE_VERSION]"
+  echo "NSHMAILX_VERSION      : [$NSHMAILX_VERSION]"
+  echo "NODE_EXPORTER_VERSION : [$NODE_EXPORTER_VERSION]"
+  echo "DOMPROM_VERSION       : [$DOMPROM_VERSION]"
+  echo "LINUX_PKG_ADD         : [$LINUX_PKG_ADD]"
+  echo "LINUX_PKG_REMOVE      : [$LINUX_PKG_REMOVE]"
+  echo "LINUX_PKG_SKIP        : [$LINUX_PKG_SKIP]"
+  echo "STARTSCRIPT_VER       : [$STARTSCRIPT_VER]"
+  echo "CUSTOM_ADD_ONS        : [$CUSTOM_ADD_ONS]"
+  echo "EXPOSED_PORTS         : [$EXPOSED_PORTS]"
+  echo "LinuxYumUpdate        : [$LinuxYumUpdate]"
+  echo "DOMINO_LANG           : [$DOMINO_LANG]"
+  echo "LINUX_LANG            : [$LINUX_LANG]"
+  echo "DOCKER_TZ             : [$DOCKER_TZ]"
+  echo "NAMESPACE             : [$CONTAINER_NAMESPACE]"
+  echo "K8S_RUNAS_USER        : [$K8S_RUNAS_USER_SUPPORT]"
+  echo "SPECIAL_CURL_ARGS     : [$SPECIAL_CURL_ARGS]"
+  echo "DominoResponseFile    : [$DominoResponseFile]"
+  echo "BUILD_SCRIPT_OPTIONS  : [$BUILD_SCRIPT_OPTIONS]"
   echo
   return 0
 }
@@ -1005,7 +1006,7 @@ check_exposed_ports()
     return 0
   fi
 
-  EXPOSED_PORTS="1352 25 80 110 143 389 443 636 993 995 63148 63149"
+  EXPOSED_PORTS="1352 25 80 110 143 389 443 465 587 636 993 995 63148 63149"
 
   if [ -n "$NOMAD_VERSION" ]; then
     EXPOSED_PORTS="$EXPOSED_PORTS 9443"
@@ -1205,6 +1206,7 @@ build_domino()
     --build-arg PROD_DOWNLOAD_FILE=$PROD_DOWNLOAD_FILE \
     --build-arg PROD_FP_DOWNLOAD_FILE=$PROD_FP_DOWNLOAD_FILE \
     --build-arg PROD_HF_DOWNLOAD_FILE=$PROD_HF_DOWNLOAD_FILE \
+    --build-arg TRAVELER_DOWNLOAD_FILE=$TRAVELER_DOWNLOAD_FILE\
     --build-arg DOCKER_TZ=$DOCKER_TZ \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
@@ -1552,7 +1554,7 @@ check_all_domdownload()
 
   fi
 
-  if [ -n "$TRAVELER_VERSION" ]; then
+  if [ -n "$TRAVELER_VERSION" ] && [ -z "$TRAVELER_DOWNLOAD_FILE" ]; then
     $DOMDOWNLOAD_BIN -product=traveler -platform=linux -ver=$TRAVELER_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
@@ -1911,7 +1913,7 @@ check_software_status()
       check_software_file "nomad" "$NOMAD_VERSION"
     fi
 
-    if [ -n "$TRAVELER_VERSION" ]; then
+    if [ -n "$TRAVELER_VERSION" ] && [ -z "$TRAVELER_DOWNLOAD_FILE" ] ; then
       check_software_file "traveler" "$TRAVELER_VERSION"
     fi
 
@@ -2088,7 +2090,7 @@ check_software_status()
       check_software_file "nomad" "$NOMAD_VERSION"
     fi
 
-    if [ -n "$TRAVELER_VERSION" ]; then
+    if [ -n "$TRAVELER_VERSION" ] && [ -z "$TRAVELER_DOWNLOAD_FILE" ] ; then
       check_software_file "traveler" "$TRAVELER_VERSION"
     fi
 
@@ -3542,6 +3544,10 @@ for a in "$@"; do
       fi
       ;;
 
+    -traveler_download=*)
+      TRAVELER_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
     -traveler*|+traveler*)
       TRAVELER_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
@@ -3665,7 +3671,6 @@ for a in "$@"; do
    -prod_download=*)
       PROD_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
-
 
    -fp_download=*)
       PROD_FP_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
