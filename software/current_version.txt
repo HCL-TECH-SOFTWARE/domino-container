@@ -8,8 +8,8 @@ leap|1.1.8
 verse|3.2.5
 capi|14.5
 safelinx|1.4.3
-nomadweb|1.0.16
-nomad|1.0.16
+nomadweb|1.0.17
+nomad|1.0.17
 domrestapi|1.1.5
 tika|3.2.1
 borg|1.2.8
