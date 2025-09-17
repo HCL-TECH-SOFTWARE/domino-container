@@ -78,7 +78,9 @@ capi|14.0|CAPIToolkit_1400_Linux.zip|zpJqVq44zayvOhEsiGbKq|02fc99bd6e0233352756f
 capi|14.5|CAPIToolkit_1450_Linux.zip|UmQqKopjLqLUTKSppwZhW|46f04a287a33eb4f648c6da3f881d2ede153dba18ea49969802c0eaeaac5e8f8
 borg|1.2.7|borg-linuxnew64-1.2.7,https://github.com/borgbackup/borg/releases/download/1.2.7/borg-linuxnew64|x|d8d3313ebaf48ba135001b7f230b494259f112e56adf0d5f952af999742e1190
 borg|1.2.8|borg-linuxnew64-1.2.8,https://github.com/borgbackup/borg/releases/download/1.2.8/borg-linuxnew64|x|85847a2ceb27d4a6c0ca0c0fb92d31bb2c1fcf6c77df1b2275b3f6f161d3571c
+borg|1.4.1|borg-linux-glibc231,https://github.com/borgbackup/borg/releases/download/1.4.1/borg-linux-glibc231|x|814c5b6f5e877366aaa790494a79be7a1eeced7e7fa659aaac429cf613276ab8
 domborg|0.9.6|nshborg-0.9.6,https://github.com/nashcom/domino-borg/releases/download/v0.9.6/nshborg-0.9.6|x|14d3ad2bf44e95c1354dc01a5e1d73a2936902b6ba3e0df9fe7149a320abd1d8
+domborg|0.9.7|nshborg-0.9.7,https://github.com/nashcom/domino-borg/releases/download/v0.9.7/nshborg-0.9.7|x|24362f931d6ca438e3332d745be38dd11d6092579315ecb8c988199a69a696b3
 tika|3.2.0|tika-server-standard-3.2.0.jar,https://dlcdn.apache.org/tika/3.2.0/tika-server-standard-3.2.0.jar|x|60cc16fc933ee47f94e9f4a56e8d6f9554e0caf14facf896d9727b1e834224c1
 tika|3.2.1|tika-server-standard-3.2.1.jar,https://dlcdn.apache.org/tika/3.2.1/tika-server-standard-3.2.1.jar|x|383a8a99ec886ea95e4143bfe200208afe1884db14b4c1e470950edec82d2c5d
 safelinx|1.4.1|HCL-SafeLinx-1410-x86_64.tar.gz|AbiYxUssdE1MT0GtR4gH8|c8c207f810343c7ab47997c1006e144998d0717080241ea6e6f2644191499c31

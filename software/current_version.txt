@@ -12,8 +12,8 @@ nomadweb|1.0.17
 nomad|1.0.17
 domrestapi|1.1.5
 tika|3.2.1
-borg|1.2.8
-domborg|0.9.6
+borg|1.4.1
+domborg|0.9.7
 node_exporter|1.9.1
 domprom|0.9.2
 iqsuite|27.1.1
