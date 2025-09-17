@@ -1306,7 +1306,12 @@ create_notes_user_and_group()
   echo "Creating notes ($NOTES_UID) user and group ($NOTES_GID)"
 
   groupadd notes -g $NOTES_GID
-  useradd notes -u $NOTES_UID -g $NOTES_GID -m
+
+  if [ -z "$LINUX_HOMEDIR" ]; then
+    useradd notes -u $NOTES_UID -g $NOTES_GID -m
+  else
+    useradd notes -u $NOTES_UID -g $NOTES_GID -m --home-dir "$LINUX_HOMEDIR"
+  fi
 }
 
 
@@ -1362,6 +1367,7 @@ echo "PROD_FP_DOWNLOAD_FILE  = [$PROD_FP_DOWNLOAD_FILE]"
 echo "PROD_HF_DOWNLOAD_FILE  = [$PROD_HF_DOWNLOAD_FILE]"
 echo "TRAVELER_DOWNLOAD_FILE = [$TRAVELER_DOWNLOAD_FILE]"
 echo "LINUX_PKG_ADD          = [$LINUX_PKG_ADD]"
+echo "LINUX_HOMEDIR          = [$LINUX_HOMEDIR]"
 echo "STARTSCRIPT_VER        = [$STARTSCRIPT_VER]"
 echo "CUSTOM_ADD_ONS         = [$CUSTOM_ADD_ONS]"
 echo "K8S_RUNAS_USER         = [$K8S_RUNAS_USER_SUPPORT]"

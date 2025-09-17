@@ -323,6 +323,7 @@ usage()
   echo "-tz=<timezone>   explicitly set container timezone during build. by default Linux TZ is used"
   echo "-locale=<locale> specify Linux locale to install (e.g. de_DE.UTF-8)"
   echo "-lang=<lang>     specify Linux glibc language pack to install (e.g. de,it,fr). Multiple languages separated by comma"
+  echo "-homedir=<dir>   custom home directory for notes user"
   echo "-pull            always try to pull a newer base image version"
   echo "-nginx=<img>     custom image name. if it is not available, it is build from Redhat UBI minimal"
   echo "-openssl         adds OpenSSL to Domino image"
@@ -436,6 +437,7 @@ dump_config()
   echo "LINUX_PKG_ADD         : [$LINUX_PKG_ADD]"
   echo "LINUX_PKG_REMOVE      : [$LINUX_PKG_REMOVE]"
   echo "LINUX_PKG_SKIP        : [$LINUX_PKG_SKIP]"
+  echo "LINUX_HOMEDIR         : [$LINUX_HOMEDIR]"
   echo "STARTSCRIPT_VER       : [$STARTSCRIPT_VER]"
   echo "CUSTOM_ADD_ONS        : [$CUSTOM_ADD_ONS]"
   echo "EXPOSED_PORTS         : [$EXPOSED_PORTS]"
@@ -1232,6 +1234,7 @@ build_domino()
     --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
     --build-arg LINUX_PKG_REMOVE="$LINUX_PKG_REMOVE" \
     --build-arg LINUX_PKG_SKIP="$LINUX_PKG_SKIP" \
+    --build-arg LINUX_HOMEDIR="$LINUX_HOMEDIR" \
     --build-arg MSSQL_INSTALL="$MSSQL_INSTALL" \
     --build-arg STARTSCRIPT_VER="$STARTSCRIPT_VER" \
     --build-arg CUSTOM_ADD_ONS="$CUSTOM_ADD_ONS" \
@@ -2705,6 +2708,7 @@ load_conf()
   local LINUX_PKG_ADD_SELECT=$LINUX_PKG_ADD
   local LINUX_PKG_REMOVE_SELECT=$LINUX_PKG_REMOVE
   local LINUX_PKG_SKIP_SELECT=$LINUX_PKG_SKIP
+  local LINUX_HOMEDIR_SELECT=$LINUX_HOMEDIR
   local CUSTOM_ADD_ONS_SELECT=$CUSTOM_ADD_ONS
   local BORG_SELECT=$BORG_VERSION
   local TIKA_SELECT=$TIKA_VERSION
@@ -2855,6 +2859,7 @@ write_conf()
   if [ -n "$LINUX_PKG_REMOVE" ]; then echo "LINUX_PKG_REMOVE=\"$LINUX_PKG_REMOVE\"" >> "$BUILD_CONF"; fi
   if [ -n "$LINUX_PKG_SKIP" ];   then echo "LINUX_PKG_SKIP=\"$LINUX_PKG_SKIP\""     >> "$BUILD_CONF"; fi
   if [ -n "$CUSTOM_ADD_ONS" ];   then echo "CUSTOM_ADD_ONS=$CUSTOM_ADD_ONS"         >> "$BUILD_CONF"; fi
+  if [ -n "$LINUX_HOMEDIR" ];    then echo "LINUX_HOMEDIR=$LINUX_HOMEDIR"           >> "$BUILD_CONF"; fi
   if [ -n "$DOCKER_TZ" ];        then echo "DOCKER_TZ=$DOCKER_TZ"                   >> "$BUILD_CONF"; fi
   if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"                 >> "$BUILD_CONF"; fi
   if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"               >> "$BUILD_CONF"; fi
@@ -3608,6 +3613,10 @@ for a in "$@"; do
       LINUX_PKG_SKIP=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
+    -homedir=*)
+    LINUX_HOMEDIR=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
     -startscript=*|+startscript=*)
       STARTSCRIPT_VER=$(echo "$a" | cut -f2 -d= -s)
       ;;
@@ -3852,11 +3861,11 @@ for a in "$@"; do
       AutoTestImage=yes
       ;;
 
-   -scan)
+    -scan)
       ScanImage=yes
       ;;
 
-   -scan=*)
+    -scan=*)
       IMAGE_SCAN_RESULT_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 

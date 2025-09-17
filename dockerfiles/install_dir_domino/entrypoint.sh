@@ -36,6 +36,11 @@ if [ ! -e "$DOMDOCK_LOG_DIR" ]; then
   mkdir -p "$DOMDOCK_LOG_DIR"
 fi
 
+# In case a none standard home dir was specified, make sure it exists on start
+if [ ! -e "$HOME" ]; then
+  mkdir -p "$HOME"
+fi
+
 # Get Linux version and platform
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
 LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)

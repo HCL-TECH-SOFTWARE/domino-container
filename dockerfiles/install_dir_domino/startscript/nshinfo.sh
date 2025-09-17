@@ -1,5 +1,14 @@
 #!/bin/bash
 
+###########################################################################
+# NashCom Domino/Linux info  script (part of Domino start script)
+###########################################################################
+# 2025 Copyright by Daniel Nashed, feedback domino_unix@nashcom.de
+# You may use and distribute the unmodified version of this script.
+# Use at your own risk. No implied or specific warranties are given.
+# You may change it for your own usage only
+# Version 4.0.6 30.07.2025
+###########################################################################
 
 print_delim ()
 {
@@ -14,7 +23,7 @@ get_entry()
   else
     DELIM="$4"
   fi
-  
+
   if [ "$5" = "mem" ]; then
     export $1="$(sed -n "/^$3/ {p;q}" $2| cut -d $DELIM -f2 | xargs | cut -d " " -f1)"
   else
@@ -28,7 +37,7 @@ format_mem()
   if [ -z "$3" ]; then
     export $1="$(echo "$2" | awk '{printf "%4.1f GB", $1/1024/1024}' )"
   else
-    export $1="$(echo "$2" "$3" | awk '{printf "%4.1f GB  (%4.1f)", $1/1024/1024, $1*100/$2}' )"
+    export $1="$(echo "$2" "$3" | awk '{printf "%4.1f GB  (%4.1f %%%%)", $1/1024/1024, $1*100/$2}' )"
   fi
 }
 
@@ -72,27 +81,31 @@ domino_uptime()
 check_free_space()
 {
   local DISK_INFO=
-  local DISK_INFO_CMD="df -h --output=target,source,fstype,size,used,avail,pcent"
-  local FORMAT="%-7s %-20s %-20s %-8s %8s %8s %8s %5s\n"
+  local DISK_INFO_CMD="df -h --output=size,used,avail,pcent,target,source,fstype"
+  local FORMAT="%-6s %8s %8s %8s %5s   %-8s %-20s %-20s\n"
   local DIR2CHECK=
   local PARTS=
   local DISK="$2"
   local SHOW_ALL="$3"
 
   if [ -z "$1" ]; then
-    printf "$FORMAT\n" "Disk" "Mounted on" "Filesystem" "Type" "Size" "Used" "Avail" "Use%"
+    printf "$FORMAT\n" "Type" "Size" "Used" "Avail" "Use%" "Disk" "Mounted on" "Filesystem"
     return 0
   fi
 
   case "$1" in
 
     /*)
-     DIR2CHECK="$1"
-     ;;
+      DIR2CHECK="$1"
+      ;;
 
     *)
-     DIR2CHECK=$(cat "$DOMINO_INI_PATH" | grep -i "$1=" | head -1 | cut -d'=' -f2)
-     ;;
+      if [ ! -e "$DOMINO_INI_PATH" ]; then
+        return 0
+      fi
+
+      DIR2CHECK=$(cat "$DOMINO_INI_PATH" | grep -i "$1=" | head -1 | cut -d'=' -f2)
+      ;;
 
   esac
 
@@ -143,8 +156,17 @@ check_free_space()
 
 check_all_disks()
 {
-  check_free_space 
+  check_free_space
   check_free_space "/" "Root"
+
+  if [ -z "$DOMINO_INI_PATH" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$DOMINO_INI_PATH" ]; then
+    return 0
+  fi
+
   check_free_space "Directory" "NSF"
   check_free_space "TRANSLOG_Path" "TXN"
   check_free_space "DAOSBasePath" "DAOS"
@@ -173,7 +195,11 @@ print_infos()
   LINUX_UPTIME=$( awk '{x=$1/86400;y=($1%86400)/3600;z=($1%3600)/60} {printf("%d day, %d hour %d min\n",x,y,z)}' /proc/uptime )
   LINUX_LOAD_AVG=$(awk -F " " '{printf $1 "  " $2 "  " $3}' /proc/loadavg)
 
-  LINUX_HOSTNAME=$(cat /proc/sys/kernel/hostname)
+  if [ -e /usr/bin/hostname ]; then
+    LINUX_HOSTNAME=$(/usr/bin/hostname --fqdn)
+  else
+    LINUX_HOSTNAME=$(cat /proc/sys/kernel/hostname)
+  fi
 
   if [ -x /usr/bin/systemd-detect-virt ]; then
     LINUX_VIRT=$(/usr/bin/systemd-detect-virt -v)
@@ -275,9 +301,7 @@ print_infos()
     printf "Linux Uptime  :      $LINUX_UPTIME\n"
   fi
 
-  if [ -n "$DOMINO_UPTIME" ]; then
-    printf "Domino Uptime :      $DOMINO_UPTIME\n"
-  fi
+  printf "Domino Uptime :      $DOMINO_UPTIME\n"
 
   printf "Load Average  :      $LINUX_LOAD_AVG\n"
 
