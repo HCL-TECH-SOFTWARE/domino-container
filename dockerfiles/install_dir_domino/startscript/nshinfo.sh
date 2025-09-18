@@ -81,7 +81,7 @@ domino_uptime()
 check_free_space()
 {
   local DISK_INFO=
-  local DISK_INFO_CMD="df -h --output=size,used,avail,pcent,target,source,fstype"
+  local DISK_INFO_CMD="df -h --output=target,source,fstype,size,used,avail,pcent"
   local FORMAT="%-6s %8s %8s %8s %5s   %-8s %-20s %-20s\n"
   local DIR2CHECK=
   local PARTS=
@@ -89,7 +89,7 @@ check_free_space()
   local SHOW_ALL="$3"
 
   if [ -z "$1" ]; then
-    printf "$FORMAT\n" "Type" "Size" "Used" "Avail" "Use%" "Disk" "Mounted on" "Filesystem"
+    printf "$FORMAT\n" "Type" "Size" "Used" "Avail" "Use%" "FsType" "Disk" "Mounted on"
     return 0
   fi
 
@@ -150,7 +150,7 @@ check_free_space()
       ;;
   esac
 
-  printf "$FORMAT" "$DISK" "$target" "$source" "$fstype" "$size" "$used" "$avail" "$pcent"
+  printf "$FORMAT" "$DISK" "$size" "$used" "$avail" "$pcent" "$fstype" "$source" "$target"
 }
 
 
