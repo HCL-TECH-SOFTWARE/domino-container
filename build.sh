@@ -472,7 +472,7 @@ check_build_nginx_image()
   header "Building NGINX Image $NGINX_IMAGE_NAME ..."
 
   if [ -z "$NGINX_BASE_IMAGE" ]; then
-    NGINX_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal:latest
+    NGINX_BASE_IMAGE=registry.access.redhat.com/ubi10/ubi-minimal:latest
   fi
 
   # Get Build Time
@@ -507,7 +507,7 @@ build_squid_image()
   header "Building Squid Image $SQUID_IMAGE_NAME ..."
 
   if [ -z "$SQUID_BASE_IMAGE" ]; then
-    SQUID_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal:latest
+    SQUID_BASE_IMAGE=registry.access.redhat.com/ubi10/ubi-minimal:latest
   fi
 
   # Get Build Time
@@ -757,15 +757,15 @@ check_from_image()
   if [ -z "$FROM_IMAGE" ]; then
 
     if [ "$PROD_NAME" = "domino" ]; then
-      FROM_IMAGE=ubi9-minimal
+      FROM_IMAGE=ubi-minimal
     elif [ "$PROD_NAME" = "traveler" ]; then
       FROM_IMAGE=hclcom/domino:latest
     elif [ "$PROD_NAME" = "leap" ]; then
       FROM_IMAGE=hclcom/domino:latest
     elif [ "$PROD_NAME" = "safelinx" ]; then
-      FROM_IMAGE=ubi9-minimal
+      FROM_IMAGE=ubi-minimal
     else
-      FROM_IMAGE=ubi9-minimal
+      FROM_IMAGE=ubi-minimal
     fi
   fi
 
@@ -826,24 +826,14 @@ check_from_image()
       BASE_IMAGE=docker.io/photon:5.0
       ;;
 
-    ubi)
-      LINUX_NAME="RedHat UBI 9"
-      BASE_IMAGE=registry.access.redhat.com/ubi9
-      ;;
-
     ubi9)
       LINUX_NAME="RedHat UBI 9"
       BASE_IMAGE=registry.access.redhat.com/ubi9
       ;;
 
-    ubi10)
+    ubi|ubi10)
       LINUX_NAME="RedHat UBI 10"
       BASE_IMAGE=registry.access.redhat.com/ubi10
-      ;;
-
-    ubi-minimal)
-      LINUX_NAME="RedHat UBI 9 minimal"
-      BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
       ;;
 
     ubi9-minimal)
@@ -851,7 +841,7 @@ check_from_image()
       BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
       ;;
 
-    ubi10-minimal)
+    ubi-minimal|ubi10-minimal)
       LINUX_NAME="RedHat UBI 10 minimal"
       BASE_IMAGE=registry.access.redhat.com/ubi10/ubi-minimal
       ;;
