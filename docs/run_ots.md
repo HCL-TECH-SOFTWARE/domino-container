@@ -45,19 +45,22 @@ Be aware that the file remains in place for the complete run-time.
 
 ## Location of OTS files in the running container at first startup
 
-The container image first checks if a OTS file is present at the following location:
+1. The container image first checks if a OTS file is present at the following location:
 
-/local/notesdata/DominoAutoConfig.json 
+**/local/notesdata/DominoAutoConfig.json**
 
-Change the location wit via environment variable: `DOMINO_AUTO_CONFIG_JSON_FILE`
 
-If no OTS file is found the container checks for an OTS template file
+Customization via environment variable: `DOMINO_AUTO_CONFIG_JSON_FILE`
 
-/local/notesdata/DominoAutoConfigTemplate.json
+2. If no OTS file is found the container checks for an OTS template file
+
+
+**/local/notesdata/DominoAutoConfigTemplate.json**
 
 Customization via environment variable: `DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE`
 
-The OTS template can be also downloaded from remote by specifying the following environment variable like in the following example:
+
+3. The OTS template can be also downloaded from remote by specifying the following environment variable like in the following example:
 
 ```
 SetupAutoConfigureTemplateDownload=https://myserver./ots-template.json
