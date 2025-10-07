@@ -359,6 +359,7 @@ send_diag()
   remove_file "$DOMINO_DIAG_TAR"
   DOMINO_DIAG_TAR=
   echo
+  wait_for_key
 }
 
 
@@ -395,6 +396,7 @@ send_nsd()
 
   tar -cz "$LAST_NSD" | "$NSHMAILX_BIN" "$DIAG_RCPT" -name "$DIAG_FULL_SERVER_NAME" -from "$DIAG_FROM"  -subject "Domino NSD [$DIAG_FULL_SERVER_NAME]" -att - -attname "${NSD_FILENAME}.taz"
   echo
+  wait_for_key
 }
 
 
@@ -431,7 +433,7 @@ send_trace_file()
 
   tar -cz "$DOMINO_DIAG_TRACE_FILE" | "$NSHMAILX_BIN" "$DIAG_RCPT" -name "$DIAG_FULL_SERVER_NAME" -from "$DIAG_FROM"  -subject "Domino Tracefile [$DIAG_FULL_SERVER_NAME]" -att - -attname "${BASE_FILENAME}.taz"
   echo
-
+  wait_for_key
 }
 
 
@@ -494,6 +496,11 @@ menu_help()
   echo "The Domino Diagnostic Menu offers diagnostics commands."
   echo "It is intended to provide easy diagnostics."
   echo
+  echo "To specify a standard mail recipient use the following notes.ini setting:"
+  echo
+  echo "notes.ini   DominoDiagRcpt=admin@example.com"
+  echo
+
 }
 
 
