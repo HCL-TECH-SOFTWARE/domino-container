@@ -339,6 +339,7 @@ usage()
   echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
   echo "-domiq           adds the Domino IQ server run-time to the image"
   echo "-mysql-jdbc      adds the MySQL JDBC driver to the image"
+  echo "-postgresql-jdbc adds the PostgreSQL JDBC driver to the image"
   echo "-tika            updates the Tika server to the Domino server"
   echo "-iqsuite         adds GBS iQ.Suite to the container image under /opt"
   echo "-nshmailx        installs Nash!Com nshmailx simple mail send tool"
@@ -395,61 +396,62 @@ header()
 dump_config()
 {
   header "Build Configuration"
-  echo "Build Environment     : [$CONTAINER_CMD] $CONTAINER_RUNTIME_VERSION"
-  echo "BASE_IMAGE            : [$BASE_IMAGE]"
-  echo "DOWNLOAD_FROM         : [$DOWNLOAD_FROM]"
-  echo "SOFTWARE_DIR          : [$SOFTWARE_DIR]"
-  echo "PROD_NAME             : [$PROD_NAME]"
-  echo "PROD_VER              : [$PROD_VER]"
-  echo "PROD_FP               : [$PROD_FP]"
-  echo "PROD_HF               : [$PROD_HF]"
-  echo "DOMLP_VER             : [$DOMLP_VER]"
-  echo "DOMRESTAPI_VER        : [$DOMRESTAPI_VER]"
-  echo "PROD_DOWNLOAD_FILE    : [$PROD_DOWNLOAD_FILE]"
-  echo "PROD_FP_DOWNLOAD_FILE : [$PROD_FP_DOWNLOAD_FILE]"
-  echo "PROD_HF_DOWNLOAD_FILE : [$PROD_HF_DOWNLOAD_FILE]"
-  echo "TRAVELER_DOWNLOAD_FILE: [$TRAVELER_DOWNLOAD_FILE]"
-  echo "PROD_EXT              : [$PROD_EXT]"
-  echo "CHECK_SOFTWARE        : [$CHECK_SOFTWARE]"
-  echo "CHECK_HASH            : [$CHECK_HASH]"
-  echo "DOWNLOAD_URLS_SHOW    : [$DOWNLOAD_URLS_SHOW]"
-  echo "TAG_LATEST            : [$TAG_LATEST]"
-  echo "TAG_IMAGE             : [$TAG_IMAGE]"
-  echo "PUSH_IMAGE            : [$PUSH_IMAGE]"
-  echo "DOCKER_FILE           : [$DOCKER_FILE]"
-  echo "VERSE_VERSION         : [$VERSE_VERSION]"
-  echo "NOMAD_VERSION         : [$NOMAD_VERSION]"
-  echo "TRAVELER_VERSION      : [$TRAVELER_VERSION]"
-  echo "LEAP_VERSION          : [$LEAP_VERSION]"
-  echo "CAPI_VERSION          : [$CAPI_VERSION]"
-  echo "NOMADWEB_VERSION      : [$NOMADWEB_VERSION]"
-  echo "DOMIQ                 : [$DOMIQ]"
-  echo "MYSQL_JDBC_VERSION    : [$MYSQL_JDBC_VERSION]"
-  echo "MYSQL_INSTALL         : [$MYSQL_INSTALL]"
-  echo "MSSQL_INSTALL         : [$MSSQL_INSTALL]"
-  echo "BORG_VERSION          : [$BORG_VERSION]"
-  echo "DOMBORG_VERSION       : [$DOMBORG_VERSION]"
-  echo "TIKA_VERSION          : [$TIKA_VERSION]"
-  echo "IQSUITE_VERSION       : [$IQSUITE_VERSION]"
-  echo "NSHMAILX_VERSION      : [$NSHMAILX_VERSION]"
-  echo "NODE_EXPORTER_VERSION : [$NODE_EXPORTER_VERSION]"
-  echo "DOMPROM_VERSION       : [$DOMPROM_VERSION]"
-  echo "LINUX_PKG_ADD         : [$LINUX_PKG_ADD]"
-  echo "LINUX_PKG_REMOVE      : [$LINUX_PKG_REMOVE]"
-  echo "LINUX_PKG_SKIP        : [$LINUX_PKG_SKIP]"
-  echo "LINUX_HOMEDIR         : [$LINUX_HOMEDIR]"
-  echo "STARTSCRIPT_VER       : [$STARTSCRIPT_VER]"
-  echo "CUSTOM_ADD_ONS        : [$CUSTOM_ADD_ONS]"
-  echo "EXPOSED_PORTS         : [$EXPOSED_PORTS]"
-  echo "LinuxYumUpdate        : [$LinuxYumUpdate]"
-  echo "DOMINO_LANG           : [$DOMINO_LANG]"
-  echo "LINUX_LANG            : [$LINUX_LANG]"
-  echo "DOCKER_TZ             : [$DOCKER_TZ]"
-  echo "NAMESPACE             : [$CONTAINER_NAMESPACE]"
-  echo "K8S_RUNAS_USER        : [$K8S_RUNAS_USER_SUPPORT]"
-  echo "SPECIAL_CURL_ARGS     : [$SPECIAL_CURL_ARGS]"
-  echo "DominoResponseFile    : [$DominoResponseFile]"
-  echo "BUILD_SCRIPT_OPTIONS  : [$BUILD_SCRIPT_OPTIONS]"
+  echo "Build Environment      : [$CONTAINER_CMD] $CONTAINER_RUNTIME_VERSION"
+  echo "BASE_IMAGE             : [$BASE_IMAGE]"
+  echo "DOWNLOAD_FROM          : [$DOWNLOAD_FROM]"
+  echo "SOFTWARE_DIR           : [$SOFTWARE_DIR]"
+  echo "PROD_NAME              : [$PROD_NAME]"
+  echo "PROD_VER               : [$PROD_VER]"
+  echo "PROD_FP                : [$PROD_FP]"
+  echo "PROD_HF                : [$PROD_HF]"
+  echo "DOMLP_VER              : [$DOMLP_VER]"
+  echo "DOMRESTAPI_VER         : [$DOMRESTAPI_VER]"
+  echo "PROD_DOWNLOAD_FILE     : [$PROD_DOWNLOAD_FILE]"
+  echo "PROD_FP_DOWNLOAD_FILE  : [$PROD_FP_DOWNLOAD_FILE]"
+  echo "PROD_HF_DOWNLOAD_FILE  : [$PROD_HF_DOWNLOAD_FILE]"
+  echo "TRAVELER_DOWNLOAD_FILE : [$TRAVELER_DOWNLOAD_FILE]"
+  echo "PROD_EXT               : [$PROD_EXT]"
+  echo "CHECK_SOFTWARE         : [$CHECK_SOFTWARE]"
+  echo "CHECK_HASH             : [$CHECK_HASH]"
+  echo "DOWNLOAD_URLS_SHOW     : [$DOWNLOAD_URLS_SHOW]"
+  echo "TAG_LATEST             : [$TAG_LATEST]"
+  echo "TAG_IMAGE              : [$TAG_IMAGE]"
+  echo "PUSH_IMAGE             : [$PUSH_IMAGE]"
+  echo "DOCKER_FILE            : [$DOCKER_FILE]"
+  echo "VERSE_VERSION          : [$VERSE_VERSION]"
+  echo "NOMAD_VERSION          : [$NOMAD_VERSION]"
+  echo "TRAVELER_VERSION       : [$TRAVELER_VERSION]"
+  echo "LEAP_VERSION           : [$LEAP_VERSION]"
+  echo "CAPI_VERSION           : [$CAPI_VERSION]"
+  echo "NOMADWEB_VERSION       : [$NOMADWEB_VERSION]"
+  echo "DOMIQ                  : [$DOMIQ]"
+  echo "MYSQL_JDBC_VERSION     : [$MYSQL_JDBC_VERSION]"
+  echo "MYSQL_INSTALL          : [$MYSQL_INSTALL]"
+  echo "MSSQL_INSTALL          : [$MSSQL_INSTALL]"
+  echo "POSTGRESQL_JDBC_VERSION: [$POSTGRESQL_JDBC_VERSION]"
+  echo "BORG_VERSION           : [$BORG_VERSION]"
+  echo "DOMBORG_VERSION        : [$DOMBORG_VERSION]"
+  echo "TIKA_VERSION           : [$TIKA_VERSION]"
+  echo "IQSUITE_VERSION        : [$IQSUITE_VERSION]"
+  echo "NSHMAILX_VERSION       : [$NSHMAILX_VERSION]"
+  echo "NODE_EXPORTER_VERSION  : [$NODE_EXPORTER_VERSION]"
+  echo "DOMPROM_VERSION        : [$DOMPROM_VERSION]"
+  echo "LINUX_PKG_ADD          : [$LINUX_PKG_ADD]"
+  echo "LINUX_PKG_REMOVE       : [$LINUX_PKG_REMOVE]"
+  echo "LINUX_PKG_SKIP         : [$LINUX_PKG_SKIP]"
+  echo "LINUX_HOMEDIR          : [$LINUX_HOMEDIR]"
+  echo "STARTSCRIPT_VER        : [$STARTSCRIPT_VER]"
+  echo "CUSTOM_ADD_ONS         : [$CUSTOM_ADD_ONS]"
+  echo "EXPOSED_PORTS          : [$EXPOSED_PORTS]"
+  echo "LinuxYumUpdate         : [$LinuxYumUpdate]"
+  echo "DOMINO_LANG            : [$DOMINO_LANG]"
+  echo "LINUX_LANG             : [$LINUX_LANG]"
+  echo "DOCKER_TZ              : [$DOCKER_TZ]"
+  echo "NAMESPACE              : [$CONTAINER_NAMESPACE]"
+  echo "K8S_RUNAS_USER         : [$K8S_RUNAS_USER_SUPPORT]"
+  echo "SPECIAL_CURL_ARGS      : [$SPECIAL_CURL_ARGS]"
+  echo "DominoResponseFile     : [$DominoResponseFile]"
+  echo "BUILD_SCRIPT_OPTIONS   : [$BUILD_SCRIPT_OPTIONS]"
   echo
   return 0
 }
@@ -1148,6 +1150,11 @@ check_addon_label()
   if [ -n "$MYSQL_JDBC_VERSION" ]; then
     add_addon_label "mysql-jdbc" "$MYSQL_JDBC_VERSION"
   fi
+
+  if [ -n "POSTGRESQL_JDBC_VERSION" ]; then
+    add_addon_label "postgresql-jdbc" "$POSTGRESQL_JDBC_VERSION"
+  fi
+
 }
 
 
@@ -1221,6 +1228,7 @@ build_domino()
     --build-arg NSHMAILX_VERSION="$NSHMAILX_VERSION" \
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
     --build-arg MYSQL_JDBC_VERSION="$MYSQL_JDBC_VERSION" \
+    --build-arg POSTGRESQL_JDBC_VERSION="$POSTGRESQL_JDBC_VERSION" \
     --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
     --build-arg LINUX_PKG_REMOVE="$LINUX_PKG_REMOVE" \
     --build-arg LINUX_PKG_SKIP="$LINUX_PKG_SKIP" \
@@ -1585,6 +1593,10 @@ check_all_domdownload()
 
   if [ -n "$MYSQL_JDBC_VERSION" ]; then
     $DOMDOWNLOAD_BIN -product=mysql-jdbc -platform=linux -ver=$MYSQL_JDBC_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=postgresql-jdbc -platform=linux -ver=$POSTGRESQL_JDBC_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
   if [ -n "$NSHMAILX_VERSION" ]; then
@@ -1974,6 +1986,12 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
+      if [ ! "$POSTGRESQL_JDBC_VERSION" = "yes" ]; then
+        check_software_file "postgresql-jdbc" "$POSTGRESQL_JDBC_VERSION"
+      fi
+    fi
+
   else
     echo
 
@@ -2148,6 +2166,12 @@ check_software_status()
     if [ -n "$MYSQL_JDBC_VERSION" ]; then
       if [ ! "$MYSQL_JDBC_VERSION" = "yes" ]; then
         check_software_file "mysql-jdbc" "$MYSQL_JDBC_VERSION"
+      fi
+    fi
+
+    if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
+      if [ ! "$POSTGRESQL_JDBC_VERSION" = "yes" ]; then
+        check_software_file "postgresql-jdbc" "$POSTGRESQL_JDBC_VERSION"
       fi
     fi
 
@@ -2703,6 +2727,7 @@ load_conf()
   local BORG_SELECT=$BORG_VERSION
   local TIKA_SELECT=$TIKA_VERSION
   local MYSQL_JDBC_SELECT=$MYSQL_JDBC_VERSION
+  local POSTGRESQL_JDBC_VERSION_SELECT=$POSTGRESQL_JDBC_VERSION
   local IQSUITE_SELECT=$IQSUITE_VERSION
 
   if [ -n "$1" ]; then
@@ -2740,6 +2765,7 @@ load_conf()
   get_current_addon_version domborg SELECT_DOMBORG_VERSION
   get_current_addon_version tika SELECT_TIKA_VERSION
   get_current_addon_version mysql-jdbc SELECT_MYSQL_JDBC_VERSION
+  get_current_addon_version postgresql-jdbc SELECT_POSTGRESQL_JDBC_VERSION
   get_current_addon_version iqsuite SELECT_IQSUITE_VERSION
   get_current_addon_version nshmailx SELECT_NSHMAILX_VERSION
   get_current_addon_version node_exporter SELECT_NODE_EXPORTER_VERSION
@@ -2760,21 +2786,22 @@ load_conf()
       ;;
   esac
 
-  if [ "$LATESTSEL" = "$VERSE_VERSION" ];         then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
-  if [ "$LATESTSEL" = "$TRAVELER_VERSION" ];      then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
-  if [ "$LATESTSEL" = "$NOMAD_VERSION" ];         then NOMAD_VERSION=$SELECT_NOMAD_VERSION; fi
-  if [ "$LATESTSEL" = "$LEAP_VERSION" ];          then LEAP_VERSION=$SELECT_LEAP_VERSION; fi
-  if [ "$LATESTSEL" = "$DOMRESTAPI_VER" ];        then DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER; fi
-  if [ "$LATESTSEL" = "$CAPI_VERSION" ];          then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
-  if [ "$LATESTSEL" = "$DOMIQ_VERSION" ];         then DOMIQ_VERSION=$SELECT_DOMIQ_VERSION; fi
-  if [ "$LATESTSEL" = "$ONTIME_VERSION" ];        then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
-  if [ "$LATESTSEL" = "$BORG_VERSION" ];          then BORG_VERSION=$SELECT_BORG_VERSION; DOMBORG_VERSION=$SELECT_DOMBORG_VERSION; fi
-  if [ "$LATESTSEL" = "$TIKA_VERSION" ];          then TIKA_VERSION=$SELECT_TIKA_VERSION; fi
-  if [ "$LATESTSEL" = "$MYSQL_JDBC_VERSION" ];    then MYSQL_JDBC_VERSION=$SELECT_MYSQL_JDBC_VERSION; fi
-  if [ "$LATESTSEL" = "$IQSUITE_VERSION" ];       then IQSUITE_VERSION=$SELECT_IQSUITE_VERSION; fi
-  if [ "$LATESTSEL" = "$NSHMAILX_VERSION" ];      then NSHMAILX_VERSION=$SELECT_NSHMAILX_VERSION; fi
-  if [ "$LATESTSEL" = "$NODE_EXPORTER_VERSION" ]; then NODE_EXPORTER_VERSION=$SELECT_NODE_EXPORTER_VERSION; fi
-  if [ "$LATESTSEL" = "$DOMPROM_VERSION" ];       then DOMPROM_VERSION=$SELECT_DOMPROM_VERSION; fi
+  if [ "$LATESTSEL" = "$VERSE_VERSION" ];           then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
+  if [ "$LATESTSEL" = "$TRAVELER_VERSION" ];        then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
+  if [ "$LATESTSEL" = "$NOMAD_VERSION" ];           then NOMAD_VERSION=$SELECT_NOMAD_VERSION; fi
+  if [ "$LATESTSEL" = "$LEAP_VERSION" ];            then LEAP_VERSION=$SELECT_LEAP_VERSION; fi
+  if [ "$LATESTSEL" = "$DOMRESTAPI_VER" ];          then DOMRESTAPI_VER=$SELECT_DOMRESTAPI_VER; fi
+  if [ "$LATESTSEL" = "$CAPI_VERSION" ];            then CAPI_VERSION=$SELECT_CAPI_VERSION; fi
+  if [ "$LATESTSEL" = "$DOMIQ_VERSION" ];           then DOMIQ_VERSION=$SELECT_DOMIQ_VERSION; fi
+  if [ "$LATESTSEL" = "$ONTIME_VERSION" ];          then ONTIME_VERSION=$SELECT_ONTIME_VERSION; fi
+  if [ "$LATESTSEL" = "$BORG_VERSION" ];            then BORG_VERSION=$SELECT_BORG_VERSION; DOMBORG_VERSION=$SELECT_DOMBORG_VERSION; fi
+  if [ "$LATESTSEL" = "$TIKA_VERSION" ];            then TIKA_VERSION=$SELECT_TIKA_VERSION; fi
+  if [ "$LATESTSEL" = "$MYSQL_JDBC_VERSION" ];      then MYSQL_JDBC_VERSION=$SELECT_MYSQL_JDBC_VERSION; fi
+  if [ "$LATESTSEL" = "$POSTGRESQL_JDBC_VERSION" ]; then POSTGRESQL_JDBC_VERSION=$SELECT_POSTGRESQL_JDBC_VERSION; fi
+  if [ "$LATESTSEL" = "$IQSUITE_VERSION" ];         then IQSUITE_VERSION=$SELECT_IQSUITE_VERSION; fi
+  if [ "$LATESTSEL" = "$NSHMAILX_VERSION" ];        then NSHMAILX_VERSION=$SELECT_NSHMAILX_VERSION; fi
+  if [ "$LATESTSEL" = "$NODE_EXPORTER_VERSION" ];   then NODE_EXPORTER_VERSION=$SELECT_NODE_EXPORTER_VERSION; fi
+  if [ "$LATESTSEL" = "$DOMPROM_VERSION" ];         then DOMPROM_VERSION=$SELECT_DOMPROM_VERSION; fi
 
   if [ -n "$FROM_IMAGE_SELECT" ];        then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
   if [ -n "$DOCKER_TZ_SELECT" ];         then DOCKER_TZ=$DOCKER_TZ_SELECT; fi
@@ -2843,7 +2870,6 @@ write_conf()
   if [ "$AutoTestImage" = "yes" ]; then echo "AutoTestImage=$AutoTestImage" >> "$BUILD_CONF"; fi
 
   # Additional parameters only configurable on command line
-  if [ -n "$MYSQL_JDBC_VERSION" ]; then echo "MYSQL_JDBC_VERSION=$LATESTSEL"        >> "$BUILD_CONF"; fi
   if [ -n "$FROM_IMAGE" ];       then echo "FROM_IMAGE=$FROM_IMAGE"                 >> "$BUILD_CONF"; fi
   if [ -n "$LINUX_PKG_ADD" ];    then echo "LINUX_PKG_ADD=\"$LINUX_PKG_ADD\""       >> "$BUILD_CONF"; fi
   if [ -n "$LINUX_PKG_REMOVE" ]; then echo "LINUX_PKG_REMOVE=\"$LINUX_PKG_REMOVE\"" >> "$BUILD_CONF"; fi
@@ -2855,7 +2881,9 @@ write_conf()
   if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"               >> "$BUILD_CONF"; fi
   if [ -n "$DOMPROM_VERSION" ];  then echo "DOMPROM_VERSION=$LATESTSEL"             >> "$BUILD_CONF"; fi
 
-  if [ -n "$NODE_EXPORTER_VERSION" ]; then echo "NODE_EXPORTER_VERSION=$LATESTSEL" >> "$BUILD_CONF"; fi
+  if [ -n "$MYSQL_JDBC_VERSION" ];      then echo "MYSQL_JDBC_VERSION=$LATESTSEL"      >> "$BUILD_CONF"; fi
+  if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then echo "POSTGRESQL_JDBC_VERSION=$LATESTSEL" >> "$BUILD_CONF"; fi
+  if [ -n "$NODE_EXPORTER_VERSION" ];   then echo "NODE_EXPORTER_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
 
   # Parameters only stored in conf file
   echo "CONTAINER_MAINTAINER=\"$CONTAINER_MAINTAINER\""                 >> "$BUILD_CONF"
@@ -2906,6 +2934,7 @@ edit_conf()
   TIKA_VERSION=
   IQSUITE_VERSION=
   MYSQL_JDBC_VERSION=
+  POSTGRESQL_JDBC_VERSION=
 
   load_conf
 }
@@ -3331,6 +3360,7 @@ install_domino_native()
   export PROD_HF
   export TIKA_VERSION
   export MYSQL_JDBC_VERSION
+  export POSTGRESQL_JDBC_VERSION
   export IQSUITE_VERSION
   export VERSE_VERSION
   export NOMAD_VERSION
@@ -3564,6 +3594,14 @@ for a in "$@"; do
 
       if [ -z "$MYSQL_JDBC_VERSION" ]; then
         get_current_addon_version mysql-jdbc MYSQL_JDBC_VERSION
+      fi
+      ;;
+
+   -postgresql-jdbc*|+postgresql-jdbc*)
+      POSTGRESQL_JDBC_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$POSTGRESQL_JDBC_VERSION" ]; then
+        get_current_addon_version postgresql-jdbc POSTGRESQL_JDBC_VERSION
       fi
       ;;
 
@@ -4125,6 +4163,11 @@ if [ -n "$MYSQL_JDBC_VERSION" ]; then
   fi
 fi
 
+if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
+  if [ -z "$TRAVELER_VERSION" ]; then
+    log_error_exit "PostgreSQL JDBC Driver can only installed for Traveler"
+  fi
+fi
 
 check_exposed_ports
 

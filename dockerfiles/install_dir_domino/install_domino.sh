@@ -865,6 +865,7 @@ install_mysql_jdbc()
 
   if [ -z "$JDBC_DRIVER_BIN" ]; then
      echo "MySQL JDBC driver not found"
+     dump_directory "--- $Notes_ExecDirectory/Traveler/lib ---"
      exit 1
   fi
 
@@ -872,6 +873,42 @@ install_mysql_jdbc()
   mv "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
 
   remove_directory "$MYSQL_JDBC_DIR"
+}
+
+
+install_postgresql-jdbc()
+{
+  if [ -z "$POSTGRESQL_JDBC_VERSION" ]; then
+    return 0
+  fi
+
+  header "Installing PostgreSQL JDBC driver $POSTGRESQL_JDBC_VERSION"
+
+  if [ ! -e "$Notes_ExecDirectory/Traveler/lib" ]; then
+    log_error "Cannot install PostgreSQL JDBC driver - Traveler server not found"
+    exit 1
+  fi
+
+  cd "$INSTALL_DIR"
+
+  get_download_name postgresql-jdbc "$POSTGRESQL_JDBC_VERSION"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find PostgreSQL JDBC driver $POSTGRESQL_JDBC_VERSION"
+    return 0
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory/Traveler/lib"
+
+  local JDBC_DRIVER_BIN=$(find "$Notes_ExecDirectory/Traveler/lib" -type f -name "postgresql-*.jar")
+
+  if [ -z "$JDBC_DRIVER_BIN" ]; then
+     echo "PostgreSQL JDBC driver not found"
+     dump_directory "$Notes_ExecDirectory/Traveler/lib"
+     exit 1
+  fi
+
+  chmod 555 "$JDBC_DRIVER_BIN"
 }
 
 
@@ -1339,46 +1376,47 @@ export DOMINO_GROUP=notes
 
 header "Environment Setup"
 
-echo "INSTALL_DIR            = [$INSTALL_DIR]"
-echo "DownloadFrom           = [$DownloadFrom]"
-echo "SOFTWARE_REPO_IP       = [$SOFTWARE_REPO_IP]"
-echo "http_proxy             = [$http_proxy]"
-echo "https_proxy            = [$https_proxy]"
-echo "no_proxy               = [$no_proxy]"
-echo "Product                = [$PROD_NAME]"
-echo "Version                = [$PROD_VER]"
-echo "Fixpack                = [$PROD_FP]"
-echo "InterimsFix/Hotfix     = [$PROD_HF]"
-echo "DOMLP_VER              = [$DOMLP_VER]"
-echo "DOMRESTAPI_VER         = [$DOMRESTAPI_VER]"
-echo "DominoResponseFile     = [$DominoResponseFile]"
-echo "DominoVersion          = [$DominoVersion]"
-echo "DominoUserID           = [$DominoUserID]"
-echo "LinuxYumUpdate         = [$LinuxYumUpdate]"
-echo "DOMINO_LANG            = [$DOMINO_LANG]"
-echo "VERSE_VERSION          = [$VERSE_VERSION]"
-echo "NOMAD_VERSION          = [$NOMAD_VERSION]"
-echo "TRAVELER_VERSION       = [$TRAVELER_VERSION]"
-echo "LEAP_VERSION           = [$LEAP_VERSION]"
-echo "CAPI_VERSION           = [$CAPI_VERSION]"
-echo "DOMIQ_VERSION          = [$DOMIQ_VERSION]"
-echo "PROD_DOWNLOAD_FILE     = [$PROD_DOWNLOAD_FILE]"
-echo "PROD_FP_DOWNLOAD_FILE  = [$PROD_FP_DOWNLOAD_FILE]"
-echo "PROD_HF_DOWNLOAD_FILE  = [$PROD_HF_DOWNLOAD_FILE]"
-echo "TRAVELER_DOWNLOAD_FILE = [$TRAVELER_DOWNLOAD_FILE]"
-echo "LINUX_PKG_ADD          = [$LINUX_PKG_ADD]"
-echo "LINUX_HOMEDIR          = [$LINUX_HOMEDIR]"
-echo "STARTSCRIPT_VER        = [$STARTSCRIPT_VER]"
-echo "CUSTOM_ADD_ONS         = [$CUSTOM_ADD_ONS]"
-echo "K8S_RUNAS_USER         = [$K8S_RUNAS_USER_SUPPORT]"
-echo "SPECIAL_CURL_ARGS      = [$SPECIAL_CURL_ARGS]"
-echo "BUILD_SCRIPT_OPTIONS   = [$BUILD_SCRIPT_OPTIONS]"
-echo "BORG_VERSION           = [$BORG_VERSION]"
-echo "NSHMAILX_VERSION       = [$NSHMAILX_VERSION]"
-echo "MYSQL_JDBC_VERSION     = [$MYSQL_JDBC_VERSION]"
-echo "DOMPROM_VERSION        = [$DOMPROM_VERSION]"
-echo "OPENSSL_INSTALL        = [$OPENSSL_INSTALL]"
-echo "SSH_INSTALL            = [$SSH_INSTALL]"
+echo "INSTALL_DIR             = [$INSTALL_DIR]"
+echo "DownloadFrom            = [$DownloadFrom]"
+echo "SOFTWARE_REPO_IP        = [$SOFTWARE_REPO_IP]"
+echo "http_proxy              = [$http_proxy]"
+echo "https_proxy             = [$https_proxy]"
+echo "no_proxy                = [$no_proxy]"
+echo "Product                 = [$PROD_NAME]"
+echo "Version                 = [$PROD_VER]"
+echo "Fixpack                 = [$PROD_FP]"
+echo "InterimsFix/Hotfix      = [$PROD_HF]"
+echo "DOMLP_VER               = [$DOMLP_VER]"
+echo "DOMRESTAPI_VER          = [$DOMRESTAPI_VER]"
+echo "DominoResponseFile      = [$DominoResponseFile]"
+echo "DominoVersion           = [$DominoVersion]"
+echo "DominoUserID            = [$DominoUserID]"
+echo "LinuxYumUpdate          = [$LinuxYumUpdate]"
+echo "DOMINO_LANG             = [$DOMINO_LANG]"
+echo "VERSE_VERSION           = [$VERSE_VERSION]"
+echo "NOMAD_VERSION           = [$NOMAD_VERSION]"
+echo "TRAVELER_VERSION        = [$TRAVELER_VERSION]"
+echo "LEAP_VERSION            = [$LEAP_VERSION]"
+echo "CAPI_VERSION            = [$CAPI_VERSION]"
+echo "DOMIQ_VERSION           = [$DOMIQ_VERSION]"
+echo "PROD_DOWNLOAD_FILE      = [$PROD_DOWNLOAD_FILE]"
+echo "PROD_FP_DOWNLOAD_FILE   = [$PROD_FP_DOWNLOAD_FILE]"
+echo "PROD_HF_DOWNLOAD_FILE   = [$PROD_HF_DOWNLOAD_FILE]"
+echo "TRAVELER_DOWNLOAD_FILE  = [$TRAVELER_DOWNLOAD_FILE]"
+echo "LINUX_PKG_ADD           = [$LINUX_PKG_ADD]"
+echo "LINUX_HOMEDIR           = [$LINUX_HOMEDIR]"
+echo "STARTSCRIPT_VER         = [$STARTSCRIPT_VER]"
+echo "CUSTOM_ADD_ONS          = [$CUSTOM_ADD_ONS]"
+echo "K8S_RUNAS_USER          = [$K8S_RUNAS_USER_SUPPORT]"
+echo "SPECIAL_CURL_ARGS       = [$SPECIAL_CURL_ARGS]"
+echo "BUILD_SCRIPT_OPTIONS    = [$BUILD_SCRIPT_OPTIONS]"
+echo "BORG_VERSION            = [$BORG_VERSION]"
+echo "NSHMAILX_VERSION        = [$NSHMAILX_VERSION]"
+echo "MYSQL_JDBC_VERSION      = [$MYSQL_JDBC_VERSION]"
+echo "POSTGRESQL_JDBC_VERSION = [$POSTGRESQL_JDBC_VERSION]"
+echo "DOMPROM_VERSION         = [$DOMPROM_VERSION]"
+echo "OPENSSL_INSTALL         = [$OPENSSL_INSTALL]"
+echo "SSH_INSTALL             = [$SSH_INSTALL]"
 
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
@@ -1518,6 +1556,7 @@ install_traveler "$TRAVELER_VERSION"
 # Install Traveler JDBC drivers if requested
 
 install_mysql_jdbc
+install_postgresql-jdbc
 
 # Install Domino Leap if requested
 install_leap "$LEAP_VERSION"

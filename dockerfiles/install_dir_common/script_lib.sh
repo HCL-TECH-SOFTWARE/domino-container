@@ -1581,15 +1581,12 @@ install_custom_packages()
   fi
 }
 
-debug_show_data_dir()
-{
-  if [ ! "$DOMDOCK_DEBUG" = "yes" ]; then
-    return 0
-  fi
 
+dump_directory()
+{
   echo
   echo "----------------------------[$@] ------------------------------"
-  ls -l /local
+  ls -l "$@"
   echo "----------------------------[$@] ------------------------------"
   echo
 
@@ -1599,9 +1596,20 @@ debug_show_data_dir()
 
   echo >> $LOG_FILE
   echo "-----------------------------[$@]------------------------------" >> $LOG_FILE
-  ls -l /local >> $LOG_FILE
+  ls -l "$@" >> $LOG_FILE
   echo "-----------------------------[$@]------------------------------" >> $LOG_FILE
   echo >> $LOG_FILE
+}
+
+
+debug_show_data_dir()
+{
+  if [ ! "$DOMDOCK_DEBUG" = "yes" ]; then
+    return 0
+  fi
+
+  dump_directory "/local"
+
 }
 
 set_sh_shell()
