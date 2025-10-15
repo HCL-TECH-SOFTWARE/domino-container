@@ -757,17 +757,22 @@ install_domino_restapi()
   local ADDON_VER=$1
   local REST_API_INSTALLER=
 
-  if [ -z "$ADDON_VER" ]; then
+  if [ -z "$ADDON_VER" ] && [ -z "$RESTAPI_DOWNLOAD_FILE" ] ; then
     return 0
   fi
 
   header "$ADDON_NAME Installation"
 
-  get_download_name $ADDON_NAME $ADDON_VER
+   # If explicitly specified just download and skip calculating hash
+  if [ -n "$RESTAPI_DOWNLOAD_FILE" ]; then
+    echo "Info: Not checking download hash for [$RESTAPI_DOWNLOAD_FILE]"
+    DOWNLOAD_NAME="$RESTAPI_DOWNLOAD_FILE"
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME" . nohash
 
-  header "Installing $ADDON_NAME $ADDON_VER"
-
-  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" domino_restapi
+  else
+    get_download_name $ADDON_NAME $ADDON_VER
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+  fi
 
   CURRENT_DIR=$(pwd)
 
@@ -777,12 +782,12 @@ install_domino_restapi()
 
   # Find out the right installer per Domino version
 
-  REST_API_INSTALLER=$(find $CURRENT_DIR/domino_restapi -name "restapiInstall*.jar")
+  REST_API_INSTALLER=$(find "$CURRENT_DIR/$ADDON_NAME" -name "restapiInstall*.jar")
 
   if [ -z "$REST_API_INSTALLER" ]; then
     log_error "Cannot find Domino REST API Installer !!!"
     echo "-------------------------"
-    ls $CURRENT_DIR/domino_restapi
+    ls "$CURRENT_DIR/$ADDON_NAME"
     echo "-------------------------"
     exit 1
 
@@ -1403,6 +1408,7 @@ echo "PROD_DOWNLOAD_FILE      = [$PROD_DOWNLOAD_FILE]"
 echo "PROD_FP_DOWNLOAD_FILE   = [$PROD_FP_DOWNLOAD_FILE]"
 echo "PROD_HF_DOWNLOAD_FILE   = [$PROD_HF_DOWNLOAD_FILE]"
 echo "TRAVELER_DOWNLOAD_FILE  = [$TRAVELER_DOWNLOAD_FILE]"
+echo "RESTAPI_DOWNLOAD_FILE   = [$RESTAPI_DOWNLOAD_FILE]"
 echo "LINUX_PKG_ADD           = [$LINUX_PKG_ADD]"
 echo "LINUX_HOMEDIR           = [$LINUX_HOMEDIR]"
 echo "STARTSCRIPT_VER         = [$STARTSCRIPT_VER]"

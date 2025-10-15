@@ -410,6 +410,7 @@ dump_config()
   echo "PROD_FP_DOWNLOAD_FILE  : [$PROD_FP_DOWNLOAD_FILE]"
   echo "PROD_HF_DOWNLOAD_FILE  : [$PROD_HF_DOWNLOAD_FILE]"
   echo "TRAVELER_DOWNLOAD_FILE : [$TRAVELER_DOWNLOAD_FILE]"
+  echo "RESTAPI_DOWNLOAD_FILE  : [$RESTAPI_DOWNLOAD_FILE]"
   echo "PROD_EXT               : [$PROD_EXT]"
   echo "CHECK_SOFTWARE         : [$CHECK_SOFTWARE]"
   echo "CHECK_HASH             : [$CHECK_HASH]"
@@ -1206,6 +1207,7 @@ build_domino()
     --build-arg PROD_FP_DOWNLOAD_FILE=$PROD_FP_DOWNLOAD_FILE \
     --build-arg PROD_HF_DOWNLOAD_FILE=$PROD_HF_DOWNLOAD_FILE \
     --build-arg TRAVELER_DOWNLOAD_FILE=$TRAVELER_DOWNLOAD_FILE\
+    --build-arg RESTAPI_DOWNLOAD_FILE=$RESTAPI_DOWNLOAD_FILE\
     --build-arg DOCKER_TZ=$DOCKER_TZ \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
@@ -1567,7 +1569,7 @@ check_all_domdownload()
     $DOMDOWNLOAD_BIN -product=verse -platform=linux -ver=$VERSE_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
-  if [ -n "$DOMRESTAPI_VER" ]; then
+  if [ -n "$DOMRESTAPI_VER" ] && [ -z "$RESTAPI_DOWNLOAD_FILE" ]; then
     $DOMDOWNLOAD_BIN -product=restapi -platform=linux -ver=$DOMRESTAPI_VER $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
@@ -1910,7 +1912,7 @@ check_software_status()
       check_software_file "domlp" "$DOMLP_VER"
     fi
 
-    if [ -n "$DOMRESTAPI_VER" ]; then
+    if [ -n "$DOMRESTAPI_VER" ] && [ -z "$RESTAPI_DOWNLOAD_FILE" ] ; then
       check_software_file "domrestapi" "$DOMRESTAPI_VER"
     fi
 
@@ -2093,7 +2095,7 @@ check_software_status()
       check_software_file "domlp" "$DOMLP_VER"
     fi
 
-    if [ -n "$DOMRESTAPI_VER" ]; then
+    if [ -n "$DOMRESTAPI_VER" ] && [ -z "$RESTAPI_DOWNLOAD_FILE" ]; then
       check_software_file "domrestapi" "$DOMRESTAPI_VER"
     fi
 
@@ -2101,7 +2103,7 @@ check_software_status()
       check_software_file "nomad" "$NOMAD_VERSION"
     fi
 
-    if [ -n "$TRAVELER_VERSION" ] && [ -z "$TRAVELER_DOWNLOAD_FILE" ] ; then
+    if [ -n "$TRAVELER_VERSION" ] && [ -z "$TRAVELER_DOWNLOAD_FILE" ]; then
       check_software_file "traveler" "$TRAVELER_VERSION"
     fi
 
@@ -3745,13 +3747,17 @@ for a in "$@"; do
       DOMLP_LANG=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
+    -restapi_download=*)
+      RESTAPI_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
+      echo "RESTAPI_DOWNLOAD_FILE: [$RESTAPI_DOWNLOAD_FILE]"
+      ;;
+
     -restapi*|+restapi*)
       DOMRESTAPI_VER=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$DOMRESTAPI_VER" ]; then
         get_current_addon_version domrestapi DOMRESTAPI_VER
       fi
-
       ;;
 
     -DominoResponseFile=*)
@@ -4139,7 +4145,7 @@ fi
 
 
 # Calculate the right version for Domino RESTAPI for selected Domino version
-if [ -n "$DOMRESTAPI_VER" ]; then
+if [ -n "$DOMRESTAPI_VER" ] && [ -z "$RESTAPI_DOWNLOAD_FILE" ] ; then
 
   case "$PROD_VER" in
 
