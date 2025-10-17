@@ -9,7 +9,13 @@ has_children: false
 
 # Introduction
 
-The Domino container project uses **UTC** and **English** as the default.  
+The Domino container project uses the timezone of your build host  and **English** as the default.  
+This would help you to run containers in your timezone.
+
+But many admins have to run containers in other timezones.
+Therfore the project supports to specify a different timezone at build time.
+
+# UTC is the standard for most containers
 
 UTC is a good choice for a container environment running in an international deployment.  
 But if running in a single timezone or application servers the local timezone makes more sense.  
@@ -29,8 +35,18 @@ The timezone can be changed using the `-tz=` build option.
 Example:
 
 ```
-./build.sh domino -tz=Europe/Berlin
+./build.sh -tz=Europe/Berlin menu
 ```
+
+## How to specify UTC
+
+
+```
+./build.sh -tz=Etc/UTC menu
+```
+
+Note: The timezone is also stored in configuration even it is not listed as a menu option.
+If you write the configuration the timezone variable is preset for a menu based build.
 
 
 ## Just setting the TZ Variable is not sufficient!

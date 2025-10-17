@@ -496,11 +496,12 @@ menu_help()
   echo "The Domino Diagnostic Menu offers diagnostics commands."
   echo "It is intended to provide easy diagnostics."
   echo
-  echo "To specify a standard mail recipient use the following notes.ini setting:"
+  echo "To specify a standard mail recipient or sender use the following notes.ini settings:"
   echo
-  echo "notes.ini   DominoDiagRcpt=admin@example.com"
+  echo "notes.ini"
+  echo "  DominoDiagRcpt=admin@example.com"
+  echo "  DominoDiagFrom=server@example.com"
   echo
-
 }
 
 
@@ -1288,14 +1289,17 @@ fi
 
 DIAG_SERVER_NAME=$(echo "$DIAG_FULL_SERVER_NAME" | cut -d '/' -f1 | tr ' ' '_' | tr '.' '_')
 
-if [ -z "$DIAG_FROM" ]; then
-  DIAG_FROM="$DIAG_HOSTNAME"
-fi
-
 if [ -z "$DIAG_RCPT" ]; then
   DIAG_RCPT=$(cat "$NOTESINI" | grep -i "^DominoDiagRcpt=" | head -1 | cut -d'=' -f2)
 fi
 
+if [ -z "$DIAG_FROM" ]; then
+  DIAG_FROM=$(cat "$NOTESINI" | grep -i "^DominoDiagFrom=" | head -1 | cut -d'=' -f2)
+fi
+
+if [ -z "$DIAG_FROM" ]; then
+  DIAG_FROM="$DIAG_HOSTNAME"
+fi
 
 for a in "$@"; do
 
