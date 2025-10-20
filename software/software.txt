@@ -65,6 +65,7 @@ leap|1.1.6|hcl.dleap-1.1.6.25.zip|EMMnLUwjXQ2FHJG4zgoRO|f0bafe83f6659d7682ce38fe
 leap|1.1.7|hcl.dleap-1.1.7.29.zip|xDfUOwgGqe2foxvmHvPTk|4315a247c0bf6c7e755c518edca09dc6789a9758138097b81696cfda3ed63c20
 leap|1.1.7IF1|hcl.dleap-1.1.7.33.zip|ZcQBXgoMQtH4eS7ZcEjri|78cb785147c1073ac81548fd5be5b13a5e775a71dfda7d4c539dd1f007ad9f91
 leap|1.1.8|hcl.dleap-1.1.8.25.zip|UFpbnsVJlLnTGi0dsRzA4|63692f7917f2a3723a7f353454fe13ba208b43aa9394f7a5f474b059c968060a
+leap|1.1.9|hcl.dleap-1.1.9.36.zip|DdLdSxNzncwZO8gX88TFz|cf30726e3df0edaefd0a6b389832373884a75f27605ae2f3e7b69cab8ed28238
 verse|3.0.2|HCL_Verse_3.0.2.zip|rZqW45z0wCuW7zCrDpq8a|59189f9105b5cdc541d3d46b381ba35a89085dad72a9021432c15c57fa47d396
 verse|3.1.0|HCL_Verse_3.1.0.zip|b9KzL5RurLCOU2FCaam8d|efaeac1c2cfcb8a77dec045f150862b6dcca57e15639bfba080a5b4412a2333f
 verse|3.2.0|HCL_Verse_3.2.0.zip|JP60aeU2qSw6xMEluj9F2|475e785c97e6afb564787609bfde198a62546e3ceca8f77bd0a7823700eef279
