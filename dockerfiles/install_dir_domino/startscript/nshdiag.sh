@@ -7,7 +7,7 @@
 # You may use and distribute the unmodified version of this script.
 # Use at your own risk. No implied or specific warranties are given.
 # You may change it for your own usage only
-# Version 4.0.6 30.07.2025
+# Version 4.0.7 20.10.2025
 ###########################################################################
 
 
@@ -68,7 +68,8 @@ ClearScreen()
     return 0
   fi
 
-  clear
+  # Clear screen using the escape sequence
+  printf "\033[H\033[J"
 }
 
 
@@ -1061,7 +1062,9 @@ menu()
 
     echo " Server     :  $DIAG_FULL_SERVER_NAME"
     echo " Hostname   :  $DIAG_HOSTNAME"
-    echo " Diag RCPT  :  $DIAG_RCPT"
+    if [ -x "$NSHMAILX_BIN" ] ; then
+      echo " Diag RCPT  :  $DIAG_RCPT"
+    fi
     echo
 
     if [ -n "$DOMINO_DIAG_TRACE_FILE" ] && [ -e "$DOMINO_DIAG_TRACE_FILE" ]; then
@@ -1099,6 +1102,10 @@ menu()
 
     echo " (C)   Collect logs"
 
+    if [ -n "$DOMINO_DIAG_TRACE_FILE" ] && [ -e "$DOMINO_DIAG_TRACE_FILE" ]; then
+      echo " (F)   Open trace file"
+    fi
+
     if [ -x "$NSHMAILX_BIN" ] ; then
       echo " (D)   Send diagnostics"
       if [ -n "$LAST_NSD" ]; then
@@ -1107,12 +1114,8 @@ menu()
 
       if [ -n "$DOMINO_DIAG_TRACE_FILE" ] && [ -e "$DOMINO_DIAG_TRACE_FILE" ]; then
         echo " (T)   Send trace file"
-        echo " (F)   Open trace file"
       fi
       echo " (R)   Set recipient"
-
-    else
-      echo " (!)   No nshmailx found!"
     fi
 
     echo

@@ -4,7 +4,7 @@
 ############################################################################
 
 # Build a base image for Linux with all required packages
-FROM registry.access.redhat.com/ubi9/ubi:9.5 AS linux_image
+FROM registry.access.redhat.com/ubi10/ubi:10.0 AS linux_image
 
 # External arguments with a default value
 ARG LinuxYumUpdate=

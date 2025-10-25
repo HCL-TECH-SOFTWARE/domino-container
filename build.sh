@@ -1081,11 +1081,11 @@ check_addon_label()
 
     # HCL container image build and full installer file: Verse, Nomad, OnTime
     if [ -z "$VERSE_VERSION" ]; then
-      add_addon_label "verse" "unknown"
+      add_addon_label "verse" "installed"
     fi
 
     if [ -z "$NOMAD_VERSION" ]; then
-      add_addon_label "nomad" "unknown"
+      add_addon_label "nomad" "installed"
     fi
 
     add_addon_label "ontime" "$ONTIME_VERSION"

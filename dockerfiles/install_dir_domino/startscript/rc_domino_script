@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version  4.0.6 30.07.2025                                               #
+# Version  4.0.7 20.10.2025                                               #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2025                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=4.0.6
+DOMINO_SCRIPT_VERSION=4.0.7
 
 if [ -z "$DOMINO_SCRIPT_VERBOSE_INFO" ]; then
   DOMINO_SCRIPT_VERBOSE_INFO="yes"
@@ -434,6 +434,18 @@ export AMQ_NO_SIGWAIT_SIGTRAP
 
 
 # --- Helper functions ---
+
+
+ClearScreen()
+{
+  if [ "$DISABLE_CLEAR_SCREEN" = "yes" ]; then
+    return 0
+  fi
+
+  # Clear screen using the escape sequence
+  printf "\033[H\033[J"
+}
+
 
 DebugText()
 {
@@ -3027,7 +3039,7 @@ check_ots_setup_complete()
     return 0
   fi
 
-  clear
+  ClearScreen
   header "HCL Domino One Touch Configuration failed"
   cat  "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/autoconfigure.log"
   echo
@@ -3090,7 +3102,7 @@ domino_process_monitor()
   done < "$DOMINO_DATA_PATH/pid.nbf"
 
   if [ "$1" = "1" ]; then
-    clear
+    ClearScreen
     printf "\nDomino Server Process Status\n----------------------------\n\n$tasks"
   fi
 
@@ -3140,7 +3152,7 @@ domino_shutdown_monitor()
     domino_process_monitor "$log"
   done
 
-  clear
+  ClearScreen
   printf "\nDomino Server shutdown successfully after $seconds seconds\n\n"
 
   return 0
@@ -3161,7 +3173,7 @@ domino_setup()
       return 0
     fi
 
-    clear
+    ClearScreen
     echo
     echo "HCL Domino Server Configuration"
     echo "-------------------------------"
@@ -3176,7 +3188,7 @@ domino_setup()
     echo
     read -n1 -e -p " Select command,  [Q] to cancel? " SELECTED;
 
-    clear
+    ClearScreen
 
     case $(echo "$SELECTED" | awk '{print tolower($0)}') in
 
@@ -3220,7 +3232,7 @@ domino_setup()
         ;;
     esac
 
-    clear
+    ClearScreen
 
   done
 }
@@ -3262,7 +3274,7 @@ menu()
     fi
 
     check_domino_status
-    clear
+    ClearScreen
     echo
     echo "HCL Domino Server"
     echo "-----------------"
@@ -3304,7 +3316,7 @@ menu()
     echo
     read -n1 -e -p " Select command,  [Q] to cancel? " SELECTED;
 
-    clear
+    ClearScreen
 
     case $(echo "$SELECTED" | awk '{print tolower($0)}') in
 
@@ -3312,7 +3324,7 @@ menu()
     ;;
 
       0|q)
-        clear
+        ClearScreen
         echo
         exit 0
         ;;

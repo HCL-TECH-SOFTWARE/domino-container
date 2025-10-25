@@ -7,7 +7,7 @@
 # You may use and distribute the unmodified version of this script.
 # Use at your own risk. No implied or specific warranties are given.
 # You may change it for your own usage only
-# Version 4.0.6 30.07.2025
+# Version 4.0.7 20.10.2025
 ###########################################################################
 
 print_delim ()
