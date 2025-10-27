@@ -1848,6 +1848,18 @@ help()
   return 0
 }
 
+
+cleanup_java_setup_process()
+{
+  local pid=$(get_java_setup_process | awk '{ print $2 }')
+
+  if [ -n "$pid" ]; then
+    echo "Killing Remote Java Setup pid #" $pid
+    kill -9 "$pid"
+  fi
+}
+
+
 cleanup_domino_server_os_level()
 {
   pre_cleanup_operations
@@ -1858,12 +1870,7 @@ cleanup_domino_server_os_level()
     kill -9 "$pid"
   done
 
-  pid=$(get_java_setup_process | awk '{ print $2 }')
-
-  if [ -n "$pid" ]; then
-    echo "Killing Remote Java Setup pid #" $pid
-    kill -9 "$pid"
-  fi
+  cleanup_java_setup_process
 
   # Kill 3rd party Domino processes started from other directories
 
@@ -3212,6 +3219,7 @@ domino_setup()
         ;;
 
       s)
+	cleanup_java_setup_process
         domino_setup_start_server
         return 0
         ;;
@@ -3264,6 +3272,11 @@ menu()
     domino_setup
   fi
 
+  if [ -z "$DOMINO_SERVER_NAME" ]; then
+    get_notes_ini_var "$DOMINO_INI_PATH" "ServerName"
+    DOMINO_SERVER_NAME="$ret_ini_var"
+  fi
+
   while [ 1 ];
   do
 
@@ -3279,7 +3292,10 @@ menu()
     echo "HCL Domino Server"
     echo "-----------------"
     echo
-    printf " Server status:  $DOMINO_STATUS_DISPLAY\n"
+    if [ -n "$DOMINO_SERVER_NAME" ]; then
+      echo   " Server:  $DOMINO_SERVER_NAME"
+    fi
+    printf " Status:  $DOMINO_STATUS_DISPLAY\n"
     echo
 
     if [ "$DOMINO_STATUS" = "Stopped" ]; then
@@ -3297,6 +3313,11 @@ menu()
     echo " (O)   Domino log"
     echo " (A)   Archive Domino start script logs"
     echo " (P)   Show processes"
+
+    if [ "$DOMINO_STATUS" = "Running" ]; then
+      echo " (U)   Restart Domino"
+    fi
+
     echo
     echo "Diagnostic"
     echo
@@ -3332,15 +3353,15 @@ menu()
       s)
         domino_is_running
         if [ $? -eq 1 ]; then
-      echo
-      echo "Domino server already started"
-      echo
-    else
-      echo
+          echo
+          echo "Domino server already started"
+          echo
+        else
+        echo
           domino start
-    fi
+        fi
 
-    sleep 3
+        sleep 3
         ;;
 
       i)
@@ -3357,6 +3378,13 @@ menu()
       t)
         log_space "Waiting for server shutdown, please wait ..."
         domino stop
+        ;;
+
+      u)
+        log_space "Restarting server, please wait ..."
+        domino restart
+	sleep 3
+        check_domino_status
         ;;
 
       w)
@@ -3376,10 +3404,10 @@ menu()
         if [ "$DOMINO_STATUS" = "Running" ]; then
           DOMINO_CONSOLE_NO_EXIT=yes
           run_monitor
-    else
-      log_space "Server live console not available in status: $DOMINO_STATUS"
-      wait_for_key
-    fi
+        else
+          log_space "Server live console not available in status: $DOMINO_STATUS"
+          wait_for_key
+        fi
         ;;
 
       l)
