@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Domino OTS Setup">
+  <title>HCL Domino Server Configuration</title>
+  <link rel="stylesheet" href="assets/bootstrap.min.css">
+</head>
+
+<body>
+  <div class="container mt-5" style="max-width: 660px;">
+    <div class="text-center">
+      <img src="assets/domsetup-logo.svg" class="img-fluid" style="max-height: 100px;" alt="HCL Domino Server">
+      <h5 class="mt-3">Domino Server Configuration</h5>
+      <p>Setup a first server using the parameters below or upload a Domino OTS JSON file.</p>
+      <a href="/domino-ots-setup.html" class="btn btn-outline-primary">Upload OTS JSON</a>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-body">
+        <form method="post" action="/domino-ots-setup">
+
+          <div class="mb-3">
+            <label for="SERVER_NAME" class="form-label">Server Name<span class="text-danger">*</span></label>
+            <input id="SERVER_NAME" name="SERVER_NAME"
+              class="form-control"
+              type="text"
+              required
+              pattern="[A-Za-z0-9_.\-]+"
+              title="Only letters, numbers, underscores, dots, and hyphens are allowed.">
+            <small id="serverHelp" class="form-text text-muted">Common Name of Domino server</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="NETWORK_HOSTNAME" class="form-label">Network Hostname (FQDN)<span class="text-danger">*</span></label>
+            <input id="NETWORK_HOSTNAME" name="NETWORK_HOSTNAME" 
+              class="form-control"
+              type="text"
+              required
+              pattern="[A-Za-z0-9.\-]+"
+              title="Only letters, numbers, dots, and hyphen">
+          </div>
+
+          <div class="mb-3" id="SERVER_CONFIGURATION_FIELD" style="display: none;">
+            <label for="ServerType" class="form-label">Server Type<span class="text-danger">*</span></label>
+            <select class="form-select" id="SERVER_CONFIGURATION" name="SERVER_CONFIGURATION"></select>
+          </div>
+
+          <div class="mb-3">
+            <label for="SERVER_DOMAINNAME" class="form-label">Domino Domain Name<span class="text-danger">*</span></label>
+            <input id="SERVER_DOMAINNAME" name="SERVER_DOMAINNAME"
+              class="form-control"
+              type="text"
+              required
+              pattern="[A-Za-z0-9&\-]+"
+              title="Only letters, numbers, ampersand (&), apostrophe ('), and hyphen (-) are allowed.">
+            <small id="domainnameHelp" class="form-text text-muted">Unique name without blanks</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="ORG_ORGNAME" class="form-label">Organization Certifier Name<span class="text-danger">*</span></label>
+            <input id="ORG_ORGNAME" name="ORG_ORGNAME"
+              class="form-control"
+              type="text"
+              required
+              pattern="[A-Za-z0-9&\-]+"
+              title="Only letters, numbers, ampersand (&), apostrophe ('), and hyphen (-) are allowed.">
+            <small id="orgnameHelp" class="form-text text-muted">Organization certifier name (no blanks recommended)</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="ORG_CERTIFIERPASSWORD" class="form-label">Certifier Password<span class="text-danger">*</span></label>
+            <div class="input-group input-group-sm-3">
+              <input id="ORG_CERTIFIERPASSWORD" name="ORG_CERTIFIERPASSWORD"
+                class="form-control"
+                type="password"
+                required
+                placeholder="Notes Certifier password"
+                autocomplete="new-password">
+              <button class="btn btn-outline-primary btn-sm" type="button" onclick="togglePassword('ORG_CERTIFIERPASSWORD', this)">Show</button>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="ADMIN_FIRSTNAME" class="form-label">Administrator First Name<span class="text-danger">*</span></label>
+            <input id="ADMIN_FIRSTNAME" name="ADMIN_FIRSTNAME"
+              class="form-control"
+              type="text"
+              required
+              placeholder="Full"
+              autocomplete="given-name">
+          </div>
+
+          <div class="mb-3">
+            <label for="ADMIN_LASTNAME" class="form-label">Administrator Last Name<span class="text-danger">*</span></label>
+            <input id="ADMIN_LASTNAME" name="ADMIN_LASTNAME"
+              class="form-control"
+              type="text"
+              required
+              placeholder="Admin"
+              autocomplete="family-name">
+          </div>
+
+          <div class="mb-3">
+            <label for="ADMIN_PASSWORD" class="form-label">Administrator Password<span class="text-danger">*</span></label>
+            <div class="input-group input-group-sm-3">
+              <input id="ADMIN_PASSWORD" name="ADMIN_PASSWORD"
+                class="form-control"
+                type="password"
+                required
+                placeholder="Admin password"
+                autocomplete="new-password">
+              <button class="btn btn-outline-primary btn-sm" type="button" onclick="togglePassword('ADMIN_PASSWORD', this)">Show</button>
+            </div>
+          </div>
+
+          <br>
+          <div class="text-begin">
+            <button type="submit" class="btn btn-outline-primary">Submit</button>
+          </div>
+          <br>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword(inputId, button) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      button.textContent = isPassword ? "Hide" : "Show";
+    }
+
+    document.getElementById('SERVER_NAME').value = window.location.hostname;
+    document.getElementById('NETWORK_HOSTNAME').value = window.location.hostname;
+
+    fetch('settings.json')
+      .then(response => response.json())
+      .then(data => {
+        const dropdown = document.getElementById('SERVER_CONFIGURATION');
+        const container = document.getElementById('SERVER_CONFIGURATION_FIELD');
+
+        if (Array.isArray(data.serverTypes) && data.serverTypes.length > 0) {
+          dropdown.innerHTML = '';
+
+          data.serverTypes.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.type;
+            option.textContent = item.label;
+            dropdown.appendChild(option);
+          });
+
+          // Show the field only if options exist
+          container.style.display = 'block';
+          dropdown.required = true;
+        } else {
+          // Do nothing — field remains hidden
+          dropdown.required = false;
+        }
+      })
+      .catch(error => {
+        console.error('Failed to load settings.json:', error);
+      });
+
+    const form = document.querySelector("form");
+
+    form.addEventListener("submit", function(e) {
+      if (!form.checkValidity()) {
+        e.preventDefault(); // stop submission
+        form.reportValidity(); // show validation messages
+      }
+    });
+  </script>
+
+</body>
+</html>
+

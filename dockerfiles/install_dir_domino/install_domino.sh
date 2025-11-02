@@ -1374,6 +1374,16 @@ create_borg_user_and_group()
     useradd borg -U -m
 }
 
+
+install_domsetup()
+{
+    header "Installing Domino Setup Listener"
+
+    cp -r "$INSTALL_DIR/domsetup/"* "$Notes_ExecDirectory"/
+    chmod 755 "$Notes_ExecDirectory/domsetup.sh"
+}
+
+
 # --- Main Install Logic ---
 
 export DOMINO_USER=notes
@@ -1660,6 +1670,9 @@ fi
 
 # Install Domino Start Script
 install_startscript
+
+# Install Domino Setup Listener
+install_domsetup
 
 # Copy pre-start configuration
 install_file "$INSTALL_DIR/domino_prestart.sh" "$DOMDOCK_SCRIPT_DIR/domino_prestart.sh" root root 755

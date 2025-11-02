@@ -174,6 +174,31 @@ check_download_and_decrypt()
   return 0
 }
 
+
+run_domsetup_listener()
+{
+
+  if [ "$DOMSETUP_ENABLED" != "1" ]; then
+    return 0
+  fi
+
+  local DOMSETUP_BIN="$Notes_ExecDirectory/domsetup.sh"
+
+  if [ ! -x "$DOMSETUP_BIN" ]; then
+    log_file "Error: Cannot run Domino Setup listener binary: $DOMSETUP_BIN"
+    return 0
+  fi
+
+  if [ ! -x /usr/bin/openssl ]; then
+    log_file "Error: Cannot run Domino Setup because no OpenSSL command line available"
+    return 0
+  fi
+
+  log_file_header "Domino Setup Listener"
+  "$DOMSETUP_BIN"
+}
+
+
 # --- Main Logic ---
 
 NOW=$(date)
@@ -207,6 +232,9 @@ check_download_file_links
 
 # Download and decrypt files if specified
 check_download_and_decrypt
+
+# Invoke Domino Setup Listener if requested
+run_domsetup_listener
 
 # Ensure server.id name is always default name and rename if needed
 if [ -n "$SERVERSETUP_SERVER_IDFILEPATH" ]; then

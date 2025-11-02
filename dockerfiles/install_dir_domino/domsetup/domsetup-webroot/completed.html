@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/bootstrap.min.css">
+    <title>Waiting for HCL Domino Server start</title>
+    <style>
+        body {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .dots-loader {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .dots-loader div {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #333;
+            animation: dots-bounce 1.5s infinite ease-in-out;
+        }
+
+        .dots-loader div:nth-child(2) { animation-delay: 0.2s; }
+        .dots-loader div:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dots-bounce {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.3; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+    </style>
+    <script>
+        const resourceUrl = new URLSearchParams(window.location.search).get('redirect') || '/verse';
+        const checkInterval = 1000;
+
+        async function checkResource() {
+            try {
+                const response = await fetch(resourceUrl, { method: 'GET' });
+                if (response.ok) {
+                    window.location.href = resourceUrl;
+                }
+            } catch (error) {
+                console.log("Resource not available yet. Retrying...");
+            }
+        }
+
+        setInterval(checkResource, checkInterval);
+    </script>
+</head>
+<body>
+    <br>
+    <br>
+    <br>
+    <img src="assets/domsetup-logo.svg" style="max-height: 80px;" class="" alt="HCL Domino Server">
+    <br>
+    <br>
+    HCL Domino Setup completed &ndash; Waiting for server to start
+    <br>
+    <div class="dots-loader">
+        <div></div><div></div><div></div>
+    </div>
+
+</body>
+</html>
