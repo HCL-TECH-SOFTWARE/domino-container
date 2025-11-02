@@ -441,6 +441,11 @@ process_ots_form_data()
     export "SERVERSETUP_$pair"
   done
 
+  # Ensure user.id is set
+  if [ -z "$SERVERSETUP_ADMIN_IDFILEPATH" ]; then
+    SERVERSETUP_ADMIN_IDFILEPATH="$DOMINO_DATA_PATH/user.id"
+  fi
+
   # Only dump sensitive setup data if requested for debug
   if [ "$DOMSETUP_DEBUG" = "yes" ]; then
     header "OTS form data"
