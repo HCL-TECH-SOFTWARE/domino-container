@@ -37,20 +37,29 @@ DOMSETUP_VERSION="0.9.2"
 SCRIPT_NAME=$0
 SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
-# Variables
-# -------------------
+# Environment Variables
+# ---------------------
 # DOMSETUP_HOST           Host name to use for setup (default: hostname machine)
 # DOMSETUP_HTTPS_PORT     HTTPS port to use for setup (default: 443)
 # DOMSETUP_USER           Setup user name (default: admin)
-# DOMSETUP_PASSWORD       Password for setup user
+# DOMSETUP_PASSWORD       Password for setup user (default: /tmp/domsetup-key.pass)
 # DOMSETUP_BEARER         Setup Bearer token instead of user password
 # DOMSETUP_CERT_FILE      TLS Certificate file name (default: /tmp/domsetup-cert.pem)
 # DOMSETUP_KEY_FILE       TLS Key file name (default: /tmp/domsetup-key.pem)
 # DOMSETUP_KEY_FILE_PWD   TLS Key password file name (default: /tmp/domsetup-password.txt)
 # DOMSETUP_CERTMGR_HOST   Domino CertMgr host name to retieve a certificate matching the current key for host name
+# DOMSETUP_CERTMGR_LOOKUP Name to use to lookup a TLS Certificate from CertMgr (requried multiple SANs in a name)
 # DOMSETUP_JSON_FILE      OTS JSON file to write (default: $DOMINO_AUTO_CONFIG_JSON_FILE)
 # DOMSETUP_DOMINO_REDIR   Redirect URL after setup (default: /verse)
 # DOMSETUP_WEBROOT        Web root to use (default: script directory + /domsetup-webroot)
+# DOMSETUP_NOGUI          set to 1 to disable setup GUI and only allow OTS JSON post
+
+
+# Default TLS Cert/Key location checked first if not specified
+# ------------------------------------------------------------
+# /run/secrets/domsetup/tls.crt
+# /run/secrets/domsetup/tls.key
+# /run/secrets/domsetup/key.pass
 
 
 if [ -z "$DOMSETUP_USER" ]; then
@@ -514,6 +523,11 @@ check_authorization()
 
 certmgr_cert_download()
 {
+  local LOOKUP_SAN_NAME="$DOMSETUP_HOST"
+
+  if [ -n "$DOMSETUP_CERTMGR_LOOKUP" ]; then
+    LOOKUP_SAN_NAME="$DOMSETUP_CERTMGR_LOOKUP"
+  fi
 
   # Certificate already available
   if [ -s "$DOMSETUP_CERT_FILE" ]; then
@@ -533,7 +547,7 @@ certmgr_cert_download()
   fi
 
   # Check for new certificate on CertMgr server
-  openssl s_client -servername $DOMSETUP_HOST -showcerts $DOMSETUP_CERTMGR_HOST:443 </dev/null 2>/dev/null | sed -ne '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > "$DOMSETUP_CERT_FILE"
+  openssl s_client -servername "$LOOKUP_SAN_NAME" -showcerts "$DOMSETUP_CERTMGR_HOST:443" </dev/null 2>/dev/null | sed -ne '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > "$DOMSETUP_CERT_FILE"
 
   if [ ! "$?" = "0" ]; then
     log_error "Cannot retrieve certificate from CertMgr server [$DOMSETUP_CERTMGR_HOST]"
@@ -586,16 +600,29 @@ DOMSETUP_COMPLETED_REDIR=${DOMSETUP_COMPLETED_REDIR:-/completed.html?redirect=$D
 DOMSETUP_OPNSSL_PID=
 DOMSETUP_DONE=
 
+
 if [ -z "$DOMSETUP_CERT_FILE" ]; then
-  DOMSETUP_CERT_FILE=/tmp/domsetup-cert.pem
+  if [ -e /run/secrets/domsetup/tls.crt ]; then
+    DOMSETUP_CERT_FILE=/run/secrets/domsetup/tls.crt
+  else
+    DOMSETUP_CERT_FILE=/tmp/domsetup-cert.pem
+  fi
 fi
 
 if [ -z "$DOMSETUP_KEY_FILE" ]; then
-  DOMSETUP_KEY_FILE=/tmp/domsetup-key.pem
+  if [ -e /run/secrets/domsetup/tls.key ]; then
+    DOMSETUP_KEY_FILE=/run/secrets/domsetup/tls.key
+  else
+    DOMSETUP_KEY_FILE=/tmp/domsetup-key.pem
+  fi
 fi
 
 if [ -z "$DOMSETUP_KEY_FILE_PWD" ]; then
-  DOMSETUP_KEY_FILE_PWD=/tmp/domsetup-password.txt
+  if [ -e /run/secrets/domsetup/key.pass ]; then
+    DOMSETUP_KEY_FILE_PWD=/run/secrets/domsetup/key.pass
+  else
+    DOMSETUP_KEY_FILE_PWD=/tmp/domsetup-key.pass
+  fi
 fi
 
 if [ -z "$DOMSETUP_WEBROOT" ]; then
