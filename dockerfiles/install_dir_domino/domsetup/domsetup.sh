@@ -2,7 +2,7 @@
 ###########################################################################
 # Domino OTS Setup Helper Script                                          #
 #                                                                         #
-# Version 0.9.0  02.11.2025                                               #
+# Version 0.9.2  08.01.2025                                               #
 # (C) Copyright Daniel Nashed/NashCom 2025                                #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -39,20 +39,24 @@ SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
 # Variables
 # -------------------
-# DOMSETUP_HTTPS_PORT
-# DOMSETUP_USER
-# DOMSETUP_PASSWORD
-# DOMSETUP_BEARER
-# DOMSETUP_CERT_FILE
-# DOMSETUP_KEY_FILE
-# DOMSETUP_KEY_FILE-PWD
-# DOMSETUP_JSON_FILE
-# DOMSETUP_DOMINO_REDIR
+# DOMSETUP_HOST           Host name to use for setup (default: hostname machine)
+# DOMSETUP_HTTPS_PORT     HTTPS port to use for setup (default: 443)
+# DOMSETUP_USER           Setup user name (default: admin)
+# DOMSETUP_PASSWORD       Password for setup user
+# DOMSETUP_BEARER         Setup Bearer token instead of user password
+# DOMSETUP_CERT_FILE      TLS Certificate file name (default: /tmp/domsetup-cert.pem)
+# DOMSETUP_KEY_FILE       TLS Key file name (default: /tmp/domsetup-key.pem)
+# DOMSETUP_KEY_FILE_PWD   TLS Key password file name (default: /tmp/domsetup-password.txt)
+# DOMSETUP_CERTMGR_HOST   Domino CertMgr host name to retieve a certificate matching the current key for host name
+# DOMSETUP_JSON_FILE      OTS JSON file to write (default: $DOMINO_AUTO_CONFIG_JSON_FILE)
+# DOMSETUP_DOMINO_REDIR   Redirect URL after setup (default: /verse)
+# DOMSETUP_WEBROOT        Web root to use (default: script directory + /domsetup-webroot)
 
 
 if [ -z "$DOMSETUP_USER" ]; then
   DOMSETUP_USER=admin
 fi
+
 
 log()
 {
@@ -68,10 +72,12 @@ log_space()
 }
 
 
+
 log_stderr()
 {
   echo "$@" >&2
 }
+
 
 log_space_stderr()
 {
@@ -79,6 +85,7 @@ log_space_stderr()
   echo "$@" >&2
   echo >&2
 }
+
 
 log_error()
 {
@@ -467,6 +474,7 @@ process_ots_form_data()
   fi
 }
 
+
 check_authorization()
 {
   local DOMSETUP_BASIC_AUTH=
@@ -504,6 +512,58 @@ check_authorization()
 }
 
 
+certmgr_cert_download()
+{
+
+  # Certificate already available
+  if [ -s "$DOMSETUP_CERT_FILE" ]; then
+    log_space "Info: Certificate already present: $DOMSETUP_CERT_FILE"
+    return 0
+  fi
+
+  # No CertMgr Host specified
+  if [ -z "$DOMSETUP_CERTMGR_HOST" ]; then
+    log_space "Info: No CertMgr specified"
+    return 1
+  fi
+
+  if [ ! -e "$DOMSETUP_KEY_FILE" ]; then
+    log_error "No key found when checking CertMgr server"
+    return 2
+  fi
+
+  # Check for new certificate on CertMgr server
+  openssl s_client -servername $DOMSETUP_HOST -showcerts $DOMSETUP_CERTMGR_HOST:443 </dev/null 2>/dev/null | sed -ne '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > "$DOMSETUP_CERT_FILE"
+
+  if [ ! "$?" = "0" ]; then
+    log_error "Cannot retrieve certificate from CertMgr server [$DOMSETUP_CERTMGR_HOST]"
+    return 3
+  fi
+
+  if [ ! -s "$DOMSETUP_CERT_FILE" ]; then
+    log_error "No certificate returned by CertMgr server"
+    return 4
+  fi
+
+  local PUB_KEY_HASH=$(openssl x509 -in "$DOMSETUP_CERT_FILE" -noout -pubkey | openssl sha1 | cut -d ' ' -f 2)
+
+  if [ -e "$DOMSETUP_KEY_FILE_PWD" ]; then
+    local PUB_PKEY_HASH=$(openssl pkey -in "$DOMSETUP_KEY_FILE" -passin "file:$DOMSETUP_KEY_FILE_PWD" -pubout | openssl sha1 | cut -d ' ' -f 2)
+  else
+    local PUB_PKEY_HASH=$(openssl pkey -in "$DOMSETUP_KEY_FILE" -pubout | openssl sha1 | cut -d ' ' -f 2)
+  fi
+
+  if [ "$PUB_KEY_HASH" = "$PUB_PKEY_HASH" ]; then
+    log_space "Certificate successfully downloaded from Domino CertMgr: $DOMSETUP_CERTMGR_HOST"
+    return 0
+  else
+    log_error "Invalid certificate found"
+    remove_file "$DOMSETUP_CERT_FILE"
+    return 5
+  fi
+}
+
+
 # --- Main logic ---
 
 # Get environment variables and set defaults
@@ -534,8 +594,8 @@ if [ -z "$DOMSETUP_KEY_FILE" ]; then
   DOMSETUP_KEY_FILE=/tmp/domsetup-key.pem
 fi
 
-if [ -z "$DOMSETUP_KEY_FILE-PWD" ]; then
-  DOMSETUP_KEY_FILE-PWD=/tmp/domsetup-password.txt
+if [ -z "$DOMSETUP_KEY_FILE_PWD" ]; then
+  DOMSETUP_KEY_FILE_PWD=/tmp/domsetup-password.txt
 fi
 
 if [ -z "$DOMSETUP_WEBROOT" ]; then
@@ -568,6 +628,10 @@ if [ ! -e /usr/bin/openssl ]; then
   log_space "OpenSSL is not installed"
   exit 1
 fi
+
+
+# Try to download certificate if key exists and CertMgr server is specified
+certmgr_cert_download
 
 # Create key & certificate via OpenSSL if not present
 
@@ -632,8 +696,8 @@ log_space "OTS Output File: [$DOMSETUP_JSON_FILE]"
 
 header "Starting OpenSSL"
 
-if [ -n "DOMSETUP_KEY_FILE-PWD" ] && [ -e "DOMSETUP_KEY_FILE-PWD" ]; then
-  coproc OPENSSL (openssl s_server -quiet -accept "$DOMSETUP_HTTPS_PORT" -cert "$DOMSETUP_CERT_FILE" -key "$DOMSETUP_KEY_FILE"  "-pass file:$DOMSETUP_KEY_FILE-PWD" 2>> "$DOMSETUP_LOGFILE")
+if [ -n "$DOMSETUP_KEY_FILE_PWD" ] && [ -e "$DOMSETUP_KEY_FILE_PWD" ]; then
+  coproc OPENSSL (openssl s_server -quiet -accept "$DOMSETUP_HTTPS_PORT" -cert "$DOMSETUP_CERT_FILE" -key "$DOMSETUP_KEY_FILE" -pass "file:$DOMSETUP_KEY_FILE_PWD" 2>> "$DOMSETUP_LOGFILE")
 else
   coproc OPENSSL (openssl s_server -quiet -accept "$DOMSETUP_HTTPS_PORT" -cert "$DOMSETUP_CERT_FILE" -key "$DOMSETUP_KEY_FILE" 2>> "$DOMSETUP_LOGFILE")
 fi
