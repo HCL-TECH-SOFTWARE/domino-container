@@ -28,6 +28,14 @@ domsetup.sh implements a Micro Web server written in Bash leveraging OpenSSL com
 * Supports both **Basic Authentication** and **Bearer Token Authentication** for secured access.
 
 
+## How to enable the Setup Menu
+
+To enable the setup web GUI set the following environment variable in your container configuarion.
+
+```
+DOMSETUP_ENABLED=1
+
+
 # Scenarios
 
 ## First server setup via Web GUI
@@ -53,20 +61,26 @@ On Kubernetes the server.id might be provided using a secret.
 But specially on Docker it might be useful to just use a single OTS JSON file with an embedded server.id using the `@Base64: ...` syntax described below.
 
 
-## How to enable the Setup Menu
+## OTS Server.ID @Base64: Syntax
 
-To enable the setup web GUI set the following environment variable in your container configuarion.
+To pass a server.id to an OTS additional server setup it can be encoded in base64 and stored into the server.id field.
+
+Standard OTS configuration:
 
 ```
-DOMSETUP_ENABLED=1
+"IDFilePath": "server.id"
 ```
 
-The following table describes all environment variables and their default values.
+Custom configuration passing a server.id
+
+```
+"IDFilePath": "@Base64: <base64-encoded-server.id>"
+```
 
 
 ## Environment Variables
 
-The following environment variables control the behavior of the Domino Setup Web UI.
+The following table describes all environment variables and their default values.
 
 | Variable                    | Description                                                                      | Default                         |
 | --------------------------- | -------------------------------------------------------------------------------- | ------------------------------- |
@@ -133,28 +147,11 @@ If no explicit paths are defined via environment variables, the following defaul
 These locations are typically populated via **Kubernetes Secrets**, mounted into the container to provide TLS certificates and private keys securely at runtime.
 
 
-## OTS Server.ID @Base64: Syntax
-
-To pass a server.id to an OTS additional server setup it can be encoded in base64 and stored into the server.id field.
-
-Standard OTS configuration:
-
-```
-"IDFilePath": "server.id"
-```
-
-Custom configuration passing a server.id
-
-```
-"IDFilePath": "@Base64: <base64-encoded-server.id>"
-```
-
-
 ---
 
 ## Notes
 
-* **OpenSSL** must be available in the container or host environment.
+* **OpenSSL** must be available.
 * When no certificate or key file is provided, a self-signed certificate is generated automatically.
 * When using **CertMgr integration**, both `DOMSETUP_CERTMGR_HOST` must be defined.
 * For non-interactive automation, set `DOMSETUP_NOGUI=1` and POST the OTS JSON directly to `/ots`.
