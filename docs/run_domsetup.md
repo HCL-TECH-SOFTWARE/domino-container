@@ -34,6 +34,7 @@ To enable the setup web GUI set the following environment variable in your conta
 
 ```
 DOMSETUP_ENABLED=1
+```
 
 
 # Scenarios
@@ -151,7 +152,7 @@ These locations are typically populated via **Kubernetes Secrets**, mounted into
 
 ## Notes
 
-* **OpenSSL** must be available.
+* Requires **OpenSSL** command line.
 * When no certificate or key file is provided, a self-signed certificate is generated automatically.
 * When using **CertMgr integration**, both `DOMSETUP_CERTMGR_HOST` must be defined.
 * For non-interactive automation, set `DOMSETUP_NOGUI=1` and POST the OTS JSON directly to `/ots`.
