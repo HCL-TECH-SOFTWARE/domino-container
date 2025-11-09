@@ -252,6 +252,13 @@ send_http_response()
     CONTENT_TYPE="text/plain"
   fi
 
+  if [ "$RECEIVED_CONTENT_TYPE" = "application/json" ]; then
+    BODY="{\"status\": \"$HTTP_STATUS\", \"text\": \"$BODY\"}"
+    CONTENT_LEN=${#BODY}
+    # When returning JSON always return status code 200 and add the status code to JSON payload
+    HTTP_STATUS=200
+  fi
+
   printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nContent-Type: %s\r\nContent-Length: %s\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$CONTENT_TYPE" "$CONTENT_LEN" >&${OPENSSL[1]}
   if [ -n "$BODY" ]; then
     printf '%s' "$BODY" >&${OPENSSL[1]}
@@ -272,7 +279,7 @@ send_http_unauthorized()
     REALM="Domino Setup"
   fi
 
-  printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nContent-Type: %s\r\nWWW-Authenticate: Basic realm=\"$REALM\"\r\nContent-Length: %s\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$CONTENT_TYPE" "$CONTENT_LEN" >&${OPENSSL[1]}
+  printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nContent-Type: %s\r\nWWW-Authenticate: Basic realm=\"%s\"\r\nContent-Length: %s\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$CONTENT_TYPE" "$REALM" "$CONTENT_LEN" >&${OPENSSL[1]}
   if [ -n "$BODY" ]; then
     printf '%s' "$BODY" >&${OPENSSL[1]}
   fi
@@ -561,9 +568,11 @@ certmgr_cert_download()
 
   local PUB_KEY_HASH=$(openssl x509 -in "$DOMSETUP_CERT_FILE" -noout -pubkey | openssl sha1 | cut -d ' ' -f 2)
 
-  if [ -e "$DOMSETUP_KEY_FILE_PWD" ]; then
+  if [ -n "$DOMSETUP_KEY_FILE_PWD" ] &&  [ -e "$DOMSETUP_KEY_FILE_PWD" ]; then
+    log_space "OpenSSL using $DOMSETUP_KEY_FILE_PWD"
     local PUB_PKEY_HASH=$(openssl pkey -in "$DOMSETUP_KEY_FILE" -passin "file:$DOMSETUP_KEY_FILE_PWD" -pubout | openssl sha1 | cut -d ' ' -f 2)
   else
+    log_space "OpenSSL no private key password specified"
     local PUB_PKEY_HASH=$(openssl pkey -in "$DOMSETUP_KEY_FILE" -pubout | openssl sha1 | cut -d ' ' -f 2)
   fi
 
@@ -666,6 +675,7 @@ if [ ! -e "$DOMSETUP_KEY_FILE" ]; then
   header "Creating private key via OpenSSL"
   openssl ecparam -name prime256v1 -genkey -noout -out "$DOMSETUP_KEY_FILE" > /dev/null 2>> "$DOMSETUP_LOGFILE"
   DOMSETUP_TEMP_KEY="$DOMSETUP_KEY_FILE"
+  DOMSETUP_KEY_FILE_PWD=
 fi
 
 if [ ! -e "$DOMSETUP_KEY_FILE" ]; then
@@ -675,7 +685,15 @@ fi
 
 if [ ! -e "$DOMSETUP_CERT_FILE" ]; then
   header "Generating self-signed certificate via OpenSSL ..."
-  openssl req -x509 -key "$DOMSETUP_KEY_FILE" -nodes -days 1 -subj "/CN=$DOMSETUP_SUBJECT" -addext "subjectAltName=DNS:$DOMSETUP_DNS_SAN,IP:$DOMSETUP_IP_SAN" -out "$DOMSETUP_CERT_FILE" 2>> "$DOMSETUP_LOGFILE"
+
+  if [ -n "$DOMSETUP_KEY_FILE_PWD" ] &&  [ -e "$DOMSETUP_KEY_FILE_PWD" ]; then
+    log_space "OpenSSL using $DOMSETUP_KEY_FILE_PWD"
+    openssl req -x509 -key "$DOMSETUP_KEY_FILE" -nodes -days 1 -passin "file:$DOMSETUP_KEY_FILE_PWD" -subj "/CN=$DOMSETUP_SUBJECT" -addext "subjectAltName=DNS:$DOMSETUP_DNS_SAN,IP:$DOMSETUP_IP_SAN" -out "$DOMSETUP_CERT_FILE" 2>> "$DOMSETUP_LOGFILE"
+  else
+    log_space "OpenSSL no private key password specified"
+    openssl req -x509 -key "$DOMSETUP_KEY_FILE" -nodes -days 1 -subj "/CN=$DOMSETUP_SUBJECT" -addext "subjectAltName=DNS:$DOMSETUP_DNS_SAN,IP:$DOMSETUP_IP_SAN" -out "$DOMSETUP_CERT_FILE" 2>> "$DOMSETUP_LOGFILE"
+  fi
+
   DOMSETUP_TEMP_CERT="$DOMSETUP_CERT_FILE"
 fi
 
@@ -752,11 +770,13 @@ while true; do
   AUTHORIZATION_HEADER=
   HEADER_COUNT=0
 
+  log
   while true; do
 
     if read -r -u ${OPENSSL[0]} LINE; then
       # Replace via bash
       LINE="${LINE%$'\r'}"
+      LINE="${LINE%$'\n'}"
     else
       log "Cannot read from OpenSSL process"
       exit 1
