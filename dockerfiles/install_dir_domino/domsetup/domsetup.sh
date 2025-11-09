@@ -2,7 +2,7 @@
 ###########################################################################
 # Domino OTS Setup Helper Script                                          #
 #                                                                         #
-# Version 0.9.2  08.01.2025                                               #
+# Version 0.9.4  10.01.2025                                               #
 # (C) Copyright Daniel Nashed/NashCom 2025                                #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -31,9 +31,8 @@
 # Example how to post an OTS JSON file
 
 # curl -v -k -X POST https://localhost/ots -H "Content-Type: application/json" --data-binary @ots.json
-# curl -v -k -X POST https://localhost/ots -F "file=@ots.json;type=application/json"
 
-DOMSETUP_VERSION="0.9.2"
+DOMSETUP_VERSION="0.9.4"
 SCRIPT_NAME=$0
 SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
@@ -228,7 +227,7 @@ ots_read_replace_server_id_base64()
   local BASE64DATA=$(get_value_after_prefix "$ELEMENT_VALUE" "@Base64:")
 
   if [ -z "$BASE64DATA" ]; then
-    echo "$1"
+    echo -n "$1"
     return 0
   fi
 
