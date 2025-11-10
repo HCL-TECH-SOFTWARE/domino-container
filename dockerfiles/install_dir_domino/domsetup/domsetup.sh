@@ -2,7 +2,7 @@
 ###########################################################################
 # Domino OTS Setup Helper Script                                          #
 #                                                                         #
-# Version 0.9.4  10.01.2025                                               #
+# Version 0.9.5  10.01.2025                                               #
 # (C) Copyright Daniel Nashed/NashCom 2025                                #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -32,7 +32,7 @@
 
 # curl -v -k -X POST https://localhost/ots -H "Content-Type: application/json" --data-binary @ots.json
 
-DOMSETUP_VERSION="0.9.4"
+DOMSETUP_VERSION="0.9.5"
 SCRIPT_NAME=$0
 SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
@@ -251,12 +251,27 @@ send_http_response()
     CONTENT_TYPE="text/plain"
   fi
 
-  if [ "$RECEIVED_CONTENT_TYPE" = "application/json" ]; then
+  if [ "$ACCEPT_CONTENT_TYPE" = "application/json" ]; then
     BODY="{\"status\": \"$HTTP_STATUS\", \"text\": \"$BODY\"}"
     CONTENT_LEN=${#BODY}
     # When returning JSON always return status code 200 and add the status code to JSON payload
     HTTP_STATUS=200
   fi
+
+  printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nContent-Type: %s\r\nContent-Length: %s\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$CONTENT_TYPE" "$CONTENT_LEN" >&${OPENSSL[1]}
+  if [ -n "$BODY" ]; then
+    printf '%s' "$BODY" >&${OPENSSL[1]}
+  fi
+}
+
+
+send_json_response()
+{
+  local HTTP_STATUS="200"
+  local REASON="OK"
+  local CONTENT_TYPE="application/json"
+  local BODY="$1"
+  local CONTENT_LEN=${#BODY}
 
   printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nContent-Type: %s\r\nContent-Length: %s\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$CONTENT_TYPE" "$CONTENT_LEN" >&${OPENSSL[1]}
   if [ -n "$BODY" ]; then
@@ -318,10 +333,22 @@ process_get_request()
 
   log "GET: [$1]"
 
-  if [ "/" = "$1" ]; then
+  if [ "$1" = "/" ]; then
     FILE_NAME="$DOMSETUP_WEBROOT/index.html"
   else
-    FILE_NAME="$DOMSETUP_WEBROOT$(echo $1 | cut -f1 -d'?')"
+
+    # Append .html if file has no extension and make it relative to web root
+    case "${1##*/}" in
+      *.*)
+        # Last segment has a dot → keep as-is
+        FILE_NAME="$DOMSETUP_WEBROOT$(echo "$1" | cut -f1 -d'?')"
+        ;;
+
+      *)
+        # No extension add .html
+        FILE_NAME="$DOMSETUP_WEBROOT$(echo "$1" | cut -f1 -d'?').html"
+        ;;
+    esac
   fi
 
   # Always allow to check if setup is available
@@ -407,27 +434,16 @@ process_post_request()
   if [ "$CONTENT_LEN" = "0" ]; then
     log "No post data received"
     send_http_response 400 "Bad Request" "" "No post data received"
-    return
+    return 1
   fi
 
-  log "Reading $CONTENT_LEN bytes postdata"
-
   if read -N $CONTENT_LEN -r -u ${OPENSSL[0]} POST_DATA; then
-
-    if [ "$1" = "/upload" ]; then
-      send_http_redirect "$DOMSETUP_COMPLETED_REDIR" 303
-
-    elif [ "$1" = "/domino-ots-setup" ]; then
-      send_http_redirect "$DOMSETUP_COMPLETED_REDIR" 303
-
-    else
-      send_http_response 200 "OK" "" "Domino OTS data received"
-    fi
+    log "Read $CONTENT_LEN bytes postdata"
 
   else
     log "Cannot read from OpenSSL process"
     send_http_response 400 "Bad Request" "" "No post data received"
-    return
+    return 1
   fi
 }
 
@@ -452,6 +468,25 @@ process_ots_json_postdata()
     log_space  "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
     log_space_stderr "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
   fi
+}
+
+
+process_serverid_postdata()
+{
+  local SERVER_ID_FILEPATH="$DOMINO_DATA_PATH/server.id"
+
+  head -c "$CONTENT_LEN" <&"${OPENSSL[0]}" > "$SERVER_ID_FILEPATH"
+  local SHA256SUM=$(sha256sum $SERVER_ID_FILEPATH | awk '{print $1}')
+
+
+  if [ "$ACCEPT_CONTENT_TYPE" = "application/json" ]; then
+    send_json_response "{\"status\": \"200\", \"text\": \"Domino Server.ID recreived\", \"sha256\": \"$SHA256SUM\"}"
+  else
+    send_http_response 200 "OK" "" "Domino Server.ID recreived: SHA256 $SHA256SUM"
+  fi
+
+  log_space_stderr "Downloaded server.id -> $SERVER_ID_FILEPATH (SHA256: $SHA256SUM)"
+  log_space "Downloaded server.id -> $SERVER_ID_FILEPATH (SHA256: $SHA256SUM)"
 }
 
 
@@ -604,7 +639,7 @@ DOMSETUP_DNS_SAN=${DOMSETUP_DNS_SAN:-$DOMSETUP_HOST}
 DOMSETUP_SUBJECT=${DOMSETUP_SUBJECT:-$DOMSETUP_HOST}
 DOMSETUP_IP_SAN=${DOMSETUP_IP_SAN:-127.0.0.1}
 DOMSETUP_DOMINO_REDIR=${DOMSETUP_DOMINO_REDIR:-/verse}
-DOMSETUP_COMPLETED_REDIR=${DOMSETUP_COMPLETED_REDIR:-/completed.html?redirect=$DOMSETUP_DOMINO_REDIR}
+DOMSETUP_COMPLETED_REDIR=${DOMSETUP_COMPLETED_REDIR:-/completed?redirect=$DOMSETUP_DOMINO_REDIR}
 DOMSETUP_OPNSSL_PID=
 DOMSETUP_DONE=
 
@@ -766,6 +801,7 @@ while true; do
   GET_REQ=
   CONTENT_LEN=0
   RECEIVED_CONTENT_TYPE=
+  ACCEPT_CONTENT_TYPE=
   AUTHORIZATION_HEADER=
   HEADER_COUNT=0
 
@@ -814,11 +850,21 @@ while true; do
         authorization:*)
           AUTHORIZATION_HEADER=$(echo "$LINE"| cut -f2 -d":" | xargs)
           ;;
+
+        accept:*)
+          ACCEPT_CONTENT_TYPE=$(echo "$LINE"| cut -f2 -d":" | xargs)
+          ;;
+
       esac
     fi
 
     HEADER_COUNT=$((HEADER_COUNT + 1))
   done
+
+  # if no content type is specify for accept, use request content type
+  if [ -z "$ACCEPT_CONTENT_TYPE" ]; then
+    ACCEPT_CONTENT_TYPE="$RECEIVED_CONTENT_TYPE"
+  fi
 
   check_authorization
   AUTH_STATUS="$?"
@@ -841,22 +887,35 @@ while true; do
     process_get_request "$GET_REQ"
 
   elif [ -n "$POST_REQ" ]; then
-    process_post_request "$POST_REQ"
 
-    if [ "$POST_REQ" = "/ots" ]; then
-      process_ots_json_postdata
-      break
-    fi
+    # Handle server.id binary data separately
+    if [ "$POST_REQ" = "/serverid" ]; then
+      process_serverid_postdata
+    else
 
-    if [ "$POST_REQ" = "/upload" ]; then
-      log "OTS Upload completed"
-      process_ots_json_postdata
-      DOMSETUP_DONE=1
-    fi
+      if [ "$POST_REQ" = "/ots" ]; then
+        process_post_request "$POST_REQ"
+        process_ots_json_postdata
+	send_http_response 200 "OK" "" "Domino OTS data received"
+        break
 
-    if [ "$POST_REQ" = "/domino-ots-setup" ]; then
-      process_ots_form_data
-      DOMSETUP_DONE=1
+      elif [ "$POST_REQ" = "/upload" ]; then
+        process_post_request "$POST_REQ"
+	send_http_redirect "$DOMSETUP_COMPLETED_REDIR" 303
+        process_ots_json_postdata
+        DOMSETUP_DONE=1
+
+      elif [ "$POST_REQ" = "/domino-ots-setup" ]; then
+        process_post_request "$POST_REQ"
+        process_ots_form_data
+	send_http_redirect "$DOMSETUP_COMPLETED_REDIR" 303
+        DOMSETUP_DONE=1
+
+      else
+	# Nonblocking drain: read until no more data is available
+        timeout 0.1 cat <&"${OPENSSL[0]}" > /dev/null 2>&1
+        send_http_response 400 "Bad Request" "" "Invalid request"
+      fi
     fi
 
   else
