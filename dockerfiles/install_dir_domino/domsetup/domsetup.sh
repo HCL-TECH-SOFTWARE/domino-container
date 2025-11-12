@@ -2,7 +2,7 @@
 ###########################################################################
 # Domino OTS Setup Helper Script                                          #
 #                                                                         #
-# Version 0.9.5  10.01.2025                                               #
+# Version 0.9.6  12.11.2025                                               #
 # (C) Copyright Daniel Nashed/NashCom 2025                                #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -32,7 +32,7 @@
 
 # curl -v -k -X POST https://localhost/ots -H "Content-Type: application/json" --data-binary @ots.json
 
-DOMSETUP_VERSION="0.9.5"
+DOMSETUP_VERSION="0.9.6"
 SCRIPT_NAME=$0
 SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
@@ -258,7 +258,7 @@ send_http_response()
     HTTP_STATUS=200
   fi
 
-  printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nContent-Type: %s\r\nContent-Length: %s\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$CONTENT_TYPE" "$CONTENT_LEN" >&${OPENSSL[1]}
+  printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nContent-Type: %s\r\nContent-Length: %s\r\nCache-Control: no-store\r\nPragma: no-cache\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$CONTENT_TYPE" "$CONTENT_LEN" >&${OPENSSL[1]}
   if [ -n "$BODY" ]; then
     printf '%s' "$BODY" >&${OPENSSL[1]}
   fi
@@ -273,7 +273,7 @@ send_json_response()
   local BODY="$1"
   local CONTENT_LEN=${#BODY}
 
-  printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nContent-Type: %s\r\nContent-Length: %s\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$CONTENT_TYPE" "$CONTENT_LEN" >&${OPENSSL[1]}
+  printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nContent-Type: %s\r\nContent-Length: %s\r\nCache-Control: no-store\r\nPragma: no-cache\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$CONTENT_TYPE" "$CONTENT_LEN" >&${OPENSSL[1]}
   if [ -n "$BODY" ]; then
     printf '%s' "$BODY" >&${OPENSSL[1]}
   fi
@@ -319,7 +319,8 @@ send_http_redirect()
   esac
 
   log "Sending redirect [$HTTP_STATUS] [$REASON] -> [$LOCATION]"
-  printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nLocation: %s\r\nContent-Length: %s\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$LOCATION" "$CONTENT_LEN" >&${OPENSSL[1]}
+  printf 'HTTP/1.1 %s %s\r\nServer: domsetup\r\nLocation: %s\r\nContent-Length: %s\r\nCache-Control: no-store\r\nPragma: no-cache\r\nConnection: close\r\n\r\n' "$HTTP_STATUS" "$REASON" "$LOCATION" "$CONTENT_LEN" >&${OPENSSL[1]}
+
 }
 
 
@@ -620,10 +621,16 @@ certmgr_cert_download()
 }
 
 
-RespondToFinalRequest()
+send_completed_redirect()
 {
+
   local HOST=
   local PORT=
+
+  if [ -n "$DOMSETUP_COMPLETED_REDIR" ]; then
+    send_http_redirect "$DOMSETUP_COMPLETED_REDIR" 303
+    return 0
+  fi
 
   IFS=":" read -r HOST PORT <<< "$RECEIVED_HOST"
 
@@ -636,10 +643,12 @@ RespondToFinalRequest()
   fi
 
   if [ "$PORT" = "443" ] ; then
-    send_http_response 404 "Not Found"
+    DOMSETUP_COMPLETED_REDIR="/completed?redirect=$DOMSETUP_DOMINO_REDIR"
   else
-    send_http_redirect "https://${HOST}${DOMSETUP_DOMINO_REDIR}" 303
+    DOMSETUP_COMPLETED_REDIR="/completed?redirect=https://${HOST}${DOMSETUP_DOMINO_REDIR}"
   fi
+
+  send_http_redirect "$DOMSETUP_COMPLETED_REDIR" 303
 }
 
 
@@ -661,7 +670,6 @@ DOMSETUP_DNS_SAN=${DOMSETUP_DNS_SAN:-$DOMSETUP_HOST}
 DOMSETUP_SUBJECT=${DOMSETUP_SUBJECT:-$DOMSETUP_HOST}
 DOMSETUP_IP_SAN=${DOMSETUP_IP_SAN:-127.0.0.1}
 DOMSETUP_DOMINO_REDIR=${DOMSETUP_DOMINO_REDIR:-/verse}
-DOMSETUP_COMPLETED_REDIR=${DOMSETUP_COMPLETED_REDIR:-/completed?redirect=$DOMSETUP_DOMINO_REDIR}
 DOMSETUP_OPNSSL_PID=
 DOMSETUP_DONE=
 
@@ -893,10 +901,17 @@ while true; do
 
     if [ -n "$DOMSETUP_DONE" ]; then
       if [ "$GET_REQ" = "$DOMSETUP_DOMINO_REDIR" ]; then
-	RespondToFinalRequest
+	send_http_response 404 "Not Found"
         log "Domino final redirect URL requests -> terminating"
         break
       fi
+
+      if [ "$GET_REQ" = "/setup-done" ]; then
+        send_http_response 204 "Not Content"
+        log "Domino Setup Done signaled > terminating"
+        break
+      fi
+
     fi
 
     process_get_request "$GET_REQ"
@@ -916,14 +931,14 @@ while true; do
 
       elif [ "$POST_REQ" = "/upload" ]; then
         process_post_request "$POST_REQ"
-	send_http_redirect "$DOMSETUP_COMPLETED_REDIR" 303
+	send_completed_redirect
         process_ots_json_postdata
         DOMSETUP_DONE=1
 
       elif [ "$POST_REQ" = "/domino-ots-setup" ]; then
         process_post_request "$POST_REQ"
         process_ots_form_data
-	send_http_redirect "$DOMSETUP_COMPLETED_REDIR" 303
+	send_completed_redirect
         DOMSETUP_DONE=1
 
       else
