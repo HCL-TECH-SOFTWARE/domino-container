@@ -6,4 +6,5 @@ software/*.zip
 /dockerfiles/volt/install_dir/demopack.zip
 /dockerfiles/install_dir_domino/custom/*.sources
 /dockerfiles/install_dir_domino/custom/*.pem
+/dockerfiles/install_dir_domino/custom/*.svg
 .DominoContainer

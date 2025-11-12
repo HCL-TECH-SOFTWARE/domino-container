@@ -39,7 +39,7 @@ SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 # Environment Variables
 # ---------------------
 # DOMSETUP_HOST           Host name to use for setup (default: hostname machine)
-# DOMSETUP_HTTPS_PORT     HTTPS port to use for setup (default: 443)
+# DOMSETUP_HTTPS_PORT     HTTPS port to use for setup (default: 1352)
 # DOMSETUP_USER           Setup user name (default: admin)
 # DOMSETUP_PASSWORD       Password for setup user (default: /tmp/domsetup-key.pass)
 # DOMSETUP_BEARER         Setup Bearer token instead of user password
@@ -634,7 +634,7 @@ if [ -z "$DOMSETUP_HOST" ]; then
 fi
 
 DOMINO_DATA_PATH=${DOMINO_DATA_PATH:-/local/notesdata}
-DOMSETUP_HTTPS_PORT=${DOMSETUP_HTTPS_PORT:-443}
+DOMSETUP_HTTPS_PORT=${DOMSETUP_HTTPS_PORT:-1352}
 DOMSETUP_DNS_SAN=${DOMSETUP_DNS_SAN:-$DOMSETUP_HOST}
 DOMSETUP_SUBJECT=${DOMSETUP_SUBJECT:-$DOMSETUP_HOST}
 DOMSETUP_IP_SAN=${DOMSETUP_IP_SAN:-127.0.0.1}

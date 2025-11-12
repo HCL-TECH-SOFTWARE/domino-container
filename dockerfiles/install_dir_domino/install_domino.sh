@@ -1380,7 +1380,17 @@ install_domsetup()
     header "Installing Domino Setup Listener"
 
     cp -r "$INSTALL_DIR/domsetup/"* "$Notes_ExecDirectory"/
+    # Set permissions for script
     chmod 755 "$Notes_ExecDirectory/domsetup.sh"
+    # Ensure all files and directories can be read
+    find "$Notes_ExecDirectory/domsetup-webroot" -type f -exec chmod 0444 {} \;
+    find "$Notes_ExecDirectory/domsetup-webroot" -type d -exec chmod 0555 {} \;
+
+    # Logo customization if present in custom dir
+    if [ -e "$INSTALL_DIR/custom/domsetup-logo.svg" ]; then
+      header "Replacing Domino Setup logo"
+      cp -f "$INSTALL_DIR/custom/domsetup-logo.svg" "$Notes_ExecDirectory/domsetup-webroot/assets/domsetup-logo.svg"
+    fi
 }
 
 

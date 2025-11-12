@@ -51,3 +51,15 @@ The PEM file and JVM trusted roots can be updated by providing a PEM file with t
 ```
 trusted_domino_root.pem
 ```
+
+
+# Custom Domino Setup Logo
+
+To replace the Domino Setup logo place a SVG file into the custom directory.
+The standard Domino logo is placed into the domsetup web root.
+
+```
+domsetup-logo.svg
+```
+
+
