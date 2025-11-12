@@ -145,7 +145,7 @@ The following table describes all environment variables and their default values
 | Variable                    | Description                                                                      | Default                         |
 | --------------------------- | -------------------------------------------------------------------------------- | ------------------------------- |
 | **DOMSETUP_HOST**           | Hostname used for setup operations.                                              | System hostname                 |
-| **DOMSETUP_HTTPS_PORT**     | HTTPS port the setup web UI listens on (must be >= 1024.                         | `1352'                          |
+| **DOMSETUP_HTTPS_PORT**     | HTTPS port the setup web UI listens on (must be >= 1024.                         | `1352`                          |
 | **DOMSETUP_USER**           | Username for Basic authentication.                                               | `admin`                         |
 | **DOMSETUP_PASSWORD**       | Password for setup user. Can point to a file path containing the password.       | `/tmp/domsetup-key.pass`        |
 | **DOMSETUP_BEARER**         | Bearer token for authentication (used instead of username/password).             | *(unset)*                       |

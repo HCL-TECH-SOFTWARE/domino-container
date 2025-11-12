@@ -478,7 +478,6 @@ process_serverid_postdata()
   head -c "$CONTENT_LEN" <&"${OPENSSL[0]}" > "$SERVER_ID_FILEPATH"
   local SHA256SUM=$(sha256sum $SERVER_ID_FILEPATH | awk '{print $1}')
 
-
   if [ "$ACCEPT_CONTENT_TYPE" = "application/json" ]; then
     send_json_response "{\"status\": \"200\", \"text\": \"Domino Server.ID recreived\", \"sha256\": \"$SHA256SUM\"}"
   else
@@ -617,6 +616,29 @@ certmgr_cert_download()
     log_error "Invalid certificate found"
     remove_file "$DOMSETUP_CERT_FILE"
     return 5
+  fi
+}
+
+
+RespondToFinalRequest()
+{
+  local HOST=
+  local PORT=
+
+  IFS=":" read -r HOST PORT <<< "$RECEIVED_HOST"
+
+  if [ -z "$HOST" ]; then
+    HOST="$DOMSETUP_HOST"
+  fi
+
+  if [ -z "$PORT" ]; then
+    PORT="$DOMSETUP_HTTPS_PORT"
+  fi
+
+  if [ "$PORT" = "443" ] ; then
+    send_http_response 404 "Not Found"
+  else
+    send_http_redirect "https://${HOST}${DOMSETUP_DOMINO_REDIR}" 303
   fi
 }
 
@@ -800,6 +822,7 @@ while true; do
   POST_REQ=
   GET_REQ=
   CONTENT_LEN=0
+  RECEIVED_HOST=
   RECEIVED_CONTENT_TYPE=
   ACCEPT_CONTENT_TYPE=
   AUTHORIZATION_HEADER=
@@ -836,25 +859,17 @@ while true; do
       esac
 
     else
-      # Compare headers case-insensitive by lowercasing it
-      case ${LINE,,} in
+      IFS=: read -r HEADER_NAME HEADER_VALUE <<< "$LINE"
+      HEADER_NAME=${HEADER_NAME,,}
+      HEADER_VALUE=${HEADER_VALUE# }
+      HEADER_VALUE=${HEADER_VALUE%$'\r'}
 
-        content-length:*)
-          CONTENT_LEN=$(echo "$LINE"| cut -f2 -d":" | xargs)
-          ;;
-
-        content-type:*)
-          RECEIVED_CONTENT_TYPE=$(echo "$LINE"| cut -f2 -d":" | xargs)
-          ;;
-
-        authorization:*)
-          AUTHORIZATION_HEADER=$(echo "$LINE"| cut -f2 -d":" | xargs)
-          ;;
-
-        accept:*)
-          ACCEPT_CONTENT_TYPE=$(echo "$LINE"| cut -f2 -d":" | xargs)
-          ;;
-
+      case $HEADER_NAME in
+        host)             RECEIVED_HOST="$HEADER_VALUE" ;;
+        content-length)   CONTENT_LEN="$HEADER_VALUE" ;;
+        content-type)     RECEIVED_CONTENT_TYPE="$HEADER_VALUE" ;;
+        authorization)    AUTHORIZATION_HEADER="$HEADER_VALUE" ;;
+        accept)           ACCEPT_CONTENT_TYPE="$HEADER_VALUE" ;;
       esac
     fi
 
@@ -878,7 +893,7 @@ while true; do
 
     if [ -n "$DOMSETUP_DONE" ]; then
       if [ "$GET_REQ" = "$DOMSETUP_DOMINO_REDIR" ]; then
-        send_http_response 404 "Not Found"
+	RespondToFinalRequest
         log "Domino final redirect URL requests -> terminating"
         break
       fi
