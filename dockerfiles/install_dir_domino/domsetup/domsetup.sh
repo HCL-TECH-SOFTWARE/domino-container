@@ -262,6 +262,7 @@ send_http_response()
   fi
 
   if [ "$ACCEPT_CONTENT_TYPE" = "application/json" ]; then
+    CONTENT_TYPE="application/json"
     BODY="{\"status\": \"$HTTP_STATUS\", \"text\": \"$BODY\"}"
     CONTENT_LEN=${#BODY}
     # When returning JSON always return status code 200 and add the status code to JSON payload
