@@ -61,6 +61,16 @@ SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 # /run/secrets/domsetup/key.pass
 
 
+# Locations checked for Domino OTS JSON Template
+# ------------------------------------------------------------
+# 1. Directly specified DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE
+# 2. /run/secrets/domsetup/DominoAutoConfigTemplate.json
+# 3. /local/notesdata/DominoAutoConfigTemplate.json
+# 4. <domsetup script dir>/first_server.json
+# 5. /opt/nashcom/startscript/OneTouchSetup/first_server.json
+
+
+
 if [ -z "$DOMSETUP_USER" ]; then
   DOMSETUP_USER=admin
 fi
@@ -652,7 +662,45 @@ send_completed_redirect()
 }
 
 
+export_tls_file()
+{
+  if [ -z "$DOMSETUP_TLS_FILE" ]; then
+    log_space "Info: No DOMSETUP_TLS_FILE specified"
+    return 0
+  fi
+
+  if [ ! -e "$DOMSETUP_KEY_FILE" ]; then
+    log_space "No DOMSETUP_KEY_FILE specified"
+    return 0
+  fi
+
+  if [ ! -e "$DOMSETUP_CERT_FILE" ]; then
+    log_space "No DOMSETUP_CERT_FILE specified"
+    return 0
+  fi
+
+  cat "$DOMSETUP_KEY_FILE"  >  "$DOMSETUP_TLS_FILE"
+  cat "$DOMSETUP_CERT_FILE" >> "$DOMSETUP_TLS_FILE"
+
+  log_space "TLS Credentials file exported for OTS setup -> $DOMSETUP_TLS_FILE"
+}
+
+
+import_environment()
+{
+  if [ -z "$DOMSETUP_ENV_FILE" ]; then
+    DOMSETUP_ENV_FILE=/run/secrets/domsetup/env
+  fi
+
+  if [ -r "$DOMSETUP_ENV_FILE" ]; then
+    . "$DOMSETUP_ENV_FILE"
+  fi
+}
+
+
 # --- Main logic ---
+
+import_environment
 
 # Get environment variables and set defaults
 
@@ -717,12 +765,20 @@ clear_log
 header "Domino OTS Setup $DOMSETUP_VERSION"
 log_space "Started $(date)"
 
+
 # Trap cleanup
 trap cleanup_and_terminate INT TERM HUP QUIT EXIT
+
 
 header "Environment"
 env >> "$DOMSETUP_LOGFILE"
 log
+
+if [ -n "$DOMSETUP_ENV_FILE" ]; then
+  header "$DOMSETUP_ENV_FILE"
+  cat "$DOMSETUP_ENV_FILE" >> "$DOMSETUP_LOGFILE"
+  log
+fi
 
 if [ ! -e /usr/bin/openssl ]; then
   log_space "OpenSSL is not installed"
@@ -774,12 +830,18 @@ log "Parent Process: [$DOMSETUP_PARENT_PROCESS]"
 
 if [ -z "$DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE" ]; then
 
-  if [ -e "$SCRIPT_DIR/first_server.json" ]; then
+  if [ -e "/run/secrets/domsetup/DominoAutoConfigTemplate.json" ]; then
+    DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE="/run/secrets/domsetup/DominoAutoConfigTemplate.json"
+  elif [ -e "$DOMINO_DATA_PATH/DominoAutoConfigTemplate.json" ]; then
+    DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE="$DOMINO_DATA_PATH/DominoAutoConfigTemplate.json"
+  elif [ -e "$SCRIPT_DIR/first_server.json" ]; then
     DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE="$SCRIPT_DIR/first_server.json"
   else
     DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE="/opt/nashcom/startscript/OneTouchSetup/first_server.json"
   fi
 fi
+
+log_space "Domino Setup Template JSON file: $DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE"
 
 if [ -z "$DOMINO_AUTO_CONFIG_JSON_FILE" ]; then
   DOMINO_AUTO_CONFIG_JSON_FILE=/local/notesdata/DominoAutoConfig.json
@@ -953,6 +1015,8 @@ while true; do
   fi
 
 done;
+
+export_tls_file
 
 # Make sure the OpenSSL back-end process terminates
 cleanup_and_terminate

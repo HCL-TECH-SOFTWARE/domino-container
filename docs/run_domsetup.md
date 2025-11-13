@@ -142,6 +142,14 @@ Result:
 The following table describes all environment variables and their default values.
 
 
+Environment variables are usually passed thru the container configuration, but stay in the container until it is recreated.
+Therefore DominoSetup can use an environment file to pass temporary configuration environment variables.
+
+Define `DOMSETUP_ENV_FILE` to specify a mounted environment file.
+The default value for this file is `/run/secrets/domsetup/env`
+
+
+
 | Variable                    | Description                                                                      | Default                         |
 | --------------------------- | -------------------------------------------------------------------------------- | ------------------------------- |
 | **DOMSETUP_HOST**           | Hostname used for setup operations.                                              | System hostname                 |
@@ -158,6 +166,22 @@ The following table describes all environment variables and their default values
 | **DOMSETUP_DOMINO_REDIR**   | URL to redirect to after successful setup.                                       | `/verse`                        |
 | **DOMSETUP_WEBROOT**        | Directory containing the setup web UI files.                                     | `<script_dir>/domsetup-webroot` |
 | **DOMSETUP_NOGUI**          | Set to `1` to disable the web UI (Allow OTS JSON posts only).                    | *(unset)*                       |
+
+
+
+## Locations checked for Domino OTS JSON Template
+
+The Domino One Touch JSON template is the base for a first server setup.
+It contains environment variables which are replaced by DominoSetup.
+
+Domino OTS JSON files are searched in the following order:
+
+
+1. Directly specified DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE
+2. /run/secrets/domsetup/DominoAutoConfigTemplate.json
+3. /local/notesdata/DominoAutoConfigTemplate.json
+4. <domsetup script dir>/first_server.json
+5. /opt/nashcom/startscript/OneTouchSetup/first_server.json
 
 
 
@@ -191,8 +215,37 @@ If no explicit paths are defined via environment variables, the following defaul
 | **DOMSETUP_CERT_FILE**    | Path to the mounted TLS certificate file.                     | `/run/secrets/domsetup/tls.crt`  |
 | **DOMSETUP_KEY_FILE**     | Path to the mounted TLS private key file.                     | `/run/secrets/domsetup/tls.key`  |
 | **DOMSETUP_KEY_FILE_PWD** | Path to the mounted password file for the TLS key (optional). | `/run/secrets/domsetup/key.pass` |
+| **DOMSETUP_ENV_FILE**     | Optional file to specify  environment variables               | `/run/secrets/domsetup/env`      |
 
 These locations are typically populated via **Kubernetes Secrets**, mounted into the container to provide TLS certificates and private keys securely at runtime.
+They can be also used in Docker and other environments but have their defaults adopted to the K8s secrets namespace.
+
+
+
+## Domino OTS TLS Setup Integration
+
+For a first server setup TLS Credentials can be imported from a PEM file.
+To write a file containing the DominoSetup private key and certificate chain define an export file via `DOMSETUP_TLS_FILE`.
+
+Example:
+
+```
+DOMSETUP_TLS_FILE=/tmp/domsetup_tls.pem
+```
+
+### Domino OTS configuration example
+
+The following example also contains the configuration needed for password protected private keys.
+
+```
+ "security": {
+      "TLSSetup": {
+        "method": "import",
+        "importFilePath": "/tmp/domsetup_tls.pem",
+        "importFilePassword": "@Secret:/run/secrets/domsetup/key.pass"
+      }
+    }
+```
 
 
 ---
@@ -206,4 +259,21 @@ These locations are typically populated via **Kubernetes Secrets**, mounted into
 * In Kubernetes environments, it is recommended to use mounted secrets for TLS keys and certificates under `/run/secrets/domsetup/`.
 
 
+## Implementation details
+
+### Port Setup
+
+The default port to setup a server is 1352 used for a HTTPS connection.
+The main reason is that none privileged processes can't bind to ports below 1024.
+The program uses for communication is the OpenSSL command-line which should not be authorized to listen to restricted ports.
+
+### Waiting for server setup to complete
+
+After the setup completes the redirect needs to change to the standard HTTPS port (443).
+A redirect to another port would be denied by CORS.
+Therefore the Javascript in **complete.html** waits for **/domcfg.nsf/style.css** to be available before using Javascript load the specified login page.
+The name of the redirect URL is passed as a parameter and the link to the style sheet is derived from that name.
+Requesting image files and style sheets is not restricted by CORS and works cross servers.
+
+Checking `style.css` in `domcfg.nsf` is a reliable way to detect the server has been started and the login form is available.
 
