@@ -868,9 +868,9 @@ log_space "OTS Output File: [$DOMSETUP_JSON_FILE]"
 header "Starting OpenSSL"
 
 if [ -n "$DOMSETUP_KEY_FILE_PWD" ] && [ -e "$DOMSETUP_KEY_FILE_PWD" ]; then
-  coproc OPENSSL (openssl s_server -quiet -accept "$DOMSETUP_HTTPS_PORT" -cert "$DOMSETUP_CERT_FILE" -key "$DOMSETUP_KEY_FILE" -pass "file:$DOMSETUP_KEY_FILE_PWD" 2>> "$DOMSETUP_LOGFILE")
+  coproc OPENSSL (openssl s_server -quiet -accept "$DOMSETUP_HTTPS_PORT" -build_chain -CAfile "$DOMSETUP_CERT_FILE" -cert "$DOMSETUP_CERT_FILE" -key "$DOMSETUP_KEY_FILE" -pass "file:$DOMSETUP_KEY_FILE_PWD" 2>> "$DOMSETUP_LOGFILE")
 else
-  coproc OPENSSL (openssl s_server -quiet -accept "$DOMSETUP_HTTPS_PORT" -cert "$DOMSETUP_CERT_FILE" -key "$DOMSETUP_KEY_FILE" 2>> "$DOMSETUP_LOGFILE")
+  coproc OPENSSL (openssl s_server -quiet -accept "$DOMSETUP_HTTPS_PORT" -build_chain -CAfile "$DOMSETUP_CERT_FILE" -cert "$DOMSETUP_CERT_FILE" -key "$DOMSETUP_KEY_FILE" 2>> "$DOMSETUP_LOGFILE")
 fi
 
 DOMSETUP_OPNSSL_PID="$!"

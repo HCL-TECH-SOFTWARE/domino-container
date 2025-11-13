@@ -117,7 +117,7 @@ Domino Server.ID recreived: SHA256 3ae053c7af734c9f3b97f0ece3af211762519aa8449de
 ### Uploading a server.id `curl` with JSON response
 
 Specially for automation a parsable result is important.
-The setup GUI Javascript calculates the hash of the uploaded file and verifies it against the resulting JSON.
+The setup GUI JavaScript calculates the hash of the uploaded file and verifies it against the resulting JSON.
 
 
 ```
@@ -271,7 +271,7 @@ The program uses for communication is the OpenSSL command-line which should not 
 
 After the setup completes the redirect needs to change to the standard HTTPS port (443).
 A redirect to another port would be denied by CORS.
-Therefore the Javascript in **complete.html** waits for **/domcfg.nsf/style.css** to be available before using Javascript load the specified login page.
+Therefore the JavaScript in **complete.html** waits for **/domcfg.nsf/style.css** to be available before using JavaScript load the specified login page.
 The name of the redirect URL is passed as a parameter and the link to the style sheet is derived from that name.
 Requesting image files and style sheets is not restricted by CORS and works cross servers.
 
