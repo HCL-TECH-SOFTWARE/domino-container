@@ -220,6 +220,7 @@
             "computeWithForm": true,
             "items": {
               "Form": "WebSite",
+              "Type": "WebSite",
               "AutomationComment " : "Default Website",
               "WSIsDflt"           : "1",
               "ISiteAdrs"          : [ "127.0.0.1", "automation.notes.lab" ],
@@ -242,6 +243,7 @@
             "computeWithForm": true,
             "items": {
               "Form": "SMTPInboundSite",
+              "Type": "SMTPInboundSite",
               "AutomationComment" : "Default SMTP",
               "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
               "ISiteName"         : "AutomationTestDefaultSite",
@@ -261,6 +263,7 @@
             "computeWithForm": true,
             "items": {
               "Form": "DirectorySite",
+              "Type": "DirectorySite",
               "AutomationComment" : "Default LDAP",
               "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
               "ISiteName"         : "AutomationTestDefaultSite",
@@ -280,6 +283,7 @@
             "computeWithForm": true,
             "items": {
               "Form": "IMAPSite",
+              "Type": "IMAPSite",
               "AutomationComment" : "Default IMAP",
               "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
               "ISiteName"         : "AutomationTestDefaultSite",
@@ -299,6 +303,7 @@
             "computeWithForm": true,
             "items": {
               "Form": "POP3Site",
+              "Type": "POP3Site",
               "AutomationComment" : "Default POP3",
               "ISiteAdrs"         : [ "127.0.0.1", "automation.notes.lab" ],
               "ISiteName"         : "AutomationTestDefaultSite",
@@ -318,6 +323,7 @@
             "computeWithForm": true,
             "items": {
               "Form": "Domain",
+              "Type": "Domain",
               "DomainType"        : "GlobalDomain",
               "GlobalDomainTasks" : "SMTP",
               "DomainName"        : "AutoTestingGlobalDomain",

@@ -775,7 +775,7 @@ header "Environment"
 env >> "$DOMSETUP_LOGFILE"
 log
 
-if [ -n "$DOMSETUP_ENV_FILE" ]; then
+if [ -n "$DOMSETUP_ENV_FILE" ] && [ -e "$DOMSETUP_ENV_FILE" ]; then
   header "$DOMSETUP_ENV_FILE"
   cat "$DOMSETUP_ENV_FILE" >> "$DOMSETUP_LOGFILE"
   log

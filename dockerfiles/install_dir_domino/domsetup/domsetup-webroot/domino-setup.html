@@ -42,11 +42,6 @@
               title="Only letters, numbers, dots, and hyphen">
           </div>
 
-          <div class="mb-3" id="SERVER_CONFIGURATION_FIELD" style="display: none;">
-            <label for="ServerType" class="form-label">Server Type<span class="text-danger">*</span></label>
-            <select class="form-select" id="SERVER_CONFIGURATION" name="SERVER_CONFIGURATION"></select>
-          </div>
-
           <div class="mb-3">
             <label for="SERVER_DOMAINNAME" class="form-label">Domino Domain Name<span class="text-danger">*</span></label>
             <input id="SERVER_DOMAINNAME" name="SERVER_DOMAINNAME"
@@ -135,35 +130,6 @@
 
     document.getElementById('SERVER_NAME').value = window.location.hostname;
     document.getElementById('NETWORK_HOSTNAME').value = window.location.hostname;
-
-    fetch('settings.json')
-      .then(response => response.json())
-      .then(data => {
-        const dropdown = document.getElementById('SERVER_CONFIGURATION');
-        const container = document.getElementById('SERVER_CONFIGURATION_FIELD');
-
-        if (Array.isArray(data.serverTypes) && data.serverTypes.length > 0) {
-          dropdown.innerHTML = '';
-
-          data.serverTypes.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.type;
-            option.textContent = item.label;
-            dropdown.appendChild(option);
-          });
-
-          // Show the field only if options exist
-          container.style.display = 'block';
-          dropdown.required = true;
-        } else {
-          // Do nothing — field remains hidden
-          dropdown.required = false;
-        }
-      })
-      .catch(error => {
-        console.error('Failed to load settings.json:', error);
-      });
-
     const form = document.querySelector("form");
 
     form.addEventListener("submit", function(e) {
