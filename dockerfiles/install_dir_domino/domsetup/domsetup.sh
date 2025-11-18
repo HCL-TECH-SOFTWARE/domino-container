@@ -476,7 +476,15 @@ process_ots_json_postdata()
   if [ -z "$DOMSETUP_JSON_FILE" ]; then
     ots_read_replace_server_id_base64 "$POST_DATA"
   else
-    ots_read_replace_server_id_base64 "$POST_DATA" > "$DOMSETUP_JSON_FILE"
+
+    if [ -w "$(dirname "$DOMSETUP_JSON_FILE")" ]; then
+      if [ ! -e "$DOMSETUP_JSON_FILE" ] || [ -w "$DOMSETUP_JSON_FILE" ]; then
+        ots_read_replace_server_id_base64 "$POST_DATA" > "$DOMSETUP_JSON_FILE"
+      fi
+    else
+      log_space "Info: File is read-only: $DOMSETUP_JSON_FILE"
+    fi
+
     log_space  "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
     log_space_stderr "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
   fi
@@ -881,8 +889,8 @@ log "OpenSSL PID: $DOMSETUP_OPNSSL_PID"
 sleep 1
 
 if [ -n "$DOMSETUP_OPNSSL_PID" ] && kill -0 "$DOMSETUP_OPNSSL_PID" 2>/dev/null; then
-  log "OpenSSL is listening on port $DOMSETUP_HTTPS_PORT ..."
-  echo "OpenSSL is listening on port $DOMSETUP_HTTPS_PORT ..."
+  log "Domino Setup is listening on $DOMSETUP_HOST:$DOMSETUP_HTTPS_PORT ..."
+  echo "Domino Setup is listening on $DOMSETUP_HOST:$DOMSETUP_HTTPS_PORT ..."
 else
   log_error "Cannot start OpenSSL in listening mode"
   exit 1
