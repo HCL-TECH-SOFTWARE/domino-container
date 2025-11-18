@@ -115,6 +115,9 @@ domrestapi|1.1.4-14|Domino_REST_API_V1.1.4_R14_Installer.tar.gz|EQ4r1Fgkq1Y7xvRw
 domrestapi|1.1.5-12|Domino_REST_API_V1.1.5_R12_Installer.tar.gz|gvFpyxu8dXICSrZSMUCIu|b942df7f78a03c4e63cceeacb8161871af91f300261cd3586b1a69748e4d9ac5
 domrestapi|1.1.5-14|Domino_REST_API_V1.1.5_R14_Installer.tar.gz|M5yDZACCTIz6QZv5OkWJf|e535bb886645b7cbb6e1164f164d1a6cba69e4432620d656dbbbf1be886bb513
 domrestapi|1.1.5-14.5|Domino_REST_API_V1.1.5_R14.5_Installer.tar.gz|FTdWws5p26FXoaqydkaV3|0077007ff74bdaaa58ac8f5fe49859d287b8ab1bd6d380ea5faf41d20fe57e5b
+domrestapi|1.1.6-12|Domino_REST_API_V1.1.6_R12_Installer.tar.gz|x0zd2Ym0hZQwKAnTOiGjN|b4ef8beb26df5b029275ce28e6466ad3d04c281ed7efbb078af0bd651fba2e69
+domrestapi|1.1.6-14|Domino_REST_API_V1.1.6_R14_Installer.tar.gz|lSR9dZ5xWcaCmMwmT3U1x|a2f2122e95c6b7b80a8bea21434045054182b2ae5cc83ca3660165890961028b
+domrestapi|1.1.6-14.5|Domino_REST_API_V1.1.6_R14.5_Installer.tar.gz|fw77YdTNlSUgtGRAxOM1j|e55bb7b7289a1c9118169bd6a09060bea1adc4f056601a38ab54dc9ead4ec5e2
 domiq|14.5|LlamaServerforDominoIQ_080525_Linux.zip|fl51IpNNWMLhcVqCVG89l|3021f0149e7f10e8f9fcf96f9732326979d89952b96b62f209a3394f38e60477
 node_exporter|1.8.2|node_exporter-1.8.2.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz|x|6809dd0b3ec45fd6e992c19071d6b5253aed3ead7bf0686885a51d85c6643c66
 node_exporter|1.9.1|node_exporter-1.9.1.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz|x|becb950ee80daa8ae7331d77966d94a611af79ad0d3307380907e0ec08f5b4e8

@@ -560,14 +560,21 @@ log_addon_detected "$domprom_binary" "Domino Prom stats exporter"
 node_exporter_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/prometheus/node_exporter/node_exporter 2>/dev/null)
 log_addon_detected "$node_exporter_binary" "Prometheus Node Exporter"
 
-nshmailx_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/nshmailx  2>/dev/null)
+nshmailx_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/nshmailx 2>/dev/null)
 log_addon_detected "$nshmailx_binary" "Nash!Com nshmailx"
 
 borg_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/borg 2>/dev/null)
 log_addon_detected "$borg_binary" "Borg Backup"
 
-nshborg_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/nshborg  2>/dev/null)
+domborg_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/nshborg 2>/dev/null)
 log_addon_detected "$borg_binary" "Domino Borg Backup helper"
+
+mysql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "mysql-connector-j-*.jar" 2>/dev/null)
+log_addon_detected "$mysql_jdbc_binary" "MySQL JDBC driver"
+
+postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "postgresql-*.jar"  2>/dev/null)
+log_addon_detected "$postgresql_jdbc_binary" "PostgresSQL JDBC driver"
+
 
 OLDIFS=$IFS
 IFS=$'\n'
@@ -693,6 +700,23 @@ do
         ERROR_MSG="$ADDON_NAME binary not found"
       fi
       ;;
+
+    mysql-jdbc)
+      MYSQL_JDBC_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$mysql_jdbc_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    postgresql-jdbc)
+      POSTGRESQL_JDBC_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$postgresql_jdbc_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
 
     *)
       echo "LATER: [$ADDON_NAME] not checked"

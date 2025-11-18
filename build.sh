@@ -1144,6 +1144,10 @@ check_addon_label()
     add_addon_label "borg" "$BORG_VERSION"
   fi
 
+  if [ -n "$DOMBORG_VERSION" ]; then
+    add_addon_label "domborg" "$DOMBORG_VERSION"
+  fi
+
   if [ -n "$NSHMAILX_VERSION" ]; then
     add_addon_label "nshmailx" "$NSHMAILX_VERSION"
   fi
@@ -1152,7 +1156,7 @@ check_addon_label()
     add_addon_label "mysql-jdbc" "$MYSQL_JDBC_VERSION"
   fi
 
-  if [ -n "POSTGRESQL_JDBC_VERSION" ]; then
+  if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
     add_addon_label "postgresql-jdbc" "$POSTGRESQL_JDBC_VERSION"
   fi
 
