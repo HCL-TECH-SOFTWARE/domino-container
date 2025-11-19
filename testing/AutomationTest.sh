@@ -509,6 +509,21 @@ log_json "dominoAddons" "$CONTAINER_DOMINO_ADDONS"
 
 log_json_begin_array testcase
 
+header "Detecting JVM Lib Install Directory"
+
+if [ -e "$Notes_ExecDirectory/ndext" ]; then
+  JVM_LIB_INSTALL_DIRECTORY="$Notes_ExecDirectory/ndext"
+elif [ -e "$Notes_ExecDirectory/jvm/lib/ext" ]; then
+  JVM_LIB_INSTALL_DIRECTORY="$Notes_ExecDirectory/jvm/lib/ext"
+else
+  JVM_LIB_INSTALL_DIRECTORY=
+fi
+
+log
+log "$JVM_LIB_INSTALL_DIRECTORY"
+log
+
+
 header "Detecting Add-Ons"
 
 # Check if Traveler binary exits
@@ -570,10 +585,16 @@ domborg_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/nshborg 2>/de
 log_addon_detected "$borg_binary" "Domino Borg Backup helper"
 
 mysql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "mysql-connector-j-*.jar" 2>/dev/null)
-log_addon_detected "$mysql_jdbc_binary" "MySQL JDBC driver"
+log_addon_detected "$mysql_jdbc_binary" "MySQL JDBC driver for Traveler"
 
 postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "postgresql-*.jar"  2>/dev/null)
-log_addon_detected "$postgresql_jdbc_binary" "PostgresSQL JDBC driver"
+log_addon_detected "$postgresql_jdbc_binary" "PostgreSQL JDBC driver for Traveler"
+
+mysql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "mysql-connector-j-*.jar" 2>/dev/null)
+log_addon_detected "$mysql_jdbc_binary" "MySQL JDBC driver for Domino"
+
+postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "postgresql-*.jar"  2>/dev/null)
+log_addon_detected "$postgresql_jdbc_binary" "PostgreSQL JDBC driver for Domino"
 
 
 OLDIFS=$IFS

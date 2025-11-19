@@ -846,11 +846,6 @@ install_mysql_jdbc()
 
   header "Installing MySQL JDBC driver $MYSQL_JDBC_VERSION"
 
-  if [ ! -e "$Notes_ExecDirectory/Traveler/lib" ]; then
-    log_error "Cannot install MySQL JDBC driver - Traveler server not found"
-    exit 1
-  fi
-
   cd "$INSTALL_DIR"
 
   MYSQL_JDBC_DIR=mysql_jdbc_install_dir
@@ -870,12 +865,16 @@ install_mysql_jdbc()
 
   if [ -z "$JDBC_DRIVER_BIN" ]; then
      echo "MySQL JDBC driver not found"
-     dump_directory "--- $Notes_ExecDirectory/Traveler/lib ---"
+     dump_directory "$MYSQL_JDBC_DIR"
      exit 1
   fi
 
   chmod 555 "$JDBC_DRIVER_BIN"
-  mv "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
+  cp -p "$JDBC_DRIVER_BIN" "$JVM_LIB_INSTALL_DIRECTORY"
+
+  if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
+    cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
+  fi
 
   remove_directory "$MYSQL_JDBC_DIR"
 }
@@ -889,31 +888,31 @@ install_postgresql-jdbc()
 
   header "Installing PostgreSQL JDBC driver $POSTGRESQL_JDBC_VERSION"
 
-  if [ ! -e "$Notes_ExecDirectory/Traveler/lib" ]; then
-    log_error "Cannot install PostgreSQL JDBC driver - Traveler server not found"
-    exit 1
-  fi
-
   cd "$INSTALL_DIR"
 
   get_download_name postgresql-jdbc "$POSTGRESQL_JDBC_VERSION"
 
   if [ -z "$DOWNLOAD_NAME" ]; then
     log_error "Cannot find PostgreSQL JDBC driver $POSTGRESQL_JDBC_VERSION"
+     dump_directory "$JVM_LIB_INSTALL_DIRECTORY"
     return 0
   fi
 
-  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory/Traveler/lib"
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$JVM_LIB_INSTALL_DIRECTORY"
 
-  local JDBC_DRIVER_BIN=$(find "$Notes_ExecDirectory/Traveler/lib" -type f -name "postgresql-*.jar")
+  local JDBC_DRIVER_BIN=$(find "$JVM_LIB_INSTALL_DIRECTORY" -type f -name "postgresql-*.jar")
 
   if [ -z "$JDBC_DRIVER_BIN" ]; then
      echo "PostgreSQL JDBC driver not found"
-     dump_directory "$Notes_ExecDirectory/Traveler/lib"
+     dump_directory "$JVM_LIB_INSTALL_DIRECTORY"
      exit 1
   fi
 
   chmod 555 "$JDBC_DRIVER_BIN"
+
+  if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
+    cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
+  fi
 }
 
 
@@ -1577,6 +1576,24 @@ if [ "$FIRST_TIME_SETUP" = "1" ] || [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
   esac
 fi
 
+if [ -e "$Notes_ExecDirectory/ndext" ]; then
+  JVM_LIB_INSTALL_DIRECTORY="$Notes_ExecDirectory/ndext"
+elif [ -e "$Notes_ExecDirectory/jvm/lib/ext" ]; then
+  JVM_LIB_INSTALL_DIRECTORY="$Notes_ExecDirectory/jvm/lib/ext"
+else
+  JVM_LIB_INSTALL_DIRECTORY=
+fi
+
+log_space "JVM Lib Install Directory"
+
+if [ -z "$JVM_LIB_INSTALL_DIRECTORY" ]; then
+  log_error "Cannot determine JVM Lib install directory"
+  exit 1
+fi
+
+log_space "$JVM_LIB_INSTALL_DIRECTORY"
+
+
 # Install Verse if requested
 install_verse "$VERSE_VERSION"
 
@@ -1592,7 +1609,7 @@ install_domino_restapi "$DOMRESTAPI_VER"
 # Install Traveler Server if requested
 install_traveler "$TRAVELER_VERSION"
 
-# Install Traveler JDBC drivers if requested
+# Install JDBC drivers if requested
 
 install_mysql_jdbc
 install_postgresql-jdbc

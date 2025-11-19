@@ -4195,17 +4195,6 @@ if [ -n "$DOMRESTAPI_VER" ] && [ -z "$RESTAPI_DOWNLOAD_FILE" ] ; then
   esac
 fi
 
-if [ -n "$MYSQL_JDBC_VERSION" ]; then
-  if [ -z "$TRAVELER_VERSION" ]; then
-    log_error_exit "MySQL JDBC Driver can only installed for Traveler"
-  fi
-fi
-
-if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
-  if [ -z "$TRAVELER_VERSION" ]; then
-    log_error_exit "PostgreSQL JDBC Driver can only installed for Traveler"
-  fi
-fi
 
 check_exposed_ports
 
