@@ -511,9 +511,9 @@ log_json_begin_array testcase
 
 header "Detecting JVM Lib Install Directory"
 
-if [ -e "$Notes_ExecDirectory/ndext" ]; then
-  JVM_LIB_INSTALL_DIRECTORY="$Notes_ExecDirectory/ndext"
-elif [ -e "$Notes_ExecDirectory/jvm/lib/ext" ]; then
+if [ -n "$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/ndext)" ]; then
+  JVM_LIB_INSTALL_DIRECTORY="/opt/hcl/domino/notes/latest/linux/ndext"
+elif [ -n "$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/jvm/ext)" ]; then
   JVM_LIB_INSTALL_DIRECTORY="$Notes_ExecDirectory/jvm/lib/ext"
 else
   JVM_LIB_INSTALL_DIRECTORY=
