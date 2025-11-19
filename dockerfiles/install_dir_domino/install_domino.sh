@@ -1231,6 +1231,18 @@ harden_binary_dir()
 }
 
 
+correct_script_issues()
+{
+  header "Correcting nsd.sh"
+
+  # Take a backup copy of NSD and correct fgrep/egrep warnings by replacing them with grep -F / -E
+
+  cp "$Notes_ExecDirectory/nsd.sh" "$Notes_ExecDirectory/nsd.sh.orig"
+  sed -i 's/\<fgrep\>/grep -F/g' "$Notes_ExecDirectory/nsd.sh"
+  sed -i 's/\<egrep\>/grep -E/g' "$Notes_ExecDirectory/nsd.sh"
+}
+
+
 check_build_options()
 {
 
@@ -1251,6 +1263,7 @@ check_build_options()
 
   done
 
+  correct_script_issues
   harden_binary_dir
 
   return 0

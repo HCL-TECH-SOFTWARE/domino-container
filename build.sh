@@ -4,7 +4,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.4.2 1.8.2025
+# Version 2.4.3 19.11.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -26,7 +26,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.4.2
+CONTAINER_BUILD_SCRIPT_VERSION=2.4.3
 
 # OnTime version
 SELECT_ONTIME_VERSION_DOMINO14=1.11.1
@@ -77,6 +77,22 @@ log()
   echo $@
   echo
 }
+
+
+remove_file()
+{
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  if [ ! -e "$1" ]; then
+    return 2
+  fi
+
+  rm -f "$1"
+  return 0
+}
+
 
 check_version()
 {
@@ -1661,6 +1677,18 @@ check_software()
         *://*)
           if [ -z "$DOWNLOAD_1ST_FILE" ]; then
             DOWNLOAD_1ST_FILE=$(basename $CHECK_FILE)
+	  else
+	    # Try to download file to cache it
+	    $CURL_CMD -s "$CHECK_FILE" -o "$SOFTWARE_DIR/$DOWNLOAD_1ST_FILE"
+            echo "Downloading file to cache it locally $CHECK_FILE ..."
+	    HASH=$(sha256sum -b "$SOFTWARE_DIR/$DOWNLOAD_1ST_FILE" | cut -d" " -f1)
+
+	    if [ "$CURRENT_HASH" = "$HASH" ]; then
+              echo "Download successful -> $SOFTWARE_DIR/$DOWNLOAD_1ST_FILE"
+	    else
+              echo "Failed to download file to cache it locally form $CHECK_FILE"
+	      remove_file "$SOFTWARE_DIR/$DOWNLOAD_1ST_FILE"
+	    fi
           fi
 
           if [ -z "$FOUND" ]; then
@@ -1682,7 +1710,7 @@ check_software()
             CURRENT_FILE="$CHECK_FILE"
             FOUND=TRUE
             break
-    else
+          else
 
             if [ "$CURRENT_FILE_ID" != "x" ]; then
               check_domdownload "$CHECK_FILE" "$CURRENT_FILE_ID" "$CURRENT_HASH"
