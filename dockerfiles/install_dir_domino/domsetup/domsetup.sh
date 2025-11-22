@@ -2,7 +2,7 @@
 ###########################################################################
 # Domino OTS Setup Helper Script                                          #
 #                                                                         #
-# Version 0.9.6  12.11.2025                                               #
+# Version 0.9.7  23.11.2025                                               #
 # (C) Copyright Daniel Nashed/NashCom 2025                                #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -32,7 +32,7 @@
 
 # curl -v -k -X POST https://localhost/ots -H "Content-Type: application/json" --data-binary @ots.json
 
-DOMSETUP_VERSION="0.9.6"
+DOMSETUP_VERSION="0.9.7"
 SCRIPT_NAME=$0
 SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
@@ -522,6 +522,14 @@ process_ots_form_data()
     SERVERSETUP_ADMIN_IDFILEPATH="$DOMINO_DATA_PATH/user.id"
   fi
 
+  # Overwrite the hostname on URL with specified network name for redirect unless disabled
+  if [ "$DOMSETUP_DISABLE_OVERWRITE_REDIR_HOST" != "1" ]; then
+    if [ -n "$SERVERSETUP_NETWORK_HOSTNAME" ]; then
+      DOMSETUP_OVERWRITE_REDIR_HOST="$SERVERSETUP_NETWORK_HOSTNAME"
+      log_space "Setting redirect hostname to: $DOMSETUP_OVERWRITE_REDIR_HOST"
+    fi
+  fi
+
   # Only dump sensitive setup data if requested for debug
   if [ "$DOMSETUP_DEBUG" = "yes" ]; then
     header "OTS form data"
@@ -538,7 +546,7 @@ process_ots_form_data()
     cat "$DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE" | sed 's/{{ /${/g;s/{{/${/g;s/ }}/}/g;s/}}/}/g' | envsubst
   else
     cat "$DOMINO_AUTO_CONFIG_TEMPLATE_JSON_FILE" | sed 's/{{ /${/g;s/{{/${/g;s/ }}/}/g;s/}}/}/g' | envsubst > "$DOMSETUP_JSON_FILE"
-    log "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
+    log_space "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
     log_space_stderr "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
   fi
 }
@@ -659,6 +667,10 @@ send_completed_redirect()
 
   if [ -z "$PORT" ]; then
     PORT="$DOMSETUP_HTTPS_PORT"
+  fi
+
+  if [ -n "$DOMSETUP_OVERWRITE_REDIR_HOST" ]; then
+    HOST="$DOMSETUP_OVERWRITE_REDIR_HOST"
   fi
 
   if [ "$PORT" = "443" ] ; then
