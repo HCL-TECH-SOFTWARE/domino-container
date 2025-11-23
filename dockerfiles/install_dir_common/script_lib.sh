@@ -67,10 +67,13 @@ fi
 
 # Exclude repo IP if set
 if [ -n "$SOFTWARE_REPO_IP" ]; then
+
+  SOFTWARE_REPO_PROXY_EXCLUDE="${SOFTWARE_REPO_IP%%:*}"
+
   if [ -z "$no_proxy" ]; then
-    export no_proxy="$SOFTWARE_REPO_IP"
+    export no_proxy="$SOFTWARE_REPO_PROXY_EXCLUDE"
   else
-    export no_proxy="$no_proxy,$SOFTWARE_REPO_IP"
+    export no_proxy="$no_proxy,$SOFTWARE_REPO_PROXY_EXCLUDE"
   fi
 fi
 

@@ -4,7 +4,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.4.3 19.11.2025
+# Version 2.4.4 24.11.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -26,7 +26,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.4.3
+CONTAINER_BUILD_SCRIPT_VERSION=2.4.4
 
 # OnTime version
 SELECT_ONTIME_VERSION_DOMINO14=1.11.1
@@ -274,6 +274,7 @@ check_container_environment()
     CONTAINER_CMD="$CONTAINER_CMD --namespace=$CONTAINER_NAMESPACE"
 
     # nerdctl does not support a network name during build
+    CONTAINER_BUILD_DISABLE_HOST_NET=1
 
   else
 
@@ -502,7 +503,7 @@ check_build_nginx_image()
 
   export BUILDAH_FORMAT
 
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION -f dockerfile_nginx -t $NGINX_IMAGE_NAME --build-arg NGINX_BASE_IMAGE=$NGINX_BASE_IMAGE .
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $BUILD_OPTION_NET $DOCKER_PULL_OPTION -f dockerfile_nginx -t $NGINX_IMAGE_NAME --build-arg NGINX_BASE_IMAGE=$NGINX_BASE_IMAGE .
 
   cd ..
 
@@ -537,7 +538,7 @@ build_squid_image()
 
   export BUILDAH_FORMAT
 
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION -f dockerfile_squid -t $SQUID_IMAGE_NAME --build-arg SQUID_BASE_IMAGE=$SQUID_BASE_IMAGE .
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $BUILD_OPTION_NET $DOCKER_PULL_OPTION -f dockerfile_squid -t $SQUID_IMAGE_NAME --build-arg SQUID_BASE_IMAGE=$SQUID_BASE_IMAGE .
 
   cd ..
 
@@ -598,10 +599,15 @@ nginx_start()
 
   # Start local nginx container to host SW Repository
 
-  SOFTWARE_REPO_IP="$($CONTAINER_CMD inspect --format '{{ .NetworkSettings.IPAddress }}' $SOFTWARE_CONTAINER 2>/dev/null)"
-  if [ -z "$SOFTWARE_REPO_IP" ]; then
-    echo "No specific IP address using host address"
-    SOFTWARE_REPO_IP=$(hostname --all-ip-addresses | cut -f1 -d" "):$SOFTWARE_PORT
+  if [ -z "$BUILD_OPTION_NET" ]; then
+
+    SOFTWARE_REPO_IP="$($CONTAINER_CMD inspect --format '{{ .NetworkSettings.IPAddress }}' $SOFTWARE_CONTAINER 2>/dev/null)"
+    if [ -z "$SOFTWARE_REPO_IP" ]; then
+      echo "No specific IP address using host address"
+      SOFTWARE_REPO_IP=$(hostname --all-ip-addresses | cut -f1 -d" "):$SOFTWARE_PORT
+    fi
+  else
+    SOFTWARE_REPO_IP=127.0.0.1:$SOFTWARE_PORT
   fi
 
   DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
@@ -1190,7 +1196,7 @@ build_domino()
   echo "CONTAINER_DOMINO_CUSTON_ADDONS: [$CONTAINER_DOMINO_CUSTOM_ADDONS]"
   echo
 
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $BUILD_OPTION_NET $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -1269,7 +1275,7 @@ build_domino()
 
 build_traveler()
 {
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $BUILD_OPTION_NET $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -1304,7 +1310,7 @@ build_traveler()
 
 build_volt()
 {
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $BUILD_OPTION_NET $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -1339,7 +1345,7 @@ build_volt()
 
 build_leap()
 {
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $BUILD_OPTION_NET $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -1374,7 +1380,7 @@ build_leap()
 
 build_safelinx()
 {
-  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $DOCKER_PULL_OPTION \
+  $CONTAINER_CMD build --no-cache $BUILD_OPTIONS $BUILD_OPTION_NET $DOCKER_PULL_OPTION \
     $CONTAINER_NETWORK_CMD \
     -t $DOCKER_IMAGE \
     -f $DOCKER_FILE \
@@ -4135,6 +4141,10 @@ fi
 
 if [ -z "$BUILD_OPTIONS" ]; then
   BUILD_OPTIONS="--platform linux/amd64"
+fi
+
+if [ "$CONTAINER_BUILD_DISABLE_HOST_NET" != "1" ]; then
+  BUILD_OPTION_NET="--network=host"
 fi
 
 if [ "$PROD_VER" = "latest" ]; then
