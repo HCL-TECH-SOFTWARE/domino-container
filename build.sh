@@ -388,8 +388,8 @@ usage()
   echo
   echo "Examples:"
   echo
-  echo "  $(basename $SCRIPT_NAME) domino1 14.0 fp4"
-  echo "  $(basename $SCRIPT_NAME) traveler 14.0 fp4"
+  echo "  $(basename $SCRIPT_NAME) domino1 14.5 fp1"
+  echo "  $(basename $SCRIPT_NAME) traveler 14.5 fp1"
   echo
 
   return 0
@@ -796,23 +796,33 @@ check_from_image()
 
   case "$FROM_IMAGE" in
 
-    centos9)
-      LINUX_NAME="CentOS Stream 9"
-      BASE_IMAGE=quay.io/centos/centos:stream9
-      ;;
-
     centos|centos10)
       LINUX_NAME="CentOS Stream 10 (Coughlan)"
       BASE_IMAGE=quay.io/centos/centos:stream10
       ;;
 
+    centos9)
+      LINUX_NAME="CentOS Stream 9"
+      BASE_IMAGE=quay.io/centos/centos:stream9
+      ;;
+
+    rocky10)
+      LINUX_NAME="Rocky Linux 10 (Red Quartz)"
+      BASE_IMAGE=docker.io/rockylinux/rockylinux:10
+      ;;
+
     rocky9)
-      LINUX_NAME="Rocky Linux 9"
+      LINUX_NAME="Rocky Linux 9 (Blue Onyx)"
       BASE_IMAGE=docker.io/rockylinux/rockylinux:9
       ;;
 
-    rocky|rocky-minimal|rocky9-minimal)
-      LINUX_NAME="Rocky Linux 9"
+    rocky|rocky-minimal|rocky10-minimal)
+      LINUX_NAME="Rocky Linux 10 (Red Quartz)"
+      BASE_IMAGE=docker.io/rockylinux/rockylinux:10-minimal
+      ;;
+
+    rocky9-minimal)
+      LINUX_NAME="Rocky Linux 9 (Blue Onyx)"
       BASE_IMAGE=docker.io/rockylinux/rockylinux:9-minimal
       ;;
 
@@ -821,8 +831,13 @@ check_from_image()
       BASE_IMAGE=docker.io/rockylinux/rockylinux:8
       ;;
 
-    alma|alma9)
-      LINUX_NAME="Alma Linux 9"
+    alma|alma10)
+      LINUX_NAME="Alma Linux 10 (Purple Lion)"
+      BASE_IMAGE=almalinux:10
+      ;;
+
+    alma9)
+      LINUX_NAME="Alma Linux 9 (Moss Jungle Cat)"
       BASE_IMAGE=almalinux:9
       ;;
 
@@ -836,39 +851,39 @@ check_from_image()
       BASE_IMAGE=docker.io/amazonlinux
       ;;
 
-    oracle)
-      LINUX_NAME="Oracle Linux 9"
+    oracle10)
+      LINUX_NAME="Oracle Linux Server 10"
+      BASE_IMAGE=oraclelinux:10
+      ;;
+
+    oracle|oracle9)
+      LINUX_NAME="Oracle Linux Server 9"
       BASE_IMAGE=oraclelinux:9
       ;;
 
-    photon)
-      LINUX_NAME="VMware Photon OS 5"
+    photon|photon5)
+      LINUX_NAME="VMware Photon OS/Linux 5"
       BASE_IMAGE=docker.io/photon:5.0
-      ;;
-
-    photon5)
-      LINUX_NAME="VMware Photon OS 5"
-      BASE_IMAGE=docker.io/photon:5.0
-      ;;
-
-    ubi9)
-      LINUX_NAME="RedHat UBI 9"
-      BASE_IMAGE=registry.access.redhat.com/ubi9
       ;;
 
     ubi|ubi10)
-      LINUX_NAME="RedHat UBI 10"
+      LINUX_NAME="Red Hat Enterprise Linux 10 (Coughlan)"
       BASE_IMAGE=registry.access.redhat.com/ubi10
       ;;
 
-    ubi9-minimal)
-      LINUX_NAME="RedHat UBI 9 minimal"
-      BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
+    ubi9)
+      LINUX_NAME="Red Hat Enterprise Linux 9 (Plow)"
+      BASE_IMAGE=registry.access.redhat.com/ubi9
       ;;
 
     ubi-minimal|ubi10-minimal)
-      LINUX_NAME="RedHat UBI 10 minimal"
+      LINUX_NAME="Red Hat Enterprise Linux 10 (Coughlan)"
       BASE_IMAGE=registry.access.redhat.com/ubi10/ubi-minimal
+      ;;
+
+    ubi9-minimal)
+      LINUX_NAME="Red Hat Enterprise Linux 9 (Plow)"
+      BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
       ;;
 
     ubuntu|ubuntu24)
@@ -901,14 +916,14 @@ check_from_image()
       BASE_IMAGE=opensuse/leap
       ;;
 
-    leap15.6)
-      LINUX_NAME="SUSE Leap 15.6"
-      BASE_IMAGE=opensuse/leap:15.6
-      ;;
-
     leap16)
       LINUX_NAME="SUSE Leap 16.0"
       BASE_IMAGE=opensuse/leap:16.0
+      ;;
+
+    leap15.6)
+      LINUX_NAME="SUSE Leap 15.6"
+      BASE_IMAGE=opensuse/leap:15.6
       ;;
 
     bci)
@@ -916,14 +931,14 @@ check_from_image()
       BASE_IMAGE=registry.suse.com/bci/bci-base
       ;;
 
-    bci15.6)
-      LINUX_NAME="SUSE Enterprise 15.6"
-      BASE_IMAGE=registry.suse.com/bci/bci-base:15.6
-      ;;
-
     bci16|bci16.0)
       LINUX_NAME="SUSE Enterprise 16.0"
       BASE_IMAGE=registry.suse.com/bci/bci-base:16.0
+      ;;
+
+    bci15.6)
+      LINUX_NAME="SUSE Enterprise 15.6"
+      BASE_IMAGE=registry.suse.com/bci/bci-base:15.6
       ;;
 
     tumbleweed)
@@ -2707,6 +2722,7 @@ select_domino_version()
 
   get_current_version domino-12.0.2 VER_1202
   get_current_version domino-14.0 VER_140
+  get_current_version domino-14.5.1 VER_1451
 
   ClearScreen
   echo
@@ -2717,6 +2733,8 @@ select_domino_version()
   print_ver "1" "$VER_LATEST"
   print_ver "2" "$VER_140"
   print_ver "3" "$VER_1202"
+  echo
+  print_ver "4" "$VER_1451 (Beta)"
 
   echo
   read -n1 -p " Select Domino version  [0] to cancel? " VER;
@@ -2752,6 +2770,15 @@ select_domino_version()
       ONTIME_VERSION=
       DominoResponseFile=
       get_current_addon_version traveler SELECT_TRAVELER_VERSION
+      ;;
+
+    4)
+      DOMINO_VERSION="$VER_1451"
+      parse_domino_version "$DOMINO_VERSION"
+      # Reset OnTime for older releases
+      ONTIME_VERSION=
+      DominoResponseFile=
+      get_current_addon_version traveler-14.5.1 SELECT_TRAVELER_VERSION
       ;;
 
   esac
