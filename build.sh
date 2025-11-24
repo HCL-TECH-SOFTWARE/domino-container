@@ -796,12 +796,12 @@ check_from_image()
 
   case "$FROM_IMAGE" in
 
-    centos|centos9)
+    centos9)
       LINUX_NAME="CentOS Stream 9"
       BASE_IMAGE=quay.io/centos/centos:stream9
       ;;
 
-   centos10)
+    centos|centos10)
       LINUX_NAME="CentOS Stream 10 (Coughlan)"
       BASE_IMAGE=quay.io/centos/centos:stream10
       ;;
@@ -906,6 +906,11 @@ check_from_image()
       BASE_IMAGE=opensuse/leap:15.6
       ;;
 
+    leap16)
+      LINUX_NAME="SUSE Leap 16.0"
+      BASE_IMAGE=opensuse/leap:16.0
+      ;;
+
     bci)
       LINUX_NAME="SUSE Enterprise"
       BASE_IMAGE=registry.suse.com/bci/bci-base
@@ -914,6 +919,11 @@ check_from_image()
     bci15.6)
       LINUX_NAME="SUSE Enterprise 15.6"
       BASE_IMAGE=registry.suse.com/bci/bci-base:15.6
+      ;;
+
+    bci16|bci16.0)
+      LINUX_NAME="SUSE Enterprise 16.0"
+      BASE_IMAGE=registry.suse.com/bci/bci-base:16.0
       ;;
 
     tumbleweed)
