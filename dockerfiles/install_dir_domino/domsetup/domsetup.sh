@@ -803,7 +803,7 @@ fi
 
 if [ ! -e /usr/bin/openssl ]; then
   log_space "OpenSSL is not installed"
-  exit 1
+  cleanup_and_terminate
 fi
 
 
@@ -821,7 +821,7 @@ fi
 
 if [ ! -e "$DOMSETUP_KEY_FILE" ]; then
   log_error "Cannot create key: $DOMSETUP_KEY_FILE"
-  exit 1
+  cleanup_and_terminate
 fi
 
 if [ ! -e "$DOMSETUP_CERT_FILE" ]; then
@@ -840,7 +840,7 @@ fi
 
 if [ ! -e "$DOMSETUP_CERT_FILE" ]; then
   log_error "Cannot create certificate: $DOMSETUP_CERT_FILE"
-  exit 1
+  cleanup_and_terminate
 fi
 
 show_cert "$DOMSETUP_CERT_FILE"
@@ -882,6 +882,13 @@ if [ -z "$DOMSETUP_JSON_FILE" ]; then
   esac
 fi
 
+# Check first if OTS file is already present
+if [ -n "$DOMSETUP_JSON_FILE" ] && [ -e "$DOMSETUP_JSON_FILE" ]; then
+  log_space "OTS Setup file already present - No DomSetup needed"
+  log_space_stderr "OTS Setup file already present - No DomSetup needed"
+  cleanup_and_terminate
+fi
+
 log_space "OTS Output File: [$DOMSETUP_JSON_FILE]"
 
 # Start OpenSSL as a mini web server
@@ -905,7 +912,7 @@ if [ -n "$DOMSETUP_OPNSSL_PID" ] && kill -0 "$DOMSETUP_OPNSSL_PID" 2>/dev/null; 
   echo "Domino Setup is listening on $DOMSETUP_HOST:$DOMSETUP_HTTPS_PORT ..."
 else
   log_error "Cannot start OpenSSL in listening mode"
-  exit 1
+  cleanup_and_terminate
 fi
 
 while true; do
@@ -928,7 +935,7 @@ while true; do
       LINE="${LINE%$'\n'}"
     else
       log "Cannot read from OpenSSL process"
-      exit 1
+      cleanup_and_terminate
     fi
 
     if [ -z "$LINE" ]; then

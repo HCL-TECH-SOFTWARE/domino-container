@@ -851,12 +851,12 @@ check_from_image()
       BASE_IMAGE=docker.io/amazonlinux
       ;;
 
-    oracle10)
+    oracle|oracle10)
       LINUX_NAME="Oracle Linux Server 10"
       BASE_IMAGE=oraclelinux:10
       ;;
 
-    oracle|oracle9)
+    oracle9)
       LINUX_NAME="Oracle Linux Server 9"
       BASE_IMAGE=oraclelinux:9
       ;;
@@ -926,12 +926,12 @@ check_from_image()
       BASE_IMAGE=opensuse/leap:15.6
       ;;
 
-    bci)
+    bci-stable)
       LINUX_NAME="SUSE Enterprise"
       BASE_IMAGE=registry.suse.com/bci/bci-base
       ;;
 
-    bci16|bci16.0)
+    bci|bci16|bci16.0)
       LINUX_NAME="SUSE Enterprise 16.0"
       BASE_IMAGE=registry.suse.com/bci/bci-base:16.0
       ;;

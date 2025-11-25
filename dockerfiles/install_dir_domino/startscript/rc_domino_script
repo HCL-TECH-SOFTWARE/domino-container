@@ -1349,12 +1349,11 @@ check_domino_status()
     return 0
   fi
 
-  case "$DOMINO_RUNNING" in
-    *-auto*)
-     DOMINO_STATUS="Configuring"
-     DOMINO_STATUS_DISPLAY="${ColorYellow}Configuring${ColorOff}"
-     return 0
-  esac
+  if [ ! -e "$DOMINO_DATA_PATH/names.nsf" ]; then
+    DOMINO_STATUS="Configuring"
+    DOMINO_STATUS_DISPLAY="${ColorYellow}Configuring${ColorOff}"
+    return 0
+  fi
 
   DOMINO_STATUS="Running"
   DOMINO_STATUS_DISPLAY="${ColorYellow}Running (without Translog)${ColorOff}"
@@ -1874,7 +1873,7 @@ cleanup_domsetup_process()
   local pid=$(get_domsetup_process| awk '{ print $2 }')
 
   if [ -n "$pid" ]; then
-    echo "Killing DomSetup process pid #" $pid
+    echo "Stopping DomSetup process pid #" $pid
     kill -9 "$pid"
     sleep 5
   fi

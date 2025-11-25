@@ -1,7 +1,9 @@
 domino|14.5|FP1
+domino-14.5.1|14.5.1EA1
 domino-14.0|14.0|FP4|IF1
 domino-12.0.2|12.0.2|FP7|IF1
 domiq|14.5
+traveler-14.5.1|14.5.1EA1
 traveler|14.5
 volt|1.0.5.15
 leap|1.1.9

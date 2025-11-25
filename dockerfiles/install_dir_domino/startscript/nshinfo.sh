@@ -156,6 +156,12 @@ check_free_space()
 
 check_all_disks()
 {
+  # Alpine does not have a fancy df command. Use simple output.
+  if [ -f /etc/alpine-release ]; then
+    df -h
+    return 0
+  fi
+
   check_free_space
   check_free_space "/" "Root"
   check_free_space "/local" "Local"
@@ -198,6 +204,10 @@ print_infos()
 
   if [ -e /usr/bin/hostname ]; then
     LINUX_HOSTNAME=$(/usr/bin/hostname --fqdn)
+
+    if [ -z "$LINUX_HOSTNAME" ]; then
+      LINUX_HOSTNAME=$(/usr/bin/hostname)
+    fi
   else
     LINUX_HOSTNAME=$(cat /proc/sys/kernel/hostname)
   fi
