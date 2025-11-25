@@ -29,8 +29,9 @@ CHECK_SOFTWARE=yes
 CONTAINER_BUILD_SCRIPT_VERSION=2.4.4
 
 # OnTime version
-SELECT_ONTIME_VERSION_DOMINO14=1.11.1
-SELECT_ONTIME_VERSION_DOMINO145=2.3.0
+SELECT_ONTIME_VERSION_DOMINO14=2.3.0
+SELECT_ONTIME_VERSION_DOMINO145=11.7.0
+SELECT_ONTIME_VERSION_DOMINO1451=11.8.1
 
 # Build kit shortens the output. This isn't really helpful for troubleshooting and following the build process ...
 export BUILDKIT_PROGRESS=plain
@@ -2776,7 +2777,7 @@ select_domino_version()
       DOMINO_VERSION="$VER_1451"
       parse_domino_version "$DOMINO_VERSION"
       # Reset OnTime for older releases
-      ONTIME_VERSION=
+      ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO1451"
       DominoResponseFile=
       get_current_addon_version traveler-14.5.1 SELECT_TRAVELER_VERSION
       ;;
