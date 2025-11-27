@@ -153,7 +153,7 @@ cleanup_and_terminate()
   trap - EXIT
 
   if [ -z "$OPENSSL_PID" ]; then
-    return 0
+    exit 0
   fi
 
   { exec {OPENSSL[0]}>&-; } 2>/dev/null || true
@@ -884,8 +884,8 @@ fi
 
 # Check first if OTS file is already present
 if [ -n "$DOMSETUP_JSON_FILE" ] && [ -e "$DOMSETUP_JSON_FILE" ]; then
-  log_space "OTS Setup file already present - No DomSetup needed"
-  log_space_stderr "OTS Setup file already present - No DomSetup needed"
+  log_space "OTS Setup file already present - No DomSetup needed: $DOMSETUP_JSON_FILE"
+  log_space_stderr "OTS Setup file already present - No DomSetup needed: $DOMSETUP_JSON_FILE"
   cleanup_and_terminate
 fi
 
@@ -908,8 +908,8 @@ log "OpenSSL PID: $DOMSETUP_OPNSSL_PID"
 sleep 1
 
 if [ -n "$DOMSETUP_OPNSSL_PID" ] && kill -0 "$DOMSETUP_OPNSSL_PID" 2>/dev/null; then
-  log "Domino Setup is listening on $DOMSETUP_HOST:$DOMSETUP_HTTPS_PORT ..."
-  echo "Domino Setup is listening on $DOMSETUP_HOST:$DOMSETUP_HTTPS_PORT ..."
+  log "Domino Setup is listening on https://$DOMSETUP_HOST:$DOMSETUP_HTTPS_PORT ..."
+  echo "Domino Setup is listening on https://$DOMSETUP_HOST:$DOMSETUP_HTTPS_PORT ..."
 else
   log_error "Cannot start OpenSSL in listening mode"
   cleanup_and_terminate

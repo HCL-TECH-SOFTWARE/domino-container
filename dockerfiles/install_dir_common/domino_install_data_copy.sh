@@ -361,6 +361,30 @@ copy_files_for_all_addons()
   done
 }
 
+
+check_data_directory_update()
+{
+  log_file_header Checking for Data Directory Update
+
+  if [ "$DOMDOCK_SKIP_DATA_UPDATE" = "yes" ]; then
+    log_file_space "Info: Skipping data directory update because of: DOMDOCK_SKIP_DATA_UPDATE=yes"
+    return 0
+  fi
+
+  local SKIP_DATA_UPDATE_DIRECTORY_FILE="$DOMINO_DATA_PATH/skip_data_directory_update.txt"
+
+  if [ -e "$SKIP_DATA_UPDATE_DIRECTORY_FILE" ]; then
+    log_file_space "Info: Skipping data directory update because file exists: $SKIP_DATA_UPDATE_DIRECTORY_FILE"
+    return 0
+  fi
+
+  copy_files_for_major_version
+  copy_files_for_version fp
+  copy_files_for_version hf
+  copy_files_for_all_addons
+}
+
+
 # --- Main Logic ---
 
 NOW=$(date)
@@ -372,12 +396,6 @@ cleanup_fixpack_data_files
 
 copy_data_directory
 
-log_file Checking for Data Directory Update
-
-copy_files_for_major_version
-copy_files_for_version fp
-copy_files_for_version hf
-
-copy_files_for_all_addons
+check_data_directory_update
 
 log_file

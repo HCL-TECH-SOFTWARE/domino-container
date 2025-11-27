@@ -2780,6 +2780,7 @@ select_domino_version()
       ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO1451"
       DominoResponseFile=
       get_current_addon_version traveler-14.5.1 SELECT_TRAVELER_VERSION
+      get_current_addon_version domiq-14.5.1 SELECT_DOMIQ_VERSION
       ;;
 
   esac

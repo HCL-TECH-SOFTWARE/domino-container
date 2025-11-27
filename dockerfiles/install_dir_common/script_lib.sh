@@ -114,6 +114,13 @@ log_file_header()
    log_file
 }
 
+log_file_space()
+{
+   log_file
+   log_file "$@"
+   log_file
+}
+
 log_space()
 {
   echo
