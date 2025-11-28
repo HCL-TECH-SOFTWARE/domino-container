@@ -37,7 +37,7 @@ install_linux_packages()
   fi
 
   # Common packages for all distributions
-  install_packages lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip
+  install_packages lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip tzdata
 
   # SUSE does not have gdb-minimal
   if [ -x /usr/bin/zypper ]; then

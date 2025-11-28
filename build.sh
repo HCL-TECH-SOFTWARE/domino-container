@@ -493,7 +493,7 @@ check_build_nginx_image()
   header "Building NGINX Image $NGINX_IMAGE_NAME ..."
 
   if [ -z "$NGINX_BASE_IMAGE" ]; then
-    NGINX_BASE_IMAGE=registry.access.redhat.com/ubi10/ubi-minimal:latest
+    NGINX_BASE_IMAGE=registry.access.redhat.com/ubi10
   fi
 
   # Get Build Time
@@ -783,15 +783,15 @@ check_from_image()
   if [ -z "$FROM_IMAGE" ]; then
 
     if [ "$PROD_NAME" = "domino" ]; then
-      FROM_IMAGE=ubi-minimal
+      FROM_IMAGE=ubi
     elif [ "$PROD_NAME" = "traveler" ]; then
       FROM_IMAGE=hclcom/domino:latest
     elif [ "$PROD_NAME" = "leap" ]; then
       FROM_IMAGE=hclcom/domino:latest
     elif [ "$PROD_NAME" = "safelinx" ]; then
-      FROM_IMAGE=ubi-minimal
+      FROM_IMAGE=ubi
     else
-      FROM_IMAGE=ubi-minimal
+      FROM_IMAGE=ubi
     fi
   fi
 
@@ -818,12 +818,12 @@ check_from_image()
       ;;
 
     rocky|rocky-minimal|rocky10-minimal)
-      LINUX_NAME="Rocky Linux 10 (Red Quartz)"
+      LINUX_NAME="Rocky Linux 10 (Red Quartz) Minimal"
       BASE_IMAGE=docker.io/rockylinux/rockylinux:10-minimal
       ;;
 
     rocky9-minimal)
-      LINUX_NAME="Rocky Linux 9 (Blue Onyx)"
+      LINUX_NAME="Rocky Linux 9 (Blue Onyx) Minimal"
       BASE_IMAGE=docker.io/rockylinux/rockylinux:9-minimal
       ;;
 
@@ -878,12 +878,12 @@ check_from_image()
       ;;
 
     ubi-minimal|ubi10-minimal)
-      LINUX_NAME="Red Hat Enterprise Linux 10 (Coughlan)"
+      LINUX_NAME="Red Hat Enterprise Linux 10 (Coughlan) Minimal"
       BASE_IMAGE=registry.access.redhat.com/ubi10/ubi-minimal
       ;;
 
     ubi9-minimal)
-      LINUX_NAME="Red Hat Enterprise Linux 9 (Plow)"
+      LINUX_NAME="Red Hat Enterprise Linux 9 (Plow) Minimal"
       BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
       ;;
 
