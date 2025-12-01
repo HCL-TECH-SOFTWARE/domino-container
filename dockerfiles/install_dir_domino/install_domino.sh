@@ -1074,6 +1074,39 @@ install_startscript()
 }
 
 
+check_update_custom_java_policy()
+{
+  local CUSTOM_JAVA_POLICY_FILE="$1"
+  local CUSTOM_JAVA_POLICY_NAME="$2"
+
+  if [ ! -e "$CUSTOM_JAVA_POLICY_FILE" ]; then
+    return 0
+  fi
+
+  local JAVA_POLICY_FILE="$Notes_ExecDirectory/jvm/conf/security/java.policy"
+
+  header "Appending custom java.policy"
+  cat "$CUSTOM_JAVA_POLICY_FILE"
+  echo
+
+  echo >> "$JAVA_POLICY_FILE"
+  echo >> "$JAVA_POLICY_FILE"
+
+  if [ -z "$CUSTOM_JAVA_POLICY_NAME" ]; then
+    echo "--- Domino Container appended Java Security Policies ---" >> "$JAVA_POLICY_FILE"
+  else
+    echo "--- Domino Container appended for $CUSTOM_JAVA_POLICY_NAME ---" >> "$JAVA_POLICY_FILE"
+  fi
+
+  echo >> "$JAVA_POLICY_FILE"
+  cat "$CUSTOM_JAVA_POLICY_FILE" >> "$JAVA_POLICY_FILE"
+  echo >> "$JAVA_POLICY_FILE"
+
+  dump_file "$JAVA_POLICY_FILE"
+  echo
+}
+
+
 install_one_custom_add_on()
 {
   local ALL_FILES=
@@ -1087,7 +1120,7 @@ install_one_custom_add_on()
     return 0
   fi
 
-  ADDON_NAME="$(basename $(echo $1| cut -f1 -d# | cut -f1 -d'.'))"
+  ADDON_NAME="$(basename "$1" | cut -f1 -d# | cut -f1 -d'.')"
   ADDON_VER="$(echo $1| cut -f3 -d#)"
 
   header "Installing Custom Add-On $ADDON_NAME"
@@ -1107,6 +1140,8 @@ install_one_custom_add_on()
   install_files_from_dir linux-bin /usr/bin root root 755 755
 
   create_servertask_links "servertasks.txt"
+
+  check_update_custom_java_policy java.policy "$ADDON_NAME"
 
   # Runnig custom install script
   if [ -x "install.sh" ]; then
@@ -1623,8 +1658,13 @@ install_domiq "$DOMIQ_VERSION"
 # Install Domino Prometheus servertask
 install_domprom
 
-# Install Custom Trusted Root if specified
+# Install custom Trusted Root if specified
 check_install_trusted_root
+
+# Append custom Java Policies
+
+check_update_custom_java_policy "$INSTALL_DIR/custom/java.policy"
+
 
 # Install Custom Add-Ons if requested
 install_custom_add_ons

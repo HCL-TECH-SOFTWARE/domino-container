@@ -4,7 +4,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.4.4 24.11.2025
+# Version 2.4.5 02.12.2025
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -26,7 +26,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.4.4
+CONTAINER_BUILD_SCRIPT_VERSION=2.4.5
 
 # OnTime version
 SELECT_ONTIME_VERSION_DOMINO14=2.3.0
@@ -122,8 +122,6 @@ check_version()
 
 check_timezone()
 {
-  LARCH=$(uname)
-
   echo
 
   # If Timezone is not set use host's timezone
@@ -158,13 +156,17 @@ check_timezone()
 
 detect_container_environment()
 {
-
   if [ -n "$CONTAINER_CMD" ]; then
     return 0
   fi
 
   if [ -n "$USE_DOCKER" ]; then
      CONTAINER_CMD=docker
+     return 0
+  fi
+
+  if [ -n "$USE_CONTAINER" ]; then
+     CONTAINER_CMD=container
      return 0
   fi
 
@@ -198,6 +200,14 @@ detect_container_environment()
   if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
     CONTAINER_CMD=docker
     return 0
+  fi
+
+  if [ "$LARCH" = "Darwin" ]; then
+    CONTAINER_RUNTIME_VERSION_STR=$(container --version 2> /dev/null | head -1)
+    if [ -n "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+      CONTAINER_CMD=container
+      return 0
+    fi
   fi
 
   if [ -z "$CONTAINER_CMD" ]; then
@@ -276,9 +286,21 @@ check_container_environment()
 
     # nerdctl does not support a network name during build
     CONTAINER_BUILD_DISABLE_HOST_NET=1
+  fi
 
-  else
+  if [ "$CONTAINER_CMD" = "container" ]; then
 
+    CONTAINER_ENV_NAME=container
+    if [ -z "$CONTAINER_RUNTIME_VERSION_STR" ]; then
+      CONTAINER_RUNTIME_VERSION_STR=$(container --version 2> /dev/null | head -1)
+    fi
+    CONTAINER_RUNTIME_VERSION=$(echo $CONTAINER_RUNTIME_VERSION_STR | awk -F'version ' '{print $2 }' | awk '{print $1}')
+
+    # Apple container platform does not support a network name during build
+    CONTAINER_BUILD_DISABLE_HOST_NET=1
+  fi
+
+  if [ "$CONTAINER_BUILD_DISABLE_HOST_NET" != "1" ]; then
     if [ -n "$DOCKER_NETWORK_NAME" ]; then
       CONTAINER_NETWORK_CMD="--network=$DOCKER_NETWORK_NAME"
     fi
@@ -567,10 +589,57 @@ build_alpine_build_env()
 }
 
 
+nginx_start_apple_container()
+{
+  local IMAGE_NAME=docker.io/library/nginx:latest
+  local CONTAINER_STATUS=$(container inspect "$SOFTWARE_CONTAINER" 2>/dev/null | jq -r '.[0].status')
+
+  case "$CONTAINER_STATUS" in
+
+    running)
+      log "Info: Container is already running"
+      ;;
+
+    stopped)
+      log "Info: Starting existing container"
+      $CONTAINER_CMD start "$SOFTWARE_CONTAINER"
+      ;;
+
+    *)
+      $CONTAINER_CMD run --name "$SOFTWARE_CONTAINER" -p "$SOFTWARE_PORT:80" -v "$SOFTWARE_DIR:/usr/share/nginx/html" -d "$IMAGE_NAME"
+      ;;
+  esac
+
+  # For Apple containers currently the host machine would
+  if [ -z "$SOFTWARE_REPO_IP" ] && [ "$USE_CONTAINER_IP" ]; then
+    CONTAINER_IP=$(container inspect "$SOFTWARE_CONTAINER" 2>/dev/null | jq -r '.[0].networks[0].address'| cut -f1 -d'/')
+    if [ -n "$CONTAINER_IP" ]; then
+      SOFTWARE_REPO_IP=$CONTAINER_IP
+    fi
+  fi
+
+  if [ -z "$SOFTWARE_REPO_IP" ]; then
+    local PRIMARY_INTERFACE=$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')
+    local PRIMARY_IP=$(ipconfig getifaddr "$PRIMARY_INTERFACE")
+    SOFTWARE_REPO_IP=$PRIMARY_IP:$SOFTWARE_PORT
+  fi
+
+  DOWNLOAD_FROM=http://$SOFTWARE_REPO_IP
+
+  echo "Hosting HCL Software repository on $DOWNLOAD_FROM"
+  echo
+}
+
+
 nginx_start()
 {
 
   if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+    return 0
+  fi
+
+  if [ "$CONTAINER_CMD" = "container" ]; then
+    nginx_start_apple_container
     return 0
   fi
 
@@ -625,7 +694,13 @@ nginx_stop()
   # Stop and remove SW repository
 
   $CONTAINER_CMD stop $SOFTWARE_CONTAINER
-  $CONTAINER_CMD container rm $SOFTWARE_CONTAINER
+
+  if [ "$CONTAINER_CMD" = "container" ]; then
+    $CONTAINER_CMD rm $SOFTWARE_CONTAINER
+  else
+    $CONTAINER_CMD container rm $SOFTWARE_CONTAINER
+  fi
+
   echo "Stopped & Removed Software Repository Container"
   echo
 }
@@ -1559,21 +1634,32 @@ docker_build()
   # Scan image if requested
   ScanImage
 
+
+  local IMAGE_TAG_CMD=tag
+  local IMAGE_PUSH_CMD=push
+
+  # Apple container platform requires 'image', nerdctl does not implement image tag/push only short hand flags
+  if [ "$CONTAINER_CMD" = "container" ]; then
+    IMAGE_TAG_CMD="image tag"
+    IMAGE_PUSH_CMD="image push"
+  fi
+
   if [ -n "$DOCKER_TAG_LATEST" ]; then
-    $CONTAINER_CMD tag $DOCKER_IMAGE $DOCKER_TAG_LATEST
+
+    $CONTAINER_CMD $IMAGE_TAG_CMD $DOCKER_IMAGE $DOCKER_TAG_LATEST
     echo
   fi
 
   if [ -n "$TAG_IMAGE" ]; then
-    $CONTAINER_CMD tag $DOCKER_IMAGE $TAG_IMAGE
+    $CONTAINER_CMD $IMAGE_TAG_CMD $DOCKER_IMAGE $TAG_IMAGE
     echo
   fi
 
   if [ -n "$PUSH_IMAGE" ]; then
-    $CONTAINER_CMD tag $DOCKER_IMAGE $PUSH_IMAGE
+    $CONTAINER_CMD $IMAGE_TAG_CMD $DOCKER_IMAGE $PUSH_IMAGE
 
     header "Pushing image $PUSH_IMAGE to registry"
-    $CONTAINER_CMD push $PUSH_IMAGE
+    $CONTAINER_CMD $IMAGE_PUSH_CMD $PUSH_IMAGE
     echo
   fi
 
@@ -3498,6 +3584,8 @@ SOFTWARE_CONTAINER=hclsoftware
 
 VERSION_FILE_NAME=current_version.txt
 DOMDOWNLOAD_BIN=/usr/local/bin/domdownload
+# Get the platform for platform specific checks
+LARCH=$(uname)
 
 # Use vi if no other editor specified in config
 
@@ -4180,6 +4268,13 @@ fi
 
 if [ -z "$BUILD_OPTIONS" ]; then
   BUILD_OPTIONS="--platform linux/amd64"
+else
+  BUILD_OPTIONS="$BUILD_OPTIONS --platform linux/amd64"
+fi
+
+# Apple Container does currently ignore BUILDKIT_PROGRESS=plain
+if [ "$CONTAINER_CMD" = "container" ]; then
+  BUILD_OPTIONS="$BUILD_OPTIONS --progress plain"
 fi
 
 if [ "$CONTAINER_BUILD_DISABLE_HOST_NET" != "1" ]; then

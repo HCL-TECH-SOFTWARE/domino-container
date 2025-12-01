@@ -378,6 +378,13 @@ check_data_directory_update()
     return 0
   fi
 
+  get_notes_ini_var "$DOMINO_DATA_PATH/notes.ini" "DominoContainer_SkipDataUpdate"
+
+  if [ "$ret_ini_var" = "1" ]; then
+    log_file_space "Info: Skipping data directory update because of notes.ini : DominoContainer_SkipDataUpdate"
+    return 0
+  fi
+
   copy_files_for_major_version
   copy_files_for_version fp
   copy_files_for_version hf

@@ -31,12 +31,29 @@ The tarball can be either placed on a web server reachable from your build machi
 Or it can be loaded from the same location where all install packages were downloaded (default: /local/software).
 When specifying a URL, the build-script will try to download the package from a web server, if you only specify a filename, the build-script assumes it is in the default software location.
 
+
 ## Structure of the tarball
 
-There are 3 predefined directories and one predefined file for the tarball. Let me explain these from an example of a tarball’s file tree.
+There are 3 predefined directories and one predefined file for the tarball. See below example of a tarball’s file tree.
 Additional files in the tar can be leveraged by the custom `install.sh` script.
 
+- domino-bin
+- domino-data
+- linux-bin
+
+Files in the tarball in the defined directories replace existing file.
+
+
+### Append Java policy settings
+
+Specially for Java policies appending settings are usually the better strategy.
+A java.policy file placed in main directory of the tar file is appended to `jvm/conf/security/java.policy`
+
+
 ```
+├── java.policy
+├── install.sh
+│
 ├── domino-bin
 │   ├── jvm
 │   │   ├── conf
@@ -46,31 +63,36 @@ Additional files in the tar can be leveraged by the custom `install.sh` script.
 │   │       └── security
 │   │           └── cacerts
 │   └── libnshsmtp.so
+│
 ├── domino-data
 │   └── nshsmtp
 │       ├── nshsmtpconfig.ntf
 │       ├── nshsmtpipcache.ntf
 │       ├── nshsmtpjournal.ntf
 │       └── nshsmtplog.ntf
-├── install.sh
+│
 └── linux-bin
     └── nshmailx
 ```
+
 
 ### domino-bin
 
 The domino-bin directory refers to the `/opt/hcl/domino/notes/latest/linux` directory, so any file in here will be added to or replacing a file in this directory or one of its sub-directories.
 As you can see in the example above, this tarball adds the `libnshsmtp.so` as a Domino program task (this is the library for SpamGeek) and adds a custom Java security policy and `cacerts` key/certs database.
 
+
 ### domino-data
 
 Any file or directory with file here will end up in your /local/notesdata directory, but only when setting up a new server with this Domino image.
 As the `notesdata` directory is on a persistent volume, changes to the image won’t make any changes to an existing notesdata directory.
 
+
 ### linux-bin
 
 Files in this directory are added to `/usr/bin`.
 `linux-bin` is not meant for adding extra Linux packages to the container that would be installed by yum/dnf/apt-get as those would be added by using the option `-linuxpkg=` in the build.sh script.
+
 
 ### install.sh
 
@@ -80,6 +102,7 @@ It could be used, for any custom logic for any other application requirement.
 Ensure the script executing the install logic works with relatives directories.
 
 The tar is extracted into a temporary directory and the current directory is set to the directory before `install.sh` is called.
+
 
 ### Creating the tarball and SHA256 hash
 
@@ -123,3 +146,4 @@ If you move your add-on file to your software download directory (default: **/lo
 
 This will load the usual build menu, but you will see in the menu a line: **Add-Ons : MyAddon.taz.**  
 The same option is also available for command-line installs.
+

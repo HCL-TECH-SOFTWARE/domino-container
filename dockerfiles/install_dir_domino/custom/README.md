@@ -53,6 +53,17 @@ trusted_domino_root.pem
 ```
 
 
+# Append entries to java.policy
+
+
+If the file java.policy is present, append the entries to the existing java.policy in the existing Java policy file
+
+```
+java.policy
+```
+
+
+
 # Custom Domino Setup Logo
 
 To replace the Domino Setup logo place a SVG file into the custom directory.
