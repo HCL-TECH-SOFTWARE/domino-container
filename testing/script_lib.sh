@@ -203,7 +203,7 @@ show_results()
   printf "\n\n"
 
   if [ "$count_error" != "0" ]; then
-    exit 1
+    exit "$count_error"
   fi
 }
 

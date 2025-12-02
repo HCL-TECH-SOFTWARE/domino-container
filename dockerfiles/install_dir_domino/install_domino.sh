@@ -1785,6 +1785,7 @@ mv "$DOMINO_DATA_PATH/notes.ini" "$DOMINO_DATA_PATH/notes.ini.install"
 # --- Ensure FP/IF data is readable  ---
 
 find "$Notes_ExecDirectory/data1_bck" -type d -exec chmod 755 {} \; 2>/dev/null
+find "$Notes_ExecDirectory/license" -type d -exec chmod 755 {} \; 2>/dev/null
 
 # --- Cleanup Routines to reduce image size ---
 

@@ -41,6 +41,7 @@ KEEP_API_URL="http://automation.notes.lab:8880"
 
 SCRIPT_NAME=$(readlink -f $0)
 SCRIPT_DIR=$(dirname $SCRIPT_NAME)
+LARCH=$(uname)
 
 . $SCRIPT_DIR/script_lib.sh
 
@@ -451,8 +452,13 @@ while [ $count -gt 0 ]; do
   fi
 done
 
-HOST_LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
-HOST_LINUX_VERSION=$(cat /etc/os-release | grep "VERSION="| cut -d= -f2 | xargs)
+if [ "$LARCH" = "Darwin" ]; then
+  HOST_LINUX_VERSION="macOS $(sw_vers -productVersion)"
+  HOST_LINUX_PRETTY_NAME="$HOST_LINUX_VERSION"
+else
+  HOST_LINUX_PRETTY_NAME=$(cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
+  HOST_LINUX_VERSION=$(cat /etc/os-release | grep "VERSION="| cut -d= -f2 | xargs)
+fi
 
 LINUX_PRETTY_NAME=$($CONTAINER_CMD exec $CONTAINER_NAME cat /etc/os-release | grep "PRETTY_NAME="| cut -d= -f2 | xargs)
 LINUX_VERSION=$($CONTAINER_CMD exec $CONTAINER_NAME cat /etc/os-release | grep "VERSION="| cut -d= -f2 | xargs)
