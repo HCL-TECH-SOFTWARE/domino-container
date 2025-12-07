@@ -4257,7 +4257,9 @@ check_container_environment
 
 # Invoke build menu asking for Domino image details
 if [ "$BUILD_MENU" = "yes" ] || [ -n "$CONF_FILE" ] || [ -z "$PROD_NAME" ]; then
-  build_menu
+   BUILD_MENU=yes
+   CONF_FILE=default.conf
+   build_menu
 fi
 
 if [ -n "$DISPLAY_WARNING" ]; then
