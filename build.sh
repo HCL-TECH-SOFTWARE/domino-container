@@ -387,6 +387,7 @@ usage()
   echo "-startscript=x   installs specified start script version from software repository"
   echo "-custom-addon=x  specify a tar file with additional Domino add-on software to install format: (https://)file.taz#sha256checksum"
   echo "-software=<dir>  explicitly specify SOFTWARE_DIR and override cfg file "
+  echo "-update          update repositories and check for updating scripts (build.sh, dominoctl, domdownload)"
   echo
   echo "-linuxpkg=<pkg>       add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
   echo "-linuxpkgskip=<pkg>   skip adding on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
@@ -3580,7 +3581,7 @@ update_scripts()
     sleep 5
   fi
 
-  /opt/nashcom/startscript/nsh-update-check.sh
+  /opt/nashcom/startscript/nsh-update-check.sh "$1"
 }
 
 
@@ -4026,10 +4027,21 @@ for a in "$@"; do
 
     -update)
       update_scripts
+      sleep 2
       ;;
 
     update)
       update_scripts
+      exit 0
+      ;;
+
+    -update-repo)
+      update_scripts repo
+      sleep 2
+      ;;
+
+    update-repo)
+      update_scripts repo
       exit 0
       ;;
 
@@ -4244,7 +4256,7 @@ check_timezone
 check_container_environment
 
 # Invoke build menu asking for Domino image details
-if [ "$BUILD_MENU" = "yes" ] || [ -n "$CONF_FILE" ] ; then
+if [ "$BUILD_MENU" = "yes" ] || [ -n "$CONF_FILE" ] || [ -z "$PROD_NAME" ]; then
   build_menu
 fi
 
