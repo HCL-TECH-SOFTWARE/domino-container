@@ -33,9 +33,6 @@ SELECT_ONTIME_VERSION_DOMINO14=2.3.0
 SELECT_ONTIME_VERSION_DOMINO145=11.7.0
 SELECT_ONTIME_VERSION_DOMINO1451=11.8.1
 
-# Build kit shortens the output. This isn't really helpful for troubleshooting and following the build process ...
-export BUILDKIT_PROGRESS=plain
-
 
 if [ "$1" == "--version" ]; then
   echo $CONTAINER_BUILD_SCRIPT_VERSION
@@ -3576,6 +3573,17 @@ install_domino_native()
 }
 
 
+update_scripts()
+{
+  if [ ! -e /opt/nashcom/startscript/nsh-update-check.sh ]; then
+    log_error "Update check script not found!"
+    sleep 5
+  fi
+
+  /opt/nashcom/startscript/nsh-update-check.sh
+}
+
+
 # --- Main script logic ---
 
 SOFTWARE_PORT=7777
@@ -4016,6 +4024,15 @@ for a in "$@"; do
       INSTALL_DOMINO_NATIVE=yes
       ;;
 
+    -update)
+      update_scripts
+      ;;
+
+    update)
+      update_scripts
+      exit 0
+      ;;
+
     menu|m)
       BUILD_MENU=yes
       CONF_FILE=default.conf
@@ -4275,6 +4292,12 @@ fi
 # Apple Container does currently ignore BUILDKIT_PROGRESS=plain
 if [ "$CONTAINER_CMD" = "container" ]; then
   BUILD_OPTIONS="$BUILD_OPTIONS --progress plain"
+fi
+
+if [ "$CONTAINER_CMD" != "nerdctl" ]; then
+  # Build kit shortens the output. This isn't really helpful for troubleshooting and following the build process ...
+  # nerdctl on Rancher Desktop works better without it
+  export BUILDKIT_PROGRESS=plain
 fi
 
 if [ "$CONTAINER_BUILD_DISABLE_HOST_NET" != "1" ]; then
