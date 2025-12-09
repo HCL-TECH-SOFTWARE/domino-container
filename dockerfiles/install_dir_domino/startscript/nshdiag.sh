@@ -196,64 +196,83 @@ showfile()
 }
 
 
-list_files()
-{
-  if [ -z "$1" ]; then
-    return 0
-  fi
-
-  local CURRENT_DIR=$(pwd)
-  local pattern=
-
-  if [ -z "$2" ]; then
-    pattern="*.log"
-  else
-    pattern="$2"
-  fi
-
-  local max_days=30
-
-  if [ -n "$3" ]; then
-    max_days="$3"
-  fi
-
-  cd "$1"
-
-  find . -type f -name "$pattern" -mtime -$max_days -printf '%T@ %P\n' | sort -nr | awk '{print $2}' | while IFS= read -r file; do
-    showfile "$file"
-  done
-
-  cd "$CURRENT_DIR"
-}
-
-
 tar_files()
 {
-
   if [ -z "$1" ]; then
     return 0
   fi
 
+  local SOURCE_DIR="$1"
   local CURRENT_DIR=$(pwd)
-  local pattern=
 
+  local PATTERN
   if [ -z "$2" ]; then
-    pattern="*.log"
+    PATTERN="*.log"
   else
-    pattern="$2"
+    PATTERN="$2"
   fi
 
-  local max_days=30
-
+  local MAX_DAYS=2
   if [ -n "$3" ]; then
-    max_days="$3"
+    MAX_DAYS="$3"
   fi
 
-  cd "$1"
-  find . -type f -name "$pattern" -mtime -$max_days -printf '%P\n' | tar -czf "$DOMINO_DIAG_TAR" --files-from=-
+  cd "$SOURCE_DIR"
+
+  local TRANSLOG_CONTROL_FILE="$TRANSLOG_DIRECTORY/nlogctrl.lfh"
+
+  if [ -e "$TRANSLOG_CONTROL_FILE" ]; then
+    local ts=$(stat -c %Y "$TRANSLOG_CONTROL_FILE")
+    local TRANSLOG_CONTROL_FILE_BACKUP="nlogctrl_$(date -d "@$ts" '+%Y%m%d_%H%M%S').lfh"
+    cp -f "$TRANSLOG_CONTROL_FILE" "$TRANSLOG_CONTROL_FILE_BACKUP"
+    touch -d '1 second ago' "$TRANSLOG_CONTROL_FILE_BACKUP"
+  fi
+
+  local LAST_LOG_COLLECT_FILE="domdiag_last_collect.txt"
+  local NOW=$(date +%s)
+  local CUTOFF=$(( NOW - MAX_DAYS * 24 * 3600 ))
+  local START=
+  local LAST=
+  local TAR_START=$(date +%s)
+
+  if [ -e "$LAST_LOG_COLLECT_FILE" ]; then
+    LAST=$(stat -c %Y "$LAST_LOG_COLLECT_FILE")
+    if [ "$LAST" -gt "$CUTOFF" ]; then
+        START=$LAST
+    else
+        START=$CUTOFF
+    fi
+  else
+    START=$CUTOFF
+  fi
+
+  # Build consistent file list (NULL terminated)
+  find . -type f -name "$PATTERN" \
+      -newermt "@$START" \
+      ! -newermt "@$TAR_START" \
+      ! -name "domdiag_*" \
+      -print0 > "$DOMINO_DIAG_TMP_FILE_LIST"
+
+  tar --null -T "$DOMINO_DIAG_TMP_FILE_LIST" -czf "$DOMINO_DIAG_TAR"
+
+  tr '\0' '\n' < "$DOMINO_DIAG_TMP_FILE_LIST" \
+    | while IFS= read -r file; do
+      printf "%s %s\n" "$(stat -c %Y "$file")" "$file"
+      done \
+    | sort -nr \
+    | while read -r ts file; do
+        showfile "$file"
+      done
+
+  remove_file "$DOMINO_DIAG_TMP_FILE_LIST"
+
+  if [ -n "$TRANSLOG_CONTROL_FILE_BACKUP" ]; then
+    remove_file "$TRANSLOG_CONTROL_FILE_BACKUP"
+  fi
 
   cd "$CURRENT_DIR"
-  echo "Created $DOMINO_DIAG_TAR ($(du -sh "$DOMINO_DIAG_TAR" | cut -f1))"
+  printf "%s" "$(date -d "@$TAR_START" '+%Y-%m-%d %H:%M:%S')" > "$SOURCE_DIR/$LAST_LOG_COLLECT_FILE"
+  touch -d "@$TAR_START" "$SOURCE_DIR/$LAST_LOG_COLLECT_FILE"
 }
 
 
@@ -286,56 +305,48 @@ get_semdebug_infos()
 }
 
 
+get_last_collect_time()
+{
+  if [ -e "$DIAG_DIRECTORY/domdiag_last_collect.txt" ]; then
+    cat "$DIAG_DIRECTORY/domdiag_last_collect.txt"
+  fi
+}
+
 collect_diag()
 {
 
   if [ -n "$DOMINO_DIAG_TAR" ]; then
+    echo "Log already collected: $DOMINO_DIAG_TAR"
     return 1
   fi
 
   DOMINO_DIAG_TAR="$DIAG_DIRECTORY/domdiag_${DIAG_SERVER_NAME}_${DATE_STR}.taz"
 
-  log_file "Servername : $DIAG_FULL_SERVER_NAME"
-  log_file "Hostname   : $DIAG_HOSTNAME"
-  log_file "Diag Dir   : $DIAG_DIRECTORY"
+  log_file "Servername  :  $DIAG_FULL_SERVER_NAME"
+  log_file "Hostname    :  $DIAG_HOSTNAME"
+  log_file "Diag Dir    :  $DIAG_DIRECTORY"
 
   get_semdebug_infos
   if [ -n "$SEMDEBUG_DISPLAY" ]; then
-    log_file "SEM Debug  : $SEMDEBUG_FILE  [ $SEMDEBUG_DISPLAY ]"
+    log_file "SEM Debug   :  $SEMDEBUG_FILE  [ $SEMDEBUG_DISPLAY ]"
   fi
 
   if [ -n "$LAST_NSD" ]; then
-    log_file "Latest NSD : $LAST_NSD"
-  fi
-
-  if [ "$DIAG_DAYS" = "1" ]; then
-    UNIT=day
-  else
-    UNIT=days
+    log_file "Latest NSD  :  $LAST_NSD"
   fi
 
   log_file
-  log_file "Latest Diagnostic files ($DIAG_DAYS $UNIT)"
-  log_file "----------------------------------------"
+  log_file "Latest Diagnostic files (since $(get_last_collect_time))"
+  log_file "-------------------------------------------------------"
   log_file
 
-  list_files "$DIAG_DIRECTORY" "*" "$DIAG_DAYS"
+  header "Collecting files"
+
+  tar_files "$DIAG_DIRECTORY" "*" "$DOMINO_DIAG_DAYS"
   cat "$DOMINO_DIAG_LOG"
 
-  echo
-
-  header "Collecting files"
-
-  tar_files "$DIAG_DIRECTORY" "*" "$DIAG_DAYS"
 
   echo
-}
-
-
-collect_files()
-{
-  header "Collecting files"
-  tar_files "$DIAG_DIRECTORY" "*" "$DIAG_DAYS"
 }
 
 
@@ -358,7 +369,9 @@ send_diag()
 
   "$NSHMAILX_BIN" "$DIAG_RCPT" -name "$DIAG_FULL_SERVER_NAME" -from "$DIAG_FROM" -file "$DOMINO_DIAG_LOG" -subject "Domino Diag [$DIAG_FULL_SERVER_NAME]" -att "$DOMINO_DIAG_TAR"
   remove_file "$DOMINO_DIAG_TAR"
+  remove_file "$DOMINO_DIAG_LOG"
   DOMINO_DIAG_TAR=
+  DOMINO_DIAG_LOG=
   echo
   wait_for_key
 }
@@ -1049,6 +1062,8 @@ menu()
 {
   local SELECTED=
 
+  local LAST_COLLECT=$(get_last_collect_time)
+
   while [ 1 ];
   do
 
@@ -1060,34 +1075,38 @@ menu()
     echo "----------------------"
     echo
 
-    echo " Server     :  $DIAG_FULL_SERVER_NAME"
-    echo " Hostname   :  $DIAG_HOSTNAME"
+    echo " Server       :  $DIAG_FULL_SERVER_NAME"
+    echo " Hostname     :  $DIAG_HOSTNAME"
     if [ -x "$NSHMAILX_BIN" ] ; then
-      echo " Diag RCPT  :  $DIAG_RCPT"
+      echo " Diag RCPT    :  $DIAG_RCPT"
     fi
     echo
 
     if [ -n "$DOMINO_DIAG_TRACE_FILE" ] && [ -e "$DOMINO_DIAG_TRACE_FILE" ]; then
-      echo " Trace file :  $DOMINO_DIAG_TRACE_FILE ($(du -sh "$DOMINO_DIAG_TRACE_FILE" | cut -f1))"
+      echo " Trace file   :  $DOMINO_DIAG_TRACE_FILE ($(du -sh "$DOMINO_DIAG_TRACE_FILE" | cut -f1))"
     fi
 
     if  [ -z "$LAST_NSD" ] && [ -z "$SEMDEBUG_FILE" ]; then
-      echo " Diag Dir   :  $DIAG_DIRECTORY"
+      echo " Diag Dir     :  $DIAG_DIRECTORY"
     fi
 
     get_semdebug_infos
 
     if [ -n "$SEMDEBUG_DISPLAY" ]; then
-      echo " SEM Debug  :  $SEMDEBUG_FILE  ($SEMDEBUG_DISPLAY)"
+      echo " SEM Debug    :  $SEMDEBUG_FILE  ($SEMDEBUG_DISPLAY)"
     fi
 
     if [ -n "$LAST_NSD" ] && [ -e "$LAST_NSD" ]; then
-      echo " Latest NSD :  $LAST_NSD  ($(du -sh "$LAST_NSD" | cut -f1))"
-      echo " NSD age    :  $(get_file_age "$LAST_NSD")"
+      echo " Latest NSD   :  $LAST_NSD  ($(du -sh "$LAST_NSD" | cut -f1))"
+      echo " NSD age      :  $(get_file_age "$LAST_NSD")"
     fi
 
     if [ -n "$DOMINO_DIAG_TAR" ]; then
-      echo " Diag file  :  $DOMINO_DIAG_TAR ($(du -sh "$DOMINO_DIAG_TAR" | cut -f1))"
+      echo " Diag file    :  $DOMINO_DIAG_TAR ($(du -sh "$DOMINO_DIAG_TAR" | cut -f1))"
+    fi
+
+    if [ -n "$LAST_COLLECT" ]; then
+      echo  " Last collect :  $LAST_COLLECT"
     fi
 
     echo
@@ -1254,6 +1273,7 @@ DIAG_DIRECTORY=$(head -1 "$DIAG_INDEX_FILE")
 SEMDEBUG_FILE="$DIAG_DIRECTORY/SEMDEBUG.TXT"
 DATE_STR=$(LANG=C date +"%Y_%m_%d@%H_%M_%S")
 DOMINO_DIAG_LOG="$DIAG_DIRECTORY/domdiag_${DATE_STR}.log"
+DOMINO_DIAG_TMP_FILE_LIST="$DIAG_DIRECTORY/domdiag_${DATE_STR}.files"
 DOMINO_DIAG_TRACE_FILE="$DIAG_DIRECTORY/domdiag_trace_${DATE_STR}.log"
 
 
@@ -1278,8 +1298,8 @@ if [ -z "$DIAG_HOSTNAME" ]; then
   DIAG_HOSTNAME=$(hostname -f)
 fi
 
-if [ -z "$DIAG_DAYS" ]; then
-  DIAG_DAYS=1
+if [ -z "$DOMINO_DIAG_DAYS" ]; then
+  DOMINO_DIAG_DAYS=1
 fi
 
 NSHMAILX_BIN=/usr/bin/nshmailx
@@ -1295,6 +1315,8 @@ DIAG_SERVER_NAME=$(echo "$DIAG_FULL_SERVER_NAME" | cut -d '/' -f1 | tr ' ' '_' |
 if [ -z "$DIAG_RCPT" ]; then
   DIAG_RCPT=$(cat "$NOTESINI" | grep -i "^DominoDiagRcpt=" | head -1 | cut -d'=' -f2)
 fi
+
+TRANSLOG_DIRECTORY=$(cat "$NOTESINI" | grep -i "^TRANSLOG_Path=" | head -1 | cut -d'=' -f2)
 
 if [ -z "$DIAG_FROM" ]; then
   DIAG_FROM=$(cat "$NOTESINI" | grep -i "^DominoDiagFrom=" | head -1 | cut -d'=' -f2)
