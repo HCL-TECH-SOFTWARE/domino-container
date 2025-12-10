@@ -484,7 +484,7 @@ install_domiq()
 
   chmod 555 "$Notes_ExecDirectory/llama-server"
   # It's OK to set all *.so files to 555
-  chmod 555 "$Notes_ExecDirectory/*.so"
+  chmod 555 "$Notes_ExecDirectory"/*.so
 
   log_space Installed $ADDON_NAME
 }
