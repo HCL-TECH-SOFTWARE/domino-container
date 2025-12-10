@@ -60,7 +60,7 @@ install_linux_packages()
 
   elif [ -x /usr/bin/apt-get ]; then
 
-    install_package procps libcap2-bin
+    install_package procps libcap2-bin gettext-base
 
   else
 
