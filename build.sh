@@ -4332,24 +4332,6 @@ if [ -n "$DOMLP_LANG" ]; then
   DOMLP_VER=$DOMLP_LANG-$PROD_VER
 fi
 
-# Calculate the right version for Nomad server for selected Domino version
-if [ -n "$NOMAD_VERSION" ]; then
-
-  # Allow to specify explict nomad version (currently identified by "-". might change in future )
-  case "$NOMAD_VERSION" in
-
-    *-*)
-      ;;
-
-    # For now make it a special case before we phase out older Nomad versions
-    1.0.13*|1.0.14*|1.0.15*|1.0.16*|1.0.17*)
-      ;;
-
-    *)
-      NOMAD_VERSION=$NOMAD_VERSION-$PROD_VER
-      ;;
-  esac
-fi
 
 # If borgbackup is installed, also install Domino Borg
 if [ -n "$BORG_VERSION" ]; then

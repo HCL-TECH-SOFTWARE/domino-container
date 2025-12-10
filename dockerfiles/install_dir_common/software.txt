@@ -96,6 +96,7 @@ safelinx|1.4.3|HCL-SafeLinx-1430-x86_64.tar.gz|TL3PxKUv8svOiXIAr8OCE|1351abfe47a
 nomadweb|1.0.15|HCL_Nomad_web_1.0.15_for_HCL_SafeLinx.zip|mNuHoM6NKOOkj7RgUhnhZ|cd18f45d2684efb3632c6f0c9fb155271c3a906da827c9883bc375a0de543284
 nomadweb|1.0.16|HCL_Nomad_web_1.0.16_for_HCL_SafeLinx.zip|8B0kfPixyPZn9mYmzAaCA|67a289657adffea88684c59d5f5a8e98049e3abb70ee2b2b4ac405f46eceb7e7
 nomadweb|1.0.17|HCL_Nomad_web_1.0.17_for_HCL_SafeLinx.zip|QNMp67Asgi9MFEHqGMENr|38d4cd416f743b05ddac42b3b57d0f850c53f729807190d889c6e9e6dfa2214e
+nomadweb|1.0.18|HCL_Nomad_web_1.0.18_for_HCL_SafeLinx.zip|KCFLNgYxmHgrKTCrkwH1U|8c8ebda1db0144fda9f8d586b5bf4a2be903eaf75f8ae866ad182c066efe0bb8
 nomad|1.0.13|nomad-server-1.0.13-linux.tar.gz|kzsOP2qCPZRk5YvhjU3eg|7d5108b0efc36a53e4cb959d0032adb6a5994fb3d8465b407280d83239652f26
 nomad|1.0.13IF1|nomad-server-1.0.13-IF1-linux.tar.gz|c3sHgxMiwVVGkrBBV6cJ2|97364bde63e694845b10825af4005356cf92cb52ed628003c1567600b0613368
 nomad|1.0.13IF2|nomad-server-1.0.13-IF2-linux.tar.gz|5BPCenCx7Bu5NEYhc1PIM|6812af2b71d6c956387162a7bf5df03f05a044466ca956f301789441f8e8eec4
@@ -104,6 +105,7 @@ nomad|1.0.15|HCL_Nomad_server_1.0.15_linux.tar.gz,nomad-server-1.0.15-linux.tar.
 nomad|1.0.15IF1|HCL_Nomad_server_1.0.15-IF1_linux.tar.gz|b8upAL5L6uL9Fo8mS9xa0|8c63db6e18c4dcc23fd2ca5db025e445644751f323372c20cecb631dd0484eb9
 nomad|1.0.16|HCL_Nomad_server_1.0.16_linux.tar.gz|FV38xlVSRI4lsheRurBIB|99288096ab617eca1b650bed4773b7e1b75a09346925b4813e631de971ddd4e0
 nomad|1.0.17|HCL_Nomad_server_1.0.17_linux.tar.gz|rYqlpoX9SEQAgs1tZ00Uy|75d89f77d987435253913729f781b9170cb0a08de4cbd634b5a02992b1f3db1c
+nomad|1.0.18|HCL_Nomad_server_1.0.18_linux.tar.gz|IRzJvYQTzeL8uUGkqkeuR|1150e20d3ecd9845a370937c7cbdd3642c7144d1e3595164e4654bc06156ae8d
 domrestapi|1.1-12|Domino_REST_API_V1.1_R12_Installer.tar.gz|AcYz2HbFEtVKyFBYh6oj7|b61fe057c1420aef1f95a8da03794077ee26531104b32c75b67c02f8983ac54f
 domrestapi|1.1.1-12|Domino_REST_API_V1.1.1_R12_Installer.tar.gz|PJZR8bRQsxADqYxlcVjCy|f9f28a2c1d5dc9e632cfeafe7c63ad3b186352df4fa0e9839dbe45580e00ccd6
 domrestapi|1.1-14|Domino_REST_API_V1.1_R14_Installer.tar.gz|WaAVquPQpD1ESIkoyRwDi|0a1329a6620bd3114c0c4089048229b2c17f5fef9fb6920f32d238e6fe3e3e54
