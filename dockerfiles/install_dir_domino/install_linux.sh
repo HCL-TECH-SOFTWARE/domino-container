@@ -60,7 +60,12 @@ install_linux_packages()
 
   elif [ -x /usr/bin/apt-get ]; then
 
-    install_package procps libcap2-bin gettext-base
+    install_packages procps libcap2-bin gettext-base
+
+    # Ubuntu 26.04 LTS moved rev to bsdextrautils
+    if [ ! -e /usr/bin/rev ]; then
+      install_package bsdextrautils
+    fi
 
   else
 
