@@ -818,6 +818,84 @@ install_domino_restapi()
 }
 
 
+install_ontime()
+{
+  local ADDON_NAME=ontime
+  local ADDON_VER=$1
+
+  if [ -z "$ADDON_VER" ] && [ -z "$ONTIME_DOWNLOAD_FILE" ] ; then
+    return 0
+  fi
+
+  header "Ontime Installation"
+
+  CURRENT_DIR=$(pwd)
+
+  cd "$INSTALL_DIR"
+
+  # If explicitly specified just download and skip calculating hash
+  if [ -n "$ONTIME_DOWNLOAD_FILE" ]; then
+    echo "Info: Not checking download hash for [$ONTIME_DOWNLOAD_FILE]"
+    DOWNLOAD_NAME="$ONTIME_DOWNLOAD_FILE"
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME" . nohash
+
+  else
+    # LATER: get download from software.txt
+    get_download_name $ADDON_NAME $ADDON_VER
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+  fi
+
+  echo "Unzipping files .."
+  cd "$ADDON_NAME"
+  unzip -o -q *.zip
+
+  if [ -z "$ADDON_VER" ]; then
+    ADDON_VER="$(head -n 1 version.txt | xargs)"
+
+    if [ -z "$ADDON_VER" ]; then
+      log_error "Cannot detect OnTime version"
+      exit 1
+    fi
+
+    echo "Ontime Version detected in file: [$ADDON_VER]"
+
+  fi
+
+  echo "Copying files .."
+
+  local ONTIME_DATA="$DOMINO_DATA_PATH/ontime"
+  mkdir -p "$ONTIME_DATA"
+
+  for NTF in *.ntf; do
+    install_file "$NTF" "$ONTIME_DATA/$NTF" $DOMINO_USER $DOMINO_GROUP 644
+  done
+
+  for NSF in *.nsf; do
+    install_file "$NSF" "$ONTIME_DATA/$NSF" $DOMINO_USER $DOMINO_GROUP 644
+  done
+
+  install_file 'ExtraFiles/Tasks/Linux64 (Domino 10 - 14)/ontimegc' "$Notes_ExecDirectory/ontimegc" root root 755 755
+
+  ln -s "$LOTUS/bin/tools/startup" "$LOTUS/bin/ontimegc"
+
+  # Set add-on version
+  echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
+  echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
+
+  # Copy add-on data for OnTime, even it will be in the full data dir
+  local INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${ADDON_NAME}.taz
+
+  cd $DOMINO_DATA_PATH
+  tar -czf "$INSTALL_ADDON_DATA_TAR" ontime ${ADDON_NAME}_ver.txt
+
+  cd $INSTALL_DIR
+  remove_directory "$ADDON_NAME"
+  cd "$CURRENT_DIR"
+
+  log_space Installed "$ADDON_NAME"
+}
+
+
 install_domprom()
 {
   if [ -z "$DOMPROM_VERSION" ]; then
@@ -1470,12 +1548,14 @@ echo "NOMAD_VERSION           = [$NOMAD_VERSION]"
 echo "TRAVELER_VERSION        = [$TRAVELER_VERSION]"
 echo "LEAP_VERSION            = [$LEAP_VERSION]"
 echo "CAPI_VERSION            = [$CAPI_VERSION]"
+echo "ONTIME_VERSION          = [$ONTIME_VERSION]"
 echo "DOMIQ_VERSION           = [$DOMIQ_VERSION]"
 echo "PROD_DOWNLOAD_FILE      = [$PROD_DOWNLOAD_FILE]"
 echo "PROD_FP_DOWNLOAD_FILE   = [$PROD_FP_DOWNLOAD_FILE]"
 echo "PROD_HF_DOWNLOAD_FILE   = [$PROD_HF_DOWNLOAD_FILE]"
 echo "TRAVELER_DOWNLOAD_FILE  = [$TRAVELER_DOWNLOAD_FILE]"
 echo "RESTAPI_DOWNLOAD_FILE   = [$RESTAPI_DOWNLOAD_FILE]"
+echo "ONTIME_DOWNLOAD_FILE    = [$ONTIME_DOWNLOAD_FILE]"
 echo "LINUX_PKG_ADD           = [$LINUX_PKG_ADD]"
 echo "LINUX_HOMEDIR           = [$LINUX_HOMEDIR]"
 echo "STARTSCRIPT_VER         = [$STARTSCRIPT_VER]"
@@ -1643,6 +1723,10 @@ install_domino_restapi "$DOMRESTAPI_VER"
 
 # Install Traveler Server if requested
 install_traveler "$TRAVELER_VERSION"
+
+# Install OnTime if requested and not included in Domino
+install_ontime "$ONTIME_VERSION"
+
 
 # Install JDBC drivers if requested
 

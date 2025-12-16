@@ -449,6 +449,8 @@ dump_config()
   echo "PROD_HF_DOWNLOAD_FILE  : [$PROD_HF_DOWNLOAD_FILE]"
   echo "TRAVELER_DOWNLOAD_FILE : [$TRAVELER_DOWNLOAD_FILE]"
   echo "RESTAPI_DOWNLOAD_FILE  : [$RESTAPI_DOWNLOAD_FILE]"
+  echo "ONTIME_DOWNLOAD_FILE   : [$ONTIME_DOWNLOAD_FILE]"
+  echo "ONTIME_VERSION         : [$ONTIME_VERSION]"
   echo "PROD_EXT               : [$PROD_EXT]"
   echo "CHECK_SOFTWARE         : [$CHECK_SOFTWARE]"
   echo "CHECK_HASH             : [$CHECK_HASH]"
@@ -1220,6 +1222,9 @@ check_addon_label()
 
     # OnTime is added from Domino V14 WebKit
     add_addon_label "ontime" "$ONTIME_VERSION"
+
+  elif [ -n "$ONTIME_VERSION" ]; then
+    add_addon_label "ontime" "$ONTIME_VERSION"
   fi
 
   if [ -n "$DOMLP_LANG" ]; then
@@ -1338,6 +1343,8 @@ build_domino()
     --build-arg PROD_HF_DOWNLOAD_FILE=$PROD_HF_DOWNLOAD_FILE \
     --build-arg TRAVELER_DOWNLOAD_FILE=$TRAVELER_DOWNLOAD_FILE\
     --build-arg RESTAPI_DOWNLOAD_FILE=$RESTAPI_DOWNLOAD_FILE\
+    --build-arg ONTIME_DOWNLOAD_FILE=$ONTIME_DOWNLOAD_FILE\
+    --build-arg ONTIME_VERSION=$ONTIME_VERSION\
     --build-arg DOCKER_TZ=$DOCKER_TZ \
     --build-arg BASE_IMAGE=$BASE_IMAGE \
     --build-arg DownloadFrom=$DOWNLOAD_FROM \
@@ -2989,7 +2996,7 @@ load_conf()
 
   if [ -n "$NODE_EXPORTER_VERSION" ] && [ -n "$DOMPROM_VERSION" ]; then PROM_INSTALL=yes; fi
 
-  if [ -n "$ONTIME_VERSION" ]; then
+  if [ -n "$ONTIME_VERSION" ] && [ -z "$ONTIME_DOWNLOAD_FILE" ] ; then
      DominoResponseFile=domino14_ontime_install.properties
   fi
 
@@ -3928,7 +3935,6 @@ for a in "$@"; do
 
     -restapi_download=*)
       RESTAPI_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
-      echo "RESTAPI_DOWNLOAD_FILE: [$RESTAPI_DOWNLOAD_FILE]"
       ;;
 
     -restapi*|+restapi*)
@@ -3946,6 +3952,14 @@ for a in "$@"; do
     -ontime|+ontime)
       DominoResponseFile=domino14_ontime_install.properties
       ONTIME_VERSION=$SELECT_ONTIME_VERSION_DOMINO145
+      ;;
+
+    -ontime=*|+ontime=*)
+      ONTIME_VERSION=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -ontime_download=*)
+      ONTIME_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     _*)
