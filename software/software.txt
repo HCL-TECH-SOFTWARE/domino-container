@@ -125,6 +125,7 @@ domiq|14.5|LlamaServerforDominoIQ_080525_Linux.zip|fl51IpNNWMLhcVqCVG89l|3021f01
 domiq|14.5.1EA1|LlamaServerforDominoIQ_14.5.1_EA1_Linux.zip|30A2Jpg7vU8KNrGo5L5A5|58d4b694ee462e542f1e3462c586267fe4ef7373b6bfb7f416cbeece69245abf
 node_exporter|1.8.2|node_exporter-1.8.2.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz|x|6809dd0b3ec45fd6e992c19071d6b5253aed3ead7bf0686885a51d85c6643c66
 node_exporter|1.9.1|node_exporter-1.9.1.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz|x|becb950ee80daa8ae7331d77966d94a611af79ad0d3307380907e0ec08f5b4e8
+node_exporter|1.10.2|node_exporter-1.10.2.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz|x|c46e5b6f53948477ff3a19d97c58307394a29fe64a01905646f026ddc32cb65b
 domprom|0.9.2|domprom-0.9.2-linux-amd64.taz,https://github.com/nashcom/domino-grafana/releases/download/v0.9.2/domprom-0.9.2-linux-amd64.taz|x|07b0feea9b0674a868f885052d9bef8f60f5c762623329190e37c9f9fba6fb3f
 iqsuite|27.1.1|iQ.Suite-27.1.1.10939-Linux-Domino14-64bit.tar.gz|x|998c5cfb498ae5b8036a2a4d44aacfc5d94006559c3e247a1e83b8c5c0f57729
 iqsuite|28.1|iQ.Suite-28.1-Linux-Domino14-64-Bit.tar.gz|x|442739a02b15a06705d6b0f3749ec26c923c4f710d0b1348fd6b6f3e40da88a6
