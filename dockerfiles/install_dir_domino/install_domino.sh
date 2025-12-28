@@ -840,6 +840,7 @@ install_ontime()
     download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME" . nohash
 
   else
+    return 0
     # LATER: get download from software.txt
     get_download_name $ADDON_NAME $ADDON_VER
     download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
