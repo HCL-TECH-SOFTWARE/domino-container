@@ -7,7 +7,7 @@ domiq-14.5.1|14.5.1EA1
 traveler-14.5.1|14.5.1EA1
 traveler|14.5
 volt|1.0.5.15
-leap|1.1.9
+leap|1.1.10
 verse|3.2.6
 capi|14.5
 safelinx|1.4.3
