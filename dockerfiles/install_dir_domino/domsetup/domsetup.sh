@@ -727,11 +727,18 @@ import_environment
 
 if [ -z "$DOMSETUP_HOST" ]; then
   if [ -e /usr/bin/hostname ]; then
-    DOMSETUP_HOST=$(/usr/bin/hostname -f)
-  else
+    DOMSETUP_HOST=$(/usr/bin/hostname -f 2> /dev/null)
+
+    if [ -z "$DOMSETUP_HOST" ]; then
+      DOMSETUP_HOST=$(/usr/bin/hostname 2> /dev/null)
+    fi
+  fi
+
+  if [ -z "$DOMSETUP_HOST" ]; then
     DOMSETUP_HOST=localhost
   fi
 fi
+
 
 DOMINO_DATA_PATH=${DOMINO_DATA_PATH:-/local/notesdata}
 DOMSETUP_HTTPS_PORT=${DOMSETUP_HTTPS_PORT:-1352}

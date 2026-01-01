@@ -191,22 +191,28 @@ print_infos()
   fi
 
   if [ -r  /etc/os-release ]; then
-    get_entry LINUX_VERSION /etc/os-release "VERSION_ID=" "="
+    get_entry LINUX_VERSION /etc/os-release "VERSION=" "="
+    if [ -z "$LINUX_VERSION" ]; then
+      get_entry LINUX_VERSION /etc/os-release "VERSION_ID=" "="
+    fi
+
     get_entry LINUX_PRETTY_NAME /etc/os-release "PRETTY_NAME=" "="
     get_entry LINUX_ID /etc/os-release "ID=" "="
   fi
 
   LINUX_KERNEL=$(uname -r)
-  LINUX_GLIBC_VERSION=$(ldd --version| head -1 | rev | cut -f1 -d' ' | rev 2> /dev/null)
+  if [ ! -x /sbin/apk ]; then
+    LINUX_GLIBC_VERSION=$(ldd --version | head -1 | awk '{print $NF}')
+  fi
   LINUX_ARCH==$(uname -m)
   LINUX_UPTIME=$( awk '{x=$1/86400;y=($1%86400)/3600;z=($1%3600)/60} {printf("%d day, %d hour %d min\n",x,y,z)}' /proc/uptime )
   LINUX_LOAD_AVG=$(awk -F " " '{printf $1 "  " $2 "  " $3}' /proc/loadavg)
 
   if [ -e /usr/bin/hostname ]; then
-    LINUX_HOSTNAME=$(/usr/bin/hostname --fqdn)
+    LINUX_HOSTNAME=$(/usr/bin/hostname --fqdn 2>/dev/null)
 
     if [ -z "$LINUX_HOSTNAME" ]; then
-      LINUX_HOSTNAME=$(/usr/bin/hostname)
+      LINUX_HOSTNAME=$(/usr/bin/hostname 2>/dev/null)
     fi
   else
     LINUX_HOSTNAME=$(cat /proc/sys/kernel/hostname)
@@ -250,11 +256,26 @@ print_infos()
   printf "Linux OS      :      $LINUX_PRETTY_NAME\n"
   printf "Linux Version :      $LINUX_VERSION\n"
   printf "Kernel        :      $LINUX_KERNEL\n"
-  printf "GNU libc      :      $LINUX_GLIBC_VERSION\n"
+  if [ -n "$LINUX_GLIBC_VERSION" ]; then
+    printf "GNU libc      :      $LINUX_GLIBC_VERSION\n"
+  fi
   printf "Timezone      :      $(date +"%Z %z")\n"
   printf "Locale        :      $LANG\n"
 
 
+  if [ -n "$http_proxy" ]; then
+    if [ -n "$https_proxy" ]; then
+      printf "HTTP  Proxy   :      $http_proxy\n"
+    else
+      printf "HTTP Proxy    :      $http_proxy\n"
+    fi
+  fi
+
+  if [ -n "$https_proxy" ]; then
+    printf "HTTPS Proxy   :      $https_proxy\n"
+  fi
+
+  printf "\n"
   if [ -n "$LINUX_VIRT" ]; then
     printf "Virt          :      $LINUX_VIRT\n"
   fi
@@ -295,6 +316,14 @@ print_infos()
       printf "DomDownload   :      $DOMINO_DOWNLOAD_VER\n"
   else
       printf "DomDownload   :      [not installed]\n"
+  fi
+
+  DOMINOCTL_VER=$(dominoctl --version 2> /dev/null)
+
+  if [ -n "$DOMINOCTL_VER" ]; then
+      printf "DominoCtl     :      $DOMINOCTL_VER\n"
+  else
+      printf "DominoCtl     :      [not installed]\n"
   fi
 
   printf "\n"

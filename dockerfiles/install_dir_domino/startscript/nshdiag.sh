@@ -163,8 +163,18 @@ log_file ()
 
 print_file()
 {
+
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
   if [ ! -e "$1" ]; then
-    echo "File does not exist"
+    echo "File does not exist: $1"
+    return 0
+  fi
+
+  if [ ! -r "$1" ]; then
+    echo "Cannot read file: $1"
     return 0
   fi
 
@@ -192,7 +202,7 @@ get_file_age()
 
 showfile()
 {
-  print_file "$1" "$2"
+  print_file "$1"
 }
 
 
@@ -246,7 +256,7 @@ tar_files()
       ! -name "domdiag_*" \
       -print0 > "$DOMINO_DIAG_TMP_FILE_LIST"
 
-  tar --null -T "$DOMINO_DIAG_TMP_FILE_LIST" -czf "$DOMINO_DIAG_TAR"
+  tar --null --warning=no-file-changed --ignore-failed-read -T "$DOMINO_DIAG_TMP_FILE_LIST" -czf "$DOMINO_DIAG_TAR"
 
   tr '\0' '\n' < "$DOMINO_DIAG_TMP_FILE_LIST" |
   while IFS= read -r file; do
@@ -313,6 +323,11 @@ collect_diag()
     echo "Log already collected: $DOMINO_DIAG_TAR"
     return 1
   fi
+
+  DATE_STR=$(LANG=C date +"%Y_%m_%d@%H_%M_%S")
+  DOMINO_DIAG_LOG="$DIAG_DIRECTORY/domdiag_${DATE_STR}.log"
+  DOMINO_DIAG_TMP_FILE_LIST="$DIAG_DIRECTORY/domdiag_${DATE_STR}.files"
+  DOMINO_DIAG_TRACE_FILE="$DIAG_DIRECTORY/domdiag_trace_${DATE_STR}.log"
 
   DOMINO_DIAG_TAR="$DIAG_DIRECTORY/domdiag_${DIAG_SERVER_NAME}_${DATE_STR}.taz"
 
@@ -1287,7 +1302,11 @@ if [ ! -e "$LAST_NSD" ]; then
 fi
 
 if [ -z "$DIAG_HOSTNAME" ]; then
-  DIAG_HOSTNAME=$(hostname -f)
+  DIAG_HOSTNAME=$(hostname -f 2>/dev/null)
+
+  if [ -z "$DIAG_HOSTNAME" ]; then
+    DIAG_HOSTNAME=$(hostname 2>/dev/null)
+  fi
 fi
 
 if [ -z "$DOMINO_DIAG_DAYS" ]; then

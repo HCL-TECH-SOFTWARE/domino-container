@@ -2,9 +2,9 @@
 
 ###########################################################################
 # Linux configuration JSON based script                                   #
-# Version 1.0.0 02.01.2022                                                #
+# Version 1.0.1 09.10.2023                                                #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2022                                #
+# (C) Copyright Daniel Nashed/NashCom 2023                                #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -316,7 +316,7 @@ DownloadConfig()
 
   # Use server's domain for target URL, if not specified
   if [ -z "$URL" ]; then
-    DOMAIN=$(hostname -d)
+    DOMAIN=$(hostname -d 2>/dev/null)
     if [ -n "$DOMAIN" ]; then
       URL=https://$DOMAIN/.well-known/domino.cfg
     fi
