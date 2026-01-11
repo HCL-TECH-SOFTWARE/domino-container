@@ -387,7 +387,7 @@ upload_file()
       exit 1
     fi
 
-    CURL_RESULT=$(curl -s -S -u "$WEBDAV_PUBLIC_SHARE:$WEBDAV_PASSWORD" -T "$DOMINO_DIAG_ARCHIVE_FILE" "$WEBDAV_URL/$FILE_NAME" 2>&1)
+    CURL_RESULT=$(curl -s -S --fail -u "$WEBDAV_PUBLIC_SHARE:$WEBDAV_PASSWORD" -T "$DOMINO_DIAG_ARCHIVE_FILE" "$WEBDAV_URL/$FILE_NAME" 2>&1)
     rc=$?
 
     if [ $rc -eq 0 ] && [ -z "$CURL_RESULT" ]; then
@@ -503,9 +503,9 @@ edit_config()
     echo >> "$DOM_DIAG_COLLECT_CFG"
     echo "# --- WebDav config ---" >> "$DOM_DIAG_COLLECT_CFG"
     echo >> "$DOM_DIAG_COLLECT_CFG"
-    echo "#WEBDAV_URL=" >> "$DOM_DIAG_COLLECT_CFG"
-    echo "#WEBDAV_PASSWORD=" >> "$DOM_DIAG_COLLECT_CFG"
-    echo "#WEBDAV_PUBLIC_SHARE=" >> "$DOM_DIAG_COLLECT_CFG"
+    echo "#WEBDAV_URL=https://webdav.example.com/public.php/webdav" >> "$DOM_DIAG_COLLECT_CFG"
+    echo "#WEBDAV_PASSWORD=password" >> "$DOM_DIAG_COLLECT_CFG"
+    echo "#WEBDAV_PUBLIC_SHARE=xyz" >> "$DOM_DIAG_COLLECT_CFG"
 
     echo >> "$DOM_DIAG_COLLECT_CFG"
     echo "# --- SCP config ---" >> "$DOM_DIAG_COLLECT_CFG"
@@ -518,6 +518,11 @@ edit_config()
     echo >> "$DOM_DIAG_COLLECT_CFG"
     echo "#SEVENZIP_ENABLED=yes" >> "$DOM_DIAG_COLLECT_CFG"
     echo "#SEVENZIP_PASSWORD=@" >> "$DOM_DIAG_COLLECT_CFG"
+    echo >> "$DOM_DIAG_COLLECT_CFG"
+    echo "# --- Mail config ---" >> "$DOM_DIAG_COLLECT_CFG"
+    echo >> "$DOM_DIAG_COLLECT_CFG"
+    echo "#DIAG_RCPT=admin@example.com" >> "$DOM_DIAG_COLLECT_CFG"
+    echo "#DIAG_FROM" >> "$DOM_DIAG_COLLECT_CFG"
     echo >> "$DOM_DIAG_COLLECT_CFG"
 
   fi

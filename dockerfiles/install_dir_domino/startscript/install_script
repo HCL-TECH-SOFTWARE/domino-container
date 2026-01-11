@@ -83,7 +83,7 @@ if [ -z "$DOMINO_DATA_PATH" ]; then
 fi
 
 DOMINO_SCRIPT_BIN=/usr/bin/domino
-DOMINO_DIAG_COLLECT_BIN=/usr/bin/domdiagcollect.sh
+DOMINO_DIAG_COLLECT_BIN=/usr/bin/domdiagcollect
 
 #DOMINO_DEBUG_MODE="yes"
 
