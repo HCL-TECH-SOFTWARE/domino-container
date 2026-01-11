@@ -32,13 +32,40 @@ DOMINO_DOCKER_SCRIPT=entrypoint.sh
 DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
 DONT_TOUCH_THIS_STANDARD_USER=notes
 
-DOMINO_SCRIPT_VERSION=4.0.3
 
 # if you really really need to, change this and all files will be patched
 
 if [ -z "$DOMINO_START_SCRIPT_DIR" ]; then
   DOMINO_START_SCRIPT_DIR=/opt/nashcom/startscript
 fi
+
+CURRENT_VERSION=$(domino --version 2>/dev/null)
+
+DOMINO_SCRIPT_VERSION=$($SCRIPT_DIR/rc_domino_script --version)
+
+if [ "$CURRENT_VERSION" = "$DOMINO_SCRIPT_VERSION" ]; then
+
+  if [ "$1" = "--check-version" ]; then
+    exit 0
+  fi
+  
+  if [ "$PARAM1" = "upd" ] || [ "$PARAM1" = "force" ] ; then
+    echo
+    echo "Reinstalling version: $CURRENT_VERSION"
+    echo
+  else
+    echo
+    echo "Already latest Domino Start Script version installed: $CURRENT_VERSION"
+    echo
+    exit 0
+  fi
+
+else
+  if [ "$1" = "--check-version" ]; then
+    exit 1
+  fi
+fi
+
 
 if [ -z "$DOMINO_USER" ]; then
   DOMINO_USER=notes
@@ -56,6 +83,7 @@ if [ -z "$DOMINO_DATA_PATH" ]; then
 fi
 
 DOMINO_SCRIPT_BIN=/usr/bin/domino
+DOMINO_DIAG_COLLECT_BIN=/usr/bin/domdiagcollect.sh
 
 #DOMINO_DEBUG_MODE="yes"
 
@@ -349,7 +377,10 @@ install_file "$START_SCRIPT_DIR/rc_domino_readme.txt" "$DOMINO_START_SCRIPT_DIR/
 
 install_file "$START_SCRIPT_DIR/nshinfo.sh" "$DOMINO_START_SCRIPT_DIR/nshinfo.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/nshdiag.sh" "$DOMINO_START_SCRIPT_DIR/nshdiag.sh" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/domdiagcollect.sh" "$DOMINO_DIAG_COLLECT_BIN" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/nsh-update-check.sh" "$DOMINO_START_SCRIPT_DIR/nsh-update-check.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/DominoOneTouchSetup.sh" "$DOMINO_START_SCRIPT_DIR/DominoOneTouchSetup.sh" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/domsetup.sh" "$DOMINO_START_SCRIPT_DIR/domsetup.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/nshcfg.sh" "$DOMINO_START_SCRIPT_DIR/nshcfg.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/domino.cfg" "$DOMINO_START_SCRIPT_DIR/domino-example.cfg" $ROOT_USER $ROOT_GROUP 755
 
@@ -416,10 +447,14 @@ fi
 if [ ${LARCH} = "linux" ]; then
   if [ -e /etc/systemd/system ]; then
 
+    if [ -e "etc/systemd/system/$DOMINO_SYSTEMD_NAME" ]; then
+      DOMINO_SYSTEMD_SERVICE_STATUS=INSTALLED
+    fi
+
     if [ "$PARAM1" = "upd" ]; then
-      install_file $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
+      install_file "$START_SCRIPT_DIR/domino.service" "/etc/systemd/system/$DOMINO_SYSTEMD_NAME" $ROOT_USER $ROOT_GROUP 644
     else
-      install_file_noupdate $START_SCRIPT_DIR/domino.service /etc/systemd/system/$DOMINO_SYSTEMD_NAME $ROOT_USER $ROOT_GROUP 644
+      install_file_noupdate "$START_SCRIPT_DIR/domino.service" "/etc/systemd/system/$DOMINO_SYSTEMD_NAME" $ROOT_USER $ROOT_GROUP 644
     fi
   fi
 
@@ -431,7 +466,12 @@ if [ ${LARCH} = "linux" ]; then
     echo "Info: System is not running systemd"
   else
     systemctl daemon-reload
-    $DOMINO_SCRIPT_BIN service add
+
+    if [ -z "DOMINO_SYSTEMD_SERVICE_STATUS" ] || [ "$PARAM1" = "upd" ] ; then
+      "$DOMINO_SCRIPT_BIN" service add
+    else
+      echo "Info: Not updating service status: $DOMINO_SYSTEMD_NAME"
+    fi
   fi
 
 fi
