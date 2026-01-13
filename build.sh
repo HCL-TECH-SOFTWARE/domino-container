@@ -448,6 +448,8 @@ dump_config()
   echo "PROD_FP_DOWNLOAD_FILE  : [$PROD_FP_DOWNLOAD_FILE]"
   echo "PROD_HF_DOWNLOAD_FILE  : [$PROD_HF_DOWNLOAD_FILE]"
   echo "TRAVELER_DOWNLOAD_FILE : [$TRAVELER_DOWNLOAD_FILE]"
+  echo "VERSE_DOWNLOAD_FILE    : [$VERSE_DOWNLOAD_FILE]"
+  echo "NOMAD_DOWNLOAD_FILE    : [$NOMAD_DOWNLOAD_FILE]"
   echo "RESTAPI_DOWNLOAD_FILE  : [$RESTAPI_DOWNLOAD_FILE]"
   echo "ONTIME_DOWNLOAD_FILE   : [$ONTIME_DOWNLOAD_FILE]"
   echo "ONTIME_VERSION         : [$ONTIME_VERSION]"
@@ -1343,6 +1345,8 @@ build_domino()
     --build-arg PROD_HF_DOWNLOAD_FILE=$PROD_HF_DOWNLOAD_FILE \
     --build-arg TRAVELER_DOWNLOAD_FILE=$TRAVELER_DOWNLOAD_FILE\
     --build-arg RESTAPI_DOWNLOAD_FILE=$RESTAPI_DOWNLOAD_FILE\
+    --build-arg VERSE_DOWNLOAD_FILE=$VERSE_DOWNLOAD_FILE\
+    --build-arg NOMAD_DOWNLOAD_FILE=$NOMAD_DOWNLOAD_FILE\
     --build-arg ONTIME_DOWNLOAD_FILE=$ONTIME_DOWNLOAD_FILE\
     --build-arg ONTIME_VERSION=$ONTIME_VERSION\
     --build-arg DOCKER_TZ=$DOCKER_TZ \
@@ -1713,7 +1717,7 @@ check_all_domdownload()
     $DOMDOWNLOAD_BIN -product=domino -platform=linux -type=langpack -lang=$DOMLP_LANG -ver=$PROD_VER $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
-  if [ -n "$VERSE_VERSION" ]; then
+  if [ -n "$VERSE_VERSION" ] && [ -z "$VERSE_DOWNLOAD_FILE" ]; then
     $DOMDOWNLOAD_BIN -product=verse -platform=linux -ver=$VERSE_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
@@ -1721,7 +1725,7 @@ check_all_domdownload()
     $DOMDOWNLOAD_BIN -product=restapi -platform=linux -ver=$DOMRESTAPI_VER $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
-  if [ -n "$NOMAD_VERSION" ]; then
+  if [ -n "$NOMAD_VERSION" ] && [ -z "$NOMAD_DOWNLOAD_FILE" ]; then
     $DOMDOWNLOAD_BIN -product=nomad -platform=linux -ver=$NOMAD_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
@@ -2064,7 +2068,7 @@ check_software_status()
     check_software_file "leap"
     check_software_file "safelinx"
 
-    if [ -n "$VERSE_VERSION" ]; then
+    if [ -n "$VERSE_VERSION" ] && [ -z "$VERSE_DOWNLOAD_FILE" ]; then
       check_software_file "verse" "$VERSE_VERSION"
     fi
 
@@ -2072,15 +2076,15 @@ check_software_status()
       check_software_file "domlp" "$DOMLP_VER"
     fi
 
-    if [ -n "$DOMRESTAPI_VER" ] && [ -z "$RESTAPI_DOWNLOAD_FILE" ] ; then
+    if [ -n "$DOMRESTAPI_VER" ] && [ -z "$RESTAPI_DOWNLOAD_FILE" ]; then
       check_software_file "domrestapi" "$DOMRESTAPI_VER"
     fi
 
-    if [ -n "$NOMAD_VERSION" ]; then
+    if [ -n "$NOMAD_VERSION" ] &&  [ -z "$NOMAD_DOWNLOAD_FILE" ]; then
       check_software_file "nomad" "$NOMAD_VERSION"
     fi
 
-    if [ -n "$TRAVELER_VERSION" ] && [ -z "$TRAVELER_DOWNLOAD_FILE" ] ; then
+    if [ -n "$TRAVELER_VERSION" ] && [ -z "$TRAVELER_DOWNLOAD_FILE" ]; then
       check_software_file "traveler" "$TRAVELER_VERSION"
     fi
 
@@ -2247,7 +2251,7 @@ check_software_status()
       fi
     fi
 
-    if [ -n "$VERSE_VERSION" ]; then
+    if [ -n "$VERSE_VERSION" ] && [ -z "$VERSE_DOWNLOAD_FILE" ]; then
       check_software_file "verse" "$VERSE_VERSION"
     fi
 
@@ -2259,7 +2263,7 @@ check_software_status()
       check_software_file "domrestapi" "$DOMRESTAPI_VER"
     fi
 
-    if [ -n "$NOMAD_VERSION" ]; then
+    if [ -n "$NOMAD_VERSION" ] && [ -z "$NOMAD_DOWNLOAD_FILE" ]; then
       check_software_file "nomad" "$NOMAD_VERSION"
     fi
 
@@ -3733,6 +3737,10 @@ for a in "$@"; do
       exit 0
       ;;
 
+    -verse_download=*)
+      VERSE_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
     -verse*|+verse*)
       VERSE_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
@@ -3747,6 +3755,11 @@ for a in "$@"; do
       if [ -z "$NOMADWEB_VERSION" ]; then
         get_current_addon_version nomadweb NOMADWEB_VERSION
       fi
+      ;;
+
+
+    -nomad_download=*)
+      NOMAD_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -nomad*|+nomad*)

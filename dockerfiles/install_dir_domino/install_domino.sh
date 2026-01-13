@@ -404,8 +404,16 @@ install_verse()
 
   header "$ADDON_NAME Installation"
 
-  get_download_name $ADDON_NAME $ADDON_VER
-  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+  # If explicitly specified just download and skip calculating hash
+  if [ -n "$VERSE_DOWNLOAD_FILE" ]; then
+    echo "Info: Not checking download hash for [$VERSE_DOWNLOAD_FILE]"
+    DOWNLOAD_NAME="$VERSE_DOWNLOAD_FILE"
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME" . nohash
+
+  else
+    get_download_name $ADDON_NAME $ADDON_VER
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$ADDON_NAME"
+  fi
 
   header "Installing $ADDON_NAME $ADDON_VER"
 
@@ -447,11 +455,18 @@ install_nomad()
 
   header "$ADDON_NAME Installation"
 
-  get_download_name $ADDON_NAME $ADDON_VER
-
   header "Installing $ADDON_NAME $ADDON_VER"
 
-  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory"
+  # If explicitly specified just download and skip calculating hash
+  if [ -n "$NOMAD_DOWNLOAD_FILE" ]; then
+    echo "Info: Not checking download hash for [$NOMAD_DOWNLOAD_FILE]"
+    DOWNLOAD_NAME="$NOMAD_DOWNLOAD_FILE"
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory" . nohash
+
+  else
+    get_download_name $ADDON_NAME $ADDON_VER
+    download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory"
+  fi
 
   log_space Installed $ADDON_NAME
 }
@@ -1555,6 +1570,8 @@ echo "PROD_DOWNLOAD_FILE      = [$PROD_DOWNLOAD_FILE]"
 echo "PROD_FP_DOWNLOAD_FILE   = [$PROD_FP_DOWNLOAD_FILE]"
 echo "PROD_HF_DOWNLOAD_FILE   = [$PROD_HF_DOWNLOAD_FILE]"
 echo "TRAVELER_DOWNLOAD_FILE  = [$TRAVELER_DOWNLOAD_FILE]"
+echo "VERSE_DOWNLOAD_FILE     = [$VERSE_DOWNLOAD_FILE]"
+echo "NOMAD_DOWNLOAD_FILE     = [$NOMAD_DOWNLOAD_FILE]"
 echo "RESTAPI_DOWNLOAD_FILE   = [$RESTAPI_DOWNLOAD_FILE]"
 echo "ONTIME_DOWNLOAD_FILE    = [$ONTIME_DOWNLOAD_FILE]"
 echo "LINUX_PKG_ADD           = [$LINUX_PKG_ADD]"
