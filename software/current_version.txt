@@ -18,7 +18,7 @@ tika|3.2.3
 borg|1.4.1
 domborg|0.9.7
 node_exporter|1.10.2
-domprom|0.9.2
+domprom|1.0.0
 iqsuite|28.1
 mysql-jdbc|9.4.0
 postgresql-jdbc|42.7.8
