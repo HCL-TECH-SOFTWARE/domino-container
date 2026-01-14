@@ -821,6 +821,24 @@ fi
 sleep 5
 
 
+# Start Domino Prometheus Exporter Server task
+
+if [ -n "$domprom_binary" ]; then
+  # Wait 10 sec to process the last server command to avoid console buffer errors.
+  sleep 10
+  header "Starting Domino Prometheus Exporter"
+  server_console_cmd "load domprom"
+fi
+
+
+# Start Prometheus Node Exporter
+
+if [ -n "$node_exporter_binary" ]; then
+  header "Starting Prometheus Node Exporter"
+  $CONTAINER_CMD exec $CONTAINER_NAME /opt/prometheus/node_exporter/node_exporter --collector.disable-defaults --collector.textfile --collector.textfile.directory=/local/notesdata/domino/stats > /tmp/node-exporter.log 2>&1 &
+fi
+
+
 # Test if HTTP is running
 
 ERROR_MSG=
@@ -1139,6 +1157,31 @@ fi
 test_result "startscript.archivelog" "Start Script archivelog" "" "$ERROR_MSG"
 
 
+# Test if Domino Prometheus Exporter is available
+
+if [ -n "$domprom_binary" ]; then
+
+  node_exporter_response=$($CONTAINER_CMD exec $CONTAINER_NAME curl $CURL_OPTIONS -s 'http://automation.notes.lab:9100/metrics' 2>&1)
+  node_exporter_check=$(echo "$node_exporter_response" | grep "Domino Prometheus Exporter build version $DOMPROM_IMAGE_VERSION")
+
+  if [ -n "$node_exporter_check" ]; then
+    ERROR_MSG=
+  else
+    ERROR_MSG="Invalid response from Node Exporter URL"
+    dump_var "Node Exporter Response" "$node_exporter_response"
+  fi
+
+  test_result "domprom.available" "Domino Prometheus Exporter available" "" "$ERROR_MSG"
+
+  if [ -n "$ERROR_MSG" ]; then
+    header "Tika Server Error Log"
+    cat "/tmp/node-exporter.log"
+    echo
+  fi
+
+fi
+
+
 # Test NSD call stacks via GDB
 
 ERROR_MSG=
@@ -1324,6 +1367,12 @@ fi
 echo "TIKA_VERSION: [$TIKA_VERSION]"
 
 test_result "tikaserver.available" "Check if Tika Server can be started" "" "$ERROR_MSG"
+
+if [ -n "$ERROR_MSG" ]; then
+  header "Tika Server Error Log"
+  cat "/tmp/tika.log"
+  echo
+fi
 
 
 header "Security check"
