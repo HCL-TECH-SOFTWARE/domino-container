@@ -21,5 +21,6 @@ node_exporter|1.10.2
 domprom|1.0.0
 iqsuite|28.1
 mysql-jdbc|9.4.0
+mssql-jdbc|13.2.1
 postgresql-jdbc|42.7.8
 nshmailx|1.1.0

@@ -590,16 +590,31 @@ log_addon_detected "$borg_binary" "Borg Backup"
 domborg_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/nshborg 2>/dev/null)
 log_addon_detected "$borg_binary" "Domino Borg Backup helper"
 
+
 mysql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "mysql-connector-j-*.jar" 2>/dev/null)
-log_addon_detected "$mysql_jdbc_binary" "MySQL JDBC driver for Traveler"
 
-postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "postgresql-*.jar"  2>/dev/null)
-log_addon_detected "$postgresql_jdbc_binary" "PostgreSQL JDBC driver for Traveler"
+if [ -z "$mysql_jdbc_binary" ]; then
+  mysql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "mysql-connector-j-*.jar" 2>/dev/null)
+fi
 
-mysql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "mysql-connector-j-*.jar" 2>/dev/null)
 log_addon_detected "$mysql_jdbc_binary" "MySQL JDBC driver for Domino"
 
-postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "postgresql-*.jar"  2>/dev/null)
+
+mssql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "mssql-jdbc-*.jre8.jar" 2>/dev/null)
+
+if [ -z "$mssql_jdbc_binary" ]; then
+  mssql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "mssql-jdbc-*.jre8.jar" 2>/dev/null)
+fi
+
+log_addon_detected "$mssql_jdbc_binary" "Microsoft JDBC driver for Domino"
+
+
+postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "postgresql-*.jar"  2>/dev/null)
+
+if [ -z "$postgresql_jdbc_binary" ]; then
+  postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "postgresql-*.jar"  2>/dev/null)
+fi
+
 log_addon_detected "$postgresql_jdbc_binary" "PostgreSQL JDBC driver for Domino"
 
 
@@ -732,6 +747,14 @@ do
       MYSQL_JDBC_IMAGE_VERSION="$ADDON_VERSION"
 
       if [ -z "$mysql_jdbc_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    mssql-jdbc)
+      MSSQL_JDBC_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$mssql_jdbc_binary" ]; then
         ERROR_MSG="$ADDON_NAME binary not found"
       fi
       ;;

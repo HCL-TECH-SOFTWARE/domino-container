@@ -468,9 +468,10 @@ dump_config()
   echo "CAPI_VERSION           : [$CAPI_VERSION]"
   echo "NOMADWEB_VERSION       : [$NOMADWEB_VERSION]"
   echo "DOMIQ                  : [$DOMIQ]"
-  echo "MYSQL_JDBC_VERSION     : [$MYSQL_JDBC_VERSION]"
   echo "MYSQL_INSTALL          : [$MYSQL_INSTALL]"
   echo "MSSQL_INSTALL          : [$MSSQL_INSTALL]"
+  echo "MYSQL_JDBC_VERSION     : [$MYSQL_JDBC_VERSION]"
+  echo "MSSQL_JDBC_VERSION     : [$MSSQL_JDBC_VERSION]"
   echo "POSTGRESQL_JDBC_VERSION: [$POSTGRESQL_JDBC_VERSION]"
   echo "BORG_VERSION           : [$BORG_VERSION]"
   echo "DOMBORG_VERSION        : [$DOMBORG_VERSION]"
@@ -1289,6 +1290,10 @@ check_addon_label()
     add_addon_label "mysql-jdbc" "$MYSQL_JDBC_VERSION"
   fi
 
+  if [ -n "$MSSQL_JDBC_VERSION" ]; then
+    add_addon_label "mssql-jdbc" "$MSSQL_JDBC_VERSION"
+  fi
+
   if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
     add_addon_label "postgresql-jdbc" "$POSTGRESQL_JDBC_VERSION"
   fi
@@ -1371,6 +1376,7 @@ build_domino()
     --build-arg NSHMAILX_VERSION="$NSHMAILX_VERSION" \
     --build-arg MYSQL_INSTALL="$MYSQL_INSTALL" \
     --build-arg MYSQL_JDBC_VERSION="$MYSQL_JDBC_VERSION" \
+    --build-arg MSSQL_JDBC_VERSION="$MSSQL_JDBC_VERSION" \
     --build-arg POSTGRESQL_JDBC_VERSION="$POSTGRESQL_JDBC_VERSION" \
     --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
     --build-arg LINUX_PKG_REMOVE="$LINUX_PKG_REMOVE" \
@@ -1747,6 +1753,10 @@ check_all_domdownload()
 
   if [ -n "$MYSQL_JDBC_VERSION" ]; then
     $DOMDOWNLOAD_BIN -product=mysql-jdbc -platform=linux -ver=$MYSQL_JDBC_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$MSSQL_JDBC_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=mssql-jdbc -platform=linux -ver=$MSSQL_JDBC_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
   if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
@@ -2152,6 +2162,12 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$MSSQL_JDBC_VERSION" ]; then
+      if [ ! "$MSSQL_JDBC_VERSION" = "yes" ]; then
+        check_software_file "mssql-jdbc" "$MSSQL_JDBC_VERSION"
+      fi
+    fi
+
     if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
       if [ ! "$POSTGRESQL_JDBC_VERSION" = "yes" ]; then
         check_software_file "postgresql-jdbc" "$POSTGRESQL_JDBC_VERSION"
@@ -2332,6 +2348,12 @@ check_software_status()
     if [ -n "$MYSQL_JDBC_VERSION" ]; then
       if [ ! "$MYSQL_JDBC_VERSION" = "yes" ]; then
         check_software_file "mysql-jdbc" "$MYSQL_JDBC_VERSION"
+      fi
+    fi
+
+    if [ -n "$MSSQL_JDBC_VERSION" ]; then
+      if [ ! "$MSSQL_JDBC_VERSION" = "yes" ]; then
+        check_software_file "mssql-jdbc" "$MSSQL_JDBC_VERSION"
       fi
     fi
 
@@ -2906,6 +2928,7 @@ load_conf()
   local BORG_SELECT=$BORG_VERSION
   local TIKA_SELECT=$TIKA_VERSION
   local MYSQL_JDBC_SELECT=$MYSQL_JDBC_VERSION
+  local MSSQL_JDBC_SELECT=$MSSQL_JDBC_VERSION
   local POSTGRESQL_JDBC_VERSION_SELECT=$POSTGRESQL_JDBC_VERSION
   local IQSUITE_SELECT=$IQSUITE_VERSION
 
@@ -2944,6 +2967,7 @@ load_conf()
   get_current_addon_version domborg SELECT_DOMBORG_VERSION
   get_current_addon_version tika SELECT_TIKA_VERSION
   get_current_addon_version mysql-jdbc SELECT_MYSQL_JDBC_VERSION
+  get_current_addon_version mssql-jdbc SELECT_MSSQL_JDBC_VERSION
   get_current_addon_version postgresql-jdbc SELECT_POSTGRESQL_JDBC_VERSION
   get_current_addon_version iqsuite SELECT_IQSUITE_VERSION
   get_current_addon_version nshmailx SELECT_NSHMAILX_VERSION
@@ -2976,6 +3000,7 @@ load_conf()
   if [ "$LATESTSEL" = "$BORG_VERSION" ];            then BORG_VERSION=$SELECT_BORG_VERSION; DOMBORG_VERSION=$SELECT_DOMBORG_VERSION; fi
   if [ "$LATESTSEL" = "$TIKA_VERSION" ];            then TIKA_VERSION=$SELECT_TIKA_VERSION; fi
   if [ "$LATESTSEL" = "$MYSQL_JDBC_VERSION" ];      then MYSQL_JDBC_VERSION=$SELECT_MYSQL_JDBC_VERSION; fi
+  if [ "$LATESTSEL" = "$MSSQL_JDBC_VERSION" ];      then MSSQL_JDBC_VERSION=$SELECT_MSSQL_JDBC_VERSION; fi
   if [ "$LATESTSEL" = "$POSTGRESQL_JDBC_VERSION" ]; then POSTGRESQL_JDBC_VERSION=$SELECT_POSTGRESQL_JDBC_VERSION; fi
   if [ "$LATESTSEL" = "$IQSUITE_VERSION" ];         then IQSUITE_VERSION=$SELECT_IQSUITE_VERSION; fi
   if [ "$LATESTSEL" = "$NSHMAILX_VERSION" ];        then NSHMAILX_VERSION=$SELECT_NSHMAILX_VERSION; fi
@@ -2993,6 +3018,7 @@ load_conf()
   if [ -n "$BORG_SELECT" ];              then BORG_VERSION=$BORG_SELECT; fi
   if [ -n "$TIKA_SELECT" ];              then TIKA_VERSION=$TIKA_SELECT; fi
   if [ -n "$MYSQL_JDBC_SELECT" ];        then MYSQL_JDBC_VERSION=$MYSQL_JDBC_SELECT; fi
+  if [ -n "$MSSQL_JDBC_SELECT" ];        then MSSQL_JDBC_VERSION=$MSSQL_JDBC_SELECT; fi
   if [ -n "$IQSUITE_SELECT" ];           then IQSUITE_VERSION=$IQSUITE_SELECT; fi
   if [ -n "$NSHMAILX_SELECT" ];          then NSHMAILX_VERSION=$NSHMAILX_SELECT; fi
   if [ -n "$NODE_EXPORTER_SELECT" ];     then NODE_EXPORTER_VERSION=$NODE_EXPORTER_SELECT; fi
@@ -3061,6 +3087,7 @@ write_conf()
   if [ -n "$DOMPROM_VERSION" ];  then echo "DOMPROM_VERSION=$LATESTSEL"             >> "$BUILD_CONF"; fi
 
   if [ -n "$MYSQL_JDBC_VERSION" ];      then echo "MYSQL_JDBC_VERSION=$LATESTSEL"      >> "$BUILD_CONF"; fi
+  if [ -n "$MSSQL_JDBC_VERSION" ];      then echo "MSSQL_JDBC_VERSION=$LATESTSEL"      >> "$BUILD_CONF"; fi
   if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then echo "POSTGRESQL_JDBC_VERSION=$LATESTSEL" >> "$BUILD_CONF"; fi
   if [ -n "$NODE_EXPORTER_VERSION" ];   then echo "NODE_EXPORTER_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
 
@@ -3113,6 +3140,7 @@ edit_conf()
   TIKA_VERSION=
   IQSUITE_VERSION=
   MYSQL_JDBC_VERSION=
+  MSSQL_JDBC_VERSION=
   POSTGRESQL_JDBC_VERSION=
 
   load_conf
@@ -3539,6 +3567,7 @@ install_domino_native()
   export PROD_HF
   export TIKA_VERSION
   export MYSQL_JDBC_VERSION
+  export MSSQL_JDBC_VERSION
   export POSTGRESQL_JDBC_VERSION
   export IQSUITE_VERSION
   export VERSE_VERSION
@@ -3795,6 +3824,14 @@ for a in "$@"; do
 
       if [ -z "$MYSQL_JDBC_VERSION" ]; then
         get_current_addon_version mysql-jdbc MYSQL_JDBC_VERSION
+      fi
+      ;;
+
+    -mssql-jdbc*|+mssql-jdbc*)
+      MSSQL_JDBC_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$MSSQL_JDBC_VERSION" ]; then
+        get_current_addon_version mysql-jdbc MSSQL_JDBC_VERSION
       fi
       ;;
 

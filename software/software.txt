@@ -132,6 +132,7 @@ domprom|1.0.0|domprom-1.0.0-linux-amd64.taz,https://github.com/nashcom/domino-gr
 iqsuite|27.1.1|iQ.Suite-27.1.1.10939-Linux-Domino14-64bit.tar.gz|x|998c5cfb498ae5b8036a2a4d44aacfc5d94006559c3e247a1e83b8c5c0f57729
 iqsuite|28.1|iQ.Suite-28.1-Linux-Domino14-64-Bit.tar.gz|x|442739a02b15a06705d6b0f3749ec26c923c4f710d0b1348fd6b6f3e40da88a6
 mysql-jdbc|9.4.0|mysql-connector-j-9.4.0.tar.gz,https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-j-9.4.0.tar.gz|x|83d76179dc59d4aa0035ad2f7ef8c6a0e8c43a169dd0c2bf808feb6ed83fe4f2
+mssql-jdbc|13.2.1|sqljdbc_13.2.1.0_enu.tar.gz,https://download.microsoft.com/download/b66307a5-11c6-42c8-a039-5c4646f6f685/sqljdbc_13.2.1.0_enu.tar.gz|x|1b57f8cfbad16a523f833fc813264fe9219554814f04cd35d15fba60aadc079c
 postgresql-jdbc|42.7.8|postgresql-42.7.8.jar,https://jdbc.postgresql.org/download/postgresql-42.7.8.jar|x|2a32a9dcbc42d67a50ad3a0de5efd102c8d2be46720045f2cbd6689f160ab7c7
 nshmailx|1.1.0|nshmailx-1.1.0,https://github.com/nashcom/nshmailx/releases/download/v1.1.0/nshmailx-1.1.0|x|66f1e7498b43c5dc77577175e278ee5a04383687e6a66eabb9aac515041dd659
 

@@ -1010,6 +1010,48 @@ install_postgresql-jdbc()
 }
 
 
+install_mssql_jdbc()
+{
+  if [ -z "$MSSQL_JDBC_VERSION" ]; then
+    return 0
+  fi
+
+  header "Installing Microsoft SQL JDBC driver $MSSQL_JDBC_VERSION"
+
+  cd "$INSTALL_DIR"
+
+  MSSQL_JDBC_DIR=mssql_jdbc_install_dir
+
+  mkdir -p "$MSSQL_JDBC_DIR"
+
+  get_download_name mssql-jdbc "$MSSQL_JDBC_VERSION"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find Microsoft SQL JDBC driver $MSSQL_JDBC_VERSION"
+    return 0
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$MSSQL_JDBC_DIR"
+
+  local JDBC_DRIVER_BIN=$(find "$MSSQL_JDBC_DIR" -type f -name "mssql-jdbc-*.jre8.jar")
+
+  if [ -z "$JDBC_DRIVER_BIN" ]; then
+     echo "Microsoft SQL JDBC driver not found"
+     dump_directory "$MSSQL_JDBC_DIR"
+     exit 1
+  fi
+
+  chmod 555 "$JDBC_DRIVER_BIN"
+  cp -p "$JDBC_DRIVER_BIN" "$JVM_LIB_INSTALL_DIRECTORY"
+
+  if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
+    cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
+  fi
+
+  remove_directory "$MSSQL_JDBC_DIR"
+}
+
+
 container_set_timezone()
 {
   if [ -z "$DOCKER_TZ" ]; then
@@ -1584,6 +1626,7 @@ echo "BUILD_SCRIPT_OPTIONS    = [$BUILD_SCRIPT_OPTIONS]"
 echo "BORG_VERSION            = [$BORG_VERSION]"
 echo "NSHMAILX_VERSION        = [$NSHMAILX_VERSION]"
 echo "MYSQL_JDBC_VERSION      = [$MYSQL_JDBC_VERSION]"
+echo "MSSQL_JDBC_VERSION      = [$MSSQL_JDBC_VERSION]"
 echo "POSTGRESQL_JDBC_VERSION = [$POSTGRESQL_JDBC_VERSION]"
 echo "DOMPROM_VERSION         = [$DOMPROM_VERSION]"
 echo "OPENSSL_INSTALL         = [$OPENSSL_INSTALL]"
@@ -1749,6 +1792,7 @@ install_ontime "$ONTIME_VERSION"
 # Install JDBC drivers if requested
 
 install_mysql_jdbc
+install_mssql_jdbc
 install_postgresql-jdbc
 
 # Install Domino Leap if requested
