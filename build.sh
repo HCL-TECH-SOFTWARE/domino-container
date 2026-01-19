@@ -28,7 +28,7 @@ CHECK_SOFTWARE=yes
 
 CONTAINER_BUILD_SCRIPT_VERSION=2.4.5
 
-# OnTime version
+# Ontime version
 SELECT_ONTIME_VERSION_DOMINO14=2.3.0
 SELECT_ONTIME_VERSION_DOMINO145=11.7.0
 SELECT_ONTIME_VERSION_DOMINO1451=11.8.1
@@ -373,7 +373,7 @@ usage()
   echo "-capi            adds the C-API SDK/toolkit to a Domino image"
   echo "-domlp=xx        adds the specified Language Pack to the image"
   echo "-restapi         adds the Domino REST API to the image"
-  echo "-ontime          adds OnTime from Domino V14 web-kit to the image"
+  echo "-ontime          adds Ontime from Domino V14 web-kit to the image"
   echo "-domiq           adds the Domino IQ server run-time to the image"
   echo "-mysql-jdbc      adds the MySQL JDBC driver to the image"
   echo "-postgresql-jdbc adds the PostgreSQL JDBC driver to the image"
@@ -1210,7 +1210,7 @@ check_addon_label()
 {
   if [ "$DOCKER_FILE" = "dockerfile_hcl" ] || [ "$DominoResponseFile" = "domino14_full_install.properties" ]; then
 
-    # HCL container image build and full installer file: Verse, Nomad, OnTime
+    # HCL container image build and full installer file: Verse, Nomad, Ontime
     if [ -z "$VERSE_VERSION" ]; then
       add_addon_label "verse" "installed"
     fi
@@ -1223,7 +1223,7 @@ check_addon_label()
 
   elif [ "$DominoResponseFile" = "domino14_ontime_install.properties" ]; then
 
-    # OnTime is added from Domino V14 WebKit
+    # Ontime is added from Domino V14 WebKit
     add_addon_label "ontime" "$ONTIME_VERSION"
 
   elif [ -n "$ONTIME_VERSION" ]; then
@@ -2875,13 +2875,17 @@ select_domino_version()
       parse_domino_version "$DOMINO_VERSION"
       get_current_addon_version traveler SELECT_TRAVELER_VERSION
       SELECT_DOMIQ_VERSION=$PROD_VER
-      ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
+      if [ -n "$ONTIME_VERSION" ]; then
+        ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
+      fi
       ;;
 
     2)
       DOMINO_VERSION="$VER_140"
       SELECT_TRAVELER_VERSION="$VER_140"
-      ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
+      if [ -n "$ONTIME_VERSION" ]; then
+        ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
+      fi
       parse_domino_version "$DOMINO_VERSION"
       get_current_addon_version traveler SELECT_TRAVELER_VERSION
       ;;
@@ -2889,18 +2893,17 @@ select_domino_version()
     3)
       DOMINO_VERSION="$VER_1202"
       parse_domino_version "$DOMINO_VERSION"
-      # Reset OnTime for older releases
+      # Reset Ontime for older releases
       ONTIME_VERSION=
-      DominoResponseFile=
       get_current_addon_version traveler SELECT_TRAVELER_VERSION
       ;;
 
     4)
       DOMINO_VERSION="$VER_1451"
       parse_domino_version "$DOMINO_VERSION"
-      # Reset OnTime for older releases
-      ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO1451"
-      DominoResponseFile=
+      if [ -n "$ONTIME_VERSION" ]; then
+        ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO1451"
+      fi
       get_current_addon_version traveler-14.5.1 SELECT_TRAVELER_VERSION
       get_current_addon_version domiq-14.5.1 SELECT_DOMIQ_VERSION
       ;;
@@ -2909,6 +2912,14 @@ select_domino_version()
 
   # Select corresponding C-API version
   SELECT_CAPI_VERSION=$PROD_VER
+
+  # Ensure to select the right response file for Ontime
+  if [ -n "$ONTIME_VERSION" ] && [ -z "$ONTIME_DOWNLOAD_FILE" ] ; then
+     DominoResponseFile=domino14_ontime_install.properties
+  else
+     DominoResponseFile=
+  fi
+
 }
 
 
@@ -2975,6 +2986,11 @@ load_conf()
   get_current_addon_version domprom SELECT_DOMPROM_VERSION
 
   case "$PROD_VER" in
+
+    14.5.1)
+      SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO1451"
+      ;;
+
 
     14.5)
       SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
@@ -3257,7 +3273,7 @@ select_software()
     print_select "D" "HCL Domino"     "$D" "$DOMINO_VERSION"
 
     case "$PROD_VER" in
-      14*) print_select "O" "OnTime" "$O" "$ONTIME_VERSION"
+      14*) print_select "O" "Ontime" "$O" "$ONTIME_VERSION"
     esac
 
     print_select "V" "Verse"          "$V" "$VERSE_VERSION"
@@ -4445,7 +4461,7 @@ if [ "$PROD_NAME" = "domino" ] && [ -z "$DominoResponseFile" ]; then
   esac
 fi
 
-# The HCL image always uses the full Domino 14.0 install including Verse, Nomad and OnTime
+# The HCL image always uses the full Domino 14.0 install including Verse, Nomad and Ontime
 if [ "$DOCKER_FILE" = "dockerfile_hcl" ]; then
   DominoResponseFile=domino14_full_install.properties
 fi

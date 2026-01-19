@@ -562,9 +562,9 @@ lp_strings=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/late
 
 log_addon_detected "$lp_strings" "Language Pack [$lp_strings]"
 
-# Check if OnTime binary exists
+# Check if Ontime binary exists
 ontime_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/ontimegc 2>/dev/null)
-log_addon_detected "$ontime_binary" "OnTime group calendar"
+log_addon_detected "$ontime_binary" "Ontime group calendar"
 
 # Check if C-API global.h and lib notes0.o exists
 capi_lib=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notesapi/lib/linux64/notes0.o 2>/dev/null)
