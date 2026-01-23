@@ -932,6 +932,26 @@ install_domprom()
 }
 
 
+install_daostune()
+{
+  if [ -z "$DAOSTUNE_VERSION" ]; then
+    return 0
+  fi
+
+  header "Installing requested Domino DAOSTune $DAOSTUNE_VERSION"
+
+  get_download_name daostune "$DAOSTUNE_VERSION"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find requested Domino Domino DAOSTune version $DAOSTUNE_VERSION"
+    return 0
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$Notes_ExecDirectory"
+  ln -s "$LOTUS/bin/tools/startup" "$LOTUS/bin/daostune"
+}
+
+
 install_mysql_jdbc()
 {
   if [ -z "$MYSQL_JDBC_VERSION" ]; then
@@ -1629,6 +1649,7 @@ echo "MYSQL_JDBC_VERSION      = [$MYSQL_JDBC_VERSION]"
 echo "MSSQL_JDBC_VERSION      = [$MSSQL_JDBC_VERSION]"
 echo "POSTGRESQL_JDBC_VERSION = [$POSTGRESQL_JDBC_VERSION]"
 echo "DOMPROM_VERSION         = [$DOMPROM_VERSION]"
+echo "DAOSTUNE_VERSION        = [$DAOSTUNE_VERSION]"
 echo "OPENSSL_INSTALL         = [$OPENSSL_INSTALL]"
 echo "SSH_INSTALL             = [$SSH_INSTALL]"
 
@@ -1803,6 +1824,9 @@ install_domiq "$DOMIQ_VERSION"
 
 # Install Domino Prometheus servertask
 install_domprom
+
+# Install Domino DAOSTune servertask
+install_daostune
 
 # Install custom Trusted Root if specified
 check_install_trusted_root

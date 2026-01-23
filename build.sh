@@ -374,6 +374,7 @@ usage()
   echo "-domlp=xx        adds the specified Language Pack to the image"
   echo "-restapi         adds the Domino REST API to the image"
   echo "-ontime          adds Ontime from Domino V14 web-kit to the image"
+  echo "-daostune        installs Domino DAOSTune"
   echo "-domiq           adds the Domino IQ server run-time to the image"
   echo "-mysql-jdbc      adds the MySQL JDBC driver to the image"
   echo "-postgresql-jdbc adds the PostgreSQL JDBC driver to the image"
@@ -480,6 +481,7 @@ dump_config()
   echo "NSHMAILX_VERSION       : [$NSHMAILX_VERSION]"
   echo "NODE_EXPORTER_VERSION  : [$NODE_EXPORTER_VERSION]"
   echo "DOMPROM_VERSION        : [$DOMPROM_VERSION]"
+  echo "DAOSTUNE_VERSION       : [$DAOSTUNE_VERSION]"
   echo "LINUX_PKG_ADD          : [$LINUX_PKG_ADD]"
   echo "LINUX_PKG_REMOVE       : [$LINUX_PKG_REMOVE]"
   echo "LINUX_PKG_SKIP         : [$LINUX_PKG_SKIP]"
@@ -1270,6 +1272,10 @@ check_addon_label()
     add_addon_label "domprom" "$DOMPROM_VERSION"
   fi
 
+  if [ -n "$DAOSTUNE_VERSION" ]; then
+    add_addon_label "daostune" "$DAOSTUNE_VERSION"
+  fi
+
   if [ -n "$NODE_EXPORTER_VERSION" ]; then
     add_addon_label "node_exporter" "$NODE_EXPORTER_VERSION"
   fi
@@ -1367,6 +1373,7 @@ build_domino()
     --build-arg IQSUITE_VERSION="$IQSUITE_VERSION" \
     --build-arg NODE_EXPORTER_VERSION="$NODE_EXPORTER_VERSION" \
     --build-arg DOMPROM_VERSION="$DOMPROM_VERSION" \
+    --build-arg DAOSTUNE_VERSION="$DAOSTUNE_VERSION" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
     --build-arg NOMAD_VERSION="$NOMAD_VERSION" \
     --build-arg TRAVELER_VERSION="$TRAVELER_VERSION" \
@@ -2156,6 +2163,12 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$DAOSTUNE_VERSION" ]; then
+      if [ ! "$DAOSTUNE_VERSION" = "yes" ]; then
+        check_software_file "daostune" "$DAOSTUNE_VERSION"
+      fi
+    fi
+
     if [ -n "$MYSQL_JDBC_VERSION" ]; then
       if [ ! "$MYSQL_JDBC_VERSION" = "yes" ]; then
         check_software_file "mysql-jdbc" "$MYSQL_JDBC_VERSION"
@@ -2342,6 +2355,12 @@ check_software_status()
     if [ -n "$DOMPROM_VERSION" ]; then
       if [ ! "$DOMPROM_VERSION" = "yes" ]; then
         check_software_file "domprom" "$DOMPROM_VERSION"
+      fi
+    fi
+
+    if [ -n "$DAOSTUNE_VERSION" ]; then
+      if [ ! "$DAOSTUNE_VERSION" = "yes" ]; then
+        check_software_file "daostune" "$DAOSTUNE_VERSION"
       fi
     fi
 
@@ -2984,6 +3003,7 @@ load_conf()
   get_current_addon_version nshmailx SELECT_NSHMAILX_VERSION
   get_current_addon_version node_exporter SELECT_NODE_EXPORTER_VERSION
   get_current_addon_version domprom SELECT_DOMPROM_VERSION
+  get_current_addon_version daostune SELECT_DAOSTUNE_VERSION
 
   case "$PROD_VER" in
 
@@ -3022,6 +3042,7 @@ load_conf()
   if [ "$LATESTSEL" = "$NSHMAILX_VERSION" ];        then NSHMAILX_VERSION=$SELECT_NSHMAILX_VERSION; fi
   if [ "$LATESTSEL" = "$NODE_EXPORTER_VERSION" ];   then NODE_EXPORTER_VERSION=$SELECT_NODE_EXPORTER_VERSION; fi
   if [ "$LATESTSEL" = "$DOMPROM_VERSION" ];         then DOMPROM_VERSION=$SELECT_DOMPROM_VERSION; fi
+  if [ "$LATESTSEL" = "$DAOSTUNE_VERSION" ];        then DAOSTUNE_VERSION=$SELECT_DAOSTUNE_VERSION; fi
 
   if [ -n "$FROM_IMAGE_SELECT" ];        then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
   if [ -n "$DOCKER_TZ_SELECT" ];         then DOCKER_TZ=$DOCKER_TZ_SELECT; fi
@@ -3039,6 +3060,7 @@ load_conf()
   if [ -n "$NSHMAILX_SELECT" ];          then NSHMAILX_VERSION=$NSHMAILX_SELECT; fi
   if [ -n "$NODE_EXPORTER_SELECT" ];     then NODE_EXPORTER_VERSION=$NODE_EXPORTER_SELECT; fi
   if [ -n "$DOMPROM_SELECT" ];           then DOMPROM_VERSION=$DOMPROM_SELECT; fi
+  if [ -n "$DAOSTUNE_SELECT" ];          then DAOSTUNE_VERSION=$DAOSTUNE_SELECT; fi
 
   if [ -n "$NODE_EXPORTER_VERSION" ] && [ -n "$DOMPROM_VERSION" ]; then PROM_INSTALL=yes; fi
 
@@ -3101,6 +3123,7 @@ write_conf()
   if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"                 >> "$BUILD_CONF"; fi
   if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"               >> "$BUILD_CONF"; fi
   if [ -n "$DOMPROM_VERSION" ];  then echo "DOMPROM_VERSION=$LATESTSEL"             >> "$BUILD_CONF"; fi
+  if [ -n "$DAOSTUNE_VERSION" ]; then echo "DAOSTUNE_VERSION=$LATESTSEL"            >> "$BUILD_CONF"; fi
 
   if [ -n "$MYSQL_JDBC_VERSION" ];      then echo "MYSQL_JDBC_VERSION=$LATESTSEL"      >> "$BUILD_CONF"; fi
   if [ -n "$MSSQL_JDBC_VERSION" ];      then echo "MSSQL_JDBC_VERSION=$LATESTSEL"      >> "$BUILD_CONF"; fi
@@ -3847,7 +3870,7 @@ for a in "$@"; do
       MSSQL_JDBC_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$MSSQL_JDBC_VERSION" ]; then
-        get_current_addon_version mysql-jdbc MSSQL_JDBC_VERSION
+        get_current_addon_version mssql-jdbc MSSQL_JDBC_VERSION
       fi
       ;;
 
@@ -4243,6 +4266,14 @@ for a in "$@"; do
 
       if [ -z "$DOMPROM_VERSION" ]; then
         DOMPROM_VERSION=yes
+      fi
+      ;;
+
+    -daostune|-daostune=*|+|daostune+=daostune*)
+      DAOSTUNE_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$DAOSTUNE_VERSION" ]; then
+        get_current_addon_version daostune DAOSTUNE_VERSION
       fi
       ;;
 

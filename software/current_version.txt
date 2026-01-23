@@ -10,6 +10,7 @@ volt|1.0.5.15
 leap|1.1.10
 verse|3.2.6
 capi|14.5
+daostune|2.0
 safelinx|1.4.3
 nomadweb|1.0.18
 nomad|1.0.18

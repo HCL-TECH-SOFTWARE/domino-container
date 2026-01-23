@@ -578,6 +578,9 @@ log_addon_detected "$domiq_binary" "DominoIQ Server"
 domprom_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/domprom 2>/dev/null)
 log_addon_detected "$domprom_binary" "Domino Prom stats exporter"
 
+daostune_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/daostune 2>/dev/null)
+log_addon_detected "$daostune_binary" "Domino DAOSTune"
+
 node_exporter_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/prometheus/node_exporter/node_exporter 2>/dev/null)
 log_addon_detected "$node_exporter_binary" "Prometheus Node Exporter"
 
@@ -702,11 +705,18 @@ do
       fi
       ;;
 
-
     domprom)
       DOMPROM_IMAGE_VERSION="$ADDON_VERSION"
 
       if [ -z "$domprom_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    daostune)
+      DAOSTUNE_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$daostune_binary" ]; then
         ERROR_MSG="$ADDON_NAME binary not found"
       fi
       ;;
