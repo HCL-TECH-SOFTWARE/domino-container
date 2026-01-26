@@ -424,20 +424,37 @@ install_verse()
   CURRENT_DIR=$(pwd)
   cd $ADDON_NAME
   echo "Unzipping files .."
-  unzip -o -q  *.zip
-  unzip -o -q HCL_Verse.zip
+  ZIP_FILE=$(find . -name "*.zip")
+
+  if [ -z "$ZIP_FILE" ]; then
+    log_error "Cannot find Verse ZIP installation file!!!"
+    exit 1
+  fi
+
+  unzip -o -q "$ZIP_FILE"
+  remove_file "$ZIP_FILE"
+  unzip -o -q *.zip
 
   echo "Copying files .."
 
+  local JAR_FOUND=
+
   for JAR in eclipse/plugins/*.jar; do
     install_osgi_file "$JAR"
+    JAR_FOUND=1
   done
 
   for JAR in *.jar; do
     install_osgi_file "$JAR"
+    JAR_FOUND=1
   done
 
   install_file "iwaredir.ntf" "$DOMINO_DATA_PATH/iwaredir.ntf" $DOMINO_USER $DOMINO_GROUP 644
+
+  if [ -z "$JAR_FOUND" ]; then
+    log_error "No jar files found - Verse installation failed!!!"
+    exit 1
+  fi
 
   log_space Installed $ADDON_NAME
 
