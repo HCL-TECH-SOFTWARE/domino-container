@@ -859,7 +859,7 @@ install_ontime()
     return 0
   fi
 
-  header "Ontime Installation"
+  header "OnTime Installation"
 
   CURRENT_DIR=$(pwd)
 
@@ -890,7 +890,7 @@ install_ontime()
       exit 1
     fi
 
-    echo "Ontime Version detected in file: [$ADDON_VER]"
+    echo "OnTime Version detected in file: [$ADDON_VER]"
 
   fi
 
@@ -1000,11 +1000,14 @@ install_mysql_jdbc()
      exit 1
   fi
 
+  JDBC_DRIVER_FILE=$(basename "$JDBC_DRIVER_BIN")
   chmod 555 "$JDBC_DRIVER_BIN"
   cp -p "$JDBC_DRIVER_BIN" "$JVM_LIB_INSTALL_DIRECTORY"
+  ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$JVM_LIB_INSTALL_DIRECTORY/mysql-jdbc.jar"
 
   if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
     cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
+    ln -s "$Notes_ExecDirectory/Traveler/lib/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/mysql-jdbc.jar"
   fi
 
   remove_directory "$MYSQL_JDBC_DIR"
@@ -1039,10 +1042,14 @@ install_postgresql-jdbc()
      exit 1
   fi
 
+  JDBC_DRIVER_FILE=$(basename "$JDBC_DRIVER_BIN")
   chmod 555 "$JDBC_DRIVER_BIN"
+  cp -p "$JDBC_DRIVER_BIN" "$JVM_LIB_INSTALL_DIRECTORY"
+  ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$JVM_LIB_INSTALL_DIRECTORY/postgresql-jdbc.jar"
 
   if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
     cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
+    ln -s "$Notes_ExecDirectory/Traveler/lib/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/postgresql-jdbc.jar"
   fi
 }
 
@@ -1078,11 +1085,14 @@ install_mssql_jdbc()
      exit 1
   fi
 
+  JDBC_DRIVER_FILE=$(basename "$JDBC_DRIVER_BIN")
   chmod 555 "$JDBC_DRIVER_BIN"
   cp -p "$JDBC_DRIVER_BIN" "$JVM_LIB_INSTALL_DIRECTORY"
+  ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$JVM_LIB_INSTALL_DIRECTORY/mssql-jdbc.jar"
 
   if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
     cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
+    ln -s "$Notes_ExecDirectory/Traveler/lib/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/mssql-jdbc.jar"
   fi
 
   remove_directory "$MSSQL_JDBC_DIR"
