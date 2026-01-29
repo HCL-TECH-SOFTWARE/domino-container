@@ -60,6 +60,7 @@ print_help()
   log  "console         Run live Domino server console"
   log  "domino          Run Domino start script command"
   log  "stop            Stop container"
+  log  "kill            Hard stop container and remove it"
   log  "rm              Remove container"
   log  "cleanup         Cleanup Domino server"
   log
@@ -289,6 +290,12 @@ for a in $@; do
 
     stop)
       $CONTAINER_CMD stop $CONTAINER_NAME
+      exit 0
+      ;;
+
+    kill)
+      $CONTAINER_CMD kill $CONTAINER_NAME
+      $CONTAINER_CMD rm $CONTAINER_NAME
       exit 0
       ;;
 
@@ -607,16 +614,22 @@ if [ -e "/opt/hcl/domino/notes/latest/linux/Traveler" ]; then
   postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "postgresql-jdbc.jar" 2>/dev/null)
   log_addon_detected "$postgresql_jdbc_binary" "PostgreSQL JDBC driver for Traveler"
 
+  mariadb_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/Traveler/lib -name "mariadb-jdbc.jar" 2>/dev/null)
+  log_addon_detected "$mariadb_jdbc_binary" "MariaDB JDBC driver for Traveler"
+
 else
 
-  mysql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "mysql-connector-j-*.jar" 2>/dev/null)
+  mysql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "mysql-jdbc.jar" 2>/dev/null)
   log_addon_detected "$mysql_jdbc_binary" "MySQL JDBC driver for Domino"
 
-  mssql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "mssql-jdbc-*.jre8.jar" 2>/dev/null)
+  mssql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "mssql-jdbc.jar" 2>/dev/null)
   log_addon_detected "$mssql_jdbc_binary" "Microsoft JDBC driver for Domino"
 
-  postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "postgresql-*.jar" 2>/dev/null)
+  postgresql_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "postgresql-jdbc.jar" 2>/dev/null)
   log_addon_detected "$postgresql_jdbc_binary" "PostgreSQL JDBC driver for Domino"
+
+  mariadb_jdbc_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find "$JVM_LIB_INSTALL_DIRECTORY" -name "mariadb-jdbc.jar" 2>/dev/null)
+  log_addon_detected "$mariadb_jdbc_binary" "MariaDB JDBC driver for Domino"
 
 fi
 
@@ -777,6 +790,13 @@ do
       fi
       ;;
 
+    mariadb-jdbc)
+      MARIADB_JDBC_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$mariadb_jdbc_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
 
     *)
       echo "LATER: [$ADDON_NAME] not checked"

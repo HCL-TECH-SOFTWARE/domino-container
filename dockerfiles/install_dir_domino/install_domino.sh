@@ -1054,6 +1054,46 @@ install_postgresql-jdbc()
 }
 
 
+install_mariadb-jdbc()
+{
+  if [ -z "$MARIADB_JDBC_VERSION" ]; then
+    return 0
+  fi
+
+  header "Installing MariaDB JDBC driver $MARIADB_JDBC_VERSION"
+
+  cd "$INSTALL_DIR"
+
+  get_download_name mariadb-jdbc "$MARIADB_JDBC_VERSION"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find MariaDB JDBC driver $MARIADB_JDBC_VERSION"
+     dump_directory "$JVM_LIB_INSTALL_DIRECTORY"
+    return 0
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$JVM_LIB_INSTALL_DIRECTORY"
+
+  local JDBC_DRIVER_BIN=$(find "$JVM_LIB_INSTALL_DIRECTORY" -type f -name "mariadb-*.jar")
+
+  if [ -z "$JDBC_DRIVER_BIN" ]; then
+     echo "MariaDB JDBC driver not found"
+     dump_directory "$JVM_LIB_INSTALL_DIRECTORY"
+     exit 1
+  fi
+
+  JDBC_DRIVER_FILE=$(basename "$JDBC_DRIVER_BIN")
+  chmod 555 "$JDBC_DRIVER_BIN"
+  cp -p "$JDBC_DRIVER_BIN" "$JVM_LIB_INSTALL_DIRECTORY"
+  ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$JVM_LIB_INSTALL_DIRECTORY/mariadb-jdbc.jar"
+
+  if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
+    cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
+    ln -s "$Notes_ExecDirectory/Traveler/lib/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/mariadb-jdbc.jar"
+  fi
+}
+
+
 install_mssql_jdbc()
 {
   if [ -z "$MSSQL_JDBC_VERSION" ]; then
@@ -1675,6 +1715,7 @@ echo "NSHMAILX_VERSION        = [$NSHMAILX_VERSION]"
 echo "MYSQL_JDBC_VERSION      = [$MYSQL_JDBC_VERSION]"
 echo "MSSQL_JDBC_VERSION      = [$MSSQL_JDBC_VERSION]"
 echo "POSTGRESQL_JDBC_VERSION = [$POSTGRESQL_JDBC_VERSION]"
+echo "MARIADB_JDBC_VERSION    = [$MARIADB_JDBC_VERSION]"
 echo "DOMPROM_VERSION         = [$DOMPROM_VERSION]"
 echo "DAOSTUNE_VERSION        = [$DAOSTUNE_VERSION]"
 echo "OPENSSL_INSTALL         = [$OPENSSL_INSTALL]"
@@ -1842,6 +1883,7 @@ install_ontime "$ONTIME_VERSION"
 install_mysql_jdbc
 install_mssql_jdbc
 install_postgresql-jdbc
+install_mariadb-jdbc
 
 # Install Domino Leap if requested
 install_leap "$LEAP_VERSION"

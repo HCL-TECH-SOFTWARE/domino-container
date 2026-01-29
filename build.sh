@@ -1,10 +1,10 @@
 #!/bin/bash
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2025  - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2026  - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.4.5 02.12.2025
+# Version 2.4.6 30.01.2026
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -26,7 +26,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.4.5
+CONTAINER_BUILD_SCRIPT_VERSION=2.4.6
 
 # OnTime version
 SELECT_ONTIME_VERSION_DOMINO14=2.3.0
@@ -378,6 +378,7 @@ usage()
   echo "-domiq           adds the Domino IQ server run-time to the image"
   echo "-mysql-jdbc      adds the MySQL JDBC driver to the image"
   echo "-postgresql-jdbc adds the PostgreSQL JDBC driver to the image"
+  echo "-mariadb-jdbc    adds the MariaDB JDBC driver to the image"
   echo "-tika            updates the Tika server to the Domino server"
   echo "-iqsuite         adds GBS iQ.Suite to the container image under /opt"
   echo "-nshmailx        installs Nash!Com nshmailx simple mail send tool"
@@ -474,6 +475,7 @@ dump_config()
   echo "MYSQL_JDBC_VERSION     : [$MYSQL_JDBC_VERSION]"
   echo "MSSQL_JDBC_VERSION     : [$MSSQL_JDBC_VERSION]"
   echo "POSTGRESQL_JDBC_VERSION: [$POSTGRESQL_JDBC_VERSION]"
+  echo "MARIADB_JDBC_VERSION   : [$MARIADB_JDBC_VERSION]"
   echo "BORG_VERSION           : [$BORG_VERSION]"
   echo "DOMBORG_VERSION        : [$DOMBORG_VERSION]"
   echo "TIKA_VERSION           : [$TIKA_VERSION]"
@@ -1304,6 +1306,10 @@ check_addon_label()
     add_addon_label "postgresql-jdbc" "$POSTGRESQL_JDBC_VERSION"
   fi
 
+  if [ -n "$MARIADB_JDBC_VERSION" ]; then
+    add_addon_label "mariadb-jdbc" "$MARIADB_JDBC_VERSION"
+  fi
+
 }
 
 
@@ -1385,6 +1391,7 @@ build_domino()
     --build-arg MYSQL_JDBC_VERSION="$MYSQL_JDBC_VERSION" \
     --build-arg MSSQL_JDBC_VERSION="$MSSQL_JDBC_VERSION" \
     --build-arg POSTGRESQL_JDBC_VERSION="$POSTGRESQL_JDBC_VERSION" \
+    --build-arg MARIADB_JDBC_VERSION="$MARIADB_JDBC_VERSION" \
     --build-arg LINUX_PKG_ADD="$LINUX_PKG_ADD" \
     --build-arg LINUX_PKG_REMOVE="$LINUX_PKG_REMOVE" \
     --build-arg LINUX_PKG_SKIP="$LINUX_PKG_SKIP" \
@@ -1768,6 +1775,10 @@ check_all_domdownload()
 
   if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
     $DOMDOWNLOAD_BIN -product=postgresql-jdbc -platform=linux -ver=$POSTGRESQL_JDBC_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
+  fi
+
+  if [ -n "$MARIADB_JDBC_VERSION" ]; then
+    $DOMDOWNLOAD_BIN -product=mariadb-jdbc -platform=linux -ver=$MARIADB_JDBC_VERSION $DOWNLOAD_OPTIONS "-dir=$SOFTWARE_DIR"
   fi
 
   if [ -n "$NSHMAILX_VERSION" ]; then
@@ -2187,6 +2198,12 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$MARIADB_JDBC_VERSION" ]; then
+      if [ ! "$MARIADB_JDBC_VERSION" = "yes" ]; then
+        check_software_file "mariadb-jdbc" "$MARIADB_JDBC_VERSION"
+      fi
+    fi
+
   else
     echo
 
@@ -2379,6 +2396,12 @@ check_software_status()
     if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then
       if [ ! "$POSTGRESQL_JDBC_VERSION" = "yes" ]; then
         check_software_file "postgresql-jdbc" "$POSTGRESQL_JDBC_VERSION"
+      fi
+    fi
+
+    if [ -n "$MARIADB_JDBC_VERSION" ]; then
+      if [ ! "$MARIADB_JDBC_VERSION" = "yes" ]; then
+        check_software_file "mariadb-jdbc" "$MARIADB_JDBC_VERSION"
       fi
     fi
 
@@ -2960,6 +2983,7 @@ load_conf()
   local MYSQL_JDBC_SELECT=$MYSQL_JDBC_VERSION
   local MSSQL_JDBC_SELECT=$MSSQL_JDBC_VERSION
   local POSTGRESQL_JDBC_VERSION_SELECT=$POSTGRESQL_JDBC_VERSION
+  local MARIADB_JDBC_VERSION_SELECT=$MARIADB_JDBC_VERSION
   local IQSUITE_SELECT=$IQSUITE_VERSION
 
   if [ -n "$1" ]; then
@@ -2999,6 +3023,7 @@ load_conf()
   get_current_addon_version mysql-jdbc SELECT_MYSQL_JDBC_VERSION
   get_current_addon_version mssql-jdbc SELECT_MSSQL_JDBC_VERSION
   get_current_addon_version postgresql-jdbc SELECT_POSTGRESQL_JDBC_VERSION
+  get_current_addon_version mariadb-jdbc SELECT_MARIADB_JDBC_VERSION
   get_current_addon_version iqsuite SELECT_IQSUITE_VERSION
   get_current_addon_version nshmailx SELECT_NSHMAILX_VERSION
   get_current_addon_version node_exporter SELECT_NODE_EXPORTER_VERSION
@@ -3038,6 +3063,7 @@ load_conf()
   if [ "$LATESTSEL" = "$MYSQL_JDBC_VERSION" ];      then MYSQL_JDBC_VERSION=$SELECT_MYSQL_JDBC_VERSION; fi
   if [ "$LATESTSEL" = "$MSSQL_JDBC_VERSION" ];      then MSSQL_JDBC_VERSION=$SELECT_MSSQL_JDBC_VERSION; fi
   if [ "$LATESTSEL" = "$POSTGRESQL_JDBC_VERSION" ]; then POSTGRESQL_JDBC_VERSION=$SELECT_POSTGRESQL_JDBC_VERSION; fi
+  if [ "$LATESTSEL" = "$MARIADB_JDBC_VERSION" ];    then MARIADB_JDBC_VERSION=$SELECT_MARIADB_JDBC_VERSION; fi
   if [ "$LATESTSEL" = "$IQSUITE_VERSION" ];         then IQSUITE_VERSION=$SELECT_IQSUITE_VERSION; fi
   if [ "$LATESTSEL" = "$NSHMAILX_VERSION" ];        then NSHMAILX_VERSION=$SELECT_NSHMAILX_VERSION; fi
   if [ "$LATESTSEL" = "$NODE_EXPORTER_VERSION" ];   then NODE_EXPORTER_VERSION=$SELECT_NODE_EXPORTER_VERSION; fi
@@ -3128,6 +3154,7 @@ write_conf()
   if [ -n "$MYSQL_JDBC_VERSION" ];      then echo "MYSQL_JDBC_VERSION=$LATESTSEL"      >> "$BUILD_CONF"; fi
   if [ -n "$MSSQL_JDBC_VERSION" ];      then echo "MSSQL_JDBC_VERSION=$LATESTSEL"      >> "$BUILD_CONF"; fi
   if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then echo "POSTGRESQL_JDBC_VERSION=$LATESTSEL" >> "$BUILD_CONF"; fi
+  if [ -n "$MARIADB_JDBC_VERSION" ];    then echo "MARIADB_JDBC_VERSION=$LATESTSEL"    >> "$BUILD_CONF"; fi
   if [ -n "$NODE_EXPORTER_VERSION" ];   then echo "NODE_EXPORTER_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
 
   # Parameters only stored in conf file
@@ -3181,6 +3208,7 @@ edit_conf()
   MYSQL_JDBC_VERSION=
   MSSQL_JDBC_VERSION=
   POSTGRESQL_JDBC_VERSION=
+  MARIADB_JDBC_VERSION=
 
   load_conf
 }
@@ -3608,6 +3636,7 @@ install_domino_native()
   export MYSQL_JDBC_VERSION
   export MSSQL_JDBC_VERSION
   export POSTGRESQL_JDBC_VERSION
+  export MARIADB_JDBC_VERSION
   export IQSUITE_VERSION
   export VERSE_VERSION
   export NOMAD_VERSION
@@ -3879,6 +3908,14 @@ for a in "$@"; do
 
       if [ -z "$POSTGRESQL_JDBC_VERSION" ]; then
         get_current_addon_version postgresql-jdbc POSTGRESQL_JDBC_VERSION
+      fi
+      ;;
+
+   -mariadb-jdbc*|+mariadb-jdbc*)
+      MARIADB_JDBC_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$MARIADB_JDBC_VERSION" ]; then
+        get_current_addon_version mariadb-jdbc MARIADB_JDBC_VERSION
       fi
       ;;
 
