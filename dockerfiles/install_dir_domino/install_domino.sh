@@ -1006,8 +1006,7 @@ install_mysql_jdbc()
   ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$JVM_LIB_INSTALL_DIRECTORY/mysql-jdbc.jar"
 
   if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
-    cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
-    ln -s "$Notes_ExecDirectory/Traveler/lib/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/mysql-jdbc.jar"
+    ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/mysql-jdbc.jar"
   fi
 
   remove_directory "$MYSQL_JDBC_DIR"
@@ -1048,8 +1047,7 @@ install_postgresql-jdbc()
   ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$JVM_LIB_INSTALL_DIRECTORY/postgresql-jdbc.jar"
 
   if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
-    cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
-    ln -s "$Notes_ExecDirectory/Traveler/lib/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/postgresql-jdbc.jar"
+    ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/postgresql-jdbc.jar"
   fi
 }
 
@@ -1088,8 +1086,7 @@ install_mariadb-jdbc()
   ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$JVM_LIB_INSTALL_DIRECTORY/mariadb-jdbc.jar"
 
   if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
-    cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
-    ln -s "$Notes_ExecDirectory/Traveler/lib/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/mariadb-jdbc.jar"
+    ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/mariadb-jdbc.jar"
   fi
 }
 
@@ -1131,8 +1128,7 @@ install_mssql_jdbc()
   ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$JVM_LIB_INSTALL_DIRECTORY/mssql-jdbc.jar"
 
   if [ -e "$Notes_ExecDirectory/Traveler/lib" ]; then
-    cp -p "$JDBC_DRIVER_BIN" "$Notes_ExecDirectory/Traveler/lib"
-    ln -s "$Notes_ExecDirectory/Traveler/lib/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/mssql-jdbc.jar"
+    ln -s "$JVM_LIB_INSTALL_DIRECTORY/$JDBC_DRIVER_FILE" "$Notes_ExecDirectory/Traveler/lib/mssql-jdbc.jar"
   fi
 
   remove_directory "$MSSQL_JDBC_DIR"
