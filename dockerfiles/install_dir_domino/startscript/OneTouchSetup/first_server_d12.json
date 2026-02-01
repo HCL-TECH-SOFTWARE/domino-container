@@ -34,7 +34,7 @@
       "ADMIN_IGNORE_NEW_SERVERNAMING_CONVENTION": "1",
       "LOG_REPLICATION": "0",
       "LOG_SESSIONS": "0",
-      "HTTPPublicURLs": "/.well-known*",
+      "HTTPPublicURLs": "/iwaredir.nsf/*:/.well-known*",
       "ENABLE_SNI": "1",
       "HTTPEnableMethods": "GET,POST,PUT,DELETE,HEAD",
       "ADMIN_CLIENT_SKIP_DOMINO": "1",
@@ -110,11 +110,14 @@
         "documents": [
           {
             "action": "update",
-	    "findDocument": "Form = {Server} & ServerName = @Username",
+            "findDocument": {
+              "Type": "Server",
+              "ServerName": "CN={{ SERVERSETUP_SERVER_NAME }}/O={{ SERVERSETUP_ORG_ORGNAME }}"
+            },
             "items": {
               "HTTP_SSLKeyFile": "{{ SERVERSETUP_NETWORK_HOSTNAME }}",
               "TRANSLOG_AutoFixup": "",
-              "TRANSLOG_MaxSize": 4096,
+              "TRANSLOG_MaxSize": 1024,
               "TRANSLOG_Path": "/local/translog",
               "TRANSLOG_Performance": "2",
               "TRANSLOG_Status": "1",
@@ -146,8 +149,8 @@
               "FREnbld": "1",
               "FltRcvryNot": "LocalDomainAdmins",
 
-              "ServerBuildNumber": "14.0",
-              "MajVer": 14,
+              "ServerBuildNumber": "12.0",
+              "MajVer": 12,
               "SSLCipherList": [
                 "C030",
                 "9F",
@@ -214,6 +217,47 @@
               "LF_ServerType": "0",
               "LF_IP": "",
               "$PublicAccess": "1"
+            }
+          }
+        ]
+      },
+
+      {
+        "action": "create",
+        "filePath": "iwaredir.nsf",
+        "title": "Redirect",
+        "templatePath": "iwaredir.ntf",
+        "signUsingAdminp": true,
+
+        "documents": [
+          {
+            "action": "create",
+            "computeWithForm": true,
+            "items": {
+              "Form": "AutoLogin",
+              "ServerNameSelect": "1",
+              "RedirectMessageWebView": "Redirecting...",
+              "$LANGUAGE": "en",
+              "$ServerSettingsTable": "Select",
+              "EnableUltraliteRadioButton": "0",
+              "MobileAgentKeywords": "ipod,iphone,android,ipad",
+              "SSLPort": "443",
+              "RedirectionTime": "1",
+              "RedirectionMessageText": "Redirecting...",
+              "WMRGlobalProfileURL": "/",
+              "ServerNameChange": "0",
+              "ForceSSL": "1",
+              "OmitProtocol": "0",
+              "UseHomeMailServer": "0",
+              "LoginOptions": "0",
+              "EncryptPassword": "0",
+              "WebMailRedirectEnableDebug": "0",
+              "WebMailRedirectProfileEnable": "0",
+              "WMRVersion": "650",
+              "WMRAttachmentNames": "BLANK",
+              "MailServerDomainName": "",
+              "RevProxyServerName": "",
+              "ForcePath": ""
             }
           }
         ]

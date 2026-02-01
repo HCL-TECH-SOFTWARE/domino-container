@@ -56,6 +56,20 @@
 # nshcfg_debug=yes
 
 
+# Reset
+ColorOff='\033[0m'
+
+# Regular Colors
+ColorBlack='\033[0;30m'
+ColorRed='\033[0;31m'
+ColorGreen='\033[0;32m'
+ColorYellow='\033[1;33m'
+ColorBlue='\033[0;34m'
+ColorPurple='\033[0;35m'
+ColorCyan='\033[0;36m'
+ColorWhite='\033[0;37m'
+
+
 # Default config environment file
 
 if [ -z "$DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE" ]; then
@@ -221,6 +235,7 @@ GetConfig()
   INDEX=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .index')
   ONE_TOUCH_ENV=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .oneTouchENV')
   ONE_TOUCH_JSON=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .oneTouchJSON')
+  ONE_TOUCH_INFO=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .info')
   DXL=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .DXL')
 
   # Process setup index config
@@ -285,6 +300,11 @@ GetConfig()
     LogError "No configuration option found [$SELECTED]"
     return 1
   fi
+
+  if [ -n "$ONE_TOUCH_INFO" ]; then
+    printf "${ColorYellow}\nInfo: $ONE_TOUCH_INFO\n\n${ColorOff}"
+  fi
+
 
   return 0
 }
