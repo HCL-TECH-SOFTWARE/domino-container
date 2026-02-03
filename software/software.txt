@@ -136,5 +136,4 @@ mysql-jdbc|9.4.0|mysql-connector-j-9.4.0.tar.gz,https://dev.mysql.com/get/Downlo
 mssql-jdbc|13.2.1|sqljdbc_13.2.1.0_enu.tar.gz,https://download.microsoft.com/download/b66307a5-11c6-42c8-a039-5c4646f6f685/sqljdbc_13.2.1.0_enu.tar.gz|x|1b57f8cfbad16a523f833fc813264fe9219554814f04cd35d15fba60aadc079c
 postgresql-jdbc|42.7.8|postgresql-42.7.8.jar,https://jdbc.postgresql.org/download/postgresql-42.7.8.jar|x|2a32a9dcbc42d67a50ad3a0de5efd102c8d2be46720045f2cbd6689f160ab7c7
 mariadb-jdbc|3.5.7|mariadb-java-client-3.5.7.jar,https://dlm.mariadb.com/4550269/Connectors/java/connector-java-3.5.7/mariadb-java-client-3.5.7.jar|x|07bb1229dc184f3313a5aef4c5a6b3207c8dbaa09db4a26814c936f004b4c526
-mariadb-jdbc|2.7.13|mariadb-java-client-2.7.13.jar,https://dlm.mariadb.com/4550298/Connectors/java/connector-java-2.7.13/mariadb-java-client-2.7.13.jar|x|20f01b9bf7eb8abb87e6af32641dd0cfd2784cfe37a74720cb487960f911278f
 nshmailx|1.1.0|nshmailx-1.1.0,https://github.com/nashcom/nshmailx/releases/download/v1.1.0/nshmailx-1.1.0|x|66f1e7498b43c5dc77577175e278ee5a04383687e6a66eabb9aac515041dd659

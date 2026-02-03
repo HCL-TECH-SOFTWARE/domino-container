@@ -342,14 +342,13 @@ start_alloy()
 
   if [ -z "$ALLOY_CONFIG" ]; then
 
-    if [ -z "$ALLOY_PUSH_TARGET" ]; then
-      log "Info: No Grafana Alloy ALLOY_PUSH_TARGET specified"
-      return 0
-    fi
-
     if [ -f "/opt/grafana/config.alloy" ]; then
-      ALLOY_CONFIG="/tmp/config.alloy"
-      envsubst < "/opt/grafana/config.alloy" > "$ALLOY_CONFIG"
+      ALLOY_CONFIG="/opt/grafana/config.alloy"
+
+      if [ -z "$ALLOY_PUSH_TARGET" ]; then
+        log " Warning: No push target specified. Cannot start Grafana Alloy"
+	return 0
+      fi
     fi
 
   fi
@@ -359,18 +358,25 @@ start_alloy()
     return 0
   fi
 
+  if [ -z "$ALLOY_LOG_LEVEL" ]; then
+    export ALLOY_LOG_LEVEL=info
+  fi
+
+  if [ -z "$ALLOY_LOKI_LOGFILE" ]; then
+    export ALLOY_LOKI_LOGFILE="$DOMINO_DATA_PATH/notes.log"
+  fi
+
+  if [ -z "$ALLOY_LOKI_JOB" ]; then
+    export ALLOY_LOKI_JOB="domino-log"
+  fi
+
   if [ -z "$ALLOY_STORAGE_DIR" ]; then
-    ALLOY_STORAGE_DIR=/local/notesdata/domino/alloy
+    export ALLOY_STORAGE_DIR="$DOMINO_DATA_PATH/domino/alloy"
   fi
 
   mkdir -p "$ALLOY_STORAGE_DIR"
 
   header "Starting Grafana Alloy"
-
-  echo "---------- Configuration $ALLOY_CONFIG ----------"
-  cat "$ALLOY_CONFIG"
-  echo
-  echo
 
   # Start Grafana Alloy in background logging errors to container STDOUT/STDERR
   "$ALLOY_BIN" run "$ALLOY_CONFIG" --storage.path="$ALLOY_STORAGE_DIR"  &

@@ -1,18 +1,24 @@
 logging {
-  level = "info"
+  level = env("ALLOY_LOG_LEVEL")
 }
 
 loki.write "loki" {
   endpoint {
-    url = "$ALLOY_PUSH_TARGET"
+    url = env("ALLOY_PUSH_TARGET")
+
+    bearer_token = env("ALLOY_LOKI_TOKEN")
+
+    tls_config {
+      ca_file = env("ALLOY_LOKI_CA_FILE")
+    }
   }
 }
 
 local.file_match "logfiles" {
   path_targets = [
     {
-      __path__ = "/local/notesdata/notes.log",
-      job      = "domino-logs",
+      __path__ = env("ALLOY_LOKI_LOGFILE"),
+      job      = env("ALLOY_LOKI_JOB"),
     },
   ]
 }
@@ -21,4 +27,3 @@ loki.source.file "domino_log" {
   targets    = local.file_match.logfiles.targets
   forward_to = [loki.write.loki.receiver]
 }
-
