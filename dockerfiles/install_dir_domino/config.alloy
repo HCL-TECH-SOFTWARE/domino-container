@@ -1,0 +1,24 @@
+logging {
+  level = "info"
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "$ALLOY_PUSH_TARGET"
+  }
+}
+
+local.file_match "logfiles" {
+  path_targets = [
+    {
+      __path__ = "/local/notesdata/notes.log",
+      job      = "domino-logs",
+    },
+  ]
+}
+
+loki.source.file "domino_log" {
+  targets    = local.file_match.logfiles.targets
+  forward_to = [loki.write.loki.receiver]
+}
+

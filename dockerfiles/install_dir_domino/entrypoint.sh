@@ -286,9 +286,10 @@ cleanup_setup_env()
   history -c
 }
 
+
 start_node_exporter()
 {
-  local NODE_EXPORTER_BIN=/opt/prometheus/node_exporter/node_exporter
+  local NODE_EXPORTER_BIN=/opt/grafana/node_exporter
 
   if [ ! -x "$NODE_EXPORTER_BIN" ]; then
      return 0
@@ -321,6 +322,58 @@ start_node_exporter()
 
   # Start node exporter in background logging errors to container STDOUT/STDERR
   "$NODE_EXPORTER_BIN" $NODE_EXPORTER_OPTIONS &
+}
+
+
+start_alloy()
+{
+  local ALLOY_BIN=/opt/grafana/alloy
+  local ALLOY_CONFIG=
+  local ALLOY_STORAGE_DIR=
+
+  if [ ! -x "$ALLOY_BIN" ]; then
+     return 0
+  fi
+
+  if [ "$ALLOY_DISABLED" = "1" ]; then
+    log "Info: Grafana Alloy is disabled"
+    return 0
+  fi
+
+  if [ -z "$ALLOY_CONFIG" ]; then
+
+    if [ -z "$ALLOY_PUSH_TARGET" ]; then
+      log "Info: No Grafana Alloy ALLOY_PUSH_TARGET specified"
+      return 0
+    fi
+
+    if [ -f "/opt/grafana/config.alloy" ]; then
+      ALLOY_CONFIG="/tmp/config.alloy"
+      envsubst < "/opt/grafana/config.alloy" > "$ALLOY_CONFIG"
+    fi
+
+  fi
+
+  if [ -z "$ALLOY_CONFIG" ]; then
+    log "Info: No Grafana Alloy configuration"
+    return 0
+  fi
+
+  if [ -z "$ALLOY_STORAGE_DIR" ]; then
+    ALLOY_STORAGE_DIR=/local/notesdata/domino/alloy
+  fi
+
+  mkdir -p "$ALLOY_STORAGE_DIR"
+
+  header "Starting Grafana Alloy"
+
+  echo "---------- Configuration $ALLOY_CONFIG ----------"
+  cat "$ALLOY_CONFIG"
+  echo
+  echo
+
+  # Start Grafana Alloy in background logging errors to container STDOUT/STDERR
+  "$ALLOY_BIN" run "$ALLOY_CONFIG" --storage.path="$ALLOY_STORAGE_DIR"  &
 }
 
 
@@ -419,6 +472,7 @@ fi
 
 
 start_node_exporter
+start_alloy
 
 
 # Wait for shutdown signal. This loop should never terminate, because it would

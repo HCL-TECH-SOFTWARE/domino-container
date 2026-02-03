@@ -4,7 +4,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.4.6 30.01.2026
+# Version 2.4.7 02.02.2026
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -26,7 +26,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.4.6
+CONTAINER_BUILD_SCRIPT_VERSION=2.4.7
 
 # OnTime version
 SELECT_ONTIME_VERSION_DOMINO14=2.3.0
@@ -385,6 +385,7 @@ usage()
   echo "-node_exporter   installs Prometheus node_exporter into the container"
   echo "-domprom         installs Domino Prometheus statistics exporter"
   echo "-prometheus/prom installs Domino Prometheus statistics exporter & Node Exporter"
+  echo "-alloy           installs Grafana Alloy"
   echo "-k8s-runas       adds K8s runas user support"
   echo "-startscript=x   installs specified start script version from software repository"
   echo "-custom-addon=x  specify a tar file with additional Domino add-on software to install format: (https://)file.taz#sha256checksum"
@@ -482,6 +483,7 @@ dump_config()
   echo "IQSUITE_VERSION        : [$IQSUITE_VERSION]"
   echo "NSHMAILX_VERSION       : [$NSHMAILX_VERSION]"
   echo "NODE_EXPORTER_VERSION  : [$NODE_EXPORTER_VERSION]"
+  echo "ALLOY_VERSION          : [$ALLOY_VERSION]"
   echo "DOMPROM_VERSION        : [$DOMPROM_VERSION]"
   echo "DAOSTUNE_VERSION       : [$DAOSTUNE_VERSION]"
   echo "LINUX_PKG_ADD          : [$LINUX_PKG_ADD]"
@@ -1282,6 +1284,10 @@ check_addon_label()
     add_addon_label "node_exporter" "$NODE_EXPORTER_VERSION"
   fi
 
+  if [ -n "$ALLOY_VERSION" ]; then
+    add_addon_label "alloy" "$ALLOY_VERSION"
+  fi
+
   if [ -n "$BORG_VERSION" ]; then
     add_addon_label "borg" "$BORG_VERSION"
   fi
@@ -1378,6 +1384,7 @@ build_domino()
     --build-arg TIKA_VERSION="$TIKA_VERSION" \
     --build-arg IQSUITE_VERSION="$IQSUITE_VERSION" \
     --build-arg NODE_EXPORTER_VERSION="$NODE_EXPORTER_VERSION" \
+    --build-arg ALLOY_VERSION="$ALLOY_VERSION" \
     --build-arg DOMPROM_VERSION="$DOMPROM_VERSION" \
     --build-arg DAOSTUNE_VERSION="$DAOSTUNE_VERSION" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
@@ -2168,6 +2175,12 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$ALLOY_VERSION" ]; then
+      if [ ! "$ALLOY_VERSION" = "yes" ]; then
+        check_software_file "alloy" "$ALLOY_VERSION"
+      fi
+    fi
+
     if [ -n "$DOMPROM_VERSION" ]; then
       if [ ! "$DOMPROM_VERSION" = "yes" ]; then
         check_software_file "domprom" "$DOMPROM_VERSION"
@@ -2366,6 +2379,12 @@ check_software_status()
     if [ -n "$NODE_EXPORTER_VERSION" ]; then
       if [ ! "$NODE_EXPORTER_VERSION" = "yes" ]; then
         check_software_file "node_exporter" "$NODE_EXPORTER_VERSION"
+      fi
+    fi
+
+    if [ -n "$ALLOY_VERSION" ]; then
+      if [ ! "$ALLOY_VERSION" = "yes" ]; then
+        check_software_file "alloy" "$ALLOY_VERSION"
       fi
     fi
 
@@ -3027,6 +3046,7 @@ load_conf()
   get_current_addon_version iqsuite SELECT_IQSUITE_VERSION
   get_current_addon_version nshmailx SELECT_NSHMAILX_VERSION
   get_current_addon_version node_exporter SELECT_NODE_EXPORTER_VERSION
+  get_current_addon_version alloy SELECT_ALLOY_VERSION
   get_current_addon_version domprom SELECT_DOMPROM_VERSION
   get_current_addon_version daostune SELECT_DAOSTUNE_VERSION
 
@@ -3067,6 +3087,7 @@ load_conf()
   if [ "$LATESTSEL" = "$IQSUITE_VERSION" ];         then IQSUITE_VERSION=$SELECT_IQSUITE_VERSION; fi
   if [ "$LATESTSEL" = "$NSHMAILX_VERSION" ];        then NSHMAILX_VERSION=$SELECT_NSHMAILX_VERSION; fi
   if [ "$LATESTSEL" = "$NODE_EXPORTER_VERSION" ];   then NODE_EXPORTER_VERSION=$SELECT_NODE_EXPORTER_VERSION; fi
+  if [ "$LATESTSEL" = "$ALLOY_VERSION" ];           then ALLOY_VERSION=$SELECT_ALLOY_VERSION; fi
   if [ "$LATESTSEL" = "$DOMPROM_VERSION" ];         then DOMPROM_VERSION=$SELECT_DOMPROM_VERSION; fi
   if [ "$LATESTSEL" = "$DAOSTUNE_VERSION" ];        then DAOSTUNE_VERSION=$SELECT_DAOSTUNE_VERSION; fi
 
@@ -3085,6 +3106,7 @@ load_conf()
   if [ -n "$IQSUITE_SELECT" ];           then IQSUITE_VERSION=$IQSUITE_SELECT; fi
   if [ -n "$NSHMAILX_SELECT" ];          then NSHMAILX_VERSION=$NSHMAILX_SELECT; fi
   if [ -n "$NODE_EXPORTER_SELECT" ];     then NODE_EXPORTER_VERSION=$NODE_EXPORTER_SELECT; fi
+  if [ -n "$ALLOY_SELECT" ];             then ALLOY_VERSION=$ALLOY_SELECT; fi
   if [ -n "$DOMPROM_SELECT" ];           then DOMPROM_VERSION=$DOMPROM_SELECT; fi
   if [ -n "$DAOSTUNE_SELECT" ];          then DAOSTUNE_VERSION=$DAOSTUNE_SELECT; fi
 
@@ -3156,6 +3178,7 @@ write_conf()
   if [ -n "$POSTGRESQL_JDBC_VERSION" ]; then echo "POSTGRESQL_JDBC_VERSION=$LATESTSEL" >> "$BUILD_CONF"; fi
   if [ -n "$MARIADB_JDBC_VERSION" ];    then echo "MARIADB_JDBC_VERSION=$LATESTSEL"    >> "$BUILD_CONF"; fi
   if [ -n "$NODE_EXPORTER_VERSION" ];   then echo "NODE_EXPORTER_VERSION=$LATESTSEL"   >> "$BUILD_CONF"; fi
+  if [ -n "$ALLOY_VERSION" ];           then echo "ALLOY_VERSION=$LATESTSEL"           >> "$BUILD_CONF"; fi
 
   # Parameters only stored in conf file
   echo "CONTAINER_MAINTAINER=\"$CONTAINER_MAINTAINER\""                 >> "$BUILD_CONF"
@@ -3474,7 +3497,7 @@ select_software()
 
         else
           PROM_INSTALL=
-      DOMPROM_VERSION=
+          DOMPROM_VERSION=
           NODE_EXPORTER_VERSION=
         fi
         ;;
@@ -4291,6 +4314,18 @@ for a in "$@"; do
 
       if [ -z "$NODE_EXPORTER_VERSION" ]; then
         NODE_EXPORTER_VERSION=yes
+      fi
+      ;;
+
+    -alloy|-alloy=*|+alloy|+=alloy*)
+      ALLOY_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$ALLOY_VERSION" ]; then
+        get_current_addon_version alloy ALLOY_VERSION
+      fi
+
+      if [ -z "$ALLOY_VERSION" ]; then
+        ALLOY_VERSION=yes
       fi
       ;;
 

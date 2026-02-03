@@ -588,8 +588,11 @@ log_addon_detected "$domprom_binary" "Domino Prom stats exporter"
 daostune_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/daostune 2>/dev/null)
 log_addon_detected "$daostune_binary" "Domino DAOSTune"
 
-node_exporter_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/prometheus/node_exporter/node_exporter 2>/dev/null)
+node_exporter_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/grafana/node_exporter 2>/dev/null)
 log_addon_detected "$node_exporter_binary" "Prometheus Node Exporter"
+
+alloy_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/grafana/alloy 2>/dev/null)
+log_addon_detected "$alloy_binary" "Grafana Alloy"
 
 nshmailx_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /usr/bin/nshmailx 2>/dev/null)
 log_addon_detected "$nshmailx_binary" "Nash!Com nshmailx"
@@ -742,6 +745,14 @@ do
       fi
       ;;
 
+    alloy)
+      ALLOY_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$alloy_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
     nshmailx)
       NSHMAILX_IMAGE_VERSION="$ADDON_VERSION"
 
@@ -888,7 +899,7 @@ fi
 
 if [ -n "$node_exporter_binary" ]; then
   header "Starting Prometheus Node Exporter"
-  $CONTAINER_CMD exec $CONTAINER_NAME /opt/prometheus/node_exporter/node_exporter --collector.disable-defaults --collector.textfile --collector.textfile.directory=/local/notesdata/domino/stats > /tmp/node-exporter.log 2>&1 &
+  $CONTAINER_CMD exec $CONTAINER_NAME /opt/grafana/node_exporter --collector.disable-defaults --collector.textfile --collector.textfile.directory=/local/notesdata/domino/stats > /tmp/node-exporter.log 2>&1 &
 fi
 
 

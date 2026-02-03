@@ -333,9 +333,9 @@ install_node_exporter()
     return 0
   fi
 
- local NODE_EXPORTER_DIR="/opt/prometheus/node_exporter"
+  local GRAFANA_DIR="/opt/grafana"
 
-  mkdir -p "$NODE_EXPORTER_DIR"
+  mkdir -p "$GRAFANA_DIR"
 
   header "Installing requested Prometheus Node Exporter $NODE_EXPORTER_VERSION"
 
@@ -346,24 +346,71 @@ install_node_exporter()
     return 0
   fi
 
-  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$NODE_EXPORTER_DIR"
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$GRAFANA_DIR"
 
-  local NODE_EXPORTER_BIN=$(find "$NODE_EXPORTER_DIR" -type f -name "node_exporter")
+  local NODE_EXPORTER_BIN=$(find "$GRAFANA_DIR" -type f -name "node_exporter" | head -n 1)
 
   if [ -z "$NODE_EXPORTER_BIN" ]; then
-     echo "Node Exporter not found"
+     log_error "Node Exporter binary not found"
      exit 1
   fi
 
   # Remove version directory
-  local NODE_EXPORTER_INST_DIR=$(dirname $NODE_EXPORTER_BIN)
+  local NODE_EXPORTER_INST_DIR=$(dirname "$NODE_EXPORTER_BIN")
 
-  if [ "opt/prometheus/node_exporter" = "$NODE_EXPORTER_INST_DIR" ]; then
+  if [ "$GRAFANA_DIR/node_exporter" = "$NODE_EXPORTER_INST_DIR" ]; then
     return 0
   fi
 
-  mv "$NODE_EXPORTER_INST_DIR/"* "$NODE_EXPORTER_DIR"
+  mv "$NODE_EXPORTER_INST_DIR/"* "$GRAFANA_DIR"
   remove_directory "$NODE_EXPORTER_INST_DIR"
+}
+
+
+install_alloy()
+{
+  if [ -z "$ALLOY_VERSION" ]; then
+    return 0
+  fi
+
+  local GRAFANA_DIR="/opt/grafana"
+
+  mkdir -p "$GRAFANA_DIR"
+
+  header "Installing requested Grafana Alloy $ALLOY_VERSION"
+
+  get_download_name alloy "$ALLOY_VERSION"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find requested Grafana Alloy $ALLOY_VERSION"
+    return 0
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$GRAFANA_DIR"
+
+  cd "$GRAFANA_DIR"
+  unzip -o -q *.zip
+
+  local ALLOY_INST_BIN=$(find "$GRAFANA_DIR" -type f -name "alloy-linux*" | head -n 1)
+  local ALLOY_BIN="$GRAFANA_DIR/alloy"
+
+  if [ ! -e "$ALLOY_INST_BIN" ]; then
+     log_error "Grafana Alloy binary not found"
+     exit 1
+  fi
+
+  mv "$ALLOY_INST_BIN" "$ALLOY_BIN"
+  chmod 755 "$ALLOY_BIN"
+
+  if [ ! -e "$INSTALL_DIR/config.alloy" ]; then
+     log_error "Grafana Alloy config file  not found"
+     exit 1
+  fi
+
+  cp "$INSTALL_DIR/config.alloy" "$GRAFANA_DIR/config.alloy"
+  chmod 444 "$GRAFANA_DIR/config.alloy"
+
+  rm -f *.zip
 }
 
 
@@ -573,6 +620,7 @@ else
   fi
 
   install_node_exporter
+  install_alloy
 
   # Install custom Linux packages requested by admin into Linux layer
 
