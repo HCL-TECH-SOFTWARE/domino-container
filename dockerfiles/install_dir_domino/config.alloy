@@ -17,8 +17,10 @@ loki.write "loki" {
 local.file_match "logfiles" {
   path_targets = [
     {
-      __path__ = env("ALLOY_LOKI_LOGFILE"),
-      job      = env("ALLOY_LOKI_JOB"),
+      __path__  = env("ALLOY_LOKI_LOGFILE"),
+      job       = env("ALLOY_LOKI_JOB"),
+      namespace = env("ALLOY_LOKI_NAMESPACE"),
+      pod       = env("ALLOY_LOKI_POD"),
     },
   ]
 }

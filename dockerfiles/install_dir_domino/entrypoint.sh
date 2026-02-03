@@ -370,6 +370,25 @@ start_alloy()
     export ALLOY_LOKI_JOB="domino-log"
   fi
 
+  if [ -z "$ALLOY_LOKI_NAMESPACE" ]; then
+
+    # On K8s use namespace
+    if [ -e "/var/run/secrets/kubernetes.io/serviceaccount/namespace" ]; then
+      export ALLOY_LOKI_NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+    else
+      export ALLOY_LOKI_NAMESPACE="domino"
+    fi
+  fi
+
+  # If no pod specified use hostname
+  if [ -z "$ALLOY_LOKI_POD" ]; then
+    if [ -x /usr/bin/hostname ]; then
+      export ALLOY_LOKI_POD=$(hostname)
+    else
+      export ALLOY_LOKI_POD=$(cat /proc/sys/kernel/hostname)
+    fi
+  fi
+
   if [ -z "$ALLOY_STORAGE_DIR" ]; then
     export ALLOY_STORAGE_DIR="$DOMINO_DATA_PATH/domino/alloy"
   fi
@@ -379,7 +398,7 @@ start_alloy()
   header "Starting Grafana Alloy"
 
   # Start Grafana Alloy in background logging errors to container STDOUT/STDERR
-  "$ALLOY_BIN" run "$ALLOY_CONFIG" --storage.path="$ALLOY_STORAGE_DIR"  &
+  "$ALLOY_BIN" run "$ALLOY_CONFIG" --storage.path="$ALLOY_STORAGE_DIR" &
 }
 
 
