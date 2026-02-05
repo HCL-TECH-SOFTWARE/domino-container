@@ -390,6 +390,7 @@ install_alloy()
 
   cd "$GRAFANA_DIR"
   unzip -o -q *.zip
+  rm -f *.zip
 
   local ALLOY_INST_BIN=$(find "$GRAFANA_DIR" -type f -name "alloy-linux*" | head -n 1)
   local ALLOY_BIN="$GRAFANA_DIR/alloy"
@@ -409,8 +410,6 @@ install_alloy()
 
   cp "$INSTALL_DIR/config.alloy" "$GRAFANA_DIR/config.alloy"
   chmod 444 "$GRAFANA_DIR/config.alloy"
-
-  rm -f *.zip
 }
 
 

@@ -199,6 +199,48 @@ run_domsetup_listener()
 }
 
 
+log_space()
+{
+  echo
+  echo "$@"
+  echo
+}
+
+
+wait_for_domino_ots()
+{
+  if [ -z "$DOMINO_WAIT_FOR_OTS" ]; then
+    return 0
+  fi
+
+  local seconds=0
+
+  while :; do
+
+    if [ -e "$DOMINO_DATA_PATH/DominoAutoConfig.json" ]; then
+      log_space "OTS configuration found: $DOMINO_DATA_PATH/DominoAutoConfig.json"
+      return 0
+    fi
+
+    if [ -e "$DOMINO_DATA_PATH/DominoAutoConfigTemplate.json" ]; then
+      log_space "OTS configuration template found: $DOMINO_DATA_PATH/DominoAutoConfigTemplate.json"
+      return 0
+    fi
+
+    if [ "$seconds" = "0" ]; then
+      log_space "Waiting for OTS JSON in $DOMINO_DATA_PATH"
+    fi
+
+    sleep 1
+    seconds=$(expr $seconds + 1)
+    if [ $(expr $seconds % 10) -eq 0 ]; then
+      echo " ... waiting $seconds seconds for OTS"
+    fi
+
+  done
+}
+
+
 # --- Main Logic ---
 
 NOW=$(date)
@@ -235,6 +277,9 @@ check_download_and_decrypt
 
 # Invoke Domino Setup Listener if requested
 run_domsetup_listener
+
+# Wait for Domino OTS if requested
+wait_for_domino_ots
 
 # Ensure server.id name is always default name and rename if needed
 if [ -n "$SERVERSETUP_SERVER_IDFILEPATH" ]; then
