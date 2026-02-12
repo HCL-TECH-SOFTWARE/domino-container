@@ -448,6 +448,10 @@ $CONTAINER_CMD run -d -it $CONTAINER_PORTS --hostname=$CONTAINER_HOSTNAME --name
 
 echo "Copying OneTouch configuration into container"
 
+
+# Make sure a file copied into the container is readable by container user
+chmod 644 "$DOMINO_AUTO_CONFIG_JSON_FILE"
+
 count=10
 while [ $count -gt 0 ]; do
   sleep 1
@@ -940,6 +944,8 @@ ERROR_MSG=
 header "Download certificate chain"
 
 $CONTAINER_CMD exec $CONTAINER_NAME /opt/hcl/domino/notes/latest/linux/jvm/bin/keytool -printcert -rfc -sslserver automation.notes.lab > "$DOMINO_VOLUME/notesdata/cert.pem"
+
+# Make sure file copied by root is readable by container user
 chmod 644 "$DOMINO_VOLUME/notesdata/cert.pem"
 
 CURL_OPTIONS="--cacert /local/notesdata/cert.pem"
@@ -978,6 +984,10 @@ test_result "domino.server.onetouch.microca-cert" "Domino One Touch create Micro
 if [ -n "$capi_include" ]; then
 
   header "$Verifying C-API SDK"
+
+  # Make sure a file copied into the container is readable by container user
+  chmod 644 makefile
+  chmod 644 nshver.cpp
 
   $CONTAINER_CMD cp makefile $CONTAINER_NAME:/tmp
   $CONTAINER_CMD cp nshver.cpp $CONTAINER_NAME:/tmp
