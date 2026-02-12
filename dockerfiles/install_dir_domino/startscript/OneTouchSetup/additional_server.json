@@ -116,22 +116,7 @@
 
               "NSDEnbld": "1",
               "FREnbld": "1",
-              "FltRcvryNot": "LocalDomainAdmins",
-
-              "ServerBuildNumber": "14.0",
-              "MajVer": 14,
-              "SSLCipherList": [
-                "C030",
-                "9F",
-                "C02F",
-                "9E"
-                ],
-              "SSLCipherSupportedList": [
-                "C030",
-                "9F",
-                "C02F",
-                "9E"
-                ]
+              "FltRcvryNot": "LocalDomainAdmins"
             }
           }
 

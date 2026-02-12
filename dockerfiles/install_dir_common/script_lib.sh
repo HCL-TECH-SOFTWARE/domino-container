@@ -1334,18 +1334,20 @@ install_package()
 
   # Ensure only packages are installed which are not on the skip or remove list
   local PACKAGE=
+  local NORMALIZED_REMOVE="${LINUX_PKG_REMOVE//,/ }"
+  local NORMALIZED_SKIP="${LINUX_PKG_SKIP//,/ }"
 
-  for PACKAGE in $LINUX_PKG_REMOVE; do
-    case "$@" in
+  for PACKAGE in $NORMALIZED_REMOVE; do
+    case "$1" in
       ${PACKAGE}*)
-	echo "Skipping package install: $@"
+        echo "Skipping package install: $@"
         return 0;
         ;;
     esac
   done
 
-  for PACKAGE in $LINUX_PKG_SKIP; do
-    case "$@" in
+  for PACKAGE in $NORMALIZED_SKIP; do
+    case "$1" in
       ${PACKAGE}*)
         echo "Skipping package install: $@"
         return 0;
@@ -1382,14 +1384,33 @@ install_package()
     exit 1
   fi
 
+  local RET=$?
   echo "$@" >> /tmp/install_package.log
+  return $RET
 }
 
 install_packages()
 {
   local PACKAGE=
-  for PACKAGE in $*; do
-    install_package $PACKAGE
+  local NORMALIZED="${*//,/ }"
+
+  for PACKAGE in $NORMALIZED; do
+    install_package "$PACKAGE"
+  done
+}
+
+install_packages_required()
+{
+  local PACKAGE=
+  local NORMALIZED="${*//,/ }"
+
+  for PACKAGE in $NORMALIZED; do
+    install_package "$PACKAGE"
+
+    if [ $? -ne 0 ]; then
+      log_error "Installation of Linux package failed: $PACKAGE"
+      exit 1
+    fi
   done
 }
 
@@ -1420,14 +1441,18 @@ remove_package()
       /sbin/apk del "$@"
   fi
 
+  local RET=$?
   echo "$@" >> /tmp/remove_package.log
+  return $RET
 }
 
 remove_packages()
 {
   local PACKAGE=
-  for PACKAGE in $*; do
-    remove_package $PACKAGE
+  local NORMALIZED="${*//,/ }"
+
+  for PACKAGE in $NORMALIZED; do
+    remove_package "$PACKAGE"
   done
 }
 

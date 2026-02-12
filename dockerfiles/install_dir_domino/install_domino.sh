@@ -880,7 +880,15 @@ install_ontime()
 
   echo "Unzipping files .."
   cd "$ADDON_NAME"
-  unzip -o -q *.zip
+
+  ZIP_FILE=$(find . -iname "*.zip")
+
+  if [ -z "$ZIP_FILE" ]; then
+    log_error "Cannot find OnTime ZIP installation file!!!"
+    exit 1
+  fi
+
+  unzip -o -q "$ZIP_FILE"
 
   if [ -z "$ADDON_VER" ]; then
     ADDON_VER="$(head -n 1 version.txt | xargs)"
@@ -907,9 +915,15 @@ install_ontime()
     install_file "$NSF" "$ONTIME_DATA/$NSF" $DOMINO_USER $DOMINO_GROUP 644
   done
 
-  install_file 'ExtraFiles/Tasks/Linux64 (Domino 10 - 14)/ontimegc' "$Notes_ExecDirectory/ontimegc" root root 755 755
+  install_file 'ExtraFiles/Tasks/Linux64/ontime' "$Notes_ExecDirectory/ontime" root root 755 755
+  ln -s "$LOTUS/bin/tools/startup" "$LOTUS/bin/ontime"
 
-  ln -s "$LOTUS/bin/tools/startup" "$LOTUS/bin/ontimegc"
+  for LICENSE in ExtraFiles/Licenses/*; do
+    filename=${LICENSE##*/}
+    install_file "$LICENSE" "$Notes_ExecDirectory/license/OnTime_$filename" root root 644
+  done
+
+  install_file "version.txt" "$ONTIME_DATA/version.txt" $DOMINO_USER $DOMINO_GROUP 644
 
   # Set add-on version
   echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
@@ -1713,6 +1727,7 @@ echo "MSSQL_JDBC_VERSION      = [$MSSQL_JDBC_VERSION]"
 echo "POSTGRESQL_JDBC_VERSION = [$POSTGRESQL_JDBC_VERSION]"
 echo "MARIADB_JDBC_VERSION    = [$MARIADB_JDBC_VERSION]"
 echo "DOMPROM_VERSION         = [$DOMPROM_VERSION]"
+echo "DOMFWD_VERSION          = [$DOMFWD_VERSION]"
 echo "DAOSTUNE_VERSION        = [$DAOSTUNE_VERSION]"
 echo "OPENSSL_INSTALL         = [$OPENSSL_INSTALL]"
 echo "SSH_INSTALL             = [$SSH_INSTALL]"

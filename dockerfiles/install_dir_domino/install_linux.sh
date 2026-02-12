@@ -413,6 +413,40 @@ install_alloy()
 }
 
 
+install_domfwd()
+{
+  if [ -z "$DOMFWD_VERSION" ]; then
+    return 0
+  fi
+
+  local GRAFANA_DIR="/opt/grafana"
+
+  mkdir -p "$GRAFANA_DIR"
+
+  header "Installing Domino Log Forwarder $DOMFWD_VERSION"
+
+  get_download_name domfwd "$DOMFWD_VERSION"
+
+  if [ -z "$DOWNLOAD_NAME" ]; then
+    log_error "Cannot find requested Domimo Forwarder $DOMFWD_VERSION"
+    return 0
+  fi
+
+  download_and_check_hash "$DownloadFrom" "$DOWNLOAD_NAME" "$GRAFANA_DIR"
+
+  local DOMFWD_INST_BIN=$(find "$GRAFANA_DIR" -type f -name "domfwd*" | head -n 1)
+  local DOMFWD_BIN="$GRAFANA_DIR/domfwd"
+
+  if [ ! -e "$DOMFWD_INST_BIN" ]; then
+     log_error "Domino Log Forwarder binary not found"
+     exit 1
+  fi
+
+  mv "$DOMFWD_INST_BIN" "$DOMFWD_BIN"
+  chmod 755 "$DOMFWD_BIN"
+}
+
+
 check_custom_software_repositories()
 {
   VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -f2 -d'=')
@@ -620,12 +654,13 @@ else
 
   install_node_exporter
   install_alloy
+  install_domfwd
 
   # Install custom Linux packages requested by admin into Linux layer
 
   if [ -n "LINUX_PKG_ADD" ]; then
     header "Installing custom packages: $LINUX_PKG_ADD"
-    install_packages "$LINUX_PKG_ADD"
+    install_packages_required "$LINUX_PKG_ADD"
   fi
 
    # Remove packages remove Linux base image

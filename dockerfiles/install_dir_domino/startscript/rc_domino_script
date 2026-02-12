@@ -3,9 +3,9 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version  4.1.0 08.12.2025                                               #
+# Version  4.1.2 11.02.2026                                               #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2025                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2026                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=4.1.0
+DOMINO_SCRIPT_VERSION=4.1.2
 
 if [ "$1" = "--version" ]; then
   echo "$DOMINO_SCRIPT_VERSION"
@@ -2887,15 +2887,37 @@ domino_start()
 
   else
 
+    # Check if Domino Log Forwarder is available and not disabled.
+    # If available start it if not disabled
+
+    if [ ! -e "/opt/grafana/domfwd" ]; then
+      DOMFWD_ENABLED=no
+    elif [ -n "$DOMFWD_DISABLED" ]; then
+      DOMFWD_ENABLED=no
+    else
+      DOMFWD_BIN=/opt/grafana/domfwd
+      DOMFWD_ENABLED=yes
+    fi
+
     # Check if server is already configured. If not start in setup listen mode on 1352
     CHECK_SERVER_SETUP=$(grep -i "ServerSetup=" $DOMINO_DATA_PATH/notes.ini)
 
     if [ -n "$CHECK_SERVER_SETUP" ]; then
-      $DOMINO_BIN $JAVA_CONTROLLER_STRING < $DOMINO_INPUT_FILE >> $DOMINO_OUTPUT_LOG 2>&1 &
+
+      if [ "$DOMFWD_ENABLED" = "yes" ]; then
+        $DOMINO_BIN $JAVA_CONTROLLER_STRING < "$DOMINO_INPUT_FILE" 2>&1 | "$DOMFWD_BIN" &
+      else
+        $DOMINO_BIN $JAVA_CONTROLLER_STRING < "$DOMINO_INPUT_FILE" >> "$DOMINO_OUTPUT_LOG" 2>&1 &
+      fi
 
     elif [ -n "$SetupAutoConfigureParams" ]; then
       # Run OTS if requested
-      $DOMINO_BIN $JAVA_CONTROLLER_STRING -auto "$SetupAutoConfigureParams" < $DOMINO_INPUT_FILE >> $DOMINO_OUTPUT_LOG 2>&1 &
+
+      if [ "$DOMFWD_ENABLED" = "yes" ]; then
+        $DOMINO_BIN $JAVA_CONTROLLER_STRING -auto "$SetupAutoConfigureParams" < "$DOMINO_INPUT_FILE" 2>&1 | "$DOMFWD_BIN" &
+      else
+        $DOMINO_BIN $JAVA_CONTROLLER_STRING -auto "$SetupAutoConfigureParams" < "$DOMINO_INPUT_FILE" >> "$DOMINO_OUTPUT_LOG" 2>&1 &
+      fi
 
     else
       # Fall back to listen mode if nothing else is configured
@@ -2903,7 +2925,11 @@ domino_start()
         DOMINO_REMOTE_SETUP_PORT=1352
       fi
 
-      $DOMINO_BIN $JAVA_CONTROLLER_STRING -listen $DOMINO_REMOTE_SETUP_PORT < $DOMINO_INPUT_FILE >> $DOMINO_OUTPUT_LOG 2>&1 &
+      if [ "$DOMFWD_ENABLED" = "yes" ]; then
+        $DOMINO_BIN $JAVA_CONTROLLER_STRING -listen $DOMINO_REMOTE_SETUP_PORT < "$DOMINO_INPUT_FILE" 2>&1 | "$DOMFWD_BIN" &
+      else
+        $DOMINO_BIN $JAVA_CONTROLLER_STRING -listen $DOMINO_REMOTE_SETUP_PORT < "$DOMINO_INPUT_FILE" >> "$DOMINO_OUTPUT_LOG" 2>&1 &
+      fi
     fi
   fi
 

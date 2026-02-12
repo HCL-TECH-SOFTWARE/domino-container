@@ -4,7 +4,7 @@
 # Copyright IBM Corporation 2015, 2020 - APACHE 2.0 see LICENSE
 ############################################################################
 
-# Version 2.4.7 02.02.2026
+# Version 2.4.8 12.02.2026
 
 # Main Script to build images.
 # Run without parameters for detailed syntax.
@@ -26,7 +26,7 @@ fi
 # Default: Check if software exits
 CHECK_SOFTWARE=yes
 
-CONTAINER_BUILD_SCRIPT_VERSION=2.4.7
+CONTAINER_BUILD_SCRIPT_VERSION=2.4.8
 
 # OnTime version
 SELECT_ONTIME_VERSION_DOMINO14=2.3.0
@@ -384,6 +384,7 @@ usage()
   echo "-nshmailx        installs Nash!Com nshmailx simple mail send tool"
   echo "-node_exporter   installs Prometheus node_exporter into the container"
   echo "-domprom         installs Domino Prometheus statistics exporter"
+  echo "-domfwd          installs Domino log forwarder"
   echo "-prometheus/prom installs Domino Prometheus statistics exporter & Node Exporter"
   echo "-alloy           installs Grafana Alloy"
   echo "-k8s-runas       adds K8s runas user support"
@@ -392,9 +393,9 @@ usage()
   echo "-software=<dir>  explicitly specify SOFTWARE_DIR and override cfg file "
   echo "-update          update repositories and check for updating scripts (build.sh, dominoctl, domdownload)"
   echo
-  echo "-linuxpkg=<pkg>       add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
-  echo "-linuxpkgskip=<pkg>   skip adding on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes"
-  echo "-linuxpkgremove=<pkg> remove on or more Linux packages from the container image. Multiple pgks are separated by blank and require quotes"
+  echo "-linuxpkg=<pkg>       add on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes or use comma"
+  echo "-linuxpkgskip=<pkg>   skip adding on or more Linux packages to the container image. Multiple pgks are separated by blank and require quotes or use comma"
+  echo "-linuxpkgremove=<pkg> remove on or more Linux packages from the container image. Multiple pgks are separated by blank and require quotes or use comma"
   echo
   echo "SafeLinx options:"
   echo
@@ -485,6 +486,7 @@ dump_config()
   echo "NODE_EXPORTER_VERSION  : [$NODE_EXPORTER_VERSION]"
   echo "ALLOY_VERSION          : [$ALLOY_VERSION]"
   echo "DOMPROM_VERSION        : [$DOMPROM_VERSION]"
+  echo "DOMFWD_VERSION         : [$DOMFWD_VERSION]"
   echo "DAOSTUNE_VERSION       : [$DAOSTUNE_VERSION]"
   echo "LINUX_PKG_ADD          : [$LINUX_PKG_ADD]"
   echo "LINUX_PKG_REMOVE       : [$LINUX_PKG_REMOVE]"
@@ -1044,7 +1046,7 @@ check_from_image()
     archlinux)
       LINUX_NAME="Arch Linux (experimental)"
       BASE_IMAGE=docker.io/archlinux
-       log_error_exit "Cannot build on Arch Linux because it is a  rolling Linux distribution not compatibile with Domino"
+       log_error_exit "Cannot build on Arch Linux because it is a rolling Linux distribution not compatibile with Domino"
       ;;
 
     kali)
@@ -1276,6 +1278,10 @@ check_addon_label()
     add_addon_label "domprom" "$DOMPROM_VERSION"
   fi
 
+  if [ -n "$DOMFWD_VERSION" ]; then
+    add_addon_label "domfwd" "$DOMFWD_VERSION"
+  fi
+
   if [ -n "$DAOSTUNE_VERSION" ]; then
     add_addon_label "daostune" "$DAOSTUNE_VERSION"
   fi
@@ -1386,6 +1392,7 @@ build_domino()
     --build-arg NODE_EXPORTER_VERSION="$NODE_EXPORTER_VERSION" \
     --build-arg ALLOY_VERSION="$ALLOY_VERSION" \
     --build-arg DOMPROM_VERSION="$DOMPROM_VERSION" \
+    --build-arg DOMFWD_VERSION="$DOMFWD_VERSION" \
     --build-arg DAOSTUNE_VERSION="$DAOSTUNE_VERSION" \
     --build-arg VERSE_VERSION="$VERSE_VERSION" \
     --build-arg NOMAD_VERSION="$NOMAD_VERSION" \
@@ -2187,6 +2194,12 @@ check_software_status()
       fi
     fi
 
+    if [ -n "$DOMFWD_VERSION" ]; then
+      if [ ! "$DOMFWD_VERSION" = "yes" ]; then
+        check_software_file "domfwd" "$DOMFWD_VERSION"
+      fi
+    fi
+
     if [ -n "$DAOSTUNE_VERSION" ]; then
       if [ ! "$DAOSTUNE_VERSION" = "yes" ]; then
         check_software_file "daostune" "$DAOSTUNE_VERSION"
@@ -2391,6 +2404,12 @@ check_software_status()
     if [ -n "$DOMPROM_VERSION" ]; then
       if [ ! "$DOMPROM_VERSION" = "yes" ]; then
         check_software_file "domprom" "$DOMPROM_VERSION"
+      fi
+    fi
+
+    if [ -n "$DOMFWD_VERSION" ]; then
+      if [ ! "$DOMFWD_VERSION" = "yes" ]; then
+        check_software_file "domfwd" "$DOMFWD_VERSION"
       fi
     fi
 
@@ -3048,6 +3067,7 @@ load_conf()
   get_current_addon_version node_exporter SELECT_NODE_EXPORTER_VERSION
   get_current_addon_version alloy SELECT_ALLOY_VERSION
   get_current_addon_version domprom SELECT_DOMPROM_VERSION
+  get_current_addon_version domfwd SELECT_DOMFWD_VERSION
   get_current_addon_version daostune SELECT_DAOSTUNE_VERSION
 
   case "$PROD_VER" in
@@ -3062,7 +3082,7 @@ load_conf()
       ;;
 
     14*)
-    SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
+      SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
       ;;
 
     *)
@@ -3089,6 +3109,7 @@ load_conf()
   if [ "$LATESTSEL" = "$NODE_EXPORTER_VERSION" ];   then NODE_EXPORTER_VERSION=$SELECT_NODE_EXPORTER_VERSION; fi
   if [ "$LATESTSEL" = "$ALLOY_VERSION" ];           then ALLOY_VERSION=$SELECT_ALLOY_VERSION; fi
   if [ "$LATESTSEL" = "$DOMPROM_VERSION" ];         then DOMPROM_VERSION=$SELECT_DOMPROM_VERSION; fi
+  if [ "$LATESTSEL" = "$DOMFWD_VERSION" ];          then DOMFWD_VERSION=$SELECT_DOMFWD_VERSION; fi
   if [ "$LATESTSEL" = "$DAOSTUNE_VERSION" ];        then DAOSTUNE_VERSION=$SELECT_DAOSTUNE_VERSION; fi
 
   if [ -n "$FROM_IMAGE_SELECT" ];        then FROM_IMAGE=$FROM_IMAGE_SELECT; fi
@@ -3108,6 +3129,7 @@ load_conf()
   if [ -n "$NODE_EXPORTER_SELECT" ];     then NODE_EXPORTER_VERSION=$NODE_EXPORTER_SELECT; fi
   if [ -n "$ALLOY_SELECT" ];             then ALLOY_VERSION=$ALLOY_SELECT; fi
   if [ -n "$DOMPROM_SELECT" ];           then DOMPROM_VERSION=$DOMPROM_SELECT; fi
+  if [ -n "$DOMFWD_SELECT" ];            then DOMFWD_VERSION=$DOMFWD_SELECT; fi
   if [ -n "$DAOSTUNE_SELECT" ];          then DAOSTUNE_VERSION=$DAOSTUNE_SELECT; fi
 
   if [ -n "$NODE_EXPORTER_VERSION" ] && [ -n "$DOMPROM_VERSION" ]; then PROM_INSTALL=yes; fi
@@ -3171,6 +3193,7 @@ write_conf()
   if [ -n "$LINUX_LANG" ];       then echo "LINUX_LANG=$LINUX_LANG"                 >> "$BUILD_CONF"; fi
   if [ -n "$DOMINO_LANG" ];      then echo "DOMINO_LANG=$DOMINO_LANG"               >> "$BUILD_CONF"; fi
   if [ -n "$DOMPROM_VERSION" ];  then echo "DOMPROM_VERSION=$LATESTSEL"             >> "$BUILD_CONF"; fi
+  if [ -n "$DOMFWD_VERSION" ];   then echo "DOMFWD_VERSION=$LATESTSEL"              >> "$BUILD_CONF"; fi
   if [ -n "$DAOSTUNE_VERSION" ]; then echo "DAOSTUNE_VERSION=$LATESTSEL"            >> "$BUILD_CONF"; fi
 
   if [ -n "$MYSQL_JDBC_VERSION" ];      then echo "MYSQL_JDBC_VERSION=$LATESTSEL"      >> "$BUILD_CONF"; fi
@@ -4338,6 +4361,18 @@ for a in "$@"; do
 
       if [ -z "$DOMPROM_VERSION" ]; then
         DOMPROM_VERSION=yes
+      fi
+      ;;
+
+    -domfwd|-domfwd=*|+domfwd|+=domfwd*)
+      DOMFWD_VERSION=$(echo "$a" | cut -f2 -d= -s)
+
+      if [ -z "$DOMFWD_VERSION" ]; then
+        get_current_addon_version domfwd DOMFWD_VERSION
+      fi
+
+      if [ -z "$DOMFWD_VERSION" ]; then
+        DOMFWD_VERSION=yes
       fi
       ;;
 

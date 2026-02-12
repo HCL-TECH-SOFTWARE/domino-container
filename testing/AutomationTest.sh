@@ -569,8 +569,14 @@ lp_strings=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/late
 
 log_addon_detected "$lp_strings" "Language Pack [$lp_strings]"
 
-# Check if Ontime binary exists
+# Check if OnTime binary exists
 ontime_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/ontimegc 2>/dev/null)
+
+# Check for new OnTime 12+ binary exists
+if [ -z "$ontime_binary" ]; then
+  ontime_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/ontime 2>/dev/null)
+fi
+
 log_addon_detected "$ontime_binary" "Ontime group calendar"
 
 # Check if C-API global.h and lib notes0.o exists
@@ -583,7 +589,10 @@ domiq_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/la
 log_addon_detected "$domiq_binary" "DominoIQ Server"
 
 domprom_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/domprom 2>/dev/null)
-log_addon_detected "$domprom_binary" "Domino Prom stats exporter"
+log_addon_detected "$domprom_binary" "Domino Prom Stats Exporter"
+
+domfwd_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/grafana/domfwd 2>/dev/null)
+log_addon_detected "$domfwd_binary" "Domino Log Forwarder"
 
 daostune_binary=$($CONTAINER_CMD exec $CONTAINER_NAME find /opt/hcl/domino/notes/latest/linux/daostune 2>/dev/null)
 log_addon_detected "$daostune_binary" "Domino DAOSTune"
@@ -725,6 +734,14 @@ do
       DOMPROM_IMAGE_VERSION="$ADDON_VERSION"
 
       if [ -z "$domprom_binary" ]; then
+        ERROR_MSG="$ADDON_NAME binary not found"
+      fi
+      ;;
+
+    domfwd)
+      DOMFWD_IMAGE_VERSION="$ADDON_VERSION"
+
+      if [ -z "$domfwd_binary" ]; then
         ERROR_MSG="$ADDON_NAME binary not found"
       fi
       ;;
@@ -923,6 +940,8 @@ ERROR_MSG=
 header "Download certificate chain"
 
 $CONTAINER_CMD exec $CONTAINER_NAME /opt/hcl/domino/notes/latest/linux/jvm/bin/keytool -printcert -rfc -sslserver automation.notes.lab > "$DOMINO_VOLUME/notesdata/cert.pem"
+chmod 644 "$DOMINO_VOLUME/notesdata/cert.pem"
+
 CURL_OPTIONS="--cacert /local/notesdata/cert.pem"
 
 if [ ! -e "$DOMINO_VOLUME/notesdata/cert.pem" ];then
