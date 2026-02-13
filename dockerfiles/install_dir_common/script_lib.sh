@@ -1753,11 +1753,23 @@ download_and_decrypt()
   return 0
 }
 
+
 install_mysql_client()
 {
 
   local ADDON_NAME="MySQL Client"
   header "$ADDON_NAME Installation"
+
+   if [ -x /usr/bin/zypper ]; then
+    log_error "MySQL Client not yet available on SUSE Linux"
+    exit 1
+  fi
+
+  if [ -x /usr/bin/apt-get ]; then
+    log_error "MySQL Client not yet available on Ubuntu/Debian"
+    exit 1
+  fi
+
 
   $CURL_CMD -LO https://repo.mysql.com/mysql80-community-release-el9-1.noarch.rpm
   rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
@@ -1772,13 +1784,31 @@ install_mysql_client()
   log_space Installed $ADDON_NAME
 }
 
+
 install_mssql_client()
 {
 
   local ADDON_NAME="Microsoft SQL Server Client"
   header "$ADDON_NAME Installation"
 
-  $CURL_CMD https://packages.microsoft.com/config/rhel/8/prod.repo > /etc/yum.repos.d/mssql-release.repo
+  if [ -x /usr/bin/zypper ]; then
+    log_error "MS-SQL Client not yet available on SUSE Linux"
+    exit 1
+  fi
+
+  if [ -x /usr/bin/apt-get ]; then
+    log_error "MS-SQL Client not yet available on Ubuntu/Debian"
+    exit 1
+  fi
+
+  local LINUX_MAJOR_VERSION=$(source /etc/os-release && echo ${VERSION_ID%%.*})
+
+  if [ -z "$LINUX_MAJOR_VERSION" ]; then
+    log_error "Cannot detect Linux major version"
+    exit 1
+  fi
+
+  $CURL_CMD https://packages.microsoft.com/config/rhel/$LINUX_MAJOR_VERSION/prod.repo > /etc/yum.repos.d/mssql-release.repo
 
   ACCEPT_EULA=Y install_package msodbcsql18
   ACCEPT_EULA=Y install_package mssql-tools18
