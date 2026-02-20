@@ -301,7 +301,7 @@ start_node_exporter()
   fi
 
   if [ -z "$DOMINO_PROM_STATS_DIR" ]; then
-    export DOMINO_PROM_STATS_DIR=/local/notesdata/domino/stats
+    export DOMINO_PROM_STATS_DIR="$DOMINO_DATA_PATH/domino/stats"
 
   else
     # Use default if no other option is specified and the stats dir is set
