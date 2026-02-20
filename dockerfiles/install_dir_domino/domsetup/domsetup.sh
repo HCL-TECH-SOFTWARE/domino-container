@@ -425,7 +425,7 @@ process_get_request()
     *.mp3)         CONTENT_TYPE="audio/mpeg" ;;
     *.ogg)         CONTENT_TYPE="audio/ogg" ;;
     *.wav)         CONTENT_TYPE="audio/wav" ;;
-    *.mp4|*.m4v)   CONTENT_YPE="video/mp4" ;;
+    *.mp4|*.m4v)   CONTENT_TYPE="video/mp4" ;;
     *.mov)         CONTENT_TYPE="video/quicktime" ;;
     *.pdf)         CONTENT_TYPE="application/pdf" ;;
     *)             CONTENT_TYPE="application/octet-stream" ;;

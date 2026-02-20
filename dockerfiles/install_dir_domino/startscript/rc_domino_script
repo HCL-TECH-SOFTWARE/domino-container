@@ -672,7 +672,7 @@ wait_time_or_string()
 
   while [ "$seconds" -lt "$MAX_SECONDS" ]; do
 
-    found=$(grep -e "$SEARCH_STR" "$FILE" 2>/dev/null | wc -l)
+    found=$(grep -E "$SEARCH_STR" "$FILE" 2>/dev/null | wc -l)
 
     if [ "$found" -ge "$COUNT" ]; then
       return 0
@@ -3093,11 +3093,23 @@ remove_ots_setup_files()
 
 check_ots_setup_complete()
 {
-  local OTS_SUCCESS=$(grep "Application configuration completed successfully" "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/autoconfigure.log" | wc -l)
+  local OTS_SUCCESS=$(grep "Application configuration completed successfully" "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/autoconfigure.log")
 
-  if [ "$OTS_SUCCESS" = "1" ]; then
+  if [ -n "$OTS_SUCCESS" ]; then
     log_space "HCL Domino One Touch Configuration was successful"
     return 0
+  fi
+
+  local OTS_ERROR=$(grep "Application configuration completed successfully" "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/autoconfigure.log")
+
+  if [ -z "$OTS_ERROR" ]; then
+
+    local SERVER_STARTED=$(grep "Server started on physical node" "$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/console.log")
+
+    if [ -n "$SERVER_STARTED" ]; then
+      log_space "HCL Domino started successful"
+      return 0
+    fi
   fi
 
   ClearScreen
@@ -3112,11 +3124,15 @@ check_ots_setup_complete()
 
 domino_setup_start_server()
 {
-  header "Starting HCL Domino Server Configuration"
+  if [ "$DOMINO_WAIT_FOR_OTS" = "1" ]; then
+    header "Waiting for HCL Domino Server Configuration to complete (DOMINO_WAIT_FOR_OTS=1)"
+  else
+    header "Starting HCL Domino Server Configuration"
+    domino start
+  fi
 
-  domino start
-
-  wait_time_or_string 60 $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/console.log "Server started on physical node"
+  # Wait for up to 300 seconds if OTS was successful, failed or server already started configured
+  wait_time_or_string 300 $DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT/console.log "Server started on physical node|Application configuration completed successfully|AutoConfiguration error:"
 
   sleep 10
   check_ots_setup_complete
@@ -3129,8 +3145,6 @@ domino_setup_start_server()
   sleep 5
   domino service enable
 }
-
-#! /bin/bash
 
 
 domino_process_monitor()

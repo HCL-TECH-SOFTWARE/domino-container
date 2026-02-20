@@ -123,6 +123,7 @@
               "TRANSLOG_Status": "1",
               "TRANSLOG_Style": "0",
               "TRANSLOG_UseAll": "0",
+	      "TRANSLOG_AutoFixup": "1",
 
               "QtaMthd": "1",
               "DAOSEnable": "0",

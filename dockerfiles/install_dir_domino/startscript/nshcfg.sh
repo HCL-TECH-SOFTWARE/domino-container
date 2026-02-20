@@ -238,6 +238,10 @@ GetConfig()
   ONE_TOUCH_INFO=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .info')
   DXL=$(echo $CFG | jq --arg key "$KEY" -r '.[] | select(.name==$key) | .DXL')
 
+  if [ "$ONE_TOUCH_INFO" = "null" ]; then
+    ONE_TOUCH_INFO=
+  fi
+
   # Process setup index config
   if [ "null" != "$URL" ] || [ "null" != "$INDEX" ]; then
 
