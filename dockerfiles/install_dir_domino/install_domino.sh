@@ -1326,9 +1326,9 @@ check_update_custom_java_policy()
   echo >> "$JAVA_POLICY_FILE"
 
   if [ -z "$CUSTOM_JAVA_POLICY_NAME" ]; then
-    echo "--- Domino Container appended Java Security Policies ---" >> "$JAVA_POLICY_FILE"
+    echo "// --- Domino Container appended Java Security Policies ---" >> "$JAVA_POLICY_FILE"
   else
-    echo "--- Domino Container appended for $CUSTOM_JAVA_POLICY_NAME ---" >> "$JAVA_POLICY_FILE"
+    echo "// --- Domino Container appended for $CUSTOM_JAVA_POLICY_NAME ---" >> "$JAVA_POLICY_FILE"
   fi
 
   echo >> "$JAVA_POLICY_FILE"
