@@ -99,12 +99,14 @@ nomadweb|1.0.15|HCL_Nomad_web_1.0.15_for_HCL_SafeLinx.zip|mNuHoM6NKOOkj7RgUhnhZ|
 nomadweb|1.0.16|HCL_Nomad_web_1.0.16_for_HCL_SafeLinx.zip|8B0kfPixyPZn9mYmzAaCA|67a289657adffea88684c59d5f5a8e98049e3abb70ee2b2b4ac405f46eceb7e7
 nomadweb|1.0.17|HCL_Nomad_web_1.0.17_for_HCL_SafeLinx.zip|QNMp67Asgi9MFEHqGMENr|38d4cd416f743b05ddac42b3b57d0f850c53f729807190d889c6e9e6dfa2214e
 nomadweb|1.0.18|HCL_Nomad_web_1.0.18_for_HCL_SafeLinx.zip|KCFLNgYxmHgrKTCrkwH1U|8c8ebda1db0144fda9f8d586b5bf4a2be903eaf75f8ae866ad182c066efe0bb8
+nomadweb|1.0.19|HCL_Nomad_web_1.0.19_for_HCL_SafeLinx.zip|jrXfAEijKkntPTdiF4sjp|a88d51e8137ac03c7f5d6ed62e0c36401f3f4db7edb0df9c20da5b82239d69f2
 nomad|1.0.14|nomad-server-1.0.14-linux.tar.gz|JAneQRBJX0MsyZ1YpoJ0r|1a31194e99611d31bbc33617e310439e7da9fee870c019d76e250ee79b061765
 nomad|1.0.15|HCL_Nomad_server_1.0.15_linux.tar.gz,nomad-server-1.0.15-linux.tar.gz|eIJRTrDPRqGGzevzYRcFe|f34da6a47461d98338307ed08967df60995bb01d4eb65ab0fba99451aac930ef
 nomad|1.0.15IF1|HCL_Nomad_server_1.0.15-IF1_linux.tar.gz|b8upAL5L6uL9Fo8mS9xa0|8c63db6e18c4dcc23fd2ca5db025e445644751f323372c20cecb631dd0484eb9
 nomad|1.0.16|HCL_Nomad_server_1.0.16_linux.tar.gz|FV38xlVSRI4lsheRurBIB|99288096ab617eca1b650bed4773b7e1b75a09346925b4813e631de971ddd4e0
 nomad|1.0.17|HCL_Nomad_server_1.0.17_linux.tar.gz|rYqlpoX9SEQAgs1tZ00Uy|75d89f77d987435253913729f781b9170cb0a08de4cbd634b5a02992b1f3db1c
 nomad|1.0.18|HCL_Nomad_server_1.0.18_linux.tar.gz|IRzJvYQTzeL8uUGkqkeuR|1150e20d3ecd9845a370937c7cbdd3642c7144d1e3595164e4654bc06156ae8d
+nomad|1.0.19|HCL_Nomad_server_1.0.19_linux.tar.gz|QDMrocRSzv0KU6cHlQr2Y|439cd1898cad70b268b54fa39bb81cbd0744adc0a2a980eae027541cac412aa8
 domrestapi|1.1-12|Domino_REST_API_V1.1_R12_Installer.tar.gz|AcYz2HbFEtVKyFBYh6oj7|b61fe057c1420aef1f95a8da03794077ee26531104b32c75b67c02f8983ac54f
 domrestapi|1.1.1-12|Domino_REST_API_V1.1.1_R12_Installer.tar.gz|PJZR8bRQsxADqYxlcVjCy|f9f28a2c1d5dc9e632cfeafe7c63ad3b186352df4fa0e9839dbe45580e00ccd6
 domrestapi|1.1-14|Domino_REST_API_V1.1_R14_Installer.tar.gz|WaAVquPQpD1ESIkoyRwDi|0a1329a6620bd3114c0c4089048229b2c17f5fef9fb6920f32d238e6fe3e3e54
@@ -139,3 +141,4 @@ mssql-jdbc|13.2.1|sqljdbc_13.2.1.0_enu.tar.gz,https://download.microsoft.com/dow
 postgresql-jdbc|42.7.8|postgresql-42.7.8.jar,https://jdbc.postgresql.org/download/postgresql-42.7.8.jar|x|2a32a9dcbc42d67a50ad3a0de5efd102c8d2be46720045f2cbd6689f160ab7c7
 mariadb-jdbc|3.5.7|mariadb-java-client-3.5.7.jar,https://dlm.mariadb.com/4550269/Connectors/java/connector-java-3.5.7/mariadb-java-client-3.5.7.jar|x|07bb1229dc184f3313a5aef4c5a6b3207c8dbaa09db4a26814c936f004b4c526
 nshmailx|1.1.0|nshmailx-1.1.0,https://github.com/nashcom/nshmailx/releases/download/v1.1.0/nshmailx-1.1.0|x|66f1e7498b43c5dc77577175e278ee5a04383687e6a66eabb9aac515041dd659
+nshmailx|1.2.6|nshmailx-1.2.6,https://github.com/nashcom/nshmailx/releases/download/v1.2.6/nshmailx-1.2.6|x|fa4618508c4fce52d8b12629984f7136baab5781c48d9a3f9bd62662f5aba61a

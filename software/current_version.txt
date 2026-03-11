@@ -12,8 +12,8 @@ verse|3.2.6
 capi|14.5
 daostune|2.0
 safelinx|1.4.3
-nomadweb|1.0.18
-nomad|1.0.18
+nomadweb|1.0.19
+nomad|1.0.19
 domrestapi|1.1.6
 tika|3.2.3
 borg|1.4.1
@@ -27,4 +27,4 @@ mysql-jdbc|9.4.0
 mssql-jdbc|13.2.1
 postgresql-jdbc|42.7.8
 mariadb-jdbc|3.5.7
-nshmailx|1.1.0
+nshmailx|1.2.6
