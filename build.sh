@@ -988,6 +988,11 @@ check_from_image()
       BASE_IMAGE=ubuntu:jammy
       ;;
 
+    dhi-debian13)
+      LINUX_NAME="Docker Hardened Images/Debian GNU/Linux 13 (trixie)"
+      BASE_IMAGE=dhi.io/debian-base:trixie-debian13-dev
+      ;;
+
     debian13)
       LINUX_NAME="Debian 13 (Trixie)"
       BASE_IMAGE=debian:13
@@ -3900,7 +3905,6 @@ for a in "$@"; do
       fi
       ;;
 
-
     -nomad_download=*)
       NOMAD_DOWNLOAD_FILE=$(echo "$a" | cut -f2 -d= -s)
       ;;
@@ -3949,7 +3953,7 @@ for a in "$@"; do
       fi
       ;;
 
-   -postgresql-jdbc*|+postgresql-jdbc*)
+    -postgresql-jdbc*|+postgresql-jdbc*)
       POSTGRESQL_JDBC_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$POSTGRESQL_JDBC_VERSION" ]; then
@@ -3957,7 +3961,7 @@ for a in "$@"; do
       fi
       ;;
 
-   -mariadb-jdbc*|+mariadb-jdbc*)
+    -mariadb-jdbc*|+mariadb-jdbc*)
       MARIADB_JDBC_VERSION=$(echo "$a" | cut -f2 -d= -s)
 
       if [ -z "$MARIADB_JDBC_VERSION" ]; then
@@ -4002,7 +4006,7 @@ for a in "$@"; do
       ;;
 
     -homedir=*)
-    LINUX_HOMEDIR=$(echo "$a" | cut -f2 -d= -s)
+      LINUX_HOMEDIR=$(echo "$a" | cut -f2 -d= -s)
       ;;
 
     -startscript=*|+startscript=*)
