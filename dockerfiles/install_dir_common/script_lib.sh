@@ -530,6 +530,13 @@ download_and_check_hash()
       ;;
   esac
 
+  # LATER: Temporary workaround because is compressing the file without changing the file extension. A streaming tar cannot detect the format
+  # The curl download output is streamed into tar
+
+  if [ "Traveler_14.5.1_Linux_ML.tar" = "$CURRENT_FILE" ]; then
+    TAR_OPT=-xz
+  fi
+
   if [ -z "$TAR_OPT" ]; then
 
     # Download without extracting for none tar files
