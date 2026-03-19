@@ -772,8 +772,7 @@ install_capi()
 
   # Update global profile
 
-  update_capi_env /root/.bashrc
-  update_capi_env /home/notes/.bashrc
+  update_capi_env "/etc/bashrc"
 
   echo
   echo Installed $ADDON_NAME

@@ -734,7 +734,7 @@ nsh_cmp()
     return 1
   fi
 
-  if [ -x /usr/bin/cmp ]; then
+  if command -v "cmd" >/dev/null 2>&1; then
     cmp -s "$1" "$2"
     return $?
   fi
@@ -1471,7 +1471,7 @@ install_if_missing()
     return 0
   fi
 
-  if [ -x "/usr/bin/$1" ] || [ -x "/usr/local/bin/$1" ]; then
+  if command -v "$PACKAGE" >/dev/null 2>&1; then
     log_space "Already installed: $1"
     return 0
   fi
@@ -1482,7 +1482,7 @@ install_if_missing()
 
   install_package "$PACKAGE"
 
-  if [ -x "/usr/bin/$1" ] || [ -x "/usr/local/bin/$1" ]; then
+  if command -v "$PACKAGE" >/dev/null 2>&1; then
     log_space "Successfully installed: $PACKAGE"
     return 0
   fi
@@ -1495,7 +1495,7 @@ install_if_missing()
 
   install_package "$PACKAGE"
 
-  if [ -x "/usr/bin/$1" ] || [ -x "/usr/local/bin/$1" ]; then
+  if command -v "$PACKAGE" >/dev/null 2>&1; then
     log_space "Successfully installed: $PACKAGE"
     return 0
   fi
