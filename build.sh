@@ -2917,20 +2917,47 @@ select_language_pack()
   esac
 }
 
+
+select_ontime_version()
+{
+
+  case "$PROD_VER" in
+
+    14.5.1|latest)
+      SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO1451"
+      ;;
+
+    14.5)
+      SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
+      ;;
+
+    14*)
+      SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
+      ;;
+
+    *)
+      SELECT_ONTIME_VERSION=
+      ;;
+  esac
+}
+
+
 select_domino_version()
 {
   local VER=
   local VER_LATEST=
+  local VER_1451=
+  local VER_145=
   local VER_140=
   local VER_1202=
-  local VER_145=
 
   get_current_version domino VER_LATEST
   VER="$VER_LATEST"
 
-  get_current_version domino-12.0.2 VER_1202
-  get_current_version domino-14.0 VER_140
   get_current_version domino-14.5.1 VER_1451
+  get_current_version domino-14.5   VER_145
+  get_current_version domino-14.0   VER_140
+  get_current_version domino-12.0.2 VER_1202
 
   ClearScreen
   echo
@@ -2939,10 +2966,9 @@ select_domino_version()
   echo
 
   print_ver "1" "$VER_LATEST"
-  print_ver "2" "$VER_140"
-  print_ver "3" "$VER_1202"
-  echo
-  print_ver "4" "$VER_1451 (Beta)"
+  print_ver "2" "$VER_145"
+  print_ver "3" "$VER_140"
+  print_ver "4" "$VER_1202"
 
   echo
   read -n1 -p " Select Domino version  [0] to cancel? " VER;
@@ -2960,50 +2986,39 @@ select_domino_version()
       parse_domino_version "$DOMINO_VERSION"
       get_current_addon_version traveler SELECT_TRAVELER_VERSION
       SELECT_DOMIQ_VERSION=$PROD_VER
-      if [ -n "$ONTIME_VERSION" ]; then
-        ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
-      fi
       ;;
 
     2)
-      DOMINO_VERSION="$VER_140"
-      SELECT_TRAVELER_VERSION="$VER_140"
-      if [ -n "$ONTIME_VERSION" ]; then
-        ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
-      fi
+      DOMINO_VERSION="$VER_145"
       parse_domino_version "$DOMINO_VERSION"
+      SELECT_TRAVELER_VERSION="$VER_1451"
       get_current_addon_version traveler SELECT_TRAVELER_VERSION
       ;;
 
     3)
-      DOMINO_VERSION="$VER_1202"
+      DOMINO_VERSION="$VER_140"
       parse_domino_version "$DOMINO_VERSION"
-      # Reset OnTime for older releases
-      ONTIME_VERSION=
+      SELECT_TRAVELER_VERSION="$VER_140"
       get_current_addon_version traveler SELECT_TRAVELER_VERSION
       ;;
 
     4)
-      DOMINO_VERSION="$VER_1451"
+      DOMINO_VERSION="$VER_1202"
       parse_domino_version "$DOMINO_VERSION"
-      if [ -n "$ONTIME_VERSION" ]; then
-        ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO1451"
-      fi
-      get_current_addon_version traveler-14.5.1 SELECT_TRAVELER_VERSION
-      get_current_addon_version domiq-14.5.1 SELECT_DOMIQ_VERSION
+      get_current_addon_version traveler SELECT_TRAVELER_VERSION
+      # Reset OnTime for older releases
       ;;
 
   esac
 
+  # Make sure to select the right OnTime verison
+  if [ -n "$ONTIME_VERSION" ]; then
+    select_ontime_version
+    ONTIME_VERSION=$SELECT_ONTIME_VERSION
+  fi
+
   # Select corresponding C-API version
   SELECT_CAPI_VERSION=$PROD_VER
-
-  # Ensure to select the right response file for OnTime
-  if [ -n "$ONTIME_VERSION" ] && [ -z "$ONTIME_DOWNLOAD_FILE" ] ; then
-     DominoResponseFile=domino14_ontime_install.properties
-  else
-     DominoResponseFile=
-  fi
 
 }
 
@@ -3075,25 +3090,7 @@ load_conf()
   get_current_addon_version domfwd SELECT_DOMFWD_VERSION
   get_current_addon_version daostune SELECT_DAOSTUNE_VERSION
 
-  case "$PROD_VER" in
-
-    14.5.1)
-      SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO1451"
-      ;;
-
-
-    14.5)
-      SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
-      ;;
-
-    14*)
-      SELECT_ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
-      ;;
-
-    *)
-      SELECT_ONTIME_VERSION=
-      ;;
-  esac
+  select_ontime_version
 
   if [ "$LATESTSEL" = "$VERSE_VERSION" ];           then VERSE_VERSION=$SELECT_VERSE_VERSION; fi
   if [ "$LATESTSEL" = "$TRAVELER_VERSION" ];        then TRAVELER_VERSION=$SELECT_TRAVELER_VERSION; fi
@@ -3563,27 +3560,11 @@ select_software()
 
       o)
         if [ -z "$ONTIME_VERSION" ]; then
-          case "$PROD_VER" in
-            14.5)
-              ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO145"
-              DominoResponseFile=domino14_ontime_install.properties
-              ;;
-
-            14*)
-              ONTIME_VERSION="$SELECT_ONTIME_VERSION_DOMINO14"
-              SELECT_DOMIQ_VERSION=
-              DominoResponseFile=domino14_ontime_install.properties
-              ;;
-
-            *)
-              ONTIME_VERSION=
-              DominoResponseFile=
-              ;;
-           esac
-        else
+          select_ontime_version
+          ONTIME_VERSION=$SELECT_ONTIME_VERSION
+	else
           ONTIME_VERSION=
-          DominoResponseFile=
-        fi
+	fi
         ;;
 
       i)
@@ -3630,10 +3611,6 @@ build_menu()
   select_software
   ClearScreen
   echo
-
-  if [ -n "$ONTIME_VER" ]; then
-    DominoResponseFile=domino14_ontime_install.properties
-  fi
 
   if [ "$SELECTED" = "0" ] || [ -z "$SELECTED" ] ; then
     log "No build selected - Done"
@@ -4126,8 +4103,11 @@ for a in "$@"; do
       ;;
 
     -ontime|+ontime)
-      DominoResponseFile=domino14_ontime_install.properties
-      ONTIME_VERSION=$SELECT_ONTIME_VERSION_DOMINO145
+      if [ -z "$PROD_VER" ]; then
+        PROD_VER=latest
+      fi
+      select_ontime_version
+      ONTIME_VERSION=$SELECT_ONTIME_VERSION
       ;;
 
     -ontime=*|+ontime=*)
@@ -4496,6 +4476,13 @@ fi
 
 if [ -z "$PROD_NAME" ]; then
   PROD_NAME="domino"
+fi
+
+# Ensure to select the right response file for OnTime
+if [ -n "$ONTIME_VERSION" ] && [ -z "$ONTIME_DOWNLOAD_FILE" ] ; then
+  DominoResponseFile=domino14_ontime_install.properties
+else
+  DominoResponseFile=
 fi
 
 check_for_hcl_image

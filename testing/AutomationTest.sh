@@ -1035,6 +1035,8 @@ if [ -n "$nomad_binary" ]; then
 
   header "$Verifying Verifying Nomad Server"
 
+
+  ERROR_MSG=
   wait_for_string $CONSOLE_LOG "Listening on 0.0.0.0:9443" 50
   sleep 2
 
