@@ -107,6 +107,7 @@ node_exporter|1.9.1|node_exporter-1.9.1.linux-amd64.tar.gz,https://github.com/pr
 node_exporter|1.10.2|node_exporter-1.10.2.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz|x|c46e5b6f53948477ff3a19d97c58307394a29fe64a01905646f026ddc32cb65b
 alloy|1.12.2|alloy-linux-amd64.zip,https://github.com/grafana/alloy/releases/download/v1.12.2/alloy-linux-amd64.zip|x|7d12882f9c270804beeae3d519e995a1fcff18b7f50d6c5894438df0c799763a
 domprom|1.0.3|domprom-1.0.3-linux-amd64.taz,https://github.com/nashcom/domino-grafana/releases/download/v1.0.3/domprom-1.0.3-linux-amd64.taz|x|1b3e5ff7b7d11b7cc7c4ef34d34e7785b7920a6e60d51d421bfd240418760ed4
+domprom|1.0.4|domprom-1.0.4-linux-amd64.taz,https://github.com/nashcom/domino-grafana/releases/download/v1.0.4/domprom-1.0.4-linux-amd64.taz|x|d88c7650d14583b839d7ebf9114012a1cd49a86ce4aaafcf66c0b8cd32db1cdf
 domfwd|1.0.2|domfwd-1.0.2-linux-amd64.taz,https://nashcom.de/software/domfwd-1.0.2-linux-amd64.taz|x|3a8abfcbc8ee662e9f88b1f1ba5f7b1d7182b04ad8a15d04a1656696005d4375
 iqsuite|27.1.1|iQ.Suite-27.1.1.10939-Linux-Domino14-64bit.tar.gz|x|998c5cfb498ae5b8036a2a4d44aacfc5d94006559c3e247a1e83b8c5c0f57729
 iqsuite|28.1|iQ.Suite-28.1-Linux-Domino14-64-Bit.tar.gz|x|442739a02b15a06705d6b0f3749ec26c923c4f710d0b1348fd6b6f3e40da88a6
