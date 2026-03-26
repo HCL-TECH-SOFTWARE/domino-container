@@ -1191,6 +1191,7 @@ install_res_links()
   local ENGLISH_LOCALE="en_US"
   local GERMAN_LOCALE_UTF8="${GERMAN_LOCALE}.UTF-8"
   local ENGLISH_LOCALE_UTF8="${ENGLISH_LOCALE}.UTF-8"
+  local C_LOCALE_UTF8="C.UTF-8"
   local CURRENT_DIR=$(pwd)
 
   cd $DOMINO_RES_DIR
@@ -1202,22 +1203,27 @@ install_res_links()
 
   if [ ! -e "$DOMINO_RES_DIR/$GERMAN_LOCALE" ]; then
     echo "Creating symbolic link for German res files ($GERMAN_LOCALE)"
-    ln -s C $GERMAN_LOCALE
+    ln -s C "$GERMAN_LOCALE"
   fi
 
   if [ ! -e "$DOMINO_RES_DIR/$ENGLISH_LOCALE" ]; then
     echo "Creating symbolic link for English res files ($ENGLISH_LOCALE)"
-    ln -s C $ENGLISH_LOCALE
+    ln -s C "$ENGLISH_LOCALE"
   fi
 
   if [ ! -e "$DOMINO_RES_DIR/$GERMAN_LOCALE_UTF8" ]; then
     echo "Creating symbolic link for German res files ($GERMAN_LOCALE_UTF8)"
-    ln -s C $GERMAN_LOCALE_UTF8
+    ln -s C "$GERMAN_LOCALE_UTF8"
   fi
 
   if [ ! -e "$DOMINO_RES_DIR/$ENGLISH_LOCALE_UTF8" ]; then
     echo "Creating symbolic link for English res files ($ENGLISH_LOCALE_UTF8)"
-    ln -s C $ENGLISH_LOCALE_UTF8
+    ln -s C "$ENGLISH_LOCALE_UTF8"
+  fi
+
+  if [ ! -e "$DOMINO_RES_DIR/$C_LOCALE_UTF8" ]; then
+    echo "Creating symbolic link for English res files ($C_LOCALE_UTF8)"
+    ln -s C "$C_LOCALE_UTF8"
   fi
 
   cd "$CURRENT_DIR"
