@@ -209,6 +209,10 @@ log_space()
 
 wait_for_domino_ots()
 {
+
+  # In any case with 5 seconds
+  sleep 5
+
   if [ -z "$DOMINO_WAIT_FOR_OTS" ]; then
     return 0
   fi
