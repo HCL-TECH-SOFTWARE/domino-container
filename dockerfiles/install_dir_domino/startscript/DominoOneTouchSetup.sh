@@ -44,9 +44,15 @@
 
 # Default config environment file
 
-if [ -z "$DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE" ]; then
+if [ "$DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE" = "-" ]; then
+  DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE=
+elif [ -z "$DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE" ]; then
   DOMINO_AUTO_CFG_DEFAULTS_ENV_FILE=/local/notesdata/DominoAutoConfigDefault.env
 fi
+
+SCRIPT_NAME=$(readlink -f $0)
+SCRIPT_DIR=$(dirname $SCRIPT_NAME)
+
 
 # ---------------------------------------------
 
@@ -57,6 +63,12 @@ DebugText()
   fi
 
   return 0
+}
+
+
+print_delim()
+{
+  echo "--------------------------------------------------------------------------------"
 }
 
 
@@ -185,8 +197,6 @@ GetConfig()
   local DEFAULT=
   local VAR_NAME=$1
   local PROMPT=$(echo $1 |awk -F'SERVERSETUP_' '{print $2}')
-  local VAR=
-  local DEFAULT=
 
   if [ -n "$(echo $CHECKED_VAR |grep $VAR_NAME)" ]; then
     return 1
@@ -209,7 +219,13 @@ GetConfig()
   fi
 
   echo
-  read -p "$PROMPT: " -e -i "$DEFAULT" VAR
+
+  if [ "$(uname)" = "Darwin" ]; then
+    read -p "$PROMPT: " VAR
+  else
+    read -p "$PROMPT: " -e -i "$DEFAULT" VAR
+  fi
+
   CHECKED_VAR=$CHECKED_VAR:$VAR_NAME
   export $1="$VAR"
   return 0
@@ -246,6 +262,14 @@ ConfigJSON()
     fi
   fi
 
+  if [ -z "$SERVERSETUP_NETWORK_HOSTNAME" ]; then
+     SERVERSETUP_NETWORK_HOSTNAME=$(hostname -f)
+  fi
+
+  if [ -z "$SERVERSETUP_SERVER_NAME" ]; then
+    SERVERSETUP_SERVER_NAME="$SERVERSETUP_NETWORK_HOSTNAME"
+  fi
+
   CHECKED_VAR=
   SETUP_VARS=$(cat "$JSON_TEMPLATE" | sed 's/{{ /${/g;s/{{/${/g;s/ }}/}/g;s/}}/}/g' | grep '${' | awk -F'[$]{' '{print $2}' | awk -F'}' '{print $1}')
 
@@ -255,11 +279,28 @@ ConfigJSON()
 
   CHECKED_VAR=
 
-  if [ -z "$JSON_CFG" ]; then
-  cat $JSON_TEMPLATE | sed 's/{{ /${/g;s/{{/${/g;s/ }}/}/g;s/}}/}/g' | envsubst
-  else
-    cat $JSON_TEMPLATE | sed 's/{{ /${/g;s/{{/${/g;s/ }}/}/g;s/}}/}/g' | envsubst > $JSON_CFG
+  if [ -n "$SERVERSETUP_SERVER_ID_BASE64" ]; then
+    SERVERSETUP_SERVER_IDFILEPATH="$SERVERSETUP_SERVER_ID_BASE64"
   fi
+
+  if [ "$(uname)" = "Darwin" ]; then
+
+    if [ -z "$JSON_CFG" ]; then
+      cat $JSON_TEMPLATE | sed 's/{{ /${/g;s/{{/${/g;s/ }}/}/g;s/}}/}/g' | sed 's/"/\\"/g' | eval "echo \"$(cat -)\""
+    else
+      cat $JSON_TEMPLATE | sed 's/{{ /${/g;s/{{/${/g;s/ }}/}/g;s/}}/}/g' | sed 's/"/\\"/g' | eval "echo \"$(cat -)\"" > $JSON_CFG
+    fi
+
+  else
+
+    if [ -z "$JSON_CFG" ]; then
+      cat $JSON_TEMPLATE | sed 's/{{ /${/g;s/{{/${/g;s/ }}/}/g;s/}}/}/g' | envsubst
+    else
+      cat $JSON_TEMPLATE | sed 's/{{ /${/g;s/{{/${/g;s/ }}/}/g;s/}}/}/g' | envsubst > $JSON_CFG
+    fi
+
+  fi
+
 }
 
 
@@ -415,7 +456,7 @@ EditOneTouchSetup()
 
       *)
         DebugText "nshcfg.sh [$CFG_URL/$CFG_INDEX] -> [$CFG_TEMPLATE]"
-        $SCRIPT_DIR_NAME/nshcfg.sh "$CFG_TEMPLATE" "$CFG_URL" "$CFG_INDEX"
+        "$SCRIPT_DIR/nshcfg.sh" "$CFG_TEMPLATE" "$CFG_URL" "$CFG_INDEX"
         ;;
 
     esac
@@ -429,7 +470,7 @@ EditOneTouchSetup()
 
     # Finally we have to have a config file
     if [ ! -e "$CFG_FILE" ]; then
-      echo "No JSON configuration found"
+      echo "No JSON configuration found: $CFG_FILE"
       return 1
     fi
 
@@ -487,7 +528,11 @@ EditOneTouchSetup()
 
 # Edit command
 if [ -z "$EDIT_COMMAND" ]; then
-  export EDIT_COMMAND="vi"
+  if [ -n "$EDITOR" ]; then
+    EDIT_COMMAND="$EDITOR"
+  else
+    EDIT_COMMAND="vi"
+  fi
 fi
 
 # Ensure Domino Data path is set
