@@ -17,7 +17,7 @@ daostune|2.0
 safelinx|1.4.3
 nomadweb|1.0.19IF1
 nomad|1.0.19IF1
-domrestapi|1.1.6
+domrestapi|1.1.7
 tika|3.2.3
 borg|1.4.1
 domborg|0.9.7
