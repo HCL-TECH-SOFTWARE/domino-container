@@ -13,10 +13,10 @@ if [ "$DOMDOCK_DEBUG_SHELL" = "yes" ]; then
   set -x
 fi
 
-export DOMDOCK_DIR=/domino-container
+export DOMDOCK_DIR=/opt/domino-container
 export DOMDOCK_LOG_DIR=/tmp/domino-container
-export DOMDOCK_TXT_DIR=/domino-container
-export DOMDOCK_SCRIPT_DIR=/domino-container/scripts
+export DOMDOCK_TXT_DIR=//opt/domino-container
+export DOMDOCK_SCRIPT_DIR=/opt/domino-container/scripts
 export LOTUS=/opt/hcl/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux
 export DOMINO_DATA_PATH=/local/notesdata

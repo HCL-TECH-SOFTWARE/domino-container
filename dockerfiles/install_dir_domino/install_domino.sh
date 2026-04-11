@@ -1486,7 +1486,7 @@ harden_binary_dir()
 
   # Container only hardening
 
-  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+  if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
     return 0
   fi
 
@@ -1736,6 +1736,7 @@ echo "DOMFWD_VERSION          = [$DOMFWD_VERSION]"
 echo "DAOSTUNE_VERSION        = [$DAOSTUNE_VERSION]"
 echo "OPENSSL_INSTALL         = [$OPENSSL_INSTALL]"
 echo "SSH_INSTALL             = [$SSH_INSTALL]"
+echo "INSTALL_DOMINO_NATIVE   = [$INSTALL_DOMINO_NATIVE]"
 
 
 LINUX_VERSION=$(cat /etc/os-release | grep "VERSION_ID="| cut -d= -f2 | xargs)
@@ -1844,7 +1845,7 @@ cd "$INSTALL_DIR"
 # Download updated software.txt file if available
 download_file_ifpresent "$DownloadFrom" software.txt "$INSTALL_DIR"
 
-if [ "$FIRST_TIME_SETUP" = "1" ] || [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+if [ "$FIRST_TIME_SETUP" = "1" ] || [ -n "$INSTALL_DOMINO_NATIVE" ]; then
   case "$PROD_NAME" in
     domino)
       install_domino
@@ -1970,8 +1971,8 @@ fi
 # Ensure permissons are set correctly for data directory
 chown -R $DOMINO_USER:$DOMINO_GROUP $DOMINO_DATA_PATH
 
-# Skip container specific configuration for native install
-if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+# Installation end here for native LINUX installs
+if [ "$INSTALL_DOMINO_NATIVE" = "LINUX" ]; then
 
   # If configured save Domino data directory to a compressed file
 
@@ -2083,13 +2084,16 @@ export LD_LIBRARY_PATH=$Notes_ExecDirectory:$LD_LIBRARY_PATH
 
 # If configured, move data directory to a compressed tar file
 
-if [ "$SkipDominoMoveInstallData" = "yes" ]; then
-  header "Skipping notesdata compression for incremental build"
+if [ "$INSTALL_DOMINO_NATIVE" = "LINUX" ]; then
+  header "Skipping notesdata compression for LINUX native installation"
+
+elif [ "$SkipDominoMoveInstallData" = "yes" ]; then
+  header "Skipping notesdata compression"
 
 else
   DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
-  if [ "$FIRST_TIME_SETUP" = "1" ]; then
+  if [ "$FIRST_TIME_SETUP" = "1" ] || [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
     header "Moving install data $DOMINO_DATA_PATH -> [$DOMDOCK_INSTALL_DATA_TAR]"
 
     cd $DOMINO_DATA_PATH
@@ -2098,6 +2102,8 @@ else
 
     remove_directory "$DOMINO_DATA_PATH"
     create_directory "$DOMINO_DATA_PATH" $DOMINO_USER $DOMINO_GROUP $DIR_PERM
+  else
+    log "Not moving $$DOMINO_DATA_PATH. Configuration: FIRST_TIME_SETUP: [$FIRST_TIME_SETUP] INSTALL_DOMINO_NATIVE: [$INSTALL_DOMINO_NATIVE]"
   fi
 fi
 

@@ -481,7 +481,7 @@ check_install_trusted_root()
 harden_linux_bins()
 {
 
-  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+  if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
     return 0
   fi
 

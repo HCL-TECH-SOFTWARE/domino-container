@@ -224,7 +224,7 @@ check_container_environment()
   CONTAINER_RUNTIME_VERSION=
 
   # No container environment required for native installs
-  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+  if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
     CONTAINER_CMD=NATIVE-INSTALL
     return 0
   fi
@@ -645,7 +645,7 @@ nginx_start_apple_container()
 nginx_start()
 {
 
-  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+  if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
     return 0
   fi
 
@@ -698,7 +698,7 @@ nginx_start()
 
 nginx_stop()
 {
-  if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+  if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
     return 0
   fi
 
@@ -3360,9 +3360,12 @@ select_software()
     ClearScreen
     echo
 
-    if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+    if [ "$INSTALL_DOMINO_NATIVE" = "LINUX" ]; then
       echo "HCL Domino on Linux Installer"
       echo "-----------------------------"
+    elif [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
+      echo "HCL Domino on Linux LXC Installer"
+      echo "---------------------------------"
     else
       echo "HCL Domino Container Community Image"
       echo "------------------------------------"
@@ -3391,7 +3394,7 @@ select_software()
     print_select "X" "nshmailx"       "$X" "$NSHMAILX_VERSION"
 
     echo
-    if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
+    if [ -z "$INSTALL_DOMINO_NATIVE" ]; then
       print_select "I" "Test created image" "$I"
       echo
     fi
@@ -3411,7 +3414,7 @@ select_software()
       echo " IQ Suite   : $IQSUITE_VERSION"
     fi
 
-    if [ "$INSTALL_DOMINO_NATIVE" != "yes" ]; then
+    if [ -z "$INSTALL_DOMINO_NATIVE" ]; then
       echo
       echo " Base Image : $LINUX_NAME"
 
@@ -3683,7 +3686,6 @@ install_domino_native()
   export LinuxYumUpdate
   export SPECIAL_CURL_ARGS
 
-  export SkipDominoMoveInstallData=yes
   export DOMDOCK_LOG_DIR=/tmp
 
   # Always replace REST API binary directory
@@ -3792,6 +3794,12 @@ else
   if [ -r "$BUILD_CFG_FILE" ]; then
     . "$BUILD_CFG_FILE"
   fi
+fi
+
+
+if ! command -v curl >/dev/null 2>&1; then
+  log_error_exit "Curl command is required"
+  exit 1
 fi
 
 CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
@@ -4197,7 +4205,11 @@ for a in "$@"; do
       ;;
 
     -installnative)
-      INSTALL_DOMINO_NATIVE=yes
+      INSTALL_DOMINO_NATIVE=LINUX
+      ;;
+
+    -lxc)
+      INSTALL_DOMINO_NATIVE=LXC
       ;;
 
     -update)
@@ -4454,7 +4466,7 @@ done
 
 
 # Copy software.txt ..
-if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
   copy_software_txt
 fi
 
@@ -4654,7 +4666,7 @@ fi
 
 CURRENT_DIR=$(pwd)
 
-if [ "$INSTALL_DOMINO_NATIVE" = "yes" ]; then
+if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
   install_domino_native
   print_runtime
   exit 0

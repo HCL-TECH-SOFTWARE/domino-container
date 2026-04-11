@@ -36,13 +36,13 @@ But when you create a new container for updating your server instance, the `/loc
 
 This makes updating a server more complex because even a FP/IF/HF could bring update templates or more often a new iNotes/forms update.
 
-The `/entrypoint.sh` script takes care of those updates automatically at next start-up using `/domino-container/domino_install_data_copy.sh` script.
+The `/entrypoint.sh` script takes care of those updates automatically at next start-up using `/opt/domino-container/domino_install_data_copy.sh` script.
 The logic checks which files have been changed and updates this files by copying them from the image to the data volume.
 
 For Domino FP/IF/HF updates the binary directory contains a directory `opt/hcl/domino/notes/latest/linux/data1_bck` with updated install-data for each version/FP/IF/HF.
 
 During install the current installed version is written to two separate version status files 
-in `/domino-container` and `/local/notesdata` (e.g. `/domino-container/domino_fp.txt` and `/local/notesdata/domio_fp.txt` ).
+in `/opt/domino-container` and `/local/notesdata` (e.g. `/opt/domino-container/domino_fp.txt` and `/local/notesdata/domio_fp.txt` ).
 At first install those files are equal. But if a server is updated and the data volume cannot be changed at install time.
 The update routine ensures that FP updates are applied before HF updates (there are separate files for FPs, HFs and for add-on software).
 

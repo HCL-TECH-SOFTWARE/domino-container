@@ -14,9 +14,9 @@ fi
 export DOMDOCK_SCRIPT_LIB_INCLUDED=DONE
 
 # Global definitions
-export DOMDOCK_DIR=/domino-container
-export DOMDOCK_TXT_DIR=/domino-container
-export DOMDOCK_SCRIPT_DIR=/domino-container/scripts
+export DOMDOCK_DIR=/opt/domino-container
+export DOMDOCK_TXT_DIR=/opt/domino-container
+export DOMDOCK_SCRIPT_DIR=/opt/domino-container/scripts
 export DOMDOCK_INSTALL_DATA_TAR=$DOMDOCK_DIR/install_data_domino.taz
 
 if [ -z "$DOMDOCK_LOG_DIR" ]; then
