@@ -15,7 +15,7 @@ fi
 
 export DOMDOCK_DIR=/opt/domino-container
 export DOMDOCK_LOG_DIR=/tmp/domino-container
-export DOMDOCK_TXT_DIR=//opt/domino-container
+export DOMDOCK_TXT_DIR=/opt/domino-container
 export DOMDOCK_SCRIPT_DIR=/opt/domino-container/scripts
 export LOTUS=/opt/hcl/domino
 export Notes_ExecDirectory=$LOTUS/notes/latest/linux

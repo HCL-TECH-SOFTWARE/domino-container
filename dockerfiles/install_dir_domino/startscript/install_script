@@ -2,9 +2,9 @@
 
 ###########################################################################
 # Install Script - Start/Stop Script for Domino on xLinux/zLinux/AIX      #
-# Version  4.0.3 30.04.2025                                               #
+# Version  4.1.5 11.04.2026                                               #
 #                                                                         #
-# (C) Copyright Daniel Nashed/NashCom 2005-2025                           #
+# (C) Copyright Daniel Nashed/NashCom 2005-2026                           #
 # Feedback domino_unix@nashcom.de                                         #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
@@ -31,6 +31,7 @@ DOMINO_INSTALL_CONFIG_TARGET=/etc/sysconfig/rc_domino_config
 DOMINO_DOCKER_SCRIPT=entrypoint.sh
 DONT_TOUCH_THIS_NASHCOM_PATH=/opt/nashcom/startscript
 DONT_TOUCH_THIS_STANDARD_USER=notes
+DOMINO_NOTESDATA_UPD_SCRIPT=notesdata_update.sh
 
 
 # if you really really need to, change this and all files will be patched
@@ -370,6 +371,11 @@ if [ ! -e "$DOMINO_DATA_PATH" ]; then
   exit 1
 fi
 
+# create /etc/sysconfig if not present
+if [ ! -e "/etc/sysconfig" ]; then
+  mkdir -m 755 /etc/sysconfig
+fi
+
 install_file "$START_SCRIPT_DIR/rc_domino" "$DOMINO_SCRIPT_BIN" $ROOT_USER $ROOT_GROUP 755
 
 install_file "$START_SCRIPT_DIR/rc_domino_script" "$DOMINO_START_SCRIPT_DIR/rc_domino_script" $ROOT_USER $ROOT_GROUP 755
@@ -383,6 +389,7 @@ install_file "$START_SCRIPT_DIR/DominoOneTouchSetup.sh" "$DOMINO_START_SCRIPT_DI
 install_file "$START_SCRIPT_DIR/domsetup.sh" "$DOMINO_START_SCRIPT_DIR/domsetup.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/nshcfg.sh" "$DOMINO_START_SCRIPT_DIR/nshcfg.sh" $ROOT_USER $ROOT_GROUP 755
 install_file "$START_SCRIPT_DIR/domino.cfg" "$DOMINO_START_SCRIPT_DIR/domino-example.cfg" $ROOT_USER $ROOT_GROUP 755
+install_file "$START_SCRIPT_DIR/domino.cfg" "/etc/sysconfig/domino.cfg" "$DOMINO_USER" "$DOMINO_GROUP" 644
 
 START_SCRIPT_CONFIG_VER=$DOMINO_START_SCRIPT_DIR/rc_domino_config_$DOMINO_SCRIPT_VERSION.txt
 START_SCRIPT_CONFIG_LATEST=$DOMINO_START_SCRIPT_DIR/rc_domino_config_latest.txt
@@ -395,20 +402,13 @@ fi
 
 create_link $START_SCRIPT_CONFIG_VER $START_SCRIPT_CONFIG_LATEST
 
-# create /etc/sysconfig if not present
-if [ ! -e "/etc/sysconfig" ]; then
-  mkdir -m 755 /etc/sysconfig
-fi
-
 if [ "$PARAM1" = "upd" ]; then
   install_file "$DOMINO_INSTALL_CONFIG_FILE" "$DOMINO_INSTALL_CONFIG_TARGET" "$DOMINO_USER" "$DOMINO_GROUP" 644
   install_file "$START_SCRIPT_DIR/systemdbs.ind" "$DOMINO_DATA_PATH/systemdbs.ind" "$DOMINO_USER" "$DOMINO_GROUP" 644
-  install_file "$START_SCRIPT_DIR/domino.cfg" "/etc/sysconfig/domino.cfg" "$DOMINO_USER" "$DOMINO_GROUP" 644
 
 else
   install_file_noupdate "$DOMINO_INSTALL_CONFIG_FILE" "$DOMINO_INSTALL_CONFIG_TARGET" "$DOMINO_USER" "$DOMINO_GROUP" 644
   install_file_noupdate "$START_SCRIPT_DIR/systemdbs.ind" "$DOMINO_DATA_PATH/systemdbs.ind" "$DOMINO_USER" "$DOMINO_GROUP" 644
-  install_file_noupdate "$START_SCRIPT_DIR/domino.cfg" "/etc/sysconfig/domino.cfg" "$DOMINO_USER" "$DOMINO_GROUP" 644
 fi
 
 copy_one_touch_templates
@@ -472,6 +472,10 @@ if [ ${LARCH} = "linux" ]; then
     else
       echo "Info: Not updating service status: $DOMINO_SYSTEMD_NAME"
     fi
+  fi
+
+  if [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
+    install_file "$START_SCRIPT_DIR/$DOMINO_NOTESDATA_UPD_SCRIPT" "$DOMINO_START_SCRIPT_DIR/$DOMINO_NOTESDATA_UPD_SCRIPT" $ROOT_USER $ROOT_GROUP 755
   fi
 
 fi

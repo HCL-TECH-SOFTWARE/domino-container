@@ -3,7 +3,7 @@
 
 ###########################################################################
 # Main Script Logic - Start/Stop Script for Domino on xLinux/zLinux/AIX   #
-# Version  4.1.2 11.02.2026                                               #
+# Version  4.1.5 11.04.2026                                               #
 #                                                                         #
 # (C) Copyright Daniel Nashed/NashCom 2005-2026                           #
 # Feedback domino_unix@nashcom.de                                         #
@@ -21,7 +21,7 @@
 # limitations under the License.                                          #
 ###########################################################################
 
-DOMINO_SCRIPT_VERSION=4.1.2
+DOMINO_SCRIPT_VERSION=4.1.5
 
 if [ "$1" = "--version" ]; then
   echo "$DOMINO_SCRIPT_VERSION"
@@ -155,7 +155,7 @@ fi
 
 # Show log command
 if [ -z "$SHOW_LOG_COMMAND" ]; then
-  SHOW_LOG_COMMAND="vi"
+  SHOW_LOG_COMMAND="less"
 fi
 
 # Extension command descriptions
@@ -304,6 +304,11 @@ if [ -z "$DOMINO_PID_FILE" ]; then
   # -- Domino PID file per Partition which has to match the PIDFile setting in the "domino.service" --
 
   DOMINO_PID_FILE=/tmp/domino.pid
+fi
+
+# Internal startup custom container hook script. Needs to be executed early to deploy the data directory
+if [ -x /opt/nashcom/startscript/prestart-script.sh ]; then
+  /opt/nashcom/startscript/prestart-script.sh
 fi
 
 DOMINO_INI_PATH=$DOMINO_DATA_PATH/notes.ini

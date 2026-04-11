@@ -42,13 +42,20 @@ fi
 # ----------------------------------------
 
 
+CurlCommandNotFound()
+{
+  return 0
+}
+
+
 ClearScreen()
 {
   if [ "$DISABLE_CLEAR_SCREEN" = "yes" ]; then
     return 0
   fi
 
-  clear
+  # Clear screen using the escape sequence
+  printf "\033[H\033[J"
 }
 
 
@@ -3796,13 +3803,13 @@ else
   fi
 fi
 
-
 if ! command -v curl >/dev/null 2>&1; then
-  log_error_exit "Curl command is required"
-  exit 1
+  log "Info: Curl command not available"
+  CURL_CMD=CurlCommandNotFound
+else
+  CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 fi
 
-CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
 
 # If version file isn't found check standard location (check might lead to the same directory if standard location already)

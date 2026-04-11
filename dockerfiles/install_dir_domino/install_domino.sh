@@ -1,6 +1,6 @@
 #!/bin/bash
 ############################################################################
-# Copyright Nash!Com, Daniel Nashed 2019, 2025 - APACHE 2.0 see LICENSE
+# Copyright Nash!Com, Daniel Nashed 2019, 2026 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 ############################################################################
 
@@ -79,6 +79,17 @@ check_install_iqsuite()
   fi
 
   ln -s "$IQSUITE_DIR" /opt/iqsuite
+}
+
+config_sudo()
+{
+  if [ -n "$(cat /etc/sudoers | grep "notes" |grep "/usr/bin/systemctl")" ]; then
+    echo "sudo for 'notes' to execute systemctl is already configured"
+    return 0
+  fi
+
+  echo "%notes ALL= NOPASSWD: /usr/bin/systemctl *" >> /etc/sudoers
+  echo "sudo for 'notes' to execute systemctl configured"
 }
 
 
@@ -2016,6 +2027,11 @@ install_file "$INSTALL_DIR/domino_prestart.sh" "$DOMDOCK_SCRIPT_DIR/domino_prest
 # Copy script lib used by other installers
 install_file "$INSTALL_DIR/script_lib.sh" "$DOMDOCK_SCRIPT_DIR/script_lib.sh" root root 755
 
+# Copy special prestart script for LXC
+if [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
+  install_file "$INSTALL_DIR/prestart-script.sh" "/opt/nashcom/startscript/prestart-script.sh" root root 755
+fi
+
 # Copy Docker specific start script configuration if provided
 install_file "$INSTALL_DIR/rc_domino_config" "$DOMINO_DATA_PATH/rc_domino_config" root root 644
 install_file "$INSTALL_DIR/entrypoint.sh" "/entrypoint.sh" root root 755
@@ -2105,6 +2121,11 @@ else
   else
     log "Not moving $$DOMINO_DATA_PATH. Configuration: FIRST_TIME_SETUP: [$FIRST_TIME_SETUP] INSTALL_DOMINO_NATIVE: [$INSTALL_DOMINO_NATIVE]"
   fi
+fi
+
+# Enable sudo for notes user to start/stop Domino
+if [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
+  config_sudo
 fi
 
 # Remove gcc compiler if no C-API toolkit is installed
