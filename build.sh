@@ -3767,7 +3767,7 @@ install_domino_pct()
 {
 
   if [ -z "$PCT_ID" ]; then
-    PCT_ID 9000
+    PCT_ID=9000
   fi
 
   PCT_ENV_FILE=pct_build.env
@@ -3859,7 +3859,7 @@ install_domino_pct()
   if pct_exists "$PCT_TEMPLATE_ID"; then
 
     if pct_exists "$PCT_TEMP_BUILD_ID"; then
-      log_error_exit "Temporry LXC container $PCT_TEMP_BUILD_ID already exists"
+      log_error_exit "Temporary LXC container $PCT_TEMP_BUILD_ID already exists"
     fi
 
     PCT_ID="$PCT_TEMP_BUILD_ID"
@@ -3918,7 +3918,7 @@ install_domino_pct()
     export LANG=C
     apt update -y
     apt-get install -y curl openssh-server
-    /mnt/build/build.sh domino -lxc
+    /mnt/build/build.sh domino -buildlxc
   "; then
 
     log "Build failed"
@@ -3947,7 +3947,8 @@ install_domino_pct()
     ln -sfn "$PCT_DOMINO_OPT_MOUNTPOINT" "$PCT_DOMINO_OPT_LATEST"
 
     header "Domino LXC /opt volume created"
-    echo "Volume:  $PCT_DOMINO_VOL_OPT -> $PCT_DOMINO_OPT_LATEST"
+    echo "/opt Volume :  $PCT_DOMINO_VOL_OPT
+    echo "Latest link :  $PCT_DOMINO_OPT_LATEST"
     echo
     return 0
   fi
@@ -3980,7 +3981,8 @@ install_domino_pct()
 
   header "LXC Template and /opt Volume created successfully"
   echo "LXC Template :  $PCT_ID"
-  echo "Volume       :  $PCT_DOMINO_VOL_OPT -> $PCT_DOMINO_OPT_LATEST"
+  echo "/opt Volume  :  $PCT_DOMINO_VOL_OPT
+  echo "Latest link  :  $PCT_DOMINO_OPT_LATEST"
   echo
 
 }
@@ -4945,7 +4947,7 @@ CURRENT_DIR=$(pwd)
 if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
   case "$INSTALL_DOMINO_NATIVE" in
 
-    LINUX)
+    LINUX|LXC)
      install_domino_native
      ;;
 
