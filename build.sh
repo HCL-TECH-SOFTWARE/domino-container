@@ -3947,7 +3947,7 @@ install_domino_pct()
     ln -sfn "$PCT_DOMINO_OPT_MOUNTPOINT" "$PCT_DOMINO_OPT_LATEST"
 
     header "Domino LXC /opt volume created"
-    echo "/opt Volume :  $PCT_DOMINO_VOL_OPT
+    echo "/opt Volume :  $PCT_DOMINO_VOL_OPT"
     echo "Latest link :  $PCT_DOMINO_OPT_LATEST"
     echo
     return 0
@@ -3981,7 +3981,7 @@ install_domino_pct()
 
   header "LXC Template and /opt Volume created successfully"
   echo "LXC Template :  $PCT_ID"
-  echo "/opt Volume  :  $PCT_DOMINO_VOL_OPT
+  echo "/opt Volume  :  $PCT_DOMINO_VOL_OPT"
   echo "Latest link  :  $PCT_DOMINO_OPT_LATEST"
   echo
 
