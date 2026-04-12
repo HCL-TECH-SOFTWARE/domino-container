@@ -3653,7 +3653,13 @@ copy_software_txt()
 
 install_domino_native()
 {
-  header "Installing Domino on local machine ..."
+  if [ "$INSTALL_DOMINO_NATIVE" = "PCT" ]; then
+    header "Installing Domino in Proxmox LXC Container"
+  elif [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
+    header "Installing Domino in LXC Container"
+  else
+    header "Installing Domino on local machine ..."
+  fi
 
   local INSTALL_TMP_DIR=/tmp/install_domino
   export DOMDOCK_LOG_DIR=/tmp/install_domino/logs
@@ -3765,15 +3771,8 @@ add_pct_build_env()
 
 install_domino_pct()
 {
-
-  if [ -z "$PCT_ID" ]; then
-    PCT_ID=9000
-  fi
-
   PCT_ENV_FILE=pct_build.env
   echo "# PCT Build Environment file / $(date)" > "$PCT_ENV_FILE"
-
-  header "Building Proxmox LXC Template $PCT_ID ..."
 
   add_pct_build_env DOWNLOAD_FROM
   add_pct_build_env PROD_NAME
