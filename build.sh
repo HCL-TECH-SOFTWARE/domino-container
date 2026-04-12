@@ -2496,6 +2496,7 @@ check_all_software()
     fi
 
     echo
+    exit 1
   fi
 
   CHECK_SOFTWARE_STATUS=$DOWNLOAD_ERROR_COUNT
@@ -3370,6 +3371,9 @@ select_software()
     if [ "$INSTALL_DOMINO_NATIVE" = "LINUX" ]; then
       echo "HCL Domino on Linux Installer"
       echo "-----------------------------"
+    elif [ "$INSTALL_DOMINO_NATIVE" = "PCT" ]; then
+      echo "HCL Domino on Proxmox LXC Container Installer"
+      echo "---------------------------------------------"
     elif [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
       echo "HCL Domino on Linux LXC Installer"
       echo "---------------------------------"
@@ -3724,6 +3728,264 @@ install_domino_native()
 }
 
 
+pct_exists()
+{
+  pct config "$1" >/dev/null 2>&1
+}
+
+
+wait_for_pct_container()
+{
+  local id=$1
+  for i in {1..15}; do
+    if pct exec "$id" -- true >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  log_error "Container $id did not become ready"
+  return 1
+}
+
+
+add_pct_build_env()
+{
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  if [ -z "${!1}" ]; then
+    return 0
+  fi
+
+  printf '%s="%s"\n' "$1" "${!1}" >> "$PCT_ENV_FILE"
+
+}
+
+install_domino_pct()
+{
+
+  if [ -z "$PCT_ID" ]; then
+    PCT_ID 9000
+  fi
+
+  PCT_ENV_FILE=pct_build.env
+  echo "# PCT Build Environment file / $(date)" > "$PCT_ENV_FILE"
+
+  header "Building Proxmox LXC Template $PCT_ID ..."
+
+  add_pct_build_env DOWNLOAD_FROM
+  add_pct_build_env PROD_NAME
+  add_pct_build_env PROD_VER
+  add_pct_build_env DOMLP_VER
+  add_pct_build_env DOMRESTAPI_VER
+  add_pct_build_env PROD_FP
+  add_pct_build_env PROD_HF
+  add_pct_build_env DOWNLOAD_FROM
+  add_pct_build_env OPENSSL_INSTALL
+  add_pct_build_env iSSH_INSTALL
+  add_pct_build_env BORG_VERSION
+  add_pct_build_env DOMBORG_VERSION
+  add_pct_build_env TIKA_VERSION
+  add_pct_build_env IQSUITE_VERSION
+  add_pct_build_env NODE_EXPORTER_VERSION
+  add_pct_build_env ALLOY_VERSION
+  add_pct_build_env DOMPROM_VERSION
+  add_pct_build_env DOMFWD_VERSION
+  add_pct_build_env DAOSTUNE_VERSION
+  add_pct_build_env VERSE_VERSION
+  add_pct_build_env NOMAD_VERSION
+  add_pct_build_env TRAVELER_VERSION
+  add_pct_build_env LEAP_VERSION
+  add_pct_build_env CAPI_VERSION
+  add_pct_build_env DOMIQ_VERSION
+  add_pct_build_env NSHMAILX_VERSION
+  add_pct_build_env MYSQL_INSTALL
+  add_pct_build_env MYSQL_JDBC_VERSION
+  add_pct_build_env MSSQL_JDBC_VERSION
+  add_pct_build_env POSTGRESQL_JDBC_VERSION
+  add_pct_build_env MARIADB_JDBC_VERSION
+  add_pct_build_env LINUX_PKG_ADD
+  add_pct_build_env LINUX_PKG_REMOVE
+  add_pct_build_env LINUX_PKG_SKIP
+  add_pct_build_env LINUX_HOMEDIR
+  add_pct_build_env MSSQL_INSTALL
+  add_pct_build_env STARTSCRIPT_VER
+  add_pct_build_env CUSTOM_ADD_ONS
+  add_pct_build_env DOMINO_LANG
+  add_pct_build_env LINUX_LANG
+  add_pct_build_env DominoResponseFile
+  add_pct_build_env SPECIAL_CURL_ARGS
+
+
+  # Configuration value defaults 
+
+  : "${PCT_LINUX_TEMPLATE:=local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst}"
+  : "${PCT_STORAGE:=local-zfs}"
+  : "${PCT_DATA_POOL:=rpool/data}"
+  : "${PCT_SIZE:=20}"
+  : "${PCT_HOSTNAME:=localhost}"
+  : "${SOFTWARE_DIR:=/local/software}"
+  : "${PCT_TEMP_BUILD_ID:=9999}"
+  : "${PCT_NET0:=name=eth0,bridge=vmbr0,ip=dhcp}"
+  : "${PCT_TEMPLATE_ID:=9000}"
+
+  # Build Version/Tag
+  BUILD_TS=$(date +%Y%m%d-%H%M)
+  BUILD_TAG="${BUILD_TAG}"
+  BUILD_TAG=$(echo -n "$BUILD_TAG" | tr -c 'a-zA-Z0-9-' '-' | tr -s '-')
+
+  # Use neutral dataset name (no subvol-*) to have the volume independent from LXC container
+  if [ -z "$BUILD_TAG" ]; then
+    OPT_NAME="domino-opt-${BUILD_TS}"
+  else
+    OPT_NAME="domino-opt-${BUILD_TS}-${BUILD_TAG}"
+  fi
+
+  OPT_LATEST="domino-opt-latest"
+
+  PCT_DOMINO_VOL_OPT="${PCT_DATA_POOL}/${OPT_NAME}"
+  PCT_DOMINO_OPT_MOUNTPOINT="/${PCT_DATA_POOL}/${OPT_NAME}"
+  PCT_DOMINO_OPT_LATEST="/${PCT_DATA_POOL}/${OPT_LATEST}"
+  PCT_DOMINO_VOL_REF="${PCT_DOMINO_OPT_MOUNTPOINT}"
+
+  # Ensure volume does not yet exists
+  if zfs list "$PCT_DOMINO_VOL_OPT" >/dev/null 2>&1; then
+    log_error_exit "OPT dataset already exists: $PCT_DOMINO_VOL_OPT"
+  fi
+
+  # If template already exists only build new /opt and use a temporary build container
+  if pct_exists "$PCT_TEMPLATE_ID"; then
+
+    if pct_exists "$PCT_TEMP_BUILD_ID"; then
+      log_error_exit "Temporry LXC container $PCT_TEMP_BUILD_ID already exists"
+    fi
+
+    PCT_ID="$PCT_TEMP_BUILD_ID"
+    header "Creating temporary LXC build container $PCT_ID"
+
+  else
+    PCT_ID="$PCT_TEMPLATE_ID"
+    header "Creating initial LXC template container $PCT_ID"
+  fi
+
+  header "Creating ZFS dataset $PCT_DOMINO_VOL_OPT"
+
+  zfs create \
+    -o mountpoint="$PCT_DOMINO_OPT_MOUNTPOINT" \
+    -o compression=lz4 \
+    -o atime=off \
+    "$PCT_DOMINO_VOL_OPT"
+
+  # Make sure the volume is writable by root inside container
+  if [ -d "$PCT_DOMINO_OPT_MOUNTPOINT" ]; then
+    chown 100000:100000 "$PCT_DOMINO_OPT_MOUNTPOINT"
+  else
+    log_error_exit "Mountpoint not found: $PCT_DOMINO_OPT_MOUNTPOINT"
+  fi
+
+  # Create build container
+  if ! pct create "$PCT_ID" "$PCT_LINUX_TEMPLATE" \
+    --hostname "$PCT_HOSTNAME" \
+    --memory 4096 \
+    --cores 2 \
+    --rootfs ${PCT_STORAGE}:${PCT_SIZE} \
+    --net0 "$PCT_NET0" \
+    --features nesting=1 \
+    --ssh-public-keys /root/.ssh/id_ed25519.pub \
+    --unprivileged 1; then
+
+    zfs destroy "$PCT_DOMINO_VOL_OPT"
+    exit 1
+  fi
+
+  header "Configuring container mounts"
+
+  pct set "$PCT_ID" -mp0 /local/github/domino-container,mp=/mnt/build,ro=1
+  pct set "$PCT_ID" -mp1 ${SOFTWARE_DIR},mp=/local/software,ro=1
+  pct set "$PCT_ID" -mp2 "$PCT_DOMINO_VOL_REF",mp=/opt
+
+  header "Starting LXC build container"
+  pct start "$PCT_ID"
+
+  wait_for_pct_container "$PCT_ID"
+
+  header "Building HCL Domino image (this may take a while)"
+
+  if ! pct exec "$PCT_ID" -- bash -c "
+    set -e
+    export LANG=C
+    apt update -y
+    apt-get install -y curl openssh-server
+    /mnt/build/build.sh domino -lxc
+  "; then
+
+    log "Build failed"
+
+    pct stop "$PCT_ID" || true
+    pct destroy "$PCT_ID" || true
+    zfs destroy "$PCT_DOMINO_VOL_OPT"
+
+    exit 1
+  fi
+
+  # Tear down temporary build container
+  if [ "$PCT_ID" = "$PCT_TEMP_BUILD_ID" ]; then
+
+    header "Stopping container"
+    pct stop "$PCT_ID"
+
+    # Cleanup mounts
+    pct set "$PCT_ID" -delete mp0
+    pct set "$PCT_ID" -delete mp1
+    pct set "$PCT_ID" -delete mp2
+
+    header "Removing temporary build container $PCT_ID"
+    pct destroy "$PCT_ID"
+
+    ln -sfn "$PCT_DOMINO_OPT_MOUNTPOINT" "$PCT_DOMINO_OPT_LATEST"
+
+    header "Domino LXC /opt volume created"
+    echo "Volume:  $PCT_DOMINO_VOL_OPT -> $PCT_DOMINO_OPT_LATEST"
+    echo
+    return 0
+  fi
+
+  # Clean template container
+  header "Cleaning container $PCT_ID"
+
+  pct exec "$PCT_ID" -- bash -c "
+    set -e
+    apt-get clean
+    rm -f /etc/machine-id
+    systemd-machine-id-setup
+    rm -f /etc/ssh/ssh_host_*
+    find /var/log -type f -exec truncate -s 0 {} \;
+    rm -rf /tmp/* /var/tmp/*
+  "
+
+  # Finalize template
+  header "Stopping container to finalize template"
+  pct stop "$PCT_ID"
+
+  # Cleanup mounts
+  pct set "$PCT_ID" -delete mp0
+  pct set "$PCT_ID" -delete mp1
+  pct set "$PCT_ID" -delete mp2
+
+  header "Converting to template"
+  pct template "$PCT_ID"
+  ln -sfn "$PCT_DOMINO_OPT_MOUNTPOINT" "$PCT_DOMINO_OPT_LATEST"
+
+  header "LXC Template and /opt Volume created successfully"
+  echo "LXC Template :  $PCT_ID"
+  echo "Volume       :  $PCT_DOMINO_VOL_OPT -> $PCT_DOMINO_OPT_LATEST"
+  echo
+
+}
+
+
 update_scripts()
 {
   if [ ! -e /opt/nashcom/startscript/nsh-update-check.sh ]; then
@@ -3801,13 +4063,6 @@ else
   if [ -r "$BUILD_CFG_FILE" ]; then
     . "$BUILD_CFG_FILE"
   fi
-fi
-
-if ! command -v curl >/dev/null 2>&1; then
-  log "Info: Curl command not available"
-  CURL_CMD=CurlCommandNotFound
-else
-  CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 fi
 
 VERSION_FILE=$SOFTWARE_DIR/$VERSION_FILE_NAME
@@ -4215,8 +4470,15 @@ for a in "$@"; do
       INSTALL_DOMINO_NATIVE=LINUX
       ;;
 
-    -lxc)
+    -buildlxc)
       INSTALL_DOMINO_NATIVE=LXC
+      set -a
+      . "$SCRIPT_DIR/pct_build.env"
+      set +a
+      ;;
+
+    -pct|-proxmox)
+      INSTALL_DOMINO_NATIVE=PCT
       ;;
 
     -update)
@@ -4471,6 +4733,12 @@ for a in "$@"; do
   esac
 done
 
+if ! command -v curl >/dev/null 2>&1; then
+  log "Info: Curl command not available"
+  CURL_CMD=CurlCommandNotFound
+else
+  CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
+fi
 
 # Copy software.txt ..
 if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
@@ -4673,8 +4941,23 @@ fi
 
 CURRENT_DIR=$(pwd)
 
+
 if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
-  install_domino_native
+  case "$INSTALL_DOMINO_NATIVE" in
+
+    LINUX)
+     install_domino_native
+     ;;
+
+    PCT)
+      install_domino_pct
+      ;;
+
+    *)
+     log_error_exit "Invalid target platform: $INSTALL_DOMINO_NATIVE"
+      ;;
+  esac
+
   print_runtime
   exit 0
 fi

@@ -9,3 +9,4 @@ software/*.zip
 /dockerfiles/install_dir_domino/custom/*.svg
 /dockerfiles/install_dir_domino/custom/*.policy
 .DominoContainer
+pct_build.env

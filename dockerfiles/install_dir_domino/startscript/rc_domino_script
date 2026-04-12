@@ -1037,6 +1037,9 @@ check_create_directories()
   DebugText "check create for DOMINO_LOG_BACKUP_DIR" [$DOMINO_LOG_BACKUP_DIR]
   check_create_dir "$DOMINO_LOG_BACKUP_DIR" "Domino Log Backup Dir"
 
+  DebugText "check create for HOME" [$HOME]
+  check_create_dir "$HOME" "Home Dirrectory"
+
   return 0
 }
 

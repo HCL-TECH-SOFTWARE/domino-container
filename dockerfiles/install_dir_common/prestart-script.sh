@@ -17,6 +17,11 @@ DOMDOCK_UPDATE_CHECK_STATUS_FILE=$DOMDOCK_LOG_DIR/domino_data_upd_checked.txt
 mkdir -p "$DOMDOCK_LOG_DIR"
 mkdir -p "$DOMDOCK_TXT_DIR"
 
+if [ ! -w /local ]; then
+  echo "Cannot write to /local. Cannot deploy notesdata files"
+  exit 1
+fi
+
 if [ ! -e "$DOMDOCK_UPDATE_CHECK_STATUS_FILE" ]; then
   "$DOMDOCK_SCRIPT_DIR/domino_install_data_copy.sh"
   date > "$DOMDOCK_UPDATE_CHECK_STATUS_FILE"

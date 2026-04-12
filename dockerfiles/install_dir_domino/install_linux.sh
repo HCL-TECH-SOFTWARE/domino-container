@@ -364,6 +364,23 @@ install_node_exporter()
 
   mv "$NODE_EXPORTER_INST_DIR/"* "$GRAFANA_DIR"
   remove_directory "$NODE_EXPORTER_INST_DIR"
+
+  local SYSTEMD_NAME=node_exporter
+  local SYSTEMD_FILE=$SYSTEMD_NAME.service
+  local SYSTEMD_FILEPATH=/etc/systemd/system/$SYSTEMD_FILE
+
+  if [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
+
+    header "Configuring Prometheus systemd service for LXC container"
+
+    cp "$INSTALL_DIR/$SYSTEMD_FILE" "$SYSTEMD_FILEPATH"
+    chown root:root "$SYSTEMD_FILEPATH"
+    chmod 644 "$SYSTEMD_FILEPATH"
+
+    systemctl daemon-reload
+    systemctl enable "$SYSTEMD_NAME"
+  fi
+
 }
 
 

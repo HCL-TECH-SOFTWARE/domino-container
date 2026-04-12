@@ -1640,15 +1640,12 @@ create_notes_user_and_group()
   groupadd notes -g $NOTES_GID
 
   if [ -z "$LINUX_HOMEDIR" ]; then
-    useradd notes -u $NOTES_UID -g $NOTES_GID -m
+    useradd notes -u "$NOTES_UID" -g "$NOTES_GID" -m -s /bin/bash
   else
-    useradd notes -u $NOTES_UID -g $NOTES_GID -m --home-dir "$LINUX_HOMEDIR"
+    mkdir -p "$(dirname "$LINUX_HOMEDIR")"
+    useradd notes -u "$NOTES_UID" -g "$NOTES_GID" -m --home-dir "$LINUX_HOMEDIR" -s /bin/bash
 
-    local BASHRC_FILE="${LINUX_HOMEDIR}/,.bashrc"
-
-    if [ ! -e "$BASHRC_FILE" ]; then
-       cp /etc/skel/.bashrc $"BASHRC_FILE"
-    fi
+    local BASHRC_FILE="${LINUX_HOMEDIR}/.bashrc"
   fi
 }
 
