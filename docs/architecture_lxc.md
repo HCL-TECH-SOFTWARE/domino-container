@@ -19,7 +19,6 @@ The result is a highly efficient, low-overhead alternative to VM-based or Docker
 
 * Native Proxmox LXC template generation
 * systemd-based runtime environment
-* Integrated SSH access
 * Reuse of Domino container deployment logic
 * ZFS-native storage model
 * Versioned, shared `/opt` datasets
@@ -265,8 +264,8 @@ Indirect ZFS usage                 Native ZFS usage
 
 A new `/opt` dataset is created for each build.
 Containers switch to the new dataset and restart.
-
-No in-place modification is performed.
+All binaries including the Domino Start Script are located in `/opt`.
+Template Notes data tar is also located in `/opt`.
 
 
 ## Versioned Datasets
@@ -287,7 +286,7 @@ zfs create rpool/data/domino-opt-20260420-0915
 
 Populate with:
 
-* HCL Domino binaries
+* HCL Domino binaries (/opt/hcl/domino)
 * `/opt/domino-container/install_data_domino.taz`
 * Prometheus Node Exporter
 * Nash!Com Dominoi Start Script
@@ -375,7 +374,7 @@ Containers can be switched independently or in groups.
 * No Docker runtime required
 * systemd and SSH available
 * Native Proxmox integration
-
+* SSH access for Domino admins to container without access to Proxmox host
 
 ## Architecture Summary
 
@@ -401,7 +400,7 @@ The Proxmox LXC mode extends the Domino Container project by:
 * Aligning with Domino’s internal data architecture
 
 This results in a deployment model that is efficient, flexible, and optimized for Domino workloads
-leveraging LXC technology -- native Proxmox deployment method.
+leveraging LXC technology -- One of the two native Proxmox server deployment methods.
 
 
 
