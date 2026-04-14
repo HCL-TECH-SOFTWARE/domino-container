@@ -11,8 +11,8 @@
 # The script checks if software is available at configured location (download location or local directory).
 # In case of a local software directory it hosts the software on a local NGINX container.
 
-SCRIPT_NAME=$(readlink -f $0)
-SCRIPT_DIR=$(dirname $SCRIPT_NAME)
+SCRIPT_NAME="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="${SCRIPT_NAME%/*}"
 
 # Standard configuration overwritten by build.cfg
 # (Default) NGINX is used hosting software from the local "software" directory.
@@ -3901,7 +3901,7 @@ install_domino_pct()
 
   header "Configuring container mounts"
 
-  pct set "$PCT_ID" -mp0 /local/github/domino-container,mp=/mnt/build,ro=1
+  pct set "$PCT_ID" -mp0 ${SCRIPT_DIR},mp=/mnt/build,ro=1
   pct set "$PCT_ID" -mp1 ${SOFTWARE_DIR},mp=/local/software,ro=1
   pct set "$PCT_ID" -mp2 "$PCT_DOMINO_VOL_REF",mp=/opt
 
