@@ -3849,6 +3849,42 @@ install_domino_pct()
   PCT_DOMINO_OPT_LATEST="/${PCT_DATA_POOL}/${OPT_LATEST}"
   PCT_DOMINO_VOL_REF="${PCT_DOMINO_OPT_MOUNTPOINT}"
 
+  header "Build Configuration"
+
+  if [ -n "$DOWNLOAD_FROM" ]; then
+    echo "DOWNLOAD_FROM        Download URL     :  $DOWNLOAD_FROM"
+  else
+    echo "SOFTWARE_DIR         Software Dir     :  $SOFTWARE_DIR"
+  fi
+
+  echo "PCT_LINUX_TEMPLATE   Linux Template   :  $PCT_LINUX_TEMPLATE"
+  echo "PCT_STORAGE          Storage          :  $PCT_STORAGE"
+  echo "PCT_DATA_POOL        Data Pool        :  $PCT_DATA_POOL"
+  echo "PCT_SIZE             Template size    :  $PCT_SIZE (GB)"
+  echo "PCT_NET0             Network Config   :  $PCT_NET0"
+  echo "PCT_TEMP_BUILD_ID    Build LXC ID     :  $PCT_TEMP_BUILD_ID"
+  echo "PCT_TEMPLATE_ID      Template LXC ID  :  $PCT_TEMPLATE_ID"
+
+  if ! command -v pct >/dev/null 2>&1; then
+    log_error_exit "No Proxmox PCT environment found"
+  fi
+
+  if ! command -v zfs >/dev/null 2>&1; then
+    log_error_exit "No ZFS found"
+  fi
+
+  case "$SCRIPT_DIR" in
+    /local*)
+      log "Warning: GitHub repository should be mounted to /mnt/domino-container to comply to security settings"
+      ;;
+  esac
+
+
+  if ! pvesm status | grep -q "^$PCT_STORAGE .* active"; then
+    log_error_exit "Storage $PCT_STORAGE not active"
+    exit 1
+  fi
+
   # Ensure volume does not yet exists
   if zfs list "$PCT_DOMINO_VOL_OPT" >/dev/null 2>&1; then
     log_error_exit "OPT dataset already exists: $PCT_DOMINO_VOL_OPT"
@@ -3902,8 +3938,11 @@ install_domino_pct()
   header "Configuring container mounts"
 
   pct set "$PCT_ID" -mp0 ${SCRIPT_DIR},mp=/mnt/build,ro=1
-  pct set "$PCT_ID" -mp1 ${SOFTWARE_DIR},mp=/local/software,ro=1
   pct set "$PCT_ID" -mp2 "$PCT_DOMINO_VOL_REF",mp=/opt
+
+  if [ -z "$DOWNLOAD_FROM" ]; then
+    pct set "$PCT_ID" -mp1 ${SOFTWARE_DIR},mp=/local/software,ro=1
+  fi
 
   header "Starting LXC build container"
   pct start "$PCT_ID"
