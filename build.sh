@@ -4780,6 +4780,12 @@ else
   CURL_CMD="curl --location --max-redirs 10 --fail --connect-timeout 15 --max-time 300 $SPECIAL_CURL_ARGS"
 fi
 
+# Ensure files are always written that world can read them.
+# This is important for downloading files used during the build process.
+# Files which need a specific owner and permission for security reasons are handled by the script logic.
+umask 0022
+
+
 # Copy software.txt ..
 if [ -n "$INSTALL_DOMINO_NATIVE" ]; then
   copy_software_txt

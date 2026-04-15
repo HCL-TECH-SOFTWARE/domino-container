@@ -29,7 +29,7 @@
     },
 
     "notesINI": {
-      "Create_R85_log": "1",
+      "Create_R85_log": "0",
       "LOG_REPLICATION": "0",
       "LOG_SESSIONS": "0",
       "HTTPPublicURLs": "/iwaredir.nsf/*:/.well-known*",
@@ -44,6 +44,7 @@
       "CertMgr_ACCEPT_TOU": "1",
       "CERTSTORE_CACHELOG": "1",
       "NTS_AUTO_CONFIG": "false",
+      "FILE_COPY_BUFFER_SIZE": "1048576",
       "NOMAD_WEB_HOST": "automation.notes.lab"
     },
 

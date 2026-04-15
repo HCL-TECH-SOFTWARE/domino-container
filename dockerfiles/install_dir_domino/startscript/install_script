@@ -476,6 +476,8 @@ if [ ${LARCH} = "linux" ]; then
 
   if [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
     install_file "$START_SCRIPT_DIR/$DOMINO_NOTESDATA_UPD_SCRIPT" "$DOMINO_START_SCRIPT_DIR/$DOMINO_NOTESDATA_UPD_SCRIPT" $ROOT_USER $ROOT_GROUP 755
+    echo "Enabling Domino systemd service"
+    systemctl enable "$DOMINO_SYSTEMD_NAME"
   fi
 
 fi
