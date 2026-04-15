@@ -15,10 +15,10 @@ Connect to the server using the private key .ppk specified in the SSH Advanced k
 
 Linux by default uses `vi` as the editor of choice
 
-Instead of `vi` you could install  `nano` or  `mcedit`.
+Instead of `vi` you could install `nano`, `mcedit` or `micro`.
 
 ```
-yum install -y mc nano
+apt install -y mc nano micro
 
 mcedit docker-compose.yml
 
@@ -26,8 +26,8 @@ mcedit docker-compose.yml
 
 
 ```
-chmod 400 id_escsa.pem
-ssh root@master.domino-lab.net -i id_escsa.pem
+chmod 400 id_ed25519
+ssh root@test.domino-lab.net -i id_ed25519
 ```
 
 ## Prepare the local environment 
@@ -62,10 +62,10 @@ docker run --rm hello-world
 ```
 
 
-## Run the CentOS Base image
+## Run the latest Ubuntu Base image
 
 ```
-docker run --rm -it centos:latest bash
+docker run --rm -it ubuntu:latest bash
 ```
 
 ## Create a normal user and group ( notes:notes )
@@ -88,7 +88,7 @@ adduser notes -U
 * Clone Domino Container repository
 
 ```
-yum install -y git
+apt install -y git
 
 mkdir -p /local/github
 cd /local/github
@@ -97,6 +97,7 @@ git clone https://github.com/HCL-TECH-SOFTWARE/domino-container.git
 cd domino-container
 git checkout develop
 
+```
 
 
 # Build the Domino Community Image
@@ -104,7 +105,7 @@ git checkout develop
 Switch to the main directory
 
 ```
- cd /local/github/domino-docker/
+ cd /local/github/domino-container/
 ```
 
 Edit the configuraiton
@@ -136,7 +137,7 @@ Information about the software to download is located in the software.txt file, 
 
 
 ```
-docker run -d -p 80:80 -p 443:443 -p 1352:1352 --hostname marvel.domino-lab.net --name domino12 --cap-add=SYS_PTRACE -v notesdata:/local/notesdata hclcom/domino:latest
+docker run -d -p 80:80 -p 443:443 -p 1352:1352 --hostname marvel.domino-lab.net --name domino --cap-add=SYS_PTRACE -v notesdata:/local/notesdata hclcom/domino:latest
 ```
 
 
@@ -156,7 +157,7 @@ You can also jump into the container from another window
 
 
 ```
-docker exec -it domino12 bash
+docker exec -it domino bash
 ```
 
 Run commands inside the container
@@ -181,7 +182,7 @@ You need to download it separately from the Docker website. The following comman
 ## Check Docker Compose version
 
 ```
- docker-compose version
+ docker compose version
 ```
 
 ## Switch to the example directory
@@ -204,7 +205,7 @@ This example contains a server with a first Domino V12 One Touch configuration.
 
 
 ```
-docker-compose up
+docker compose up
 ```
 
 Tip: You can also start the container in back-ground detached with `-d`
