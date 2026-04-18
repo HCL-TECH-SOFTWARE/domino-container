@@ -77,6 +77,13 @@ cleanup()
   stty sane
 }
 
+cleanup_and_exit()
+{
+  tput cnorm
+  stty sane
+  exit 0
+}
+
 
 enter_raw()
 {
@@ -183,7 +190,6 @@ select_collect_diag()
 
   build_options
 
-  trap cleanup INT TERM EXIT
   enter_raw
 
   while true; do
@@ -440,7 +446,9 @@ upload_file()
   elif command -v nshmailx >/dev/null 2>&1; then
 
     if [ -z "$DIAG_FROM" ]; then
-      DIAG_FROM=$(cat "$NOTESINI" | grep -i "^DominoDiagFrom=" | head -1 | cut -d'=' -f2)
+      if [ -e "$NOTESINI" ]; then
+        DIAG_FROM=$(cat "$NOTESINI" | grep -i "^DominoDiagFrom=" | head -1 | cut -d'=' -f2)
+      fi
     fi
 
     if [ -z "$DIAG_FROM" ]; then
@@ -448,7 +456,9 @@ upload_file()
     fi
 
     if [ -z "$DIAG_RCPT" ]; then
-      DIAG_RCPT=$(cat "$NOTESINI" | grep -i "^DominoDiagRcpt=" | head -1 | cut -d'=' -f2)
+      if [ -e "$NOTESINI" ]; then
+        DIAG_RCPT=$(cat "$NOTESINI" | grep -i "^DominoDiagRcpt=" | head -1 | cut -d'=' -f2)
+      fi
     fi
 
     if [ -z "$DIAG_RCPT" ]; then
@@ -471,6 +481,7 @@ upload_file()
     fi
 
     nshmailx "$DIAG_RCPT" -name "$DIAG_FULL_SERVER_NAME" -from "$DIAG_FROM" -subject "Domino Diag [$DIAG_FULL_SERVER_NAME]" -att "$DOMINO_DIAG_ARCHIVE_FILE"
+    echo
 
   else
     echo
@@ -522,7 +533,7 @@ edit_config()
     echo "# --- Mail config ---" >> "$DOM_DIAG_COLLECT_CFG"
     echo >> "$DOM_DIAG_COLLECT_CFG"
     echo "#DIAG_RCPT=admin@example.com" >> "$DOM_DIAG_COLLECT_CFG"
-    echo "#DIAG_FROM" >> "$DOM_DIAG_COLLECT_CFG"
+    echo "#DIAG_FROM=" >> "$DOM_DIAG_COLLECT_CFG"
     echo >> "$DOM_DIAG_COLLECT_CFG"
 
   fi
@@ -533,6 +544,9 @@ edit_config()
 
 # ---------- Main Logic ----------
 
+shopt -s huponexit
+trap cleanup_and_exit SIGINT SIGTERM SIGHUP EXIT
+
 if [ -z "$DOMINO_DATA_PATH" ]; then
   DOMINO_DATA_PATH=/local/notesdata
 fi
@@ -540,12 +554,15 @@ fi
 NOTESINI="$DOMINO_DATA_PATH/notes.ini"
 
 if [ ! -e "$NOTESINI" ]; then
-  log "Cannot find notes.ini"
-  exit 1
+  log "Info: Cannot find notes.ini"
+
+  SEARCH_PATH="$1"
+
+else
+  SEARCH_PATH="$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT"
 fi
 
 DOM_DIAG_COLLECT_CFG="$DOMINO_DATA_PATH/.domdiagcollect.cfg"
-SEARCH_PATH="$DOMINO_DATA_PATH/IBM_TECHNICAL_SUPPORT"
 DEFAULT_MAX_HOURS=24
 MAX_WIDTH=110
 PRESET=1
@@ -558,13 +575,15 @@ if [ -e "$DOM_DIAG_COLLECT_CFG" ]; then
 
 # If not found check notes.ini
 else
-  WEBDAV_URL=$(cat "$NOTESINI" | grep -i "^DOMDIAG_WEBDAV_URL=" | head -1 | cut -d'=' -f2)
+  if [ -e "$NOTESINI" ]; then
+    WEBDAV_URL=$(cat "$NOTESINI" | grep -i "^DOMDIAG_WEBDAV_URL=" | head -1 | cut -d'=' -f2)
 
-  WEBDAV_PUBLIC_SHARE=$(cat "$NOTESINI" | grep -i "^DOMDIAG_PUBLIC_SHARE=" | head -1 | cut -d'=' -f2)
-  WEBDAV_PASSWORD=$(cat "$NOTESINI" | grep -i "^DOMDIAG_WEBDAV_PASSWORD=" | head -1 | cut -d'=' -f2)
+    WEBDAV_PUBLIC_SHARE=$(cat "$NOTESINI" | grep -i "^DOMDIAG_PUBLIC_SHARE=" | head -1 | cut -d'=' -f2)
+    WEBDAV_PASSWORD=$(cat "$NOTESINI" | grep -i "^DOMDIAG_WEBDAV_PASSWORD=" | head -1 | cut -d'=' -f2)
 
-  SCP_TARGET=$(cat "$NOTESINI" | grep -i "^DOMDIAG_SCP_TARGET=" | head -1 | cut -d'=' -f2)
-  SCP_PORT=$(cat "$NOTESINI" | grep -i "^DOMDIAG_SCP_PORT=" | head -1 | cut -d'=' -f2)
+    SCP_TARGET=$(cat "$NOTESINI" | grep -i "^DOMDIAG_SCP_TARGET=" | head -1 | cut -d'=' -f2)
+    SCP_PORT=$(cat "$NOTESINI" | grep -i "^DOMDIAG_SCP_PORT=" | head -1 | cut -d'=' -f2)
+  fi
 
 fi
 
@@ -644,9 +663,14 @@ if [ -z "$MAX_HOURS" ]; then
 fi
 
 DIAG_INDEX_FILE="$DOMINO_DATA_PATH/diagindex.nbf"
-DIAG_DIRECTORY=$(head -1 "$DIAG_INDEX_FILE")
 
-DIAG_FULL_SERVER_NAME=$(cat "$NOTESINI" | grep -i "^ServerName=" | head -1 | cut -d'=' -f2)
+if [ -e "$DIAG_INDEX_FILE" ]; then
+  DIAG_DIRECTORY=$(head -1 "$DIAG_INDEX_FILE")
+fi
+
+if [ -e "$NOTESINI" ]; then
+  DIAG_FULL_SERVER_NAME=$(cat "$NOTESINI" | grep -i "^ServerName=" | head -1 | cut -d'=' -f2)
+fi
 
 if [ -z "$DIAG_HOSTNAME" ]; then
   DIAG_HOSTNAME=$(hostname -f 2> /dev/null)

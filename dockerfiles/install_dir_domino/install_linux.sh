@@ -37,7 +37,7 @@ install_linux_packages()
   fi
 
   # Common packages for all distributions
-  install_packages lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip tzdata
+  install_packages lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip tzdata less
 
   # SUSE does not have gdb-minimal
   if [ -x /usr/bin/zypper ]; then
@@ -138,7 +138,7 @@ install_linux_packages_hcl()
 {
   # Only install minimum required packages for redistributable UBI image
 
-  install_packages hostname unzip lsof gdb file net-tools procps-ng diffutils gettext
+  install_packages hostname unzip lsof gdb file net-tools procps-ng diffutils gettext less
 
   # gdb installs also the C compiler, which is not required and increases image size
   remove_packages gcc make

@@ -155,7 +155,11 @@ fi
 
 # Show log command
 if [ -z "$SHOW_LOG_COMMAND" ]; then
-  SHOW_LOG_COMMAND="less"
+  if command -v less >/dev/null 2>&1; then
+    SHOW_LOG_COMMAND="less"
+  else
+     SHOW_LOG_COMMAND="$EDIT_COMMAND"
+  fi
 fi
 
 # Extension command descriptions

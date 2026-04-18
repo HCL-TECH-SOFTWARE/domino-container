@@ -3824,7 +3824,7 @@ install_domino_pct()
   : "${PCT_STORAGE:=local-zfs}"
   : "${PCT_DATA_POOL:=rpool/data}"
   : "${PCT_SIZE:=20}"
-  : "${PCT_HOSTNAME:=localhost}"
+  : "${PCT_HOSTNAME:=domino-lxc-template}"
   : "${SOFTWARE_DIR:=/local/software}"
   : "${PCT_TEMP_BUILD_ID:=9999}"
   : "${PCT_NET0:=name=eth0,bridge=vmbr0,ip=dhcp}"
