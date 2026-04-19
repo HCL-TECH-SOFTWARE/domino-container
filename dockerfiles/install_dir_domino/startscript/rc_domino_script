@@ -2931,6 +2931,28 @@ domino_start()
         $DOMINO_BIN $JAVA_CONTROLLER_STRING -auto "$SetupAutoConfigureParams" < "$DOMINO_INPUT_FILE" >> "$DOMINO_OUTPUT_LOG" 2>&1 &
       fi
 
+    elif [ "$DOMSETUP_ENABLED" = "1" ]; then
+
+      # Run domsetup.sh if configured
+
+      local DOMSETUP_BIN="$Notes_ExecDirectory/domsetup.sh"
+
+      if [ ! -x "$DOMSETUP_BIN" ]; then
+        log_space "Error: Cannot run Domino Setup listener binary: $DOMSETUP_BIN"
+
+      elif [ ! -x /usr/bin/openssl ]; then
+        log_space "Error: Cannot run Domino Setup because no OpenSSL command line available"
+      fi
+
+      header "Domino Setup Listener"
+      "$DOMSETUP_BIN"
+
+      if [ "$DOMFWD_ENABLED" = "yes" ]; then
+        $DOMINO_BIN $JAVA_CONTROLLER_STRING -auto "$DOMSETUP_JSON_FILE" < "$DOMINO_INPUT_FILE" 2>&1 | "$DOMFWD_BIN" &
+      else
+        $DOMINO_BIN $JAVA_CONTROLLER_STRING -auto "$DOMSETUP_JSON_FILE" < "$DOMINO_INPUT_FILE" >> "$DOMINO_OUTPUT_LOG" 2>&1 &
+      fi
+
     else
       # Fall back to listen mode if nothing else is configured
       if [ -z "$DOMINO_REMOTE_SETUP_PORT" ]; then
