@@ -42,38 +42,15 @@ format_mem()
 }
 
 
-get_pid_uptime()
+format_size()
 {
-  local pid="$1"
+  local val="$1"
 
-  if [ ! -e "/proc/$pid" ]
-  then
-    return 1
+  if [[ "$val" =~ ^([0-9]+)(\.[0-9]+)?([KMGTP])$ ]]; then
+    printf "%.1f%s" "${BASH_REMATCH[1]}${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"
+  else
+    printf "%s" "$val"
   fi
-
-  local now start elapsed
-
-  now=$(date +%s)
-  start=$(stat -c %Y "/proc/$pid")
-
-  if [ -z "$start" ] || [ -z "$now" ]
-  then
-    return 1
-  fi
-
-  elapsed=$(( now - start ))
-
-  if [ "$elapsed" -lt 0 ]
-  then
-    elapsed=0
-  fi
-
-  local days hours mins
-  days=$(( elapsed / 86400 ))
-  hours=$(( (elapsed % 86400) / 3600 ))
-  mins=$(( (elapsed % 3600) / 60 ))
-
-  printf "%d day, %d hour %d min\n" "$days" "$hours" "$mins"
 }
 
 
@@ -106,9 +83,13 @@ domino_uptime()
     return 0
   fi
 
-  DOMINO_SERVER_PID=$(ps -ef -fu $PARTITION_USER | grep "$LOTUS_BIN_DIR" | grep "server" | grep -v " -jc" | xargs | cut -d " " -f2)
-  if [ -n "$DOMINO_SERVER_PID" ]; then
-    DOMINO_UPTIME=$(get_pid_uptime $DOMINO_SERVER_PID)
+  if [ "$NSHINFO_MODE" = "dominoctl" ]; then
+    DOMINO_UPTIME=
+  else
+    DOMINO_SERVER_PID=$(ps -ef -fu $PARTITION_USER | grep "$LOTUS_BIN_DIR" | grep "server" | grep -v " -jc" | xargs | cut -d " " -f2)
+    if [ -n "$DOMINO_SERVER_PID" ]; then
+      DOMINO_UPTIME=$(ps -o etimes= -p "$DOMINO_SERVER_PID" | awk '{x=$1/86400;y=($1%86400)/3600;z=($1%3600)/60} {printf("%d day, %d hour %d min\n",x,y,z)}' )
+    fi
   fi
 }
 
@@ -185,7 +166,7 @@ check_free_space()
       ;;
   esac
 
-  printf "$FORMAT" "$DISK" "$size" "$used" "$avail" "$pcent" "$fstype" "$source" "$target"
+  printf "$FORMAT" "$DISK" "$(format_size "$size")" "$(format_size "$used")" "$(format_size "$avail")" "$pcent" "$fstype" "$source" "$target"
 }
 
 
@@ -240,7 +221,7 @@ print_infos()
     LINUX_GLIBC_VERSION=$(ldd --version | head -1 | awk '{print $NF}')
   fi
   LINUX_ARCH==$(uname -m)
-  LINUX_UPTIME=$(get_pid_uptime 1)
+  LINUX_UPTIME=$( awk '{x=$1/86400;y=($1%86400)/3600;z=($1%3600)/60} {printf("%d day, %d hour %d min\n",x,y,z)}' /proc/uptime )
   LINUX_LOAD_AVG=$(awk -F " " '{printf $1 "  " $2 "  " $3}' /proc/loadavg)
 
   if [ -e /usr/bin/hostname ]; then
@@ -260,7 +241,7 @@ print_infos()
     if [ "$CONTAINER_VIRT" = "none" ]; then
       CONTAINER_VIRT=
     else
-      CONTAINER_UPTIME=$(get_pid_uptime 1)
+      CONTAINER_UPTIME=$(ps -o etimes= -p 1 | awk '{x=$1/86400;y=($1%86400)/3600;z=($1%3600)/60} {printf("%d day, %d hour %d min\n",x,y,z)}' )
     fi
   fi
 
@@ -376,7 +357,9 @@ print_infos()
     printf "Linux Uptime  :      $LINUX_UPTIME\n"
   fi
 
-  printf "Domino Uptime :      $DOMINO_UPTIME\n"
+  if [ "$NSHINFO_MODE" != "dominoctl" ]; then
+    printf "Domino Uptime :      $DOMINO_UPTIME\n"
+  fi
 
   printf "Load Average  :      $LINUX_LOAD_AVG\n"
 

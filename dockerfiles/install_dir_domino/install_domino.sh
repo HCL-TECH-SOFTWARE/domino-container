@@ -1686,6 +1686,31 @@ install_domsetup()
     fi
 }
 
+secure_ssh_server()
+{
+  command -v sshd >/dev/null 2>&1 || return 0
+
+  header "Securing OpenSSH Server"
+
+  if [ ! -d /etc/ssh/sshd_config.d ]; then
+    log_error "Cannot find: /etc/ssh/sshd_config.d"
+  fi
+
+  cat > /etc/ssh/sshd_config.d/99-domino.conf <<'EOF'
+Port 22
+AuthorizedKeysFile .ssh/authorized_keys
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+KbdInteractiveAuthentication no
+MaxAuthTries 2
+UsePAM yes
+AllowTcpForwarding no
+X11Forwarding no
+AllowAgentForwarding no
+EOF
+
+}
 
 # --- Main Install Logic ---
 
@@ -2043,6 +2068,8 @@ install_file "$INSTALL_DIR/healthcheck.sh" "/healthcheck.sh" root root 755
 ln -s "/healthcheck.sh" "/domino_docker_healthcheck.sh"
 
 install_k8s_runas_user_support
+
+secure_ssh_server
 
 # Set notes.ini variables needed
 set_default_notes_ini_variables

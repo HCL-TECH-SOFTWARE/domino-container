@@ -3949,7 +3949,7 @@ install_domino_pct()
 
   wait_for_pct_container "$PCT_ID"
 
-  header "Building HCL Domino image (this may take a while)"
+  header "Building HCL Domino LXC image (this may take a while)"
 
   if ! pct exec "$PCT_ID" -- bash -c "
     set -e
