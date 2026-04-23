@@ -980,12 +980,12 @@ check_from_image()
       BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
       ;;
 
-    ubuntu26)
+    ubuntu|ubuntu26)
       LINUX_NAME="Ubuntu 26.04 LTS (Resolute Raccoon)"
       BASE_IMAGE=ubuntu:resolute
       ;;
 
-    ubuntu|ubuntu24)
+    ubuntu24)
       LINUX_NAME="Ubuntu 24.04 LTS (Noble Numbat)"
       BASE_IMAGE=ubuntu:noble
       ;;

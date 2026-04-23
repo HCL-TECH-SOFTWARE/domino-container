@@ -783,7 +783,13 @@ install_capi()
 
   # Update global profile
 
-  update_capi_env "/etc/bashrc"
+  if [ -f "/etc/bash.bashrc" ]; then
+    # Ubuntu/Debian
+    update_capi_env "/etc/bash.bashrc"
+  else
+    # Redhat/Fedora etc.
+    update_capi_env "/etc/bashrc"
+  fi
 
   echo
   echo Installed $ADDON_NAME
