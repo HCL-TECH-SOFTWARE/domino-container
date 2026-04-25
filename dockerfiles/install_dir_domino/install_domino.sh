@@ -33,6 +33,10 @@ INST_RESTAPI_LOG=$DOMDOCK_LOG_DIR/install_restapi.log
 
 DOMINO_CUSTOM_DATA_PATH=/tmp/customdata
 
+# Just in case make sure X11 terminal based installs never cause InstallAnywhere to fail with missing X11 libs
+if [ -z "$JAVA_TOOL_OPTIONS" ]; then
+  export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
+fi
 
 check_install_tika()
 {
