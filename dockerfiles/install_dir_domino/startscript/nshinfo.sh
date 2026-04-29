@@ -217,9 +217,13 @@ print_infos()
   fi
 
   LINUX_KERNEL=$(uname -r)
+
   if [ ! -x /sbin/apk ]; then
-    LINUX_GLIBC_VERSION=$(ldd --version | head -1 | awk '{print $NF}')
+    if command -v getconf >/dev/null 2>&1; then
+      LINUX_GLIBC_VERSION=$(getconf GNU_LIBC_VERSION | awk '{print $NF}')
+    fi
   fi
+
   LINUX_ARCH==$(uname -m)
   LINUX_UPTIME=$( awk '{x=$1/86400;y=($1%86400)/3600;z=($1%3600)/60} {printf("%d day, %d hour %d min\n",x,y,z)}' /proc/uptime )
   LINUX_LOAD_AVG=$(awk -F " " '{printf $1 "  " $2 "  " $3}' /proc/loadavg)
