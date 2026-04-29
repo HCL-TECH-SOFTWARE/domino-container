@@ -96,9 +96,8 @@ domrestapi|1.1.7-14.5|Domino_REST_API_V1.1.7_R14.5_Installer.tar.gz|5a2jDImLV5gX
 daostune|2.0|daostune|vwWWuh6yyudOuRjutaHnW|4b9e7af34f3cbba9a699b4288e0e10088659c5b271b0abb58907630736107793
 domiq|14.5|LlamaServerforDominoIQ_080525_Linux.zip|fl51IpNNWMLhcVqCVG89l|3021f0149e7f10e8f9fcf96f9732326979d89952b96b62f209a3394f38e60477
 domiq|14.5.1|LlamaServerforDominoIQ_030426_Linux.zip|8pXCsZ4b6dKPMNQSzLZ92|78f2386c2731964bbe79337086679e74f5c304e3b81e579c7caf9df309c973e9
-node_exporter|1.8.2|node_exporter-1.8.2.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz|x|6809dd0b3ec45fd6e992c19071d6b5253aed3ead7bf0686885a51d85c6643c66
-node_exporter|1.9.1|node_exporter-1.9.1.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz|x|becb950ee80daa8ae7331d77966d94a611af79ad0d3307380907e0ec08f5b4e8
 node_exporter|1.10.2|node_exporter-1.10.2.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz|x|c46e5b6f53948477ff3a19d97c58307394a29fe64a01905646f026ddc32cb65b
+node_exporter|1.11.1|node_exporter-1.11.1.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.11.1/node_exporter-1.11.1.linux-amd64.tar.gz|x|9f5ea48e5bc7b656f8a91a32e7d7deb89f70f73dabd0d974418aca15f37d6810
 alloy|1.12.2|alloy-linux-amd64.zip,https://github.com/grafana/alloy/releases/download/v1.12.2/alloy-linux-amd64.zip|x|7d12882f9c270804beeae3d519e995a1fcff18b7f50d6c5894438df0c799763a
 domprom|1.0.6|domprom-1.0.6-linux-amd64.taz,https://github.com/nashcom/domino-grafana/releases/download/v1.0.6/domprom-1.0.6-linux-amd64.taz|x|3b1be8ac9bc91a9dbc4409df80cee4d9d76575b766adc2ed6a14437dca0e74ff
 domprom|1.0.7|domprom-1.0.7-linux-amd64.taz,https://github.com/nashcom/domino-grafana/releases/download/v1.0.7/domprom-1.0.7-linux-amd64.taz|x|4e02312ab9fb2a10eeda446c70789c79858adc543aca14c58c2ae8c8994acde2
