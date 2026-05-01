@@ -846,12 +846,16 @@ fi
 if [ ! -e "$DOMSETUP_CERT_FILE" ]; then
   header "Generating self-signed certificate via OpenSSL ..."
 
+  if [ -z "$DOMSETUP_ORG" ]; then
+    DOMSETUP_ORG=DominoSetupCA
+  fi
+
   if [ -n "$DOMSETUP_KEY_FILE_PWD" ] &&  [ -e "$DOMSETUP_KEY_FILE_PWD" ]; then
     log_space "OpenSSL using $DOMSETUP_KEY_FILE_PWD"
-    openssl req -x509 -key "$DOMSETUP_KEY_FILE" -nodes -days 1 -passin "file:$DOMSETUP_KEY_FILE_PWD" -subj "/CN=$DOMSETUP_SUBJECT" -addext "subjectAltName=DNS:$DOMSETUP_DNS_SAN,IP:$DOMSETUP_IP_SAN" -out "$DOMSETUP_CERT_FILE" 2>> "$DOMSETUP_LOGFILE"
+    openssl req -x509 -key "$DOMSETUP_KEY_FILE" -nodes -days 1 -passin "file:$DOMSETUP_KEY_FILE_PWD" -subj "/CN=$DOMSETUP_SUBJECT/O=$DOMSETUP_ORG" -addext "subjectAltName=DNS:$DOMSETUP_DNS_SAN,IP:$DOMSETUP_IP_SAN" -out "$DOMSETUP_CERT_FILE" 2>> "$DOMSETUP_LOGFILE"
   else
     log_space "OpenSSL no private key password specified"
-    openssl req -x509 -key "$DOMSETUP_KEY_FILE" -nodes -days 1 -subj "/CN=$DOMSETUP_SUBJECT" -addext "subjectAltName=DNS:$DOMSETUP_DNS_SAN,IP:$DOMSETUP_IP_SAN" -out "$DOMSETUP_CERT_FILE" 2>> "$DOMSETUP_LOGFILE"
+    openssl req -x509 -key "$DOMSETUP_KEY_FILE" -nodes -days 1 -subj "/CN=$DOMSETUP_SUBJECT/O=$DOMSETUP_ORG" -addext "subjectAltName=DNS:$DOMSETUP_DNS_SAN,IP:$DOMSETUP_IP_SAN" -out "$DOMSETUP_CERT_FILE" 2>> "$DOMSETUP_LOGFILE"
   fi
 
   DOMSETUP_TEMP_CERT="$DOMSETUP_CERT_FILE"
