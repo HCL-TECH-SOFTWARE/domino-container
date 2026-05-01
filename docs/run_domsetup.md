@@ -166,6 +166,7 @@ The default value for this file is `/run/secrets/domsetup/env`
 | **DOMSETUP_DOMINO_REDIR**   | URL to redirect to after successful setup.                                       | `/verse`                        |
 | **DOMSETUP_WEBROOT**        | Directory containing the setup web UI files.                                     | `<script_dir>/domsetup-webroot` |
 | **DOMSETUP_NOGUI**          | Set to `1` to disable the web UI (Allow OTS JSON posts only).                    | *(unset)*                       |
+| **DOMSETUP_TOKEN**          | Shared setup token to validate server and authenticate client (nonce/HMAC)       | *(unset)*                       |
 
 
 
@@ -276,4 +277,94 @@ The name of the redirect URL is passed as a parameter and the link to the style 
 Requesting image files and style sheets is not restricted by CORS and works cross servers.
 
 Checking `style.css` in `domcfg.nsf` is a reliable way to detect the server has been started and the login form is available.
+
+
+## Domino Setup Verification (DOMSETUP_TOKEN)
+
+The verification mechanism provides mutual authentication between client and server using a shared secret (`DOMSETUP_TOKEN`).
+It is based on a challenge–response model using one-time nonces and HMAC.
+During setup, the client connects to a remote server that may not have a trusted certificate.
+
+Without additional verification:
+
+- the client cannot be sure it is talking to the intended server
+- the server cannot be sure the request originates from an authorized client
+
+The HMAC-based verification ensures that both sides share a common secret and are therefore part of the same trusted setup.
+
+
+### Principle
+
+Both client and server prove knowledge of the shared secret by computing an HMAC over a nonce provided by the other side.
+
+A nonce is a randomly generated value that is used only once.
+
+The HMAC is computed as:
+
+```
+HMAC = HMAC-SHA256(DOMSETUP_TOKEN, nonce)
+```
+
+### Verification Flow
+
+Verification is performed in both directions.
+
+Server verification:
+
+- The server returns a nonce
+- The client computes an HMAC using the nonce
+- The server verifies the HMAC
+
+Client verification:
+
+- The client sends a nonce
+- The server computes an HMAC using the nonce
+- The client verifies the HMAC
+
+
+### Why Nonces Are Used
+
+Nonces ensure that each verification is unique.
+
+Without a nonce:
+
+- a previously captured HMAC could be reused
+- authentication could be replayed
+
+By using a one-time value:
+
+- each HMAC is valid only for a single exchange
+- replay attacks are prevented
+
+
+### Why a Shared Secret Is Used
+
+The shared secret (`DOMSETUP_TOKEN`) is known only to the client and the intended server.
+
+By verifying the HMAC:
+
+- both sides prove knowledge of the secret
+- no secret is transmitted over the network
+
+This provides a simple and efficient way to establish trust without exchanging credentials.
+
+
+### Security Properties
+
+The mechanism provides:
+
+- mutual authentication
+- protection against replay attacks
+- detection of incorrect or unintended endpoints
+
+It does not provide:
+
+- protection against active man-in-the-middle attacks during initial connection
+- protection if the shared secret is compromised
+
+Note: Trusted TLS/SSL certificates would provide better protection but would need public certs or trusted roots distibuted.
+
+### Summary
+
+The verification mechanism ensures that client and server belong to the same trusted setup by proving knowledge of a shared secret using one-time nonces and HMAC, without exposing the secret itself.
 

@@ -2,8 +2,8 @@
 ###########################################################################
 # Domino OTS Setup Helper Script                                          #
 #                                                                         #
-# Version 0.9.7  23.11.2025                                               #
-# (C) Copyright Daniel Nashed/NashCom 2025                                #
+# Version 0.9.8  01.25.2026                                               #
+# (C) Copyright Daniel Nashed/NashCom 2025-2026                           #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
 # you may not use this file except in compliance with the License.        #
@@ -32,7 +32,7 @@
 
 # curl -v -k -X POST https://localhost/ots -H "Content-Type: application/json" --data-binary @ots.json
 
-DOMSETUP_VERSION="0.9.7"
+DOMSETUP_VERSION="0.9.8"
 SCRIPT_NAME=$0
 SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 
@@ -51,7 +51,8 @@ SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 # DOMSETUP_JSON_FILE      OTS JSON file to write (default: $DOMINO_AUTO_CONFIG_JSON_FILE)
 # DOMSETUP_DOMINO_REDIR   Redirect URL after setup (default: /verse)
 # DOMSETUP_WEBROOT        Web root to use (default: script directory + /domsetup-webroot)
-# DOMSETUP_NOGUI          set to 1 to disable setup GUI and only allow OTS JSON post
+# DOMSETUP_NOGUI          Set to 1 to disable setup GUI and only allow OTS JSON post
+# DOMSETUP_TOKEN          Token for validating client and server identity
 
 
 # Default TLS Cert/Key location checked first if not specified
@@ -557,16 +558,8 @@ check_authorization()
   local DOMSETUP_BASIC_AUTH=
   local DOMSETUP_BEARER_AUTH=
 
-  if [ -n "$DOMSETUP_USER" ] && [ -n "$DOMSETUP_PASSWORD" ]; then
-    DOMSETUP_BASIC_AUTH="Basic $(echo -n "$DOMSETUP_USER:$DOMSETUP_PASSWORD" | base64)"
-  fi
-
-  if [ -n "$DOMSETUP_BEARER" ]; then
-    DOMSETUP_BEARER_AUTH="Bearer $DOMSETUP_BEARER"
-  fi
-
   # No authorization required
-  if [ -z "$DOMSETUP_BASIC_AUTH" ] && [ -z "$DOMSETUP_BEARER_AUTH" ]; then
+  if [ -z "$DOMSETUP_BASIC_AUTH" ] && [ -z "$DOMSETUP_BEARER_AUTH" ] && [ -z "$DOMSETUP_TOKEN" ]; then
     return 0
   fi
 
@@ -576,12 +569,31 @@ check_authorization()
     return 401
   fi
 
-  if [ "$DOMSETUP_BASIC_AUTH" = "$AUTHORIZATION_HEADER" ]; then
-    return 0
+  # Any matching authentication is sufficient
+
+  if [ -n "$DOMSETUP_USER" ] && [ -n "$DOMSETUP_PASSWORD" ]; then
+    local DOMSETUP_BASIC_AUTH="Basic $(echo -n "$DOMSETUP_USER:$DOMSETUP_PASSWORD" | base64)"
+
+    if [ "$DOMSETUP_BASIC_AUTH" = "$AUTHORIZATION_HEADER" ]; then
+      return 0
+    fi
   fi
 
-  if [ "$DOMSETUP_BEARER_AUTH" = "$AUTHORIZATION_HEADER" ]; then
-    return 0
+  if [ -n "$DOMSETUP_BEARER" ]; then
+    local DOMSETUP_BEARER_AUTH="Bearer $DOMSETUP_BEARER"
+
+    if [ "$DOMSETUP_BEARER_AUTH" = "$AUTHORIZATION_HEADER" ]; then
+      return 0
+    fi
+  fi
+
+  if [ -n "$DOMSETUP_TOKEN" ]; then
+    local DOMSETUP_TOKEN_AUTH="Bearer $DOMSETUP_CLIENT_TOKEN"
+
+    if [ "$DOMSETUP_TOKEN_AUTH" = "$AUTHORIZATION_HEADER" ]; then
+      log "Token authorization successfull"
+      return 0
+    fi
   fi
 
   log_space "Authorization: Failed"
@@ -969,7 +981,7 @@ while true; do
       HEADER_VALUE=${HEADER_VALUE# }
       HEADER_VALUE=${HEADER_VALUE%$'\r'}
 
-      case $HEADER_NAME in
+      case "$HEADER_NAME" in
         host)             RECEIVED_HOST="$HEADER_VALUE" ;;
         content-length)   CONTENT_LEN="$HEADER_VALUE" ;;
         content-type)     RECEIVED_CONTENT_TYPE="$HEADER_VALUE" ;;
@@ -985,6 +997,38 @@ while true; do
   if [ -z "$ACCEPT_CONTENT_TYPE" ]; then
     ACCEPT_CONTENT_TYPE="$RECEIVED_CONTENT_TYPE"
   fi
+
+  # Special request needed for authorization
+  case "$GET_REQ" in
+    /nonce)
+      log "Nonce request received"
+
+      if [ -z "$DOMSETUP_TOKEN" ]; then
+        send_http_response 200 "Non nonce returned" "" "nonce: -"
+      else
+        # Sent new nonce value and remember it
+        DOMSETUP_NONCE=$(openssl rand -hex 16)
+        DOMSETUP_CLIENT_TOKEN=$(printf "%s" "$DOMSETUP_NONCE" | openssl dgst -sha256 -hmac "$DOMSETUP_TOKEN" | awk '{print $2}')
+        send_http_response 200 "Please use Nonce with authentication" "" "nonce: $DOMSETUP_NONCE"
+      fi
+      continue
+      ;;
+
+    /validateserver/*)
+      log "Server validation request received"
+
+      if [ -z "$DOMSETUP_TOKEN" ]; then
+        send_http_response 403 "No token configured"
+      else
+        # Server validation request for nonce sent
+        NONCE=$(echo "$GET_REQ" | cut -d/ -f3)
+        TOKEN=$(printf "%s" "$NONCE" | openssl dgst -sha256 -hmac "$DOMSETUP_TOKEN" | awk '{print $2}')
+        send_http_response 200 "OK" "" "$TOKEN"
+      fi
+      continue
+      ;;
+
+  esac
 
   check_authorization
   AUTH_STATUS="$?"
@@ -1008,7 +1052,6 @@ while true; do
         log "Domino Setup Done signaled > terminating"
         break
       fi
-
     fi
 
     process_get_request "$GET_REQ"

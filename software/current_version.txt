@@ -9,7 +9,6 @@ domiq-14.5|14.5
 traveler|14.5.1
 traveler-14.5.1|14.5.1
 traveler-14.5|14.5
-volt|1.0.5.15
 leap|1.1.10
 verse|3.2.6IF1
 capi|14.5.1
