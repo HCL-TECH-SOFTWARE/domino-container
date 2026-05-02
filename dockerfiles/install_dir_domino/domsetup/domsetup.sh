@@ -43,9 +43,9 @@ SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 # DOMSETUP_USER           Setup user name (default: admin)
 # DOMSETUP_PASSWORD       Password for setup user (default: /tmp/domsetup-key.pass)
 # DOMSETUP_BEARER         Setup Bearer token instead of user password
-# DOMSETUP_CERT_FILE      TLS Certificate file name (default: /tmp/domsetup-cert.pem)
-# DOMSETUP_KEY_FILE       TLS Key file name (default: /tmp/domsetup-key.pem)
-# DOMSETUP_KEY_FILE_PWD   TLS Key password file name (default: /tmp/domsetup-password.txt)
+# DOMSETUP_CERT_FILE      TLS Certificate file name (default: /run/secrets/domsetup/tls.crt or /tmp/domsetup-cert.pem)
+# DOMSETUP_KEY_FILE       TLS Key file name (default: /run/secrets/domsetup/tls.key or /tmp/domsetup-key.pem)
+# DOMSETUP_KEY_FILE_PWD   TLS Key password file name (default: /run/secrets/domsetup/key.pass or /tmp/domsetup-key.pass)
 # DOMSETUP_CERTMGR_HOST   Domino CertMgr host name to retieve a certificate matching the current key for host name
 # DOMSETUP_CERTMGR_LOOKUP Name to use to lookup a TLS Certificate from CertMgr (requried multiple SANs in a name)
 # DOMSETUP_JSON_FILE      OTS JSON file to write (default: $DOMINO_AUTO_CONFIG_JSON_FILE)
@@ -555,11 +555,8 @@ process_ots_form_data()
 
 check_authorization()
 {
-  local DOMSETUP_BASIC_AUTH=
-  local DOMSETUP_BEARER_AUTH=
-
   # No authorization required
-  if [ -z "$DOMSETUP_BASIC_AUTH" ] && [ -z "$DOMSETUP_BEARER_AUTH" ] && [ -z "$DOMSETUP_TOKEN" ]; then
+  if [ -z "$DOMSETUP_PASSWORD" ] && [ -z "$DOMSETUP_BEARER" ] && [ -z "$DOMSETUP_TOKEN" ]; then
     return 0
   fi
 
@@ -580,17 +577,14 @@ check_authorization()
   fi
 
   if [ -n "$DOMSETUP_BEARER" ]; then
-    local DOMSETUP_BEARER_AUTH="Bearer $DOMSETUP_BEARER"
-
-    if [ "$DOMSETUP_BEARER_AUTH" = "$AUTHORIZATION_HEADER" ]; then
+    if [ "Bearer $DOMSETUP_BEARER" = "$AUTHORIZATION_HEADER" ]; then
       return 0
     fi
   fi
 
-  if [ -n "$DOMSETUP_TOKEN" ]; then
-    local DOMSETUP_TOKEN_AUTH="Bearer $DOMSETUP_CLIENT_TOKEN"
+  if [ -n "$DOMSETUP_CLIENT_TOKEN" ]; then
 
-    if [ "$DOMSETUP_TOKEN_AUTH" = "$AUTHORIZATION_HEADER" ]; then
+    if [ "Bearer $DOMSETUP_CLIENT_TOKEN" = "$AUTHORIZATION_HEADER" ]; then
       log "Token authorization successfull"
       return 0
     fi
