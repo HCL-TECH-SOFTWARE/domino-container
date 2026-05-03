@@ -207,45 +207,69 @@ show_cert()
 }
 
 
-get_json_value()
-{
-  echo "$1" | sed -n "s/.*\"$2\": *\"\([^\"]*\)\".*/\1/p"
-}
-
-
-replace_str()
-{
-  echo "$1" | sed "s|$2|$3|g"
-}
-
-
-get_value_after_prefix()
-{
-  echo "$1" | awk -F"$2" 'NF > 1 { print $2 }'
-}
-
-
 ots_read_replace_server_id_base64()
 {
+
+  # If no @Base64 data is present just return the existing JSON
+  case "$1" in
+    *@Base64:*)
+      ;;
+    *)
+      if [ -n "$2" ]; then
+        printf "%s" "$1" > "$2"
+      fi
+      return 0
+      ;;
+  esac
+
+  if ! command -v jq >/dev/null 2>&1; then
+
+    if [ -n "$2" ]; then
+      printf "%s" "$1" > "$2"
+    fi
+    return 0
+  fi
+
+  local INPUT_JSON="$1"
   local SERVER_ID_FILEPATH="$DOMINO_DATA_PATH/server.id"
-  local ELEMENT_VALUE=$(get_json_value "$1" "IDFilePath")
+  local ELEMENT_VALUE
+
+  ELEMENT_VALUE=$(printf "%s" "$INPUT_JSON" | jq -r '.serverSetup.server.IDFilePath // empty')
 
   if [ -z "$ELEMENT_VALUE" ]; then
-    echo "$1"
+    printf "%s" "$INPUT_JSON"
     return 0
   fi
 
-  local BASE64DATA=$(get_value_after_prefix "$ELEMENT_VALUE" "@Base64:")
+  case "$ELEMENT_VALUE" in
+    @Base64:*)
+      ;;
+    *)
+      if [ -n "$2" ]; then
+        printf "%s" "$INPUT_JSON" > "$2"
+      fi
+      return 0
+      ;;
+  esac
 
-  if [ -z "$BASE64DATA" ]; then
-    echo -n "$1"
-    return 0
+  local BASE64DATA="${ELEMENT_VALUE#@Base64:}"
+
+  if ! printf "%s" "$BASE64DATA" | base64 -d > "$SERVER_ID_FILEPATH" 2>/dev/null; then
+    log_error "Failed to decode Base64 server.id"
+
+    if [ -n "$2" ]; then
+      printf "%s" "$INPUT_JSON" > "$2"
+    fi
+    return 1
   fi
-
-  echo "$BASE64DATA" | base64 -d > "$SERVER_ID_FILEPATH"
-  replace_str "$1" "$ELEMENT_VALUE" "$SERVER_ID_FILEPATH"
 
   log_space "Retrieved server.id from OTS JSON: $SERVER_ID_FILEPATH"
+  log_space_stderr "Retrieved server.id from OTS JSON: $SERVER_ID_FILEPATH"
+
+  if [ -n "$2" ]; then
+    printf "%s" "$INPUT_JSON" | jq --arg path "$SERVER_ID_FILEPATH" '.serverSetup.server.IDFilePath = $path' > "$2"
+  fi
+
   return 1
 }
 
@@ -474,21 +498,16 @@ process_ots_json_postdata()
       ;;
   esac
 
-  if [ -z "$DOMSETUP_JSON_FILE" ]; then
-    ots_read_replace_server_id_base64 "$POST_DATA"
-  else
-
-    if [ -w "$(dirname "$DOMSETUP_JSON_FILE")" ]; then
-      if [ ! -e "$DOMSETUP_JSON_FILE" ] || [ -w "$DOMSETUP_JSON_FILE" ]; then
-        ots_read_replace_server_id_base64 "$POST_DATA" > "$DOMSETUP_JSON_FILE"
-      fi
-    else
-      log_space "Info: File is read-only: $DOMSETUP_JSON_FILE"
+  if [ -w "$(dirname "$DOMSETUP_JSON_FILE")" ]; then
+    if [ ! -e "$DOMSETUP_JSON_FILE" ] || [ -w "$DOMSETUP_JSON_FILE" ]; then
+      ots_read_replace_server_id_base64 "$POST_DATA" "$DOMSETUP_JSON_FILE"
     fi
-
-    log_space  "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
-    log_space_stderr "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
+  else
+    log_space "Info: File is read-only: $DOMSETUP_JSON_FILE"
   fi
+
+  log_space "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
+  log_space_stderr "Created OTS Domino file -> $DOMSETUP_JSON_FILE"
 }
 
 
