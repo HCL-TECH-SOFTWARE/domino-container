@@ -3942,6 +3942,8 @@ install_domino_pct()
 
   if [ -z "$DOWNLOAD_FROM" ]; then
     pct set "$PCT_ID" -mp1 ${SOFTWARE_DIR},mp=/local/software,ro=1
+  else
+    pct set "$PCT_ID" -mp1 ${SOFTWARE_DIR},mp=/local/software,ro=1
   fi
 
   header "Starting LXC build container"
@@ -3968,6 +3970,18 @@ install_domino_pct()
     exit 1
   fi
 
+  header "Labeling container"
+
+  CONTAINER_DOMINO_ADDONS=
+  check_addon_label
+  check_custom_addon_label
+
+  local LABEL_FILE="$PCT_DOMINO_OPT_MOUNTPOINT/labels.txt"
+
+  echo "domino=$DOMINO_VERSION" > "$LABEL_FILE"
+  echo "addons=$CONTAINER_DOMINO_ADDONS" >> "$LABEL_FILE"
+  echo "custom_addons=$CONTAINER_DOMINO_CUSTOM_ADDONS" >> "$LABEL_FILE"
+
   # Tear down temporary build container
   if [ "$PCT_ID" = "$PCT_TEMP_BUILD_ID" ]; then
 
@@ -3990,6 +4004,7 @@ install_domino_pct()
     echo
     return 0
   fi
+
 
   # Clean template container
   header "Cleaning container $PCT_ID"
