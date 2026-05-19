@@ -1055,6 +1055,11 @@ check_from_image()
       BASE_IMAGE=fedora:latest
       ;;
 
+    azure)
+      LINUX_NAME="Microsoft Azure Linux 3.0"
+      BASE_IMAGE=mcr.microsoft.com/azurelinux/base/core:3.0
+      ;;
+
     archlinux)
       LINUX_NAME="Arch Linux (experimental)"
       BASE_IMAGE=docker.io/archlinux
@@ -4000,7 +4005,15 @@ install_domino_pct()
 
     header "Domino LXC /opt volume created"
     echo "/opt Volume :  $PCT_DOMINO_VOL_OPT"
-    echo "Latest link :  $PCT_DOMINO_OPT_LATEST"
+
+    if [ -n "$TAG_IMAGE" ]; then
+      local OPT_LINK="/${PCT_DATA_POOL}/domino-opt-$TAG_IMAGE"
+      ln -sfn "$PCT_DOMINO_OPT_MOUNTPOINT" "$OPT_LINK"
+      echo "Custom link :  $OPT_LINK"
+    else
+      echo "Latest link :  $PCT_DOMINO_OPT_LATEST"
+    fi
+
     echo
     return 0
   fi

@@ -37,10 +37,13 @@ install_linux_packages()
   fi
 
   # Common packages for all distributions
-  install_packages lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip tzdata less
+  install_packages lsof ncurses bc which file net-tools diffutils findutils gettext gzip tar unzip tzdata less shadow-utils
 
   # SUSE does not have gdb-minimal
   if [ -x /usr/bin/zypper ]; then
+    install_package gdb
+  # AzureLinux does also not have gdb-minimal
+  elif grep -q '^ID=azurelinux' /etc/os-release; then
     install_package gdb
   else
     install_package gdb-minimal
