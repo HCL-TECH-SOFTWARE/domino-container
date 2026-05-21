@@ -78,9 +78,9 @@ borg|1.4.1|borg-linux-glibc231,https://github.com/borgbackup/borg/releases/downl
 domborg|0.9.6|nshborg-0.9.6,https://github.com/nashcom/domino-borg/releases/download/v0.9.6/nshborg-0.9.6|x|14d3ad2bf44e95c1354dc01a5e1d73a2936902b6ba3e0df9fe7149a320abd1d8
 domborg|0.9.7|nshborg-0.9.7,https://github.com/nashcom/domino-borg/releases/download/v0.9.7/nshborg-0.9.7|x|24362f931d6ca438e3332d745be38dd11d6092579315ecb8c988199a69a696b3
 tika|3.3.0|tika-server-standard-3.3.0.jar,https://dlcdn.apache.org/tika/3.3.0/tika-server-standard-3.3.0.jar|x|2aca63d25f84774d759de6e132ae7f5723e3ee2adf1d51f585658baba1335e9b
-safelinx|1.4.1|HCL-SafeLinx-1410-x86_64.tar.gz|AbiYxUssdE1MT0GtR4gH8|c8c207f810343c7ab47997c1006e144998d0717080241ea6e6f2644191499c31
-safelinx|1.4.2|HCL-SafeLinx-1420-x86_64.tar.gz|75sNbH9gws5m6nZ3M5yR6|dfe9244848fd2ad3367db002de5dcdbf6b577ad8d240db75298b411b03c04ef0
 safelinx|1.4.3|HCL-SafeLinx-1430-x86_64.tar.gz|TL3PxKUv8svOiXIAr8OCE|1351abfe47aed5f2e3a7cb6b6696f51d7c0a69b18b2755ff3f7806592a5c909e
+safelinx|1.4.4|HCL-SafeLinx-144-x86_64.tar.gz|hB1BQWbFAax9aa9soPcCj|957b57a7a7349ea61e838c738002edcd63f47489c68512fb499da003d19c899c
+safelinx|1.4.5|HCL-SafeLinx-1450-x86_64.tar.gz|jga3pZOAVCOYeYZRsMOYp|3264ff1591748e2411c4564659173d3f60da013b4021079827a25b2cd3a52f20
 nomadweb|1.0.18|HCL_Nomad_web_1.0.18_for_HCL_SafeLinx.zip|KCFLNgYxmHgrKTCrkwH1U|8c8ebda1db0144fda9f8d586b5bf4a2be903eaf75f8ae866ad182c066efe0bb8
 nomadweb|1.0.19IF1|HCL_Nomad_web_1.0.19-IF1_for_HCL_SafeLinx.zip|Z7sgWS3ehZPDVsQbS5q1G|a3455534d3482594c7f6866210b250bfbdf04fb65c9127cb2909f22598b13dc8
 nomad|1.0.18|HCL_Nomad_server_1.0.18_linux.tar.gz|IRzJvYQTzeL8uUGkqkeuR|1150e20d3ecd9845a370937c7cbdd3642c7144d1e3595164e4654bc06156ae8d
