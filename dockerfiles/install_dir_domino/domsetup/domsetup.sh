@@ -41,11 +41,11 @@ SCRIPT_DIR=$(dirname $SCRIPT_NAME)
 # DOMSETUP_HOST           Host name to use for setup (default: hostname machine)
 # DOMSETUP_HTTPS_PORT     HTTPS port to use for setup (default: 1352)
 # DOMSETUP_USER           Setup user name (default: admin)
-# DOMSETUP_PASSWORD       Password for setup user (default: /tmp/domsetup-key.pass)
+# DOMSETUP_PASSWORD       Password for setup user
 # DOMSETUP_BEARER         Setup Bearer token instead of user password
 # DOMSETUP_CERT_FILE      TLS Certificate file name (default: /run/secrets/domsetup/tls.crt or /tmp/domsetup-cert.pem)
 # DOMSETUP_KEY_FILE       TLS Key file name (default: /run/secrets/domsetup/tls.key or /tmp/domsetup-key.pem)
-# DOMSETUP_KEY_FILE_PWD   TLS Key password file name (default: /run/secrets/domsetup/key.pass or /tmp/domsetup-key.pass)
+# DOMSETUP_KEY_FILE_PWD   TLS Key password file name (default: /run/secrets/domsetup/tls/.pass or /tmp/domsetup-key.pass)
 # DOMSETUP_CERTMGR_HOST   Domino CertMgr host name to retieve a certificate matching the current key for host name
 # DOMSETUP_CERTMGR_LOOKUP Name to use to lookup a TLS Certificate from CertMgr (requried multiple SANs in a name)
 # DOMSETUP_JSON_FILE      OTS JSON file to write (default: $DOMINO_AUTO_CONFIG_JSON_FILE)
@@ -792,8 +792,8 @@ if [ -z "$DOMSETUP_KEY_FILE" ]; then
 fi
 
 if [ -z "$DOMSETUP_KEY_FILE_PWD" ]; then
-  if [ -e /run/secrets/domsetup/key.pass ]; then
-    DOMSETUP_KEY_FILE_PWD=/run/secrets/domsetup/key.pass
+  if [ -e /run/secrets/domsetup/tls.pass ]; then
+    DOMSETUP_KEY_FILE_PWD=/run/secrets/domsetup/tls.pass
   else
     DOMSETUP_KEY_FILE_PWD=/tmp/domsetup-key.pass
   fi
