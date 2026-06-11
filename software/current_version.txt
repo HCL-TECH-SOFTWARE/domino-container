@@ -10,7 +10,7 @@ traveler|14.5.1
 traveler-14.5.1|14.5.1
 traveler-14.5|14.5
 leap|1.1.10
-verse|3.2.6IF1
+verse|3.2.7
 capi|14.5.1
 daostune|2.0
 safelinx|1.4.5
