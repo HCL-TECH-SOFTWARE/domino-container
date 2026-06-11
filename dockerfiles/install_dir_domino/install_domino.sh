@@ -2164,8 +2164,9 @@ if [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
   config_sudo
 
   # Remove Postfix and Systemd resolved
-  apt remove postfix -y
-  apt remove systemd-resolved -y
+  apt purge -y postfix
+  apt purge -y  systemd-resolved
+  apt autoremove -y
 fi
 
 # Remove gcc compiler if no C-API toolkit is installed
