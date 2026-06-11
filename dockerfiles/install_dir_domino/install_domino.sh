@@ -2157,9 +2157,15 @@ else
   fi
 fi
 
-# Enable sudo for notes user to start/stop Domino
+# PCT / LXC Container
 if [ "$INSTALL_DOMINO_NATIVE" = "LXC" ]; then
+
+  # Enable sudo for notes user to start/stop Domino
   config_sudo
+
+  # Remove Postfix and Systemd resolved
+  apt remove postfix -y
+  apt remove systemd-resolved -y
 fi
 
 # Remove gcc compiler if no C-API toolkit is installed

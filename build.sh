@@ -4014,6 +4014,10 @@ install_domino_pct()
       echo "Latest link :  $PCT_DOMINO_OPT_LATEST"
     fi
 
+    if [ -e "$SCRIPT_DIR/pct_build.env" ]; then
+      rm "$SCRIPT_DIR/pct_build.env"
+    fi
+
     echo
     return 0
   fi
