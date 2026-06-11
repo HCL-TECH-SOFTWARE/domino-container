@@ -86,6 +86,7 @@ nomadweb|1.0.19IF1|HCL_Nomad_web_1.0.19-IF1_for_HCL_SafeLinx.zip|Z7sgWS3ehZPDVsQ
 nomad|1.0.18|HCL_Nomad_server_1.0.18_linux.tar.gz|IRzJvYQTzeL8uUGkqkeuR|1150e20d3ecd9845a370937c7cbdd3642c7144d1e3595164e4654bc06156ae8d
 nomad|1.0.19|HCL_Nomad_server_1.0.19_linux.tar.gz|QDMrocRSzv0KU6cHlQr2Y|439cd1898cad70b268b54fa39bb81cbd0744adc0a2a980eae027541cac412aa8
 nomad|1.0.19IF1|HCL_Nomad_server_1.0.19-IF1_linux.tar.gz|K8FdwgFWGdqjpgGWIRaMJ|4a48069afd9e4273512db070ec35e80904fc941507086509ddbde2c6ffe54dae
+nomad|1.0.20|HCL_Nomad_server_1.0.20_linux.tar.gz|s2q7CYHVSCT5H97nouYo7|be686838eadf2f7c10477870c49b310733a8d46711aa3d59ee7040b29c3beb1f
 domrestapi|1.1.5-12|Domino_REST_API_V1.1.5_R12_Installer.tar.gz|gvFpyxu8dXICSrZSMUCIu|b942df7f78a03c4e63cceeacb8161871af91f300261cd3586b1a69748e4d9ac5
 domrestapi|1.1.5-14|Domino_REST_API_V1.1.5_R14_Installer.tar.gz|M5yDZACCTIz6QZv5OkWJf|e535bb886645b7cbb6e1164f164d1a6cba69e4432620d656dbbbf1be886bb513
 domrestapi|1.1.5-14.5|Domino_REST_API_V1.1.5_R14.5_Installer.tar.gz|FTdWws5p26FXoaqydkaV3|0077007ff74bdaaa58ac8f5fe49859d287b8ab1bd6d380ea5faf41d20fe57e5b

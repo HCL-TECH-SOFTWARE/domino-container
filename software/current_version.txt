@@ -15,7 +15,7 @@ capi|14.5.1
 daostune|2.0
 safelinx|1.4.5
 nomadweb|1.0.19IF1
-nomad|1.0.19IF1
+nomad|1.0.20
 domrestapi|1.1.7
 tika|3.3.0
 borg|1.4.1
