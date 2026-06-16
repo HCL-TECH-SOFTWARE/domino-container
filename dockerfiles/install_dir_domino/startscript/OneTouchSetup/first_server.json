@@ -195,12 +195,12 @@
             "action": "create",
             "items": {
               "Form": "LoginMap",
-              "LF_LoginForm": "$$LoginUserForm",
+              "LF_LoginForm": "\u0024\u0024LoginUserForm",
               "LF_LoginFormDB": "domcfg.nsf",
 
               "LF_ServerType": "0",
               "LF_IP": "",
-              "$PublicAccess": "1"
+              "\u0024PublicAccess": "1"
             }
           }
         ]

@@ -153,11 +153,11 @@
             "action": "create",
             "items": {
               "Form": "LoginMap",
-              "LF_LoginForm": "$$LoginUserForm",
+              "LF_LoginForm": "\u0024\u0024LoginUserForm",
               "LF_LoginFormDB": "domcfg.nsf",
               "LF_ServerType": "0",
               "LF_IP": "",
-              "$PublicAccess": "1"
+              "\u0024PublicAccess": "1"
             }
           }
         ]
@@ -178,8 +178,8 @@
               "Form": "AutoLogin",
               "ServerNameSelect": "1",
               "RedirectMessageWebView": "Redirecting...",
-              "$LANGUAGE": "en",
-              "$ServerSettingsTable": "Select",
+              "\u0024LANGUAGE": "en",
+              "\u0024ServerSettingsTable": "Select",
               "EnableUltraliteRadioButton": "0",
               "MobileAgentKeywords": "ipod,iphone,android,ipad",
               "SSLPort": "443",
