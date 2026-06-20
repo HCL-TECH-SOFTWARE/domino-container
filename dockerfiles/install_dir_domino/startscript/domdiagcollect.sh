@@ -687,7 +687,7 @@ fi
 DIAG_SERVER_NAME=$(echo "$DIAG_FULL_SERVER_NAME" | cut -d '/' -f1 | tr ' ' '_' | tr '.' '_')
 
 DATE_STR=$(LANG=C date +"%Y_%m_%d@%H_%M_%S")
-DOMINO_DIAG_ARCHIVE_FILE="$DIAG_DIRECTORY/domdiag_${DIAG_SERVER_NAME}_${DATE_STR}.taz"
+DOMINO_DIAG_ARCHIVE_FILE="$DIAG_DIRECTORY/domdiag_${DIAG_SERVER_NAME}_${DATE_STR}.tar.gz"
 
 if [ -z "$DIAG_TARGET" ]; then
   select_collect_diag

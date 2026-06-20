@@ -333,7 +333,7 @@ collect_diag()
   DOMINO_DIAG_TMP_FILE_LIST="$DIAG_DIRECTORY/domdiag_${DATE_STR}.files"
   DOMINO_DIAG_TRACE_FILE="$DIAG_DIRECTORY/domdiag_trace_${DATE_STR}.log"
 
-  DOMINO_DIAG_TAR="$DIAG_DIRECTORY/domdiag_${DIAG_SERVER_NAME}_${DATE_STR}.taz"
+  DOMINO_DIAG_TAR="$DIAG_DIRECTORY/domdiag_${DIAG_SERVER_NAME}_${DATE_STR}.tar.gz"
 
   log_file "Servername  :  $DIAG_FULL_SERVER_NAME"
   log_file "Hostname    :  $DIAG_HOSTNAME"
@@ -419,7 +419,7 @@ send_nsd()
 
   header "Sending $NSD_FILENAME -> $DIAG_RCPT"
 
-  tar -cz "$LAST_NSD" | "$NSHMAILX_BIN" "$DIAG_RCPT" -name "$DIAG_FULL_SERVER_NAME" -from "$DIAG_FROM"  -subject "Domino NSD [$DIAG_FULL_SERVER_NAME]" -att - -attname "${NSD_FILENAME}.taz"
+  tar -cz "$LAST_NSD" | "$NSHMAILX_BIN" "$DIAG_RCPT" -name "$DIAG_FULL_SERVER_NAME" -from "$DIAG_FROM"  -subject "Domino NSD [$DIAG_FULL_SERVER_NAME]" -att - -attname "${NSD_FILENAME}.tar.gz"
   echo
   wait_for_key
 }
@@ -456,7 +456,7 @@ send_trace_file()
 
   header "Sending $BASE_FILENAME -> $DIAG_RCPT"
 
-  tar -cz "$DOMINO_DIAG_TRACE_FILE" | "$NSHMAILX_BIN" "$DIAG_RCPT" -name "$DIAG_FULL_SERVER_NAME" -from "$DIAG_FROM"  -subject "Domino Tracefile [$DIAG_FULL_SERVER_NAME]" -att - -attname "${BASE_FILENAME}.taz"
+  tar -cz "$DOMINO_DIAG_TRACE_FILE" | "$NSHMAILX_BIN" "$DIAG_RCPT" -name "$DIAG_FULL_SERVER_NAME" -from "$DIAG_FROM"  -subject "Domino Tracefile [$DIAG_FULL_SERVER_NAME]" -att - -attname "${BASE_FILENAME}.tar.gz"
   echo
   wait_for_key
 }
