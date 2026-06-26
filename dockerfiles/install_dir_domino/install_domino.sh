@@ -640,7 +640,7 @@ install_traveler()
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino12.properties
   elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "140000*")" ]; then
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino140.properties
-  elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "145000*")" ]; then
+  elif [ -n "$(find /opt/hcl/domino/notes/ -maxdepth 1 -name "140500*")" ]; then
     TRAVELER_INSTALLER_PROPERTIES=$INSTALL_DIR/installer_traveler_domino145.properties
   else
     # Assume latest version (No version check and no version specified)
@@ -650,6 +650,15 @@ install_traveler()
   cd "$ADDON_NAME"
 
   header "Running Traveler silent install"
+
+  if [ ! -e "$TRAVELER_INSTALLER_PROPERTIES" ]; then
+    log_error "Installer properties $TRAVELER_INSTALLER_PROPERTIES: Not found"
+    exit 1
+  fi
+
+  log_space "Using $TRAVELER_INSTALLER_PROPERTIES"
+  cat "$TRAVELER_INSTALLER_PROPERTIES"
+  echo
 
   ./TravelerSetup -f $TRAVELER_INSTALLER_PROPERTIES -i SILENT -l en > $INST_TRAVELER_LOG 2>&1
 
