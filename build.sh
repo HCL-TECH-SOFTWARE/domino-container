@@ -365,6 +365,7 @@ usage()
   echo "-imagetag=<img>  defines the target image tag"
   echo "-save=<img>      exports the image after build. e.g. -save=domino-container.tgz"
   echo "-tz=<timezone>   explicitly set container timezone during build. by default Linux TZ is used"
+  echo "-utc             set container timezone to UTC"
   echo "-locale=<locale> specify Linux locale to install (e.g. de_DE.UTF-8)"
   echo "-lang=<lang>     specify Linux glibc language pack to install (e.g. de,it,fr). Multiple languages separated by comma"
   echo "-homedir=<dir>   custom home directory for notes user"
@@ -4366,6 +4367,10 @@ for a in "$@"; do
 
     -tz=*)
       DOCKER_TZ=$(echo "$a" | cut -f2 -d= -s)
+      ;;
+
+    -utc)
+      DOCKER_TZ="Etc/UTC"
       ;;
 
     -locale=*)

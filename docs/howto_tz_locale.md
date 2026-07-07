@@ -45,6 +45,8 @@ Example:
 ./build.sh -tz=Etc/UTC menu
 ```
 
+You can also use build alias `-utc` to switch to `Etc/UTC`
+
 Note: The timezone is also stored in configuration even it is not listed as a menu option.
 If you write the configuration the timezone variable is preset for a menu based build.
 
