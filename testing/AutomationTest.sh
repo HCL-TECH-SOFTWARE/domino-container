@@ -494,6 +494,18 @@ sleep 1
 TIKA_VERSION_STR=$($CONTAINER_CMD exec $CONTAINER_NAME curl --retry 10 --retry-delay 1 --retry-connrefused --silent http://127.0.0.1:1234/version)
 TIKA_VERSION=$(echo "$TIKA_VERSION_STR" | awk -F "Apache Tika" '{print $2}' | xargs)
 
+
+# Get Java Timezone Info
+header "Basic Java Timezone Test"
+
+$CONTAINER_CMD cp TimeTest.java $CONTAINER_NAME:/tmp
+
+echo
+JAVA_TIME_RESULT=$($CONTAINER_CMD exec -w /local/notesdata $CONTAINER_NAME bash -c "/opt/hcl/domino/bin/java /tmp/TimeTest.java -json 2>&1")
+javaTimezone="$(echo "$JAVA_TIME_RESULT" | jq -r .defaultZoneId)"
+echo
+
+
 # Start testing ..
 
 log_json_begin
@@ -519,6 +531,7 @@ log_json "kernelVersion" "$kernelVersion"
 log_json "kernelBuildTime" "$kernelBuildTime"
 log_json "glibcVersion" "$glibcVersion"
 log_json "timezone" "$timezone"
+log_json "javaTimezone" "$javaTimezone"
 log_json "javaVersion" "$javaVersion"
 log_json "tikaVersion" "$TIKA_VERSION"
 log_json "dominoAddons" "$CONTAINER_DOMINO_ADDONS"
@@ -978,7 +991,6 @@ if [ "$curl_count" = "0" ]; then
 fi
 
 test_result "domino.server.onetouch.microca-cert" "Domino One Touch create MicroCA" "" "$ERROR_MSG"
-
 
 # Test C-API SDK
 if [ -n "$capi_include" ]; then

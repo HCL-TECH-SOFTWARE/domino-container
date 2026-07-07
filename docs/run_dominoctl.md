@@ -18,7 +18,7 @@ Please refer to the Nash!Com start script project for detailed information.
 
 ## How to configure and start a container
 
-First install **dominoctl** as documented [here]([Dominoctl](https://nashcom.github.io/domino-startscript/dominoctl/)).
+First install **dominoctl** as documented [here](https://nashcom.github.io/domino-startscript/dominoctl/).
 
 Once installed all container operations can be performed using **dominoctl**.
 
