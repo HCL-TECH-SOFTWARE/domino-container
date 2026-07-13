@@ -553,6 +553,9 @@ list_installed_packages "$LINUX_PACKAGE_LIST_BASEIMAGE"
 
 check_custom_software_repositories
 
+# Before installing any software update trusted roots if requested
+check_install_trusted_root
+
 # Check for Linux updates if requested first
 
 check_linux_update
@@ -577,8 +580,6 @@ else
   if [ -x /usr/bin/apt ]; then
      install_package apt-utils
   fi
-
-  check_install_trusted_root
 
   install_linux_packages
 

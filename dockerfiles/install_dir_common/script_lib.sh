@@ -1851,15 +1851,6 @@ install_linux_trusted_root()
     return 0
   fi
 
-  # Dump certificate in PEM and text
-  header "Root Certificate Information"
-  openssl x509 -in "$1" -text -noout
-
-  header "Root Certificate in PEM format"
-  openssl x509 -in "$1"
-
-  echo
-
   header "Updating Linux Certs"
 
   if [ -e /etc/photon-release ]; then
@@ -1873,11 +1864,25 @@ install_linux_trusted_root()
     update-ca-certificates
 
   elif [ -x /usr/bin/apt-get ]; then
-    install_package ca-certificates
-    cp -f "$1" /usr/local/share/ca-certificates
+
+    # To avoid a catch22: Install a temporary cert to ensure apt trusts our mirror
+    cp -f "$1" /etc/trusted-ca.crt
+    chmod 644 /etc/trusted-ca.crt
+
+    printf "Acquire::https::CaInfo \"/etc/trusted-ca.crt\";\n" > /etc/apt/apt.conf.d/99temp-corporate-trust
+
+    apt update
+    install_packages ca-certificates openssl
+
+    rm /etc/trusted-ca.crt
+    rm /etc/apt/apt.conf.d/99temp-corporate-trust
+
+    # Now install it in the correct way
 
     # Certs must have the .crt extension
-    mv /usr/local/share/ca-certificates/*.pem /usr/local/share/ca-certificates/*.crt
+    install -m 0644 "$1" "/usr/local/share/ca-certificates/$(basename "${1%.*}").crt"
+
+    # Update CA certificate bundle
     update-ca-certificates
 
   else
@@ -1885,6 +1890,12 @@ install_linux_trusted_root()
     update-ca-trust
   fi
 
+  # Dump certificate in PEM and text
+  header "Root Certificate Information"
+  openssl x509 -in "$1" -text -noout
+
+  header "Root Certificate in PEM format"
+  openssl x509 -in "$1"
   echo
 }
 
