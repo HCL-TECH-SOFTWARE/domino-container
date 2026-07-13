@@ -32,7 +32,7 @@
       "Create_R85_log": "0",
       "LOG_REPLICATION": "0",
       "LOG_SESSIONS": "0",
-      "HTTPPublicURLs": "/iwaredir.nsf/*:/.well-known*",
+      "HTTPPublicURLs": "/iwaredir.nsf/*:/.well-known*:/public/*",
       "ENABLE_SNI": "1",
       "ADMIN_CLIENT_SKIP_DOMINO": "1",
       "EVENT_POOL_SIZE": "41943040",

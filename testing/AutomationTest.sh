@@ -463,6 +463,11 @@ while [ $count -gt 0 ]; do
   fi
 done
 
+# Copy test data into /local/notesdata
+if [ -e notesdata.taz ]; then
+  $CONTAINER_CMD exec -i "$CONTAINER_NAME" tar xzf - -C /local/notesdata < notesdata.taz
+fi
+
 if [ "$LARCH" = "Darwin" ]; then
   HOST_LINUX_VERSION="macOS $(sw_vers -productVersion)"
   HOST_LINUX_PRETTY_NAME="$HOST_LINUX_VERSION"

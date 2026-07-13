@@ -16,6 +16,12 @@ To customize the mirror list for current Ubuntu and Debian, you can specify a cu
 ubuntu_noble.sources
 ```
 
+### Ubuntu 26.04 (Resolute)
+
+```
+ubuntu_resolute.sources
+```
+
 ### Debian 12 (Bookworm)
 
 ```

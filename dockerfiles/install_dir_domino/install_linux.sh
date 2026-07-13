@@ -479,6 +479,14 @@ check_custom_software_repositories()
       fi
     fi
 
+  elif [ "$VERSION_CODENAME" = "resolute" ]; then
+    if [ -e /etc/apt/sources.list.d/ubuntu.sources ]; then
+      if [ -e "$INSTALL_DIR/custom/ubuntu_resolute.sources" ]; then
+        header "Replacing Ubuntu Resolute repositories"
+        cp -f "$INSTALL_DIR/custom/ubuntu_resolute.sources" /etc/apt/sources.list.d/ubuntu.sources
+      fi
+    fi
+
   elif [ "$VERSION_CODENAME" = "bookworm" ]; then
     if [ -e /etc/apt/sources.list.d/debian.sources ]; then
       if [ -e "$INSTALL_DIR/custom/debian_bookworm.sources" ]; then
