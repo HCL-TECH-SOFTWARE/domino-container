@@ -18,7 +18,7 @@
 #include <locale.h>
 #include <langinfo.h>
 #include <reg.h>
-
+#include <osenv.h>
 
 
 STATUS LNPUBLIC DumpIDInfo (const char *pszFilename)
@@ -180,7 +180,10 @@ int main (int argc, char *argv[])
 {
     STATUS error = NOERROR;
     int  a = 0;
-    char szBuild[MAXSPRINTF+1] = {0};
+    char szBuild[MAXSPRINTF+1]   = {0};
+    char szIDFile[MAXPATH+1]     = {0};
+    char szPassword[65]          = {0};
+    char szNewPassword[65]       = {0};
 
     error = NotesInitExtended (argc, argv);
 
@@ -189,6 +192,8 @@ int main (int argc, char *argv[])
         printf ("C-API init error: %u", error);
         return error;
     }
+
+    OSGetEnvironmentString ("CertifierIDFile", szIDFile, (WORD) (sizeof (szIDFile)-1));
 
     for (a=1; a<argc; a++)
     {
@@ -220,11 +225,68 @@ int main (int argc, char *argv[])
             goto  Done;
         }
 
+        else if (0 == strcmp (argv[a], "-password"))
+        {
+            if (a<argc)
+            {
+                a++;
+                snprintf (szPassword, sizeof(szPassword),"%s", argv[a]);
+            }
+            else
+            {
+                AddInLogMessageText ("Missing parameter [%s]", 0, argv[a]);
+                goto Done;
+            }
+        }
+
+        else if (0 == strcmp (argv[a], "-newpassword"))
+        {
+            if (a<argc)
+            {
+                a++;
+                snprintf (szNewPassword, sizeof(szNewPassword), "%s", argv[a]);
+            }
+            else
+            {
+                AddInLogMessageText ("Missing parameter [%s]", 0, argv[a]);
+                goto Done;
+            }
+        }
+
+        else if (0 == strcmp (argv[a], "-idfile"))
+        {
+            if (a<argc)
+            {
+                a++;
+                snprintf (szIDFile, sizeof(szIDFile) ,"%s", argv[a]);
+            }
+            else
+            {
+                AddInLogMessageText ("Missing parameter [%s]", 0, argv[a]);
+            }
+        }
+
         else
         {
-            printf ("Invalid option [%s]\n", argv[a]);
+            AddInLogMessageText ("Invalid option [%s]", 0, argv[a]);
             goto Done;
         }
+    }
+
+    if (*szNewPassword)
+    {
+        error = SECKFMChangePassword(szIDFile, szPassword, szNewPassword);
+
+        if (error)
+        {
+            AddInLogMessageText ("Error changing password", error);
+        }
+        else
+        {
+            AddInLogMessageText ("Password changed successful", 0);
+        }
+
+        goto Done;
     }
 
     /* by default print version if no other options beside the notes.ini are specified */

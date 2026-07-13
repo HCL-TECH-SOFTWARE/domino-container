@@ -23,6 +23,9 @@ clean:
 	rm -f *.o
 	rm -f ./$(TARGET)
 
+install: $(TARGET)
+	cp $(TARGET) /opt/hcl/domino/notes/latest/linux
+	ln -s /opt/hcl/domino/bin/tools/startup /opt/hcl/domino/bin/$(TARGET)
+
 test: $(TARGET)
 	./$(TARGET) =/local/notesdata/notes.ini
-
