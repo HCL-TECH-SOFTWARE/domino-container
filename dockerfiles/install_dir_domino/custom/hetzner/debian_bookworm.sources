@@ -1,0 +1,13 @@
+
+Types: deb
+URIs: http://mirror.hetzner.com/debian/packages
+Suites: bookworm bookworm-updates
+Components: main contrib
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: http://mirror.hetzner.com/debian/security
+Suites: bookworm-security
+Components: main contrib
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
