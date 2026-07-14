@@ -54,7 +54,7 @@ install_linux_packages()
 
   # SUSE
   if [ -x /usr/bin/zypper ]; then
-    install_packages glibc-locale libcap-progs vim procps
+    install_packages glibc-locale libcap-progs vim-small procps
 
   # Ubuntu, Debian, Astra Linux
 
@@ -63,7 +63,7 @@ install_linux_packages()
 
   elif [ -x /usr/bin/apt-get ]; then
 
-    install_packages procps libcap2-bin gettext-base
+    install_packages procps libcap2-bin gettext-base vim-tiny
 
     # Ubuntu 26.04 LTS moved rev to bsdextrautils
     if [ ! -e /usr/bin/rev ]; then
@@ -72,7 +72,7 @@ install_linux_packages()
 
   else
 
-    install_package procps-ng
+    install_package procps-ng vim-minimal
 
     # Installing the English local should always work
     install_package glibc-langpack-en
@@ -95,11 +95,14 @@ install_linux_packages()
   install_if_missing curl
   install_if_missing hostname
   install_if_missing xargs
-  install_if_missing vi vi vim
   install_if_missing awk
 
   # jq the ultimate tool for JSON files...
   install_if_missing jq
+
+  if ! command -v vi >/dev/null 2>&1; then
+    install_if_missing vim vi
+  fi
 
 }
 
