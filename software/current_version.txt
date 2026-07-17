@@ -3,13 +3,13 @@ domino-14.5.1|14.5.1|FP1
 domino-14.5|14.5|FP1
 domino-14.0|14.0|FP5
 domino-12.0.2|12.0.2|FP8
-domiq|14.5.1
-domiq-14.5.1|14.5.1
+domiq|14.5.1FP1
+domiq-14.5.1|14.5.1FP1
 domiq-14.5|14.5
 traveler|14.5.1
 traveler-14.5.1|14.5.1
 traveler-14.5|14.5
-leap|1.1.10
+leap|1.1.11
 verse|3.2.7
 capi|14.5.1
 daostune|2.0

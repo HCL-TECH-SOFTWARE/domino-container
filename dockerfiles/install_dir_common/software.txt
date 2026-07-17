@@ -65,6 +65,7 @@ leap|1.1.7IF1|hcl.dleap-1.1.7.33.zip|ZcQBXgoMQtH4eS7ZcEjri|78cb785147c1073ac8154
 leap|1.1.8|hcl.dleap-1.1.8.25.zip|UFpbnsVJlLnTGi0dsRzA4|63692f7917f2a3723a7f353454fe13ba208b43aa9394f7a5f474b059c968060a
 leap|1.1.9|hcl.dleap-1.1.9.36.zip|DdLdSxNzncwZO8gX88TFz|cf30726e3df0edaefd0a6b389832373884a75f27605ae2f3e7b69cab8ed28238
 leap|1.1.10|hcl.dleap-1.1.10.14.zip|oE265POXd9pS8kW7nH80O|bae602de4782b2527015d038f9763960c208aa01600beb9a83cf00da8a618fbf
+leap|1.1.11|hcl.dleap-1.1.11.34.zip|MPb4AvMJfh8nvmfkPsyDr|895dfdf9e6f4ce446c8eca4bb19080b75548486d06bde98a30841cd2dc5b89f0
 verse|3.2.4|HCL_Verse_3.2.4.zip|TgTGWeuaONuDQxu0kHXPG|ebe6a77cf70dd75c2819de864b964342b8817b400a5a824994c1f60879a76deb
 verse|3.2.5|HCL_Verse_3.2.5.zip|UIB5y25KITZ2nj4smeDah|4a882795b5beae1e9dc7610b9f0a860e57e55839b1568db1e7eecf27cc2f18b6
 verse|3.2.6|HCL_Verse_3.2.6.zip|SPkmaB2yaJRkOgCA53REk|856455adfa5e9437de15179ca7e487602e661f0b2f8f9a21afccf0a98d077dfc
@@ -101,6 +102,7 @@ domrestapi|1.1.7-14.5|Domino_REST_API_V1.1.7_R14.5_Installer.tar.gz|5a2jDImLV5gX
 daostune|2.0|daostune|vwWWuh6yyudOuRjutaHnW|4b9e7af34f3cbba9a699b4288e0e10088659c5b271b0abb58907630736107793
 domiq|14.5|LlamaServerforDominoIQ_080525_Linux.zip|fl51IpNNWMLhcVqCVG89l|3021f0149e7f10e8f9fcf96f9732326979d89952b96b62f209a3394f38e60477
 domiq|14.5.1|LlamaServerforDominoIQ_030426_Linux.zip|8pXCsZ4b6dKPMNQSzLZ92|78f2386c2731964bbe79337086679e74f5c304e3b81e579c7caf9df309c973e9
+domiq|14.5.1FP1|lamaServerforDominoIQ_061726_Linux.zip|6MDWN8QLQHtOSiRyLHunj|a20ec9f9d6967da9a618fda000aa965c163632803672deff9d56d07a34aa52a7
 node_exporter|1.10.2|node_exporter-1.10.2.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz|x|c46e5b6f53948477ff3a19d97c58307394a29fe64a01905646f026ddc32cb65b
 node_exporter|1.11.1|node_exporter-1.11.1.linux-amd64.tar.gz,https://github.com/prometheus/node_exporter/releases/download/v1.11.1/node_exporter-1.11.1.linux-amd64.tar.gz|x|9f5ea48e5bc7b656f8a91a32e7d7deb89f70f73dabd0d974418aca15f37d6810
 alloy|1.12.2|alloy-linux-amd64.zip,https://github.com/grafana/alloy/releases/download/v1.12.2/alloy-linux-amd64.zip|x|7d12882f9c270804beeae3d519e995a1fcff18b7f50d6c5894438df0c799763a
