@@ -20,7 +20,7 @@ domrestapi|1.1.7
 tika|3.3.0
 borg|1.4.1
 domborg|0.9.7
-node_exporter|1.11.1
+node_exporter|1.12.1
 alloy|1.12.2
 domprom|1.0.8
 domfwd|1.0.2

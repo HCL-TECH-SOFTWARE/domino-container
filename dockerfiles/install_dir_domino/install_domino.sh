@@ -595,6 +595,9 @@ install_leap()
   echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
   echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
 
+  chmod 444 "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
+  chmod 444 "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
+
   # Copy add-on data for Domino Leap, even it will be in the full data dir
 
   local CURRENT_DIR=$(pwd)
@@ -689,10 +692,14 @@ install_traveler()
 
   # Save notes.ini for Traveler add-on ini
   cp -f $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
+  chmod 444 $DOMDOCK_DIR/traveler_install_notes.ini
 
   # Set add-on version
   echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
   echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
+
+  chmod 444 "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
+  chmod 444 "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
 
   # Copy add-on data for Traveler, even it will be in the full data dir
   local INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${ADDON_NAME}.taz
@@ -957,6 +964,9 @@ install_ontime()
   # Set add-on version
   echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
   echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
+
+  chmod 444 "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
+  chmod 444 "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
 
   # Copy add-on data for OnTime, even it will be in the full data dir
   local INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${ADDON_NAME}.taz
@@ -1426,6 +1436,10 @@ install_one_custom_add_on()
   echo $ADDON_VER > "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
   echo $ADDON_VER > "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
   echo $ADDON_VER > "$DOMINO_CUSTOM_DATA_PATH/${ADDON_NAME}_ver.txt"
+
+  chmod 444 "$DOMDOCK_TXT_DIR/${ADDON_NAME}_ver.txt"
+  chmod 444 "$DOMINO_DATA_PATH/${ADDON_NAME}_ver.txt"
+  chmod 444 "$DOMINO_CUSTOM_DATA_PATH/${ADDON_NAME}_ver.txt"
 
   # Copy add-on custom data, even it will be in the full data dir
   local INSTALL_ADDON_DATA_TAR=$DOMDOCK_DIR/install_data_addon_${ADDON_NAME}.taz

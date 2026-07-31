@@ -1296,8 +1296,11 @@ set_domino_version()
 {
   # Domino version is updated after each install part (ver, fp, if/hf)
   get_domino_version
-  echo $DOMINO_VERSION > $DOMDOCK_TXT_DIR/domino_$1.txt
-  echo $DOMINO_VERSION > $DOMINO_DATA_PATH/domino_$1.txt
+  echo $DOMINO_VERSION > "$DOMDOCK_TXT_DIR/domino_$1.txt"
+  echo $DOMINO_VERSION > "$DOMINO_DATA_PATH/domino_$1.txt"
+
+  chmod 444 "$DOMDOCK_TXT_DIR/domino_$1.txt"
+  chmod 444 "$DOMINO_DATA_PATH/domino_$1.txt"
 }
 
 check_installed_version()
@@ -1324,6 +1327,9 @@ set_version()
 {
   echo $PROD_VER > "$DOMDOCK_TXT_DIR/${PROD_NAME}_ver.txt"
   echo $PROD_VER > "$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt"
+
+  chmod 444 "$DOMDOCK_TXT_DIR/${PROD_NAME}_ver.txt"
+  chmod 444 "$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt"
 }
 
 set_ini_var_if_not_set()
