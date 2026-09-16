@@ -1355,9 +1355,26 @@ check_update_custom_java_policy()
     return 0
   fi
 
-  local JAVA_POLICY_FILE="$Notes_ExecDirectory/jvm/conf/security/java.policy"
+  local JAVA_POLICY_FILE=""
+
+  # Java 9+ (Domino 14 and later)
+  if [ -f "$Notes_ExecDirectory/jvm/conf/security/java.policy" ]; then
+    JAVA_POLICY_FILE="$Notes_ExecDirectory/jvm/conf/security/java.policy"
+
+  # Java 8 (Domino 12.x)
+  elif [ -f "$Notes_ExecDirectory/jvm/lib/security/java.policy" ]; then
+    JAVA_POLICY_FILE="$Notes_ExecDirectory/jvm/lib/security/java.policy"
+
+  else
+    echo "ERROR: Cannot locate Java security policy file"
+    return 1
+  fi
 
   header "Appending custom java.policy"
+
+  echo "Java policy file: $JAVA_POLICY_FILE"
+  echo
+
   cat "$CUSTOM_JAVA_POLICY_FILE"
   echo
 
