@@ -4953,7 +4953,7 @@ DOMLP_LANG=$(echo "$DOMLP_LANG" | awk '{print toupper($0)}')
 # Ensure the right response file
 if [ "$PROD_NAME" = "domino" ] && [ -z "$DominoResponseFile" ]; then
   case "$PROD_VER" in
-    14*)
+    14*|v14*|V14*)
       DominoResponseFile=domino14_install.properties
       ;;
   esac

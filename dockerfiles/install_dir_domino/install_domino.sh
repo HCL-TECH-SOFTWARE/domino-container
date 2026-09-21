@@ -223,6 +223,8 @@ install_domino()
       esac
     fi
 
+    dump_file "$INSTALL_DIR/$DominoResponseFile"
+
     CURRENT_DIR=$(pwd)
     cd domino_server/linux64
     ./install -f "$INSTALL_DIR/$DominoResponseFile" -i silent
