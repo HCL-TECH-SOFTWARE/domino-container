@@ -901,7 +901,7 @@ check_from_image()
       BASE_IMAGE=quay.io/centos/centos:stream9
       ;;
 
-    rocky10)
+    rocky|rocky10)
       LINUX_NAME="Rocky Linux 10 (Red Quartz)"
       BASE_IMAGE=docker.io/rockylinux/rockylinux:10
       ;;
@@ -911,7 +911,7 @@ check_from_image()
       BASE_IMAGE=docker.io/rockylinux/rockylinux:9
       ;;
 
-    rocky|rocky-minimal|rocky10-minimal)
+    rocky-minimal|rocky10-minimal)
       LINUX_NAME="Rocky Linux 10 (Red Quartz) Minimal"
       BASE_IMAGE=docker.io/rockylinux/rockylinux:10-minimal
       ;;
@@ -919,11 +919,6 @@ check_from_image()
     rocky9-minimal)
       LINUX_NAME="Rocky Linux 9 (Blue Onyx) Minimal"
       BASE_IMAGE=docker.io/rockylinux/rockylinux:9-minimal
-      ;;
-
-    rocky8)
-      LINUX_NAME="Rocky Linux 8"
-      BASE_IMAGE=docker.io/rockylinux/rockylinux:8
       ;;
 
     alma|alma10)
@@ -934,11 +929,6 @@ check_from_image()
     alma9)
       LINUX_NAME="Alma Linux 9 (Moss Jungle Cat)"
       BASE_IMAGE=almalinux:9
-      ;;
-
-    alma8)
-      LINUX_NAME="Alma Linux 8"
-      BASE_IMAGE=almalinux:8
       ;;
 
     amazon)
@@ -991,29 +981,19 @@ check_from_image()
       BASE_IMAGE=ubuntu:noble
       ;;
 
-    ubuntu22)
-      LINUX_NAME="Ubuntu 22.04 LTS (Jammy Jellyfish)"
-      BASE_IMAGE=ubuntu:jammy
-      ;;
-
     dhi-debian13)
       LINUX_NAME="Docker Hardened Images/Debian GNU/Linux 13 (trixie)"
       BASE_IMAGE=dhi.io/debian-base:trixie-debian13-dev
       ;;
 
-    debian13)
+    debian|debian13)
       LINUX_NAME="Debian 13 (Trixie)"
       BASE_IMAGE=debian:13
       ;;
 
-    debian|debian12)
+    debian12)
       LINUX_NAME="Debian 12 (Bookworm)"
       BASE_IMAGE=debian:12
-      ;;
-
-    debian11)
-      LINUX_NAME="Debian 11 (Bullseye)"
-      BASE_IMAGE=debian:11
       ;;
 
     leap)

@@ -63,7 +63,7 @@ install_linux_packages()
 
   elif [ -x /usr/bin/apt-get ]; then
 
-    install_packages procps libcap2-bin gettext-base vim-tiny
+    install_packages procps libcap2-bin gettext-base vim-tiny passwd
 
     # Ubuntu 26.04 LTS moved rev to bsdextrautils
     if [ ! -e /usr/bin/rev ]; then

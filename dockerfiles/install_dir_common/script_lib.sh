@@ -34,6 +34,12 @@ export SOFTWARE_FILE=$INSTALL_DIR/software.txt
 # Ensure files extracted by root get standard owner (some files have high UID/GID values)
 export TAR_OPTIONS=--no-same-owner
 
+
+# Get release information
+if [ -f /etc/os-release ]; then
+  . /etc/os-release
+fi
+
 # In container environments the LOGNAME is not set
 if [ -z "$LOGNAME" ]; then
   export LOGNAME=$(whoami)
@@ -1570,7 +1576,12 @@ check_linux_update()
       install_package apt-utils
     fi
 
-    /usr/bin/apt-get upgrade -y
+    # On Ubuntu get phased updates
+    if [ "$ID" = "ubuntu" ]; then
+      /usr/bin/apt-get -o APT::Get::Always-Include-Phased-Updates=true upgrade -y
+    else
+      /usr/bin/apt-get upgrade -y
+    fi
 
   elif [ -x /usr/bin/pacman ]; then
     header "Updating Linux via pacman"
