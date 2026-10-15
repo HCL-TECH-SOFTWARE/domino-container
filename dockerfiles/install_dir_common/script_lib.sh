@@ -1302,6 +1302,10 @@ set_domino_version()
 {
   # Domino version is updated after each install part (ver, fp, if/hf)
   get_domino_version
+
+  rm -f "$DOMDOCK_TXT_DIR/domino_$1.txt"
+  rm -f "$DOMINO_DATA_PATH/domino_$1.txt"
+
   echo $DOMINO_VERSION > "$DOMDOCK_TXT_DIR/domino_$1.txt"
   echo $DOMINO_VERSION > "$DOMINO_DATA_PATH/domino_$1.txt"
 
@@ -1331,6 +1335,9 @@ check_installed_version()
 
 set_version()
 {
+  rm -f "$DOMDOCK_TXT_DIR/${PROD_NAME}_ver.txt"
+  rm -f "$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt"
+
   echo $PROD_VER > "$DOMDOCK_TXT_DIR/${PROD_NAME}_ver.txt"
   echo $PROD_VER > "$DOMINO_DATA_PATH/${PROD_NAME}_ver.txt"
 

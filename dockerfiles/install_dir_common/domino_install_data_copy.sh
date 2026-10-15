@@ -185,7 +185,9 @@ copy_files_for_major_version()
   # Ensure directory can be read by group -> needed for root login
   chmod "$DIR_PERM" "$DOMINO_DATA_PATH"
 
-  echo $DOMINO_VERSION > $InstalledFile
+  rm -f "$InstalledFile"
+  echo "$DOMINO_VERSION" > "$InstalledFile"
+  chmod 444 "$InstalledFile"
 
   return 0
 }
@@ -223,7 +225,9 @@ copy_files_for_version()
   copy_files $DOMINO_INSTDATA_BACKUP/$DOMINO_VERSION/localnotesdataiNotes $DOMINO_DATA_PATH/iNotes
   copy_files $DOMINO_INSTDATA_BACKUP/$DOMINO_VERSION/localnotesdatadominojava $DOMINO_DATA_PATH/domino/java
 
-  echo $DOMINO_VERSION > $InstalledFile
+  rm -f "$InstalledFile"
+  echo "$DOMINO_VERSION" > "$InstalledFile"
+  chmod 444 "$InstalledFile"
 
   return 0
 }
@@ -345,7 +349,9 @@ copy_files_for_addon()
     update_traveler_ini $DOMINO_DATA_PATH/notes.ini $DOMDOCK_DIR/traveler_install_notes.ini
   fi
 
-  echo $PROD_VER > $InstalledFile
+  rm -f "$InstalledFile"
+  echo "$PROD_VER" > "$InstalledFile"
+  chmod 444 "$InstalledFile"
 
   return 0
 }
