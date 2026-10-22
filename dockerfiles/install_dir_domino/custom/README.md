@@ -58,6 +58,26 @@ The PEM file and JVM trusted roots can be updated by providing a PEM file with t
 trusted_domino_root.pem
 ```
 
+# Replace Domino cacerts.pem
+
+The cacerts file in Domino data directory can be completly overwritten.
+Store the new file in this folder.
+Adding certificates happens on the replaced file.
+
+```
+domino_cacerts.pem
+```
+
+# Replace Domino JVM trust store
+
+The JVM trust store can be completly overwritten.
+Store the new file in this folder.
+Adding custom certificates happens on the replaced file.
+
+```
+domino_jvm_truststore
+```
+
 
 # Append entries to java.policy
 

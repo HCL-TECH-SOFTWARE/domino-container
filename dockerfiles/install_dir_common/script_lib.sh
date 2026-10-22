@@ -150,11 +150,34 @@ log_debug()
 
 copy_log()
 {
- if [ -e "$1" ]; then
+  if [ -e "$1" ]; then
     cp -f "$1" "$2"
- else
-   echo "Warning: Log file not found: $1"
- fi
+  else
+    echo "Warning: Log file not found: $1"
+  fi
+}
+
+copy_fail()
+{
+  local src="$1"
+  local dst="$2"
+
+  [ -z "$src" ] && return 0
+
+  if [ ! -f "$src" ] || [ ! -r "$src" ]; then
+    log_error "Cannot read file: $src when updating $dst"
+    exit 1
+  fi
+
+  if ! cp -f -- "$src" "$dst"; then
+    log_error "Cannot copy file: $src -> $dst"
+    exit 1
+  fi
+
+  if ! cmp -s -- "$src" "$dst"; then
+    log_error "Copy verification failed: $src -> $dst"
+    exit 1
+  fi
 }
 
 header()
@@ -1958,5 +1981,27 @@ install_domino_trusted_root()
 
   # Log trusted root imported
   openssl x509 -in "$1" -text >> $DOMDOCK_DIR/DominoImportedTrustedRoots.pem
+}
+
+
+replace_domino_trusted_roots()
+{
+  if [ -z "$1" ]; then
+     return 0
+  fi
+
+  header "Replacing Domino cacerts.pem"
+  copy_fail "$1" "$DOMINO_DATA_PATH/cacert.pem"
+}
+
+
+replace_domino_jvm_truststore()
+{
+  if [ -z "$1" ]; then
+     return 0
+  fi
+
+  header "Replacing Domino JVM trust store"
+  copy_fail "$1" "$Notes_ExecDirectory/jvm/lib/security/cacerts"
 }
 

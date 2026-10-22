@@ -1704,6 +1704,14 @@ create_notes_user_and_group()
 
 check_install_trusted_root()
 {
+  if [ -e "$INSTALL_DIR/custom/domino_cacerts.pem" ]; then
+    replace_domino_trusted_roots "$INSTALL_DIR/custom/domino_cacerts.pem"
+  fi
+
+  if [ -e "$INSTALL_DIR/custom/domino_jvm_truststore" ]; then
+    replace_domino_jvm_truststore "$INSTALL_DIR/custom/domino_jvm_truststore"
+  fi
+
   if [ -e "$INSTALL_DIR/custom/trusted_root.pem" ]; then
     install_domino_trusted_root "$INSTALL_DIR/custom/trusted_domino_root.pem"
   fi

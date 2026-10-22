@@ -956,6 +956,11 @@ check_from_image()
       BASE_IMAGE=registry.access.redhat.com/ubi10
       ;;
 
+    ubi-init)
+      LINUX_NAME="Red Hat Enterprise Linux 10 (Coughlan)"
+      BASE_IMAGE=registry.access.redhat.com/ubi10/ubi-init:latest
+      ;;
+
     ubi9)
       LINUX_NAME="Red Hat Enterprise Linux 9 (Plow)"
       BASE_IMAGE=registry.access.redhat.com/ubi9
