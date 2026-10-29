@@ -58,15 +58,11 @@ traveler|14.0FP2|Traveler_14.0.0FP2_Linux_ML.tar.gz|gllJW1oKmNp0L0G6FcW1B|4487e5
 traveler|14.5|Traveler_14.5_Linux_ML.tar.gz|TsbeLGGLmoRmRxKuI3vzS|85a57624da2c60e1b932fcce73dc9ff50ecb05f5579552ff871b55179890226e
 traveler|14.5.1|Traveler_14.5.1_Linux_ML.tar.gz,Traveler_14.5.1_Linux_ML.tar|CiQ3KYLqQ1tmf9njMJr2q|d320413e2c1783cd48b7b5aa3cb46979bd95c6061150d078f9b2dce248aa12c4
 traveler|14.5.1FP1|Traveler_14.5.1FP1_Linux_ML.tar.gz|6bNINslGRUc1XvDzaiZsd|6111a42f3c133c3d15febf01e1891c2b66027006ffaf7df4e27fa360869bb97e
-leap|1.1.4|hcl.dleap-1.1.4.3.zip|H1daXmZp1O6Mx1rwceAZU|55cc4bdb5f8dc343259c7c6efb89934d1488236c750fe2173b57e2abc1242271
-leap|1.1.5|hcl.dleap-1.1.5.4.zip|nRQqI1RdppSWdyI55ICWk|61dce3bb8ba71383a506e4f7a3673e4fdd55db12ec204246e4c7c3fc1cf5806e
-leap|1.1.6|hcl.dleap-1.1.6.25.zip|EMMnLUwjXQ2FHJG4zgoRO|f0bafe83f6659d7682ce38febf0d0d64d27f7f8c64de3629ca7fda864ad3ed31
-leap|1.1.7|hcl.dleap-1.1.7.29.zip|xDfUOwgGqe2foxvmHvPTk|4315a247c0bf6c7e755c518edca09dc6789a9758138097b81696cfda3ed63c20
-leap|1.1.7IF1|hcl.dleap-1.1.7.33.zip|ZcQBXgoMQtH4eS7ZcEjri|78cb785147c1073ac81548fd5be5b13a5e775a71dfda7d4c539dd1f007ad9f91
 leap|1.1.8|hcl.dleap-1.1.8.25.zip|UFpbnsVJlLnTGi0dsRzA4|63692f7917f2a3723a7f353454fe13ba208b43aa9394f7a5f474b059c968060a
 leap|1.1.9|hcl.dleap-1.1.9.36.zip|DdLdSxNzncwZO8gX88TFz|cf30726e3df0edaefd0a6b389832373884a75f27605ae2f3e7b69cab8ed28238
 leap|1.1.10|hcl.dleap-1.1.10.14.zip|oE265POXd9pS8kW7nH80O|bae602de4782b2527015d038f9763960c208aa01600beb9a83cf00da8a618fbf
 leap|1.1.11|hcl.dleap-1.1.11.34.zip|MPb4AvMJfh8nvmfkPsyDr|895dfdf9e6f4ce446c8eca4bb19080b75548486d06bde98a30841cd2dc5b89f0
+leap|1.1.12|hcl.dleap-1.1.12.23.zip|MtQjh1vkXJG0tI6lqAe0f|a7b3afba0c980e692fc8aadd9301ba9481adc39377f093ff237399d1409723cd
 verse|3.2.4|HCL_Verse_3.2.4.zip|TgTGWeuaONuDQxu0kHXPG|ebe6a77cf70dd75c2819de864b964342b8817b400a5a824994c1f60879a76deb
 verse|3.2.5|HCL_Verse_3.2.5.zip|UIB5y25KITZ2nj4smeDah|4a882795b5beae1e9dc7610b9f0a860e57e55839b1568db1e7eecf27cc2f18b6
 verse|3.2.6|HCL_Verse_3.2.6.zip|SPkmaB2yaJRkOgCA53REk|856455adfa5e9437de15179ca7e487602e661f0b2f8f9a21afccf0a98d077dfc
