@@ -1007,13 +1007,13 @@ check_from_image()
       ;;
 
     leap16)
-      LINUX_NAME="SUSE Leap 16.0"
-      BASE_IMAGE=opensuse/leap:16.0
+      LINUX_NAME="SUSE Leap 16.1"
+      BASE_IMAGE=opensuse/leap:16.1
       ;;
 
-    leap15.6)
-      LINUX_NAME="SUSE Leap 15.6"
-      BASE_IMAGE=opensuse/leap:15.6
+    leap15)
+      LINUX_NAME="SUSE Leap 15"
+      BASE_IMAGE=opensuse/leap:15
       ;;
 
     bci-stable)
@@ -1021,14 +1021,14 @@ check_from_image()
       BASE_IMAGE=registry.suse.com/bci/bci-base
       ;;
 
-    bci|bci16|bci16.0)
-      LINUX_NAME="SUSE Enterprise 16.0"
-      BASE_IMAGE=registry.suse.com/bci/bci-base:16.0
+    bci|bci16)
+      LINUX_NAME="SUSE Enterprise 16.1"
+      BASE_IMAGE=registry.suse.com/bci/bci-base:16.1
       ;;
 
-    bci15.6)
-      LINUX_NAME="SUSE Enterprise 15.6"
-      BASE_IMAGE=registry.suse.com/bci/bci-base:15.6
+    bci15)
+      LINUX_NAME="SUSE Enterprise 15.7"
+      BASE_IMAGE=registry.suse.com/bci/bci-base:15.7
       ;;
 
     tumbleweed)
